@@ -1,0 +1,54 @@
+# Directives UI & Identity — TICKETICK
+
+## 0. Philosophie
+L'identité repose sur le **contraste**, la **lisibilité** et un **symbole fort** :
+le « E » central à trois barres horizontales arrondies sert de pont visuel au sein
+du nom (TICK + E + TICK) tout en constituant un picto autonome moderne.
+
+## 1. Identité Visuelle & Colors
+- **Primary / Brand (Violet) :** `#6C5CE7` — hsl(247, 74%, 63%)
+- **Text / Neutral (Anthracite) :** `#2A2C30` — hsl(220, 7%, 18%)
+- **Background Dark :** `#1E1F23` — hsl(228, 8%, 13%)
+- **Background Light :** `#FFFFFF` ou `#F8F9FA`
+
+Utiliser les tokens CSS de `src/app/globals.css` (`--primary`, `--foreground`,
+`--background`, `--card`…) plutôt que des valeurs hex en dur.
+
+## 2. Typography
+- **Font Family :** 'Inter', system-ui, sans-serif
+- **Headings :** Font-weight 800 (ExtraBold), UPPERCASE pour les titres de marque.
+- **Body :** Font-weight 400 (Regular) ou 500 (Medium).
+- Kerning régulier sur le logo en capitales.
+
+## 3. Usage des Logos (`/public/brand/`)
+- **Header Light Mode :** `/brand/logo_standard.svg` (texte anthracite + E violet)
+- **Header Dark Mode / Footer :** `/brand/logo_white_purple.svg` (texte blanc + E violet)
+- **Favicon & Web App Icon :** `src/app/icon.svg` et `src/app/apple-icon.svg`
+  (source : `/brand/icon_purple_transparent.svg`)
+- **Variantes Monochromes :** `/brand/logo_monochrome_black.svg` (impression N&B,
+  documents administratifs) et `/brand/logo_monochrome_white.svg` (overlay
+  photo/vidéo)
+- **Symbole seul (`icon_*`) :** réservé aux espaces restreints — favicon, avatar
+  réseaux sociaux, bouton de menu.
+
+### Zone d'exclusion & tailles minimales
+- Conserver autour du logo un espace vide équivalent à la **hauteur d'une barre du « E »**.
+- Logo complet : **120 px** de large minimum en digital / 30 mm en impression.
+- Symbole seul : **16 px** de large minimum en digital.
+
+## 4. Design System & UI Components
+- **Style :** épuré, moderne, orienté SaaS & Ticketing / Event management.
+- **Buttons :** actions principales remplies en violet (`#6C5CE7`), texte blanc,
+  coins arrondis (`rounded-lg` ou `rounded-xl`).
+- **Cards & Containers :** bordures fines et ombres douces sur fond clair ;
+  fond `#2A2C30` avec texte blanc sur fond sombre.
+- **Contrastes :** respecter scrupuleusement les normes **WCAG** — texte anthracite
+  sur fond blanc, texte blanc sur fond sombre ou violet.
+  Ne jamais poser de texte violet sur fond sombre, ni d'anthracite sur violet.
+
+## 5. Règles de code
+- Next.js App Router, TypeScript strict, Tailwind v4.
+- Tous les libellés visibles doivent exister dans les 4 langues :
+  `messages/{fr,en,de,it}.json`. Pas de texte en dur dans les composants.
+- Utiliser les composants existants (`src/components/ui/`) avant d'en créer.
+- Prix en centimes, devise CHF, formatage via `formatPrice()` de `src/lib/utils.ts`.

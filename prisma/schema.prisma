@@ -1,0 +1,231 @@
+// ticketick — schéma de données
+// Billetterie suisse. PostgreSQL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  ORGANIZER
+  ADMIN
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  SOLD_OUT
+  PAST
+}
+
+enum OrderStatus {
+  PENDING
+  AWAITING_PAYMENT
+  PAID
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  IBAN
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum TicketStatus {
+  VALID
+  USED
+  CANCELLED
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String?
+  name         String?
+  role         UserRole   @default(CUSTOMER)
+  locale       String     @default("fr")
+  phone        String?
+  // Accès "amis du festival" (session PWA)
+  isFestivalFriend Boolean @default(false)
+  organizer    Organizer?
+  orders       Order[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Organizer {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  email       String
+  description String?
+  logoUrl     String?
+  website     String?
+  // Active la PWA "amis du festival" pour cet organisateur
+  friendsAppEnabled Boolean @default(false)
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      String?  @unique
+  events      Event[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Category {
+  id       String  @id @default(cuid())
+  slug     String  @unique
+  // Traductions du nom { fr, en, de, it }
+  name     Json
+  color    String  @default("#6C5CE7")
+  icon     String?
+  events   Event[] @relation("EventCategories")
+}
+
+model Venue {
+  id      String  @id @default(cuid())
+  name    String
+  address String?
+  city    String
+  canton  String?
+  country String  @default("CH")
+  zip     String?
+  lat     Float?
+  lng     Float?
+  events  Event[]
+}
+
+model Event {
+  id          String      @id @default(cuid())
+  slug        String      @unique
+  // Traductions { fr, en, de, it }
+  title       Json
+  description Json
+  status      EventStatus @default(DRAFT)
+  featured    Boolean     @default(false)
+  coverImage  String?
+  gallery     String[]    @default([])
+
+  startsAt    DateTime
+  endsAt      DateTime?
+  doorsAt     DateTime?
+
+  venue       Venue?      @relation(fields: [venueId], references: [id])
+  venueId     String?
+
+  organizer   Organizer   @relation(fields: [organizerId], references: [id])
+  organizerId String
+
+  categories  Category[]  @relation("EventCategories")
+  ticketTypes TicketType[]
+
+  // Plan de salle optionnel
+  hasMap      Boolean     @default(false)
+  seatMap     SeatMap?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([status, startsAt])
+}
+
+model SeatMap {
+  id      String @id @default(cuid())
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String @unique
+  // Définition JSON du plan (sections, rangées, sièges)
+  layout  Json
+}
+
+model TicketType {
+  id          String   @id @default(cuid())
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId     String
+  name        Json     // { fr, en, de, it }
+  description Json?
+  priceCents  Int
+  currency    String   @default("CHF")
+  quantity    Int
+  sold        Int      @default(0)
+  maxPerOrder Int      @default(10)
+  salesStartAt DateTime?
+  salesEndAt   DateTime?
+  orderItems  OrderItem[]
+  tickets     Ticket[]
+
+  @@index([eventId])
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  reference     String        @unique
+  user          User?         @relation(fields: [userId], references: [id])
+  userId        String?
+  email         String
+  firstName     String
+  lastName      String
+  phone         String?
+  locale        String        @default("fr")
+  status        OrderStatus   @default(PENDING)
+  paymentMethod PaymentMethod
+  subtotalCents Int
+  feeCents      Int           @default(0)
+  totalCents    Int
+  currency      String        @default("CHF")
+  items         OrderItem[]
+  tickets       Ticket[]
+  payment       Payment?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([email])
+}
+
+model OrderItem {
+  id             String     @id @default(cuid())
+  order          Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId        String
+  ticketType     TicketType @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeId   String
+  quantity       Int
+  unitPriceCents Int
+}
+
+model Ticket {
+  id           String       @id @default(cuid())
+  code         String       @unique
+  order        Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId      String
+  ticketType   TicketType   @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeId String
+  attendeeName String?
+  seatLabel    String?
+  status       TicketStatus @default(VALID)
+  createdAt    DateTime     @default(now())
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String        @unique
+  provider    String        // "postfinance" | "iban"
+  providerRef String?       // ID de transaction PostFinance Checkout
+  method      PaymentMethod
+  status      PaymentStatus @default(PENDING)
+  amountCents Int
+  currency    String        @default("CHF")
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}

@@ -1,0 +1,124 @@
+name: 🚀 Deploy BetaDev → GB10 (appbetadev.ticketick.ch)
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-betadev-gb10
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to GB10
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 📋 Deploy via SSH to GB10
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+        with:
+          host: ${{ secrets.GB10_HOST }}
+          username: ${{ secrets.GB10_USER }}
+          key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.GB10_PORT }}
+          envs: STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET
+          command_timeout: 30m
+          script: |
+            set -euo pipefail
+
+            APP_DIR="$HOME/ticketick-v2-betadev"
+            SECRETS_FILE="$HOME/.ticketick-v2-betadev.secrets"
+            REPO="https://github.com/${{ github.repository }}.git"
+            BRANCH="${{ github.ref_name }}"
+            HOST_PORT=3005
+
+            echo "════════════════════════════════════════════"
+            echo "  ticketick BetaDev — Deploy"
+            echo "  Branch : $BRANCH"
+            echo "  Host   : $(hostname)"
+            echo "════════════════════════════════════════════"
+
+            # ── 1. Clone ou mise à jour (repo public → HTTPS, aucune clé requise)
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "📦 Premier déploiement — clonage..."
+              git clone --branch "$BRANCH" "$REPO" "$APP_DIR"
+            else
+              echo "🔄 Mise à jour du repo..."
+              cd "$APP_DIR"
+              git remote set-url origin "$REPO"
+              git fetch origin "$BRANCH"
+              git reset --hard "origin/$BRANCH"
+            fi
+            cd "$APP_DIR"
+
+            # ── 2. Secrets générés une seule fois puis réutilisés.
+            # Régénérer le mot de passe Postgres après l'initialisation du volume
+            # rendrait la base inaccessible : on le fige au premier déploiement.
+            if [ ! -f "$SECRETS_FILE" ]; then
+              echo "🔑 Génération des secrets locaux (premier déploiement)..."
+              {
+                echo "POSTGRES_USER=ticketick"
+                echo "POSTGRES_DB=ticketick"
+                echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)"
+                echo "AUTH_SECRET=$(openssl rand -base64 32)"
+              } > "$SECRETS_FILE"
+              chmod 600 "$SECRETS_FILE"
+            fi
+            # shellcheck disable=SC1090
+            . "$SECRETS_FILE"
+
+            # ── 3. Fichier d'environnement consommé par docker compose
+            echo "🔐 Génération de .env.betadev..."
+            umask 077
+            cat > "$APP_DIR/.env.betadev" <<EOF
+            NODE_ENV=production
+            NEXT_PUBLIC_APP_URL=https://appbetadev.ticketick.ch
+            POSTGRES_USER=${POSTGRES_USER}
+            POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            POSTGRES_DB=${POSTGRES_DB}
+            AUTH_SECRET=${AUTH_SECRET}
+            STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+            STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
+            STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+            MAIL_FROM=billets@ticketick.ch
+            EOF
+            # docker compose lit POSTGRES_* depuis .env pour l'interpolation
+            cp "$APP_DIR/.env.betadev" "$APP_DIR/.env"
+            echo "   ✅ .env.betadev créé"
+
+            # ── 4. Build et démarrage
+            echo "🏗️  Build de l'image Next.js (standalone)..."
+            docker compose -f docker-compose.betadev.yml up -d --build --remove-orphans
+
+            # ── 5. Health check
+            echo "⏳ Attente du démarrage..."
+            OK=0
+            for i in $(seq 1 24); do
+              if curl -sf "http://127.0.0.1:${HOST_PORT}/api/health" > /dev/null 2>&1; then
+                OK=1
+                echo "✅ Frontend opérationnel sur :${HOST_PORT}"
+                break
+              fi
+              sleep 5
+            done
+
+            if [ "$OK" -ne 1 ]; then
+              echo "❌ Health check en échec — logs applicatifs :"
+              docker compose -f docker-compose.betadev.yml logs --tail=80 app || true
+              exit 1
+            fi
+
+            # ── 6. Nettoyage
+            docker image prune -f --filter "until=24h" > /dev/null 2>&1 || true
+
+            echo "════════════════════════════════════════════"
+            echo "  ✅ Déploiement terminé"
+            echo "  🌐 https://appbetadev.ticketick.ch"
+            echo "  ↳ Nginx Proxy Manager doit pointer sur 127.0.0.1:${HOST_PORT}"
+            echo "════════════════════════════════════════════"

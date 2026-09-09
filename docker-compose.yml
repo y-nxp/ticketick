@@ -1,0 +1,25 @@
+# ticketick — stack de développement local.
+# Fournit uniquement PostgreSQL ; l'application tourne via `npm run dev`.
+# Le déploiement gb10 utilise docker-compose.betadev.yml.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ticketick-dev-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ticketick}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ticketick}
+      POSTGRES_DB: ${POSTGRES_DB:-ticketick}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ticketick}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db-data:

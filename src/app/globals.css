@@ -1,26 +1,181 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
+/*
+  ticketick — Design system
+  Identité: billetterie suisse, épurée et moderne (SaaS / event management).
+  Violet signature #6C5CE7, neutres anthracite, coins arrondis, contrastes WCAG.
+  Les valeurs hex proviennent directement de la charte graphique.
+*/
+
 :root {
+  --radius: 0.75rem;
+
+  /* Fonds clairs */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #2a2c30; /* Gris Anthracite */
+
+  --card: #ffffff;
+  --card-foreground: #2a2c30;
+
+  --popover: #ffffff;
+  --popover-foreground: #2a2c30;
+
+  /* Violet TICKETICK */
+  --primary: #6c5ce7;
+  --primary-foreground: #ffffff;
+  --primary-hover: #5b4bd6; /* assombri : garde le blanc lisible au survol */
+
+  --secondary: #f8f9fa;
+  --secondary-foreground: #2a2c30;
+
+  --muted: #f8f9fa;
+  --muted-foreground: #6b6e76;
+
+  /* Teinte violette douce pour les surfaces d'accent */
+  --accent: #eeecfd;
+  --accent-foreground: #4b3fc4;
+
+  /* Sémantique — distincte du violet de marque */
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --success: #0f9d6e;
+  --warning: #d97706;
+
+  --border: #e6e8eb;
+  --input: #e6e8eb;
+  --ring: #6c5ce7;
+}
+
+.dark {
+  /* Noir / Off-Black */
+  --background: #1e1f23;
+  --foreground: #ffffff;
+
+  /* Surfaces en anthracite sur fond sombre */
+  --card: #2a2c30;
+  --card-foreground: #ffffff;
+
+  --popover: #2a2c30;
+  --popover-foreground: #ffffff;
+
+  --primary: #6c5ce7;
+  --primary-foreground: #ffffff;
+  --primary-hover: #8577ec; /* éclairci : ressort mieux sur fond sombre */
+
+  --secondary: #32353b;
+  --secondary-foreground: #ffffff;
+
+  --muted: #32353b;
+  --muted-foreground: #a7abb4;
+
+  --accent: #332f5c;
+  --accent-foreground: #cfc9fb;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --success: #22c08a;
+  --warning: #f59e0b;
+
+  --border: #3a3d44;
+  --input: #3a3d44;
+  --ring: #8577ec;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 10px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Titres en ExtraBold (charte typographique) */
+h1,
+h2,
+h3 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+h4,
+h5,
+h6 {
+  font-weight: 700;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+/* Utilitaires maison */
+.container-page {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 80rem;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-page {
+    padding-inline: 1.5rem;
+  }
+}
+
+/* Nom de marque : capitales, ExtraBold, kerning régulier */
+.brand-wordmark {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
