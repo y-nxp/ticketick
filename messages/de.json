@@ -70,7 +70,11 @@
     "selectTickets": "Wählen Sie Ihre Tickets",
     "quantity": "Menge",
     "availableUntil": "Verfügbar bis {date}",
-    "backToEvents": "Zurück zu den Veranstaltungen"
+    "backToEvents": "Zurück zu den Veranstaltungen",
+    "selectSession": "Datum wählen",
+    "sessionCount": "{count} Termine verfügbar",
+    "noSessions": "Derzeit keine Termine geplant.",
+    "datesCount": "{count} Termine"
   },
   "cart": {
     "title": "Ihr Warenkorb",
@@ -85,7 +89,8 @@
     "serviceFee": "Servicegebühr",
     "total": "Gesamt",
     "checkout": "Zur Kasse",
-    "continue": "Weiter einkaufen"
+    "continue": "Weiter einkaufen",
+    "session": "Vorstellung"
   },
   "checkout": {
     "title": "Kasse",
@@ -131,7 +136,8 @@
     "events": "Meine Veranstaltungen",
     "sales": "Verkäufe",
     "revenue": "Einnahmen",
-    "ticketsSold": "Verkaufte Tickets"
+    "ticketsSold": "Verkaufte Tickets",
+    "sessions": "Vorstellungen"
   },
   "friends": {
     "title": "Festivalfreunde",

@@ -15,6 +15,11 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
 RUN npm run build
+# Le seed est en TypeScript : on le précompile ici pour que l'image finale
+# n'ait pas à embarquer tsx. Les dépendances restent externes et sont
+# résolues depuis les node_modules du runner.
+RUN npx esbuild prisma/seed.ts --bundle --platform=node --format=esm \
+  --packages=external --outfile=prisma/seed.mjs --log-level=warning
 
 # --- Runner ---
 FROM base AS runner

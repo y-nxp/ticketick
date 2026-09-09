@@ -70,7 +70,11 @@
     "selectTickets": "Choisissez vos billets",
     "quantity": "Quantité",
     "availableUntil": "Disponible jusqu'au {date}",
-    "backToEvents": "Retour aux spectacles"
+    "backToEvents": "Retour aux spectacles",
+    "selectSession": "Choisir une date",
+    "sessionCount": "{count} dates disponibles",
+    "noSessions": "Aucune date programmée pour le moment.",
+    "datesCount": "{count} dates"
   },
   "cart": {
     "title": "Votre panier",
@@ -85,7 +89,8 @@
     "serviceFee": "Frais de service",
     "total": "Total",
     "checkout": "Passer au paiement",
-    "continue": "Continuer mes achats"
+    "continue": "Continuer mes achats",
+    "session": "Séance"
   },
   "checkout": {
     "title": "Paiement",
@@ -131,7 +136,8 @@
     "events": "Mes événements",
     "sales": "Ventes",
     "revenue": "Revenus",
-    "ticketsSold": "Billets vendus"
+    "ticketsSold": "Billets vendus",
+    "sessions": "séances"
   },
   "friends": {
     "title": "Amis du festival",

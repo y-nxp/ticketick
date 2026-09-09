@@ -70,7 +70,11 @@
     "selectTickets": "Scegli i tuoi biglietti",
     "quantity": "Quantità",
     "availableUntil": "Disponibile fino al {date}",
-    "backToEvents": "Torna agli spettacoli"
+    "backToEvents": "Torna agli spettacoli",
+    "selectSession": "Scegli una data",
+    "sessionCount": "{count} date disponibili",
+    "noSessions": "Nessuna data in programma al momento.",
+    "datesCount": "{count} date"
   },
   "cart": {
     "title": "Il tuo carrello",
@@ -85,7 +89,8 @@
     "serviceFee": "Costi di servizio",
     "total": "Totale",
     "checkout": "Vai al pagamento",
-    "continue": "Continua gli acquisti"
+    "continue": "Continua gli acquisti",
+    "session": "Replica"
   },
   "checkout": {
     "title": "Pagamento",
@@ -131,7 +136,8 @@
     "events": "I miei eventi",
     "sales": "Vendite",
     "revenue": "Ricavi",
-    "ticketsSold": "Biglietti venduti"
+    "ticketsSold": "Biglietti venduti",
+    "sessions": "repliche"
   },
   "friends": {
     "title": "Amici del festival",

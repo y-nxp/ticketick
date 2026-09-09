@@ -7,6 +7,9 @@ export interface CartLine {
   eventId: string;
   eventSlug: string;
   eventTitle: string;
+  /** Séance concernée : un même spectacle peut être joué à plusieurs dates. */
+  sessionId: string;
+  sessionStartsAt: string;
   ticketName: string;
   unitPriceCents: number;
   currency: string;
@@ -25,7 +28,9 @@ interface CartState {
 }
 
 const CartContext = React.createContext<CartState | null>(null);
-const STORAGE_KEY = "ticketick.cart.v1";
+// v2 : les lignes portent désormais la séance. Changer la clé écarte les
+// paniers au format précédent plutôt que de les faire planter à l'affichage.
+const STORAGE_KEY = "ticketick.cart.v2";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = React.useState<CartLine[]>([]);

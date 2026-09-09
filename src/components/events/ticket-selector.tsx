@@ -7,13 +7,21 @@ import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
 import { formatPrice } from "@/lib/utils";
-import { t, type EventItem, type TicketType } from "@/lib/types";
+import {
+  t,
+  type EventItem,
+  type SessionItem,
+  type TicketType,
+} from "@/lib/types";
 
 export function TicketSelector({
   event,
+  session,
   locale,
 }: {
   event: EventItem;
+  /** Séance retenue : c'est elle qui porte les tarifs et le stock. */
+  session: SessionItem;
   locale: string;
 }) {
   const te = useTranslations("event");
@@ -22,7 +30,7 @@ export function TicketSelector({
   const [qty, setQty] = React.useState<Record<string, number>>({});
   const [added, setAdded] = React.useState(false);
 
-  const totalCents = event.ticketTypes.reduce(
+  const totalCents = session.ticketTypes.reduce(
     (sum, tt) => sum + (qty[tt.id] ?? 0) * tt.priceCents,
     0,
   );
@@ -33,7 +41,7 @@ export function TicketSelector({
   }
 
   function addToCart(goToCheckout = false) {
-    event.ticketTypes.forEach((tt) => {
+    session.ticketTypes.forEach((tt) => {
       const n = qty[tt.id] ?? 0;
       if (n > 0) {
         add(
@@ -42,6 +50,8 @@ export function TicketSelector({
             eventId: event.id,
             eventSlug: event.slug,
             eventTitle: t(event.title, locale),
+            sessionId: session.id,
+            sessionStartsAt: session.startsAt,
             ticketName: t(tt.name, locale),
             unitPriceCents: tt.priceCents,
             currency: tt.currency,
@@ -64,7 +74,7 @@ export function TicketSelector({
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <h3 className="text-lg font-semibold">{te("selectTickets")}</h3>
       <div className="mt-4 space-y-3">
-        {event.ticketTypes.map((tt) => (
+        {session.ticketTypes.map((tt) => (
           <TicketRow
             key={tt.id}
             ticket={tt}

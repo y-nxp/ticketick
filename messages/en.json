@@ -70,7 +70,11 @@
     "selectTickets": "Select your tickets",
     "quantity": "Quantity",
     "availableUntil": "Available until {date}",
-    "backToEvents": "Back to events"
+    "backToEvents": "Back to events",
+    "selectSession": "Choose a date",
+    "sessionCount": "{count} dates available",
+    "noSessions": "No dates scheduled at the moment.",
+    "datesCount": "{count} dates"
   },
   "cart": {
     "title": "Your cart",
@@ -85,7 +89,8 @@
     "serviceFee": "Service fee",
     "total": "Total",
     "checkout": "Proceed to checkout",
-    "continue": "Continue shopping"
+    "continue": "Continue shopping",
+    "session": "Session"
   },
   "checkout": {
     "title": "Checkout",
@@ -131,7 +136,8 @@
     "events": "My events",
     "sales": "Sales",
     "revenue": "Revenue",
-    "ticketsSold": "Tickets sold"
+    "ticketsSold": "Tickets sold",
+    "sessions": "sessions"
   },
   "friends": {
     "title": "Festival friends",

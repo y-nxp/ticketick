@@ -3,9 +3,11 @@ import { CalendarPlus, Ticket, Banknote, TrendingUp } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getAllEvents } from "@/lib/mock-data";
+import { getPublishedEvents } from "@/lib/data/events";
 import { formatDate, formatPrice } from "@/lib/utils";
-import { minPriceCents, t } from "@/lib/types";
+import { minPriceCents, nextSession, t } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
 
 export default async function OrganizerDashboardPage({
   params,
@@ -16,14 +18,16 @@ export default async function OrganizerDashboardPage({
   setRequestLocale(locale);
   const to = await getTranslations("organizer");
 
-  const events = getAllEvents();
-  const totalSold = events.reduce(
-    (sum, e) => sum + e.ticketTypes.reduce((s, tt) => s + tt.sold, 0),
-    0,
+  const events = await getPublishedEvents();
+
+  // Les ventes se comptent au niveau des séances : un spectacle joué trois
+  // fois cumule le stock écoulé de ses trois dates.
+  const allTicketTypes = events.flatMap((e) =>
+    e.sessions.flatMap((s) => s.ticketTypes),
   );
-  const totalRevenue = events.reduce(
-    (sum, e) =>
-      sum + e.ticketTypes.reduce((s, tt) => s + tt.sold * tt.priceCents, 0),
+  const totalSold = allTicketTypes.reduce((sum, tt) => sum + tt.sold, 0);
+  const totalRevenue = allTicketTypes.reduce(
+    (sum, tt) => sum + tt.sold * tt.priceCents,
     0,
   );
 
@@ -61,12 +65,11 @@ export default async function OrganizerDashboardPage({
         </div>
         <div className="divide-y divide-border">
           {events.map((e) => {
-            const sold = e.ticketTypes.reduce((s, tt) => s + tt.sold, 0);
-            const capacity = e.ticketTypes.reduce(
-              (s, tt) => s + tt.quantity,
-              0,
-            );
-            const pct = Math.round((sold / capacity) * 100);
+            const tickets = e.sessions.flatMap((s) => s.ticketTypes);
+            const sold = tickets.reduce((s, tt) => s + tt.sold, 0);
+            const capacity = tickets.reduce((s, tt) => s + tt.quantity, 0);
+            const pct = capacity ? Math.round((sold / capacity) * 100) : 0;
+            const session = nextSession(e);
             return (
               <Link
                 key={e.id}
@@ -76,11 +79,16 @@ export default async function OrganizerDashboardPage({
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{t(e.title, locale)}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatDate(e.startsAt, `${locale}-CH`, {
-                      hour: undefined,
-                      minute: undefined,
-                    })}{" "}
-                    · {e.venue.city}
+                    {session
+                      ? formatDate(session.startsAt, `${locale}-CH`, {
+                          hour: undefined,
+                          minute: undefined,
+                        })
+                      : "—"}
+                    {session?.venue ? ` · ${session.venue.city}` : ""}
+                    {e.sessions.length > 1
+                      ? ` · ${e.sessions.length} ${to("sessions")}`
+                      : ""}
                   </p>
                 </div>
                 <div className="hidden w-40 sm:block">

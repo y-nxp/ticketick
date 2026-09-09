@@ -116,6 +116,9 @@ jobs:
             STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
             STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
             MAIL_FROM=billets@ticketick.ch
+            # Recette : catalogue de démonstration réinjecté à chaque
+            # démarrage. À ne pas activer en production.
+            SEED_ON_START=true
             EOF
             # docker compose lit POSTGRES_* depuis .env pour l'interpolation
             cp "$APP_DIR/.env.betadev" "$APP_DIR/.env"

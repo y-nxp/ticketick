@@ -10,5 +10,15 @@ if [ -f "./node_modules/prisma/build/index.js" ]; then
   }
 fi
 
+# Jeu de démonstration pour les environnements de recette. Le seed est
+# convergent (upserts), donc le rejouer à chaque déploiement est sans risque.
+# Jamais activé en production : la donnée y est réelle.
+if [ "${SEED_ON_START:-false}" = "true" ]; then
+  echo "▶ Seed du catalogue de démonstration…"
+  node prisma/seed.mjs || {
+    echo "⚠ Seed échoué. On démarre quand même."
+  }
+fi
+
 echo "▶ Démarrage de ticketick sur :${PORT:-3000}"
 exec node server.js

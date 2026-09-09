@@ -1,4 +1,36 @@
-import type { Category, EventItem, Organizer, Venue } from "./types";
+import type {
+  Category,
+  EventStatus,
+  Organizer,
+  TicketType,
+  Translated,
+  Venue,
+} from "../src/lib/types";
+
+/**
+ * Jeu de données de démonstration, consommé uniquement par `prisma/seed.ts`.
+ *
+ * Volontairement « plat » : une seule date par événement. C'est le seed qui le
+ * transforme en Event + EventSession. L'application, elle, lit la base.
+ */
+export interface EventFixture {
+  id: string;
+  slug: string;
+  title: Translated;
+  description: Translated;
+  status: EventStatus;
+  featured: boolean;
+  coverImage: string;
+  gallery: string[];
+  startsAt: string;
+  endsAt?: string;
+  doorsAt?: string;
+  venue: Venue;
+  organizer: Organizer;
+  categories: Category[];
+  ticketTypes: TicketType[];
+  hasMap: boolean;
+}
 
 export const categories: Category[] = [
   // Couleurs harmonisées avec le violet de marque, contraste suffisant pour du texte blanc.
@@ -77,7 +109,7 @@ const cats = {
   expo: catById.exposition,
 };
 
-export const events: EventItem[] = [
+export const events: EventFixture[] = [
   {
     id: "e-1",
     slug: "stephan-eicher-hallenstadion",
@@ -272,19 +304,3 @@ export const events: EventItem[] = [
     hasMap: false,
   },
 ];
-
-export function getAllEvents() {
-  return events.filter((e) => e.status === "PUBLISHED");
-}
-
-export function getEventBySlug(slug: string) {
-  return events.find((e) => e.slug === slug);
-}
-
-export function getFeaturedEvents() {
-  return events.filter((e) => e.featured && e.status === "PUBLISHED");
-}
-
-export function getCities() {
-  return Array.from(new Set(events.map((e) => e.venue.city))).sort();
-}

@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { events, categories, organizers } from "../src/lib/mock-data";
+import { events, categories, organizers } from "./fixtures";
 
 const prisma = new PrismaClient();
 
@@ -8,6 +8,22 @@ function addDays(date: Date, days: number) {
   const d = new Date(date);
   d.setDate(d.getDate() + days);
   return d;
+}
+
+/**
+ * Les dates des fixtures sont écrites en dur et vieillissent. On translate
+ * tout le catalogue pour que la plus ancienne séance tombe une semaine après
+ * le seed, en conservant l'espacement relatif des événements : la démo reste
+ * ainsi crédible quelle que soit la date d'exécution.
+ */
+const DATE_SHIFT_MS = (() => {
+  const earliest = Math.min(...events.map((e) => +new Date(e.startsAt)));
+  const target = Date.now() + 7 * 24 * 3600 * 1000;
+  return Math.max(0, target - earliest);
+})();
+
+function shift(value: string | Date) {
+  return new Date(+new Date(value) + DATE_SHIFT_MS);
 }
 
 async function main() {
@@ -62,9 +78,18 @@ async function main() {
       where: { slug: { in: e.categories.map((c) => c.slug) } },
     });
 
+    // Le seed est convergent : relancé, il réaligne les lignes existantes sur
+    // les fixtures plutôt que de laisser des données périmées.
     const event = await prisma.event.upsert({
       where: { slug: e.slug },
-      update: {},
+      update: {
+        title: e.title,
+        description: e.description,
+        status: e.status,
+        featured: e.featured,
+        coverImage: e.coverImage,
+        categories: { set: dbCategories.map((c) => ({ id: c.id })) },
+      },
       create: {
         slug: e.slug,
         title: e.title,
@@ -85,11 +110,11 @@ async function main() {
 
     for (const [i, offset] of offsets.entries()) {
       const sessionId = `${e.slug}-s${i + 1}`;
-      const startsAt = addDays(new Date(e.startsAt), offset);
+      const startsAt = addDays(shift(e.startsAt), offset);
 
       const session = await prisma.eventSession.upsert({
         where: { id: sessionId },
-        update: {},
+        update: { startsAt, status: e.status, venueId: venue.id },
         create: {
           id: sessionId,
           eventId: event.id,
@@ -97,8 +122,8 @@ async function main() {
             ? { fr: `Représentation ${i + 1}`, en: `Performance ${i + 1}`, de: `Vorstellung ${i + 1}`, it: `Rappresentazione ${i + 1}` }
             : undefined,
           startsAt,
-          endsAt: e.endsAt ? addDays(new Date(e.endsAt), offset) : undefined,
-          doorsAt: e.doorsAt ? addDays(new Date(e.doorsAt), offset) : undefined,
+          endsAt: e.endsAt ? addDays(shift(e.endsAt), offset) : undefined,
+          doorsAt: e.doorsAt ? addDays(shift(e.doorsAt), offset) : undefined,
           status: e.status,
           venueId: venue.id,
           ticketTypes: {

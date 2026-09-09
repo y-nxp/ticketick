@@ -6,7 +6,15 @@ import { Search, SlidersHorizontal, X } from "lucide-react";
 import { EventCard } from "./event-card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { minPriceCents, t, type Category, type EventItem } from "@/lib/types";
+import {
+  eventCities,
+  minPriceCents,
+  nextSession,
+  t,
+  upcomingSessions,
+  type Category,
+  type EventItem,
+} from "@/lib/types";
 
 type DateFilter = "any" | "today" | "week" | "weekend" | "month";
 type SortKey = "date" | "priceAsc" | "priceDesc" | "name";
@@ -39,14 +47,20 @@ export function EventsBrowser({
     const now = new Date();
     let list = events.slice();
 
+    // Un événement est retenu dès qu'au moins une de ses séances satisfait le
+    // critère : filtrer sur une date « de l'événement » n'aurait pas de sens
+    // pour un spectacle joué plusieurs fois.
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter(
         (e) =>
           t(e.title, locale).toLowerCase().includes(q) ||
-          e.venue.city.toLowerCase().includes(q) ||
-          e.venue.name.toLowerCase().includes(q) ||
           e.organizer.name.toLowerCase().includes(q) ||
+          e.sessions.some(
+            (s) =>
+              s.venue?.city.toLowerCase().includes(q) ||
+              s.venue?.name.toLowerCase().includes(q),
+          ) ||
           e.categories.some((c) => t(c.name, locale).toLowerCase().includes(q)),
       );
     }
@@ -56,12 +70,11 @@ export function EventsBrowser({
     }
 
     if (city !== "all") {
-      list = list.filter((e) => e.venue.city === city);
+      list = list.filter((e) => eventCities(e).includes(city));
     }
 
     if (dateFilter !== "any") {
-      list = list.filter((e) => {
-        const d = new Date(e.startsAt);
+      const matches = (d: Date) => {
         if (dateFilter === "today") {
           return d.toDateString() === now.toDateString();
         }
@@ -83,7 +96,10 @@ export function EventsBrowser({
           );
         }
         return true;
-      });
+      };
+      list = list.filter((e) =>
+        upcomingSessions(e, now).some((s) => matches(new Date(s.startsAt))),
+      );
     }
 
     list.sort((a, b) => {
@@ -94,8 +110,13 @@ export function EventsBrowser({
           return minPriceCents(b) - minPriceCents(a);
         case "name":
           return t(a.title, locale).localeCompare(t(b.title, locale));
-        default:
-          return +new Date(a.startsAt) - +new Date(b.startsAt);
+        default: {
+          const da = nextSession(a, now)?.startsAt;
+          const db = nextSession(b, now)?.startsAt;
+          return (
+            (da ? +new Date(da) : Infinity) - (db ? +new Date(db) : Infinity)
+          );
+        }
       }
     });
 
@@ -232,7 +253,11 @@ export function EventsBrowser({
               key={event.id}
               event={event}
               locale={locale}
-              labels={{ from: te("from"), soldOut: te("soldOut") }}
+              labels={{
+                from: te("from"),
+                soldOut: te("soldOut"),
+                dates: (n) => te("datesCount", { count: n }),
+              }}
             />
           ))}
         </div>
