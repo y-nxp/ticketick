@@ -20,7 +20,9 @@ export function EventCard({
   return (
     <Link
       href={`/events/${event.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5"
+      // En mode sombre l'ombre noire est invisible : le relief au survol
+      // est porté par un halo violet et une bordure accentuée.
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 dark:hover:border-primary/40 dark:hover:shadow-primary/20"
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         <Image

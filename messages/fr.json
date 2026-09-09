@@ -12,7 +12,10 @@
     "language": "Langue",
     "organizer": "Je suis organisateur",
     "search": "Rechercher un spectacle, un artiste, un lieu…",
-    "menu": "Menu"
+    "menu": "Menu",
+    "theme": "Thème",
+    "themeLight": "Passer en mode clair",
+    "themeDark": "Passer en mode sombre"
   },
   "home": {
     "heroBadge": "Billetterie suisse",

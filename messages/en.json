@@ -12,7 +12,10 @@
     "language": "Language",
     "organizer": "I'm an organizer",
     "search": "Search for a show, an artist, a venue…",
-    "menu": "Menu"
+    "menu": "Menu",
+    "theme": "Theme",
+    "themeLight": "Switch to light mode",
+    "themeDark": "Switch to dark mode"
   },
   "home": {
     "heroBadge": "Swiss ticketing",

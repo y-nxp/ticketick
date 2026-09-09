@@ -12,7 +12,10 @@
     "language": "Sprache",
     "organizer": "Ich bin Veranstalter",
     "search": "Suche nach Show, Künstler, Ort…",
-    "menu": "Menü"
+    "menu": "Menü",
+    "theme": "Design",
+    "themeLight": "Zum hellen Modus wechseln",
+    "themeDark": "Zum dunklen Modus wechseln"
   },
   "home": {
     "heroBadge": "Schweizer Ticketing",

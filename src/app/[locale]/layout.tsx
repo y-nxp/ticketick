@@ -8,6 +8,7 @@ import { routing } from "@/i18n/routing";
 import { CartProvider } from "@/components/cart/cart-context";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { themeInitScript } from "@/components/layout/theme";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -53,6 +54,9 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} className={`${inter.variable} h-full`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-full flex flex-col antialiased">
         <NextIntlClientProvider>
           <CartProvider>

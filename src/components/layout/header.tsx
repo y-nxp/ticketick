@@ -6,6 +6,7 @@ import { User, Search, Menu, X, Sparkles } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Logo } from "./logo";
 import { LanguageSwitcher } from "./language-switcher";
+import { ThemeSwitcher } from "./theme-switcher";
 import { CartButton } from "./cart-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,8 @@ export function Header() {
               {t("organizer")}
             </Button>
           </Link>
+
+          <ThemeSwitcher />
 
           <div className="hidden sm:block">
             <LanguageSwitcher />
