@@ -17,9 +17,12 @@ function addDays(date: Date, days: number) {
  * ainsi crédible quelle que soit la date d'exécution.
  */
 const DATE_SHIFT_MS = (() => {
+  const DAY = 24 * 3600 * 1000;
   const earliest = Math.min(...events.map((e) => +new Date(e.startsAt)));
-  const target = Date.now() + 7 * 24 * 3600 * 1000;
-  return Math.max(0, target - earliest);
+  const diff = Date.now() + 7 * DAY - earliest;
+  // Arrondi au jour entier : sans cela toutes les séances hériteraient de
+  // l'heure d'exécution du seed au lieu de leur horaire de spectacle.
+  return diff > 0 ? Math.ceil(diff / DAY) * DAY : 0;
 })();
 
 function shift(value: string | Date) {
