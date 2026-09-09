@@ -28,6 +28,37 @@ services:
       timeout: 5s
       retries: 12
 
+  # Applique les migrations puis, en recette, réinjecte le catalogue de
+  # démonstration. Bâti sur le stage `builder`, seul à disposer des
+  # dépendances du CLI Prisma et de tsx. S'exécute une fois puis s'arrête.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+      network: host
+    container_name: ticketick-v2-betadev-migrate
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env.betadev
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        echo "▶ Prisma migrate deploy…"
+        npx prisma migrate deploy
+        if [ "${SEED_ON_START:-false}" = "true" ]; then
+          echo "▶ Seed du catalogue de démonstration…"
+          npx tsx prisma/seed.ts
+        fi
+        echo "✅ Base prête."
+
   app:
     build:
       context: .
@@ -40,6 +71,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     env_file:
       - .env.betadev
     environment:

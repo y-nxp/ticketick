@@ -15,11 +15,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
 RUN npm run build
-# Le seed est en TypeScript : on le précompile ici pour que l'image finale
-# n'ait pas à embarquer tsx. Les dépendances restent externes et sont
-# résolues depuis les node_modules du runner.
-RUN npx esbuild prisma/seed.ts --bundle --platform=node --format=esm \
-  --packages=external --outfile=prisma/seed.mjs --log-level=warning
 
 # --- Runner ---
 FROM base AS runner
@@ -32,11 +27,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Client Prisma + CLI + schéma pour appliquer les migrations au démarrage
+# Client Prisma et moteur de requêtes. Le CLI, lui, n'est pas embarqué : il
+# tire une longue chaîne de dépendances absentes du build standalone. Les
+# migrations sont appliquées par le service `migrate` (stage builder).
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/prisma ./prisma
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
