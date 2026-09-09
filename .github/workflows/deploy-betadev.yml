@@ -36,7 +36,6 @@ jobs:
             SECRETS_FILE="$HOME/.ticketick-v2-betadev.secrets"
             REPO="https://github.com/${{ github.repository }}.git"
             BRANCH="${{ github.ref_name }}"
-            HOST_PORT=3005
 
             echo "════════════════════════════════════════════"
             echo "  ticketick BetaDev — Deploy"
@@ -73,12 +72,42 @@ jobs:
             # shellcheck disable=SC1090
             . "$SECRETS_FILE"
 
+            # ── 2b. Port hôte : choisi une fois puis figé, pour que la
+            # configuration Nginx Proxy Manager reste valable d'un déploiement à l'autre.
+            listening_ports() {
+              if command -v ss > /dev/null 2>&1; then
+                ss -ltnH 2>/dev/null | awk '{print $4}'
+              else
+                netstat -ltn 2>/dev/null | awk '{print $4}'
+              fi
+            }
+            if [ -z "${APP_PORT:-}" ]; then
+              echo "🔎 Recherche d'un port libre..."
+              USED=$(listening_ports)
+              for p in $(seq 3005 3060); do
+                if ! echo "$USED" | grep -qE "[:.]${p}$"; then
+                  APP_PORT=$p
+                  break
+                fi
+              done
+              if [ -z "${APP_PORT:-}" ]; then
+                echo "❌ Aucun port libre entre 3005 et 3060."
+                exit 1
+              fi
+              echo "APP_PORT=$APP_PORT" >> "$SECRETS_FILE"
+              echo "   ✅ Port retenu : $APP_PORT (mémorisé pour les prochains déploiements)"
+            else
+              echo "🔁 Port déjà attribué : $APP_PORT"
+            fi
+            HOST_PORT="$APP_PORT"
+
             # ── 3. Fichier d'environnement consommé par docker compose
             echo "🔐 Génération de .env.betadev..."
             umask 077
             cat > "$APP_DIR/.env.betadev" <<EOF
             NODE_ENV=production
             NEXT_PUBLIC_APP_URL=https://appbetadev.ticketick.ch
+            APP_PORT=${APP_PORT}
             POSTGRES_USER=${POSTGRES_USER}
             POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             POSTGRES_DB=${POSTGRES_DB}
