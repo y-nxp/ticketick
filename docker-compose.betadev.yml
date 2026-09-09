@@ -32,6 +32,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # Le conteneur de build de gb10 ne résout pas le DNS public (échec sur
+      # dl-cdn.alpinelinux.org) : on lui prête la pile réseau de l'hôte.
+      network: host
     container_name: ticketick-v2-betadev-app
     restart: unless-stopped
     depends_on:

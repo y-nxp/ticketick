@@ -1,6 +1,7 @@
 # ticketick — image de production (Next.js standalone)
 FROM node:22-alpine AS base
-RUN apk add --no-cache libc6-compat
+# openssl est requis par les moteurs Prisma sur musl
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 # --- Dépendances ---
