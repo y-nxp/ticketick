@@ -2,12 +2,18 @@
 set -e
 
 # Applique les migrations Prisma avant de démarrer le serveur.
-# (nécessite DATABASE_URL et le CLI Prisma présents dans l'image)
-if [ -f "./node_modules/prisma/build/index.js" ]; then
-  echo "▶ Prisma migrate deploy…"
-  node ./node_modules/prisma/build/index.js migrate deploy || {
-    echo "⚠ Aucune migration appliquée (schéma vide ?). On continue."
-  }
+# Un échec est bloquant : démarrer sur une base sans tables donnerait une
+# application qui répond mais ne sert aucun contenu.
+PRISMA_CLI="./node_modules/prisma/build/index.js"
+if [ ! -f "$PRISMA_CLI" ]; then
+  echo "✖ CLI Prisma introuvable ($PRISMA_CLI)."
+  exit 1
+fi
+
+echo "▶ Prisma migrate deploy…"
+if ! node "$PRISMA_CLI" migrate deploy; then
+  echo "✖ Migrations non appliquées. Arrêt."
+  exit 1
 fi
 
 # Jeu de démonstration pour les environnements de recette. Le seed est

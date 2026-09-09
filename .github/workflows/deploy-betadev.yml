@@ -146,6 +146,12 @@ jobs:
               exit 1
             fi
 
+            # Migrations et seed s'exécutent dans l'entrypoint : leur sortie
+            # n'apparaît que dans les logs du conteneur.
+            echo "📜 Démarrage applicatif :"
+            docker compose -f docker-compose.betadev.yml logs --tail=30 app 2>&1 \
+              | grep -iE "prisma|migrat|seed|✖|⚠" || true
+
             # ── 6. Vérification du catalogue
             # Un /api/health vert ne dit rien du contenu : une base vide
             # produirait un site en ligne mais sans aucun spectacle.
@@ -157,7 +163,9 @@ jobs:
                    || ' à venir=' || (SELECT count(*) FROM \"EventSession\" WHERE \"startsAt\" > now());" \
               || echo "⚠ Contrôle impossible"
 
-            NB_EVENTS=$(curl -s "http://127.0.0.1:${HOST_PORT}/" | grep -oE 'href="/events/[a-z0-9-]+"' | sort -u | wc -l)
+            # grep sort en erreur quand il ne trouve rien : sans le `|| true`,
+            # pipefail ferait échouer le déploiement au lieu de diagnostiquer.
+            NB_EVENTS=$(curl -s "http://127.0.0.1:${HOST_PORT}/" | grep -oE 'href="/events/[a-z0-9-]+"' | sort -u | wc -l || true)
             echo "   ↳ ${NB_EVENTS} spectacle(s) affiché(s) sur l'accueil"
             if [ "$NB_EVENTS" -eq 0 ]; then
               echo "⚠ Accueil sans spectacle — vérifier le seed :"
