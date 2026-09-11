@@ -197,7 +197,39 @@
     "signOut": "Abmelden",
     "forbiddenTitle": "Zugriff verweigert",
     "forbiddenBody": "Ihr Konto verfügt nicht über die Rechte für diese Seite.",
-    "backHome": "Zurück zur Startseite"
+    "backHome": "Zurück zur Startseite",
+    "forgot": {
+      "link": "Passwort vergessen?",
+      "title": "Passwort vergessen",
+      "subtitle": "Wir senden Ihnen einen Link, um ein neues zu wählen.",
+      "email": "E-Mail",
+      "submit": "Link senden",
+      "pending": "Wird gesendet…",
+      "sent": "Falls für diese Adresse ein Konto besteht, wurde soeben ein Link versandt.",
+      "sentHint": "Der Link ist eine Stunde gültig und funktioniert nur einmal. Prüfen Sie auch den Spam-Ordner.",
+      "backToLogin": "Zurück zur Anmeldung",
+      "invalidEmail": "Ungültige E-Mail-Adresse.",
+      "throttled": "Zu viele Anfragen. Bitte versuchen Sie es in etwa fünfzehn Minuten erneut.",
+      "unavailable": "Dienst vorübergehend nicht verfügbar. Bitte versuchen Sie es gleich erneut."
+    },
+    "reset": {
+      "title": "Neues Passwort",
+      "subtitle": "Wählen Sie ein Passwort, das Sie nirgendwo sonst verwenden.",
+      "next": "Neues Passwort",
+      "confirm": "Passwort bestätigen",
+      "hint": "Mindestens zwölf Zeichen. Alle offenen Sitzungen werden beendet.",
+      "submit": "Speichern und anmelden",
+      "pending": "Wird gespeichert…",
+      "invalid": "Ungültige Anfrage.",
+      "tooShort": "Das Passwort muss mindestens 12 Zeichen lang sein.",
+      "mismatch": "Die beiden Eingaben stimmen nicht überein.",
+      "tokenInvalid": "Dieser Link ist nicht mehr gültig. Bitte fordern Sie einen neuen an.",
+      "throttled": "Zu viele Versuche. Bitte versuchen Sie es in etwa fünfzehn Minuten erneut.",
+      "unavailable": "Dienst vorübergehend nicht verfügbar. Bitte versuchen Sie es gleich erneut.",
+      "expiredTitle": "Link abgelaufen",
+      "expiredBody": "Dieser Link wurde bereits verwendet oder ist abgelaufen.",
+      "askAgain": "Neuen Link anfordern"
+    }
   },
   "admin": {
     "title": "Verwaltung",

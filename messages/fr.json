@@ -197,7 +197,39 @@
     "signOut": "Se déconnecter",
     "forbiddenTitle": "Accès refusé",
     "forbiddenBody": "Votre compte n’a pas les droits nécessaires pour consulter cette page.",
-    "backHome": "Retour à l’accueil"
+    "backHome": "Retour à l’accueil",
+    "forgot": {
+      "link": "Mot de passe oublié ?",
+      "title": "Mot de passe oublié",
+      "subtitle": "Nous vous enverrons un lien pour en choisir un nouveau.",
+      "email": "E-mail",
+      "submit": "Envoyer le lien",
+      "pending": "Envoi…",
+      "sent": "Si un compte existe pour cette adresse, un lien vient d’y être envoyé.",
+      "sentHint": "Le lien est valable une heure et ne fonctionne qu’une fois. Pensez à regarder dans les indésirables.",
+      "backToLogin": "Retour à la connexion",
+      "invalidEmail": "Adresse e-mail invalide.",
+      "throttled": "Trop de demandes. Réessayez dans une quinzaine de minutes.",
+      "unavailable": "Service momentanément indisponible. Réessayez dans un instant."
+    },
+    "reset": {
+      "title": "Nouveau mot de passe",
+      "subtitle": "Choisissez un mot de passe que vous n’utilisez nulle part ailleurs.",
+      "next": "Nouveau mot de passe",
+      "confirm": "Confirmer le mot de passe",
+      "hint": "Douze caractères au minimum. Toutes vos sessions ouvertes seront fermées.",
+      "submit": "Enregistrer et se connecter",
+      "pending": "Enregistrement…",
+      "invalid": "Requête invalide.",
+      "tooShort": "Le mot de passe doit faire au moins 12 caractères.",
+      "mismatch": "Les deux saisies ne correspondent pas.",
+      "tokenInvalid": "Ce lien n’est plus valable. Demandez-en un nouveau.",
+      "throttled": "Trop de tentatives. Réessayez dans une quinzaine de minutes.",
+      "unavailable": "Service momentanément indisponible. Réessayez dans un instant.",
+      "expiredTitle": "Lien expiré",
+      "expiredBody": "Ce lien a déjà servi ou a dépassé sa durée de validité.",
+      "askAgain": "Demander un nouveau lien"
+    }
   },
   "admin": {
     "title": "Administration",
