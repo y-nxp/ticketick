@@ -1,0 +1,85 @@
+name: 🧹 Retirer l'ancienne stack ticketick (gb10)
+
+# Retire le conteneur de la première version, remplacée par
+# ticketick-v2-betadev-app. Déclenché à la main uniquement.
+#
+# Les volumes sont conservés : leur suppression est irréversible et l'espace
+# qu'ils occupent ne justifie pas le risque. Ils sont listés en fin de course
+# pour être traités séparément, en connaissance de cause.
+on:
+  workflow_dispatch:
+    inputs:
+      supprimer:
+        description: "Supprimer réellement (sinon simple inventaire)"
+        type: boolean
+        default: false
+
+jobs:
+  cleanup:
+    name: Nettoyage
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🧹 Nettoyage via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          SUPPRIMER: ${{ inputs.supprimer }}
+        with:
+          host: ${{ secrets.GB10_HOST }}
+          username: ${{ secrets.GB10_USER }}
+          key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.GB10_PORT }}
+          envs: SUPPRIMER
+          script: |
+            set -euo pipefail
+
+            # Nom exact : la nouvelle stack s'appelle ticketick-v2-betadev-*,
+            # un motif large l'emporterait avec l'ancienne.
+            CIBLE="ticketick-betadev-frontend"
+
+            echo "════════ Inventaire ════════"
+            if docker ps -a --format '{{.Names}}' | grep -qx "$CIBLE"; then
+              docker ps -a --filter "name=^${CIBLE}$" \
+                --format '  conteneur : {{.Names}} ({{.Status}}) — ports {{.Ports}}'
+              IMAGE=$(docker inspect "$CIBLE" --format '{{.Config.Image}}')
+              echo "  image     : $IMAGE"
+              echo "  volumes rattachés :"
+              docker inspect "$CIBLE" \
+                --format '{{range .Mounts}}    - {{if .Name}}{{.Name}}{{else}}{{.Source}}{{end}} → {{.Destination}}{{println}}{{end}}'
+            else
+              echo "  Conteneur '$CIBLE' absent : rien à retirer."
+              exit 0
+            fi
+
+            echo
+            echo "════════ Ce qui reste en place ════════"
+            docker ps --format '  {{.Names}}' | grep -E "^  ticketick-(v2|landing)" || true
+
+            if [ "${SUPPRIMER:-false}" != "true" ]; then
+              echo
+              echo "ℹ Inventaire seul. Relancer avec « supprimer » coché pour agir."
+              exit 0
+            fi
+
+            echo
+            echo "════════ Suppression ════════"
+            docker stop "$CIBLE" > /dev/null && echo "  ✅ Conteneur arrêté"
+            docker rm "$CIBLE" > /dev/null && echo "  ✅ Conteneur retiré"
+
+            # L'image n'est retirée que si plus aucun conteneur ne s'en sert.
+            if [ -n "${IMAGE:-}" ] && ! docker ps -a --format '{{.Image}}' | grep -qx "$IMAGE"; then
+              docker rmi "$IMAGE" > /dev/null 2>&1 \
+                && echo "  ✅ Image $IMAGE retirée" \
+                || echo "  ℹ Image $IMAGE conservée (encore référencée)"
+            fi
+
+            echo
+            echo "════════ Contrôle ════════"
+            echo "  Port 3003 encore en écoute ? $( (ss -tln 2>/dev/null || netstat -tln 2>/dev/null) | grep -c ':3003 ' ) (0 attendu)"
+            echo "  Stack ticketick restante :"
+            docker ps --format '    {{.Names}}\t{{.Status}}' | grep -E "ticketick" || true
+
+            echo
+            echo "════════ Volumes conservés ════════"
+            echo "  Aucun volume n'a été supprimé. Volumes orphelins du serveur :"
+            docker volume ls -qf dangling=true | head -20 || true
+            echo "  (à traiter séparément, après vérification de leur contenu)"
