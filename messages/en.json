@@ -197,7 +197,39 @@
     "signOut": "Sign out",
     "forbiddenTitle": "Access denied",
     "forbiddenBody": "Your account does not have the rights to view this page.",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "forgot": {
+      "link": "Forgotten your password?",
+      "title": "Forgotten password",
+      "subtitle": "We will send you a link to choose a new one.",
+      "email": "Email",
+      "submit": "Send the link",
+      "pending": "Sending…",
+      "sent": "If an account exists for this address, a link has just been sent to it.",
+      "sentHint": "The link is valid for one hour and works only once. Do check your spam folder.",
+      "backToLogin": "Back to sign in",
+      "invalidEmail": "Invalid email address.",
+      "throttled": "Too many requests. Please try again in about fifteen minutes.",
+      "unavailable": "Service temporarily unavailable. Please try again shortly."
+    },
+    "reset": {
+      "title": "New password",
+      "subtitle": "Choose a password you use nowhere else.",
+      "next": "New password",
+      "confirm": "Confirm password",
+      "hint": "Twelve characters minimum. All your open sessions will be closed.",
+      "submit": "Save and sign in",
+      "pending": "Saving…",
+      "invalid": "Invalid request.",
+      "tooShort": "The password must be at least 12 characters.",
+      "mismatch": "The two entries do not match.",
+      "tokenInvalid": "This link is no longer valid. Please request a new one.",
+      "throttled": "Too many attempts. Please try again in about fifteen minutes.",
+      "unavailable": "Service temporarily unavailable. Please try again shortly.",
+      "expiredTitle": "Link expired",
+      "expiredBody": "This link has already been used or has passed its validity period.",
+      "askAgain": "Request a new link"
+    }
   },
   "admin": {
     "title": "Administration",

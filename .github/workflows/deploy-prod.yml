@@ -29,12 +29,17 @@ jobs:
           STRIPE_WEBHOOK_SECRET: ${{ secrets.PROD_STRIPE_WEBHOOK_SECRET }}
           BANK_IBAN: ${{ secrets.PROD_BANK_IBAN }}
           BANK_BENEFICIARY: ${{ secrets.PROD_BANK_BENEFICIARY }}
+          # Mêmes identifiants que la vitrine : la boîte no-reply existe déjà
+          # et est acceptée par le domaine, inutile d'en ouvrir une seconde.
+          SMTP_HOST: ${{ secrets.NOREPLY_HOST }}
+          SMTP_USER: ${{ secrets.NOREPLY_USERNAME }}
+          SMTP_PASS: ${{ secrets.NOREPLY_PASSWORD }}
         with:
           host: ${{ secrets.GB10_HOST }}
           username: ${{ secrets.GB10_USER }}
           key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
           port: ${{ secrets.GB10_PORT }}
-          envs: STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,BANK_IBAN,BANK_BENEFICIARY
+          envs: STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,BANK_IBAN,BANK_BENEFICIARY,SMTP_HOST,SMTP_USER,SMTP_PASS
           command_timeout: 30m
           script: |
             set -euo pipefail
@@ -130,6 +135,10 @@ jobs:
             STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
             BANK_IBAN=${BANK_IBAN:-}
             BANK_BENEFICIARY=${BANK_BENEFICIARY:-}
+            SMTP_HOST=${SMTP_HOST:-}
+            SMTP_PORT=${SMTP_PORT:-587}
+            SMTP_USER=${SMTP_USER:-}
+            SMTP_PASS=${SMTP_PASS:-}
             MAIL_FROM=billets@ticketick.ch
             EOF
             cp "$APP_DIR/.env.prod" "$APP_DIR/.env"
@@ -186,6 +195,14 @@ jobs:
               echo "   ✅ IBAN configuré"
             else
               echo "   ⚠ BANK_IBAN absent — le virement sera refusé (503)."
+            fi
+            # Sans SMTP, la demande de réinitialisation répond « lien envoyé »
+            # et n'envoie rien : personne ne pourrait plus récupérer son accès.
+            if grep -qE '^SMTP_HOST=.+' "$APP_DIR/.env.prod"; then
+              echo "   ✅ SMTP configuré — réinitialisation de mot de passe opérationnelle"
+            else
+              echo "   ⚠ SMTP absent — aucun courriel ne partira, y compris les"
+              echo "     liens de réinitialisation de mot de passe."
             fi
 
             # ── 7. Nettoyage

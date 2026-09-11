@@ -48,6 +48,30 @@ model Session {
   @@index([expiresAt])
 }
 
+/// Jeton de réinitialisation de mot de passe, à usage unique.
+///
+/// Seule l'empreinte du jeton est conservée : la valeur en clair ne vit que
+/// dans le lien envoyé par courriel. Une fuite de la base ne permettrait donc
+/// pas de prendre la main sur les comptes dont une demande est en cours.
+model PasswordResetToken {
+  id     String @id @default(cuid())
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  /// SHA-256 du jeton transmis, en hexadécimal.
+  tokenHash String   @unique
+  expiresAt DateTime
+
+  /// Horodatage de l'emploi. Non supprimée aussitôt : conserver la ligne
+  /// permet de distinguer un lien déjà utilisé d'un lien qui n'a jamais existé.
+  usedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 enum EventStatus {
   DRAFT
   PUBLISHED
@@ -145,7 +169,8 @@ model User {
   active      Boolean   @default(true)
   lastLoginAt DateTime?
 
-  sessions Session[]
+  sessions       Session[]
+  passwordResets PasswordResetToken[]
 
   /// Accès "amis du festival" (session PWA)
   isFestivalFriend Boolean @default(false)

@@ -197,7 +197,39 @@
     "signOut": "Esci",
     "forbiddenTitle": "Accesso negato",
     "forbiddenBody": "Il suo account non dispone dei diritti per questa pagina.",
-    "backHome": "Torna alla home"
+    "backHome": "Torna alla home",
+    "forgot": {
+      "link": "Password dimenticata?",
+      "title": "Password dimenticata",
+      "subtitle": "Ti invieremo un link per sceglierne una nuova.",
+      "email": "E-mail",
+      "submit": "Invia il link",
+      "pending": "Invio…",
+      "sent": "Se esiste un account per questo indirizzo, è appena stato inviato un link.",
+      "sentHint": "Il link è valido un’ora e funziona una sola volta. Controlla anche la posta indesiderata.",
+      "backToLogin": "Torna all’accesso",
+      "invalidEmail": "Indirizzo e-mail non valido.",
+      "throttled": "Troppe richieste. Riprova tra una quindicina di minuti.",
+      "unavailable": "Servizio momentaneamente non disponibile. Riprova tra poco."
+    },
+    "reset": {
+      "title": "Nuova password",
+      "subtitle": "Scegli una password che non usi altrove.",
+      "next": "Nuova password",
+      "confirm": "Conferma la password",
+      "hint": "Almeno dodici caratteri. Tutte le sessioni aperte verranno chiuse.",
+      "submit": "Salva e accedi",
+      "pending": "Salvataggio…",
+      "invalid": "Richiesta non valida.",
+      "tooShort": "La password deve contenere almeno 12 caratteri.",
+      "mismatch": "Le due voci non corrispondono.",
+      "tokenInvalid": "Questo link non è più valido. Richiedine uno nuovo.",
+      "throttled": "Troppi tentativi. Riprova tra una quindicina di minuti.",
+      "unavailable": "Servizio momentaneamente non disponibile. Riprova tra poco.",
+      "expiredTitle": "Link scaduto",
+      "expiredBody": "Questo link è già stato usato o ha superato la durata di validità.",
+      "askAgain": "Richiedi un nuovo link"
+    }
   },
   "admin": {
     "title": "Amministrazione",

@@ -4,6 +4,7 @@ import * as React from "react";
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { LogIn, Mail, Lock } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { login, type LoginState } from "@/lib/auth/actions";
 
@@ -69,6 +70,15 @@ export function LoginForm({ next }: { next?: string }) {
         <LogIn className="size-4" />
         {pending ? t("pending") : t("submit")}
       </Button>
+
+      <p className="text-center text-sm">
+        <Link
+          href="/forgot-password"
+          className="text-muted-foreground hover:text-primary hover:underline"
+        >
+          {t("forgot.link")}
+        </Link>
+      </p>
     </form>
   );
 }
