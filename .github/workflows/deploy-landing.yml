@@ -125,9 +125,18 @@ jobs:
             # résultat : un conteneur vivant ne suffirait pas à prouver que les
             # identifiants sont bons.
             echo "✉ Service de contact :"
-            SMTP_STATE=$(docker exec ticketick-landing-mailer node -e \
-              "fetch('http://127.0.0.1:3000/health').then(r=>r.json()).then(d=>console.log(d.smtp)).catch(()=>console.log('unreachable'))" \
-              2>/dev/null || echo "unreachable")
+            # Le service éprouve le SMTP avant d'ouvrir son port : il faut donc
+            # lui laisser le temps de répondre plutôt que l'interroger une fois.
+            SMTP_STATE="unreachable"
+            for i in $(seq 1 20); do
+              SMTP_STATE=$(docker exec ticketick-landing-mailer node -e \
+                "fetch('http://127.0.0.1:3000/health').then(r=>r.json()).then(d=>console.log(d.smtp)).catch(()=>console.log('unreachable'))" \
+                2>/dev/null || echo "unreachable")
+              case "$SMTP_STATE" in
+                ok | failed) break ;;
+              esac
+              sleep 3
+            done
 
             # Le commit servi est affiché : sans lui, un filtre `paths` trop
             # étroit peut laisser croire qu'une correction est déployée alors
