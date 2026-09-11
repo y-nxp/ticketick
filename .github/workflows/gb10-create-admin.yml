@@ -1,5 +1,6 @@
 name: 🔑 Créer / réinitialiser un compte administrateur (GB10)
 
+
 # Déclenchement manuel uniquement : cette opération donne accès à l'ensemble
 # des données et n'a rien à faire dans un déploiement automatique.
 on:
@@ -14,6 +15,14 @@ on:
         required: false
         default: "Administrateur"
         type: string
+      environnement:
+        description: "Base visée"
+        required: true
+        default: betadev
+        type: choice
+        options:
+          - betadev
+          - production
 
 concurrency:
   group: admin-account-gb10
@@ -21,7 +30,7 @@ concurrency:
 
 jobs:
   create-admin:
-    name: Compte administrateur sur BetaDev
+    name: Compte administrateur (${{ inputs.environnement }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -34,19 +43,32 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           ADMIN_EMAIL: ${{ inputs.email }}
           ADMIN_NAME: ${{ inputs.nom }}
+          CIBLE: ${{ inputs.environnement }}
         with:
           host: ${{ secrets.GB10_HOST }}
           username: ${{ secrets.GB10_USER }}
           key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
           port: ${{ secrets.GB10_PORT }}
-          envs: ADMIN_PASSWORD,ADMIN_EMAIL,ADMIN_NAME
+          envs: ADMIN_PASSWORD,ADMIN_EMAIL,ADMIN_NAME,CIBLE
           command_timeout: 10m
           script: |
             set -euo pipefail
 
-            APP_DIR="$HOME/ticketick-v2-betadev"
+            # Chaque environnement a son répertoire, son fichier compose et sa
+            # base : viser la mauvaise créerait un accès administrateur là où
+            # on ne l'attend pas.
+            if [ "$CIBLE" = "production" ]; then
+              APP_DIR="$HOME/ticketick-v2-prod"
+              COMPOSE="docker-compose.prod.yml"
+              ENV_FILE=".env.prod"
+            else
+              APP_DIR="$HOME/ticketick-v2-betadev"
+              COMPOSE="docker-compose.betadev.yml"
+              ENV_FILE=".env.betadev"
+            fi
 
             echo "════════ Contrôles préalables ════════"
+            echo "  Environnement : $CIBLE"
 
             if [ -z "${ADMIN_PASSWORD:-}" ]; then
               echo "✖ Le secret ADMIN_PASSWORD est absent."
@@ -62,7 +84,7 @@ jobs:
             fi
 
             if [ ! -d "$APP_DIR" ]; then
-              echo "✖ $APP_DIR est absent : déployer l'application d'abord."
+              echo "✖ $APP_DIR est absent : déployer $CIBLE d'abord."
               exit 1
             fi
 
@@ -74,7 +96,7 @@ jobs:
 
             # Exécuté dans l'image de build : elle porte le schéma Prisma et
             # tsx, absents de l'image d'exécution allégée.
-            docker compose -f docker-compose.betadev.yml run --rm \
+            docker compose -f "$COMPOSE" run --rm \
               -e ADMIN_EMAIL="$ADMIN_EMAIL" \
               -e ADMIN_PASSWORD="$ADMIN_PASSWORD" \
               -e ADMIN_NAME="$ADMIN_NAME" \
@@ -84,10 +106,14 @@ jobs:
 
             # Relecture indépendante : prouve que la ligne existe vraiment,
             # plutôt que de se fier au seul code de sortie du script.
-            docker compose -f docker-compose.betadev.yml exec -T db \
-              psql -U "$(grep -E '^POSTGRES_USER=' .env.betadev | cut -d= -f2)" \
-                   -d "$(grep -E '^POSTGRES_DB=' .env.betadev | cut -d= -f2)" \
+            docker compose -f "$COMPOSE" exec -T db \
+              psql -U "$(grep -E '^POSTGRES_USER=' "$ENV_FILE" | cut -d= -f2)" \
+                   -d "$(grep -E '^POSTGRES_DB=' "$ENV_FILE" | cut -d= -f2)" \
                    -qtc "SELECT '  ' || email || ' | ' || role || ' | actif=' || active FROM \"User\" WHERE role = 'ADMIN';"
 
             echo ""
-            echo "✅ Connexion : https://appbetadev.ticketick.ch/login"
+            if [ "$CIBLE" = "production" ]; then
+              echo "✅ Connexion : https://ticketick.ch/login"
+            else
+              echo "✅ Connexion : https://appbetadev.ticketick.ch/login"
+            fi
