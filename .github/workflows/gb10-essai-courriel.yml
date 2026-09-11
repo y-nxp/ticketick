@@ -1,0 +1,97 @@
+name: ✉️ Essai d'envoi de courriel
+
+# Vérifie que le serveur SMTP accepte réellement un message depuis le
+# conteneur applicatif. Sans cette preuve, une demande de réinitialisation
+# répondrait « lien envoyé » alors que rien ne part, et la personne resterait
+# enfermée dehors sans savoir pourquoi.
+
+on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        description: Environnement à éprouver
+        required: true
+        type: choice
+        options: [betadev, production]
+        default: betadev
+      destinataire:
+        description: Adresse qui recevra le message d'essai
+        required: true
+        type: string
+
+jobs:
+  essai:
+    name: Essai SMTP
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: ✉️ Envoi depuis le conteneur
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          CIBLE: ${{ inputs.environnement }}
+          DEST: ${{ inputs.destinataire }}
+        with:
+          host: ${{ secrets.GB10_HOST }}
+          username: ${{ secrets.GB10_USER }}
+          key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.GB10_PORT }}
+          envs: CIBLE,DEST
+          command_timeout: 10m
+          script: |
+            set -euo pipefail
+
+            if [ "$CIBLE" = "production" ]; then
+              CONTENEUR="ticketick-v2-prod-app"
+            else
+              CONTENEUR="ticketick-v2-betadev-app"
+            fi
+
+            echo "🎯 Conteneur : $CONTENEUR"
+            echo "📮 Destinataire : $DEST"
+            echo
+
+            # Présence des variables, sans jamais en afficher la valeur.
+            docker exec "$CONTENEUR" sh -lc '
+              for v in SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS MAIL_FROM; do
+                eval "val=\$$v"
+                if [ -n "$val" ]; then
+                  case "$v" in
+                    SMTP_PASS) echo "   $v = (défini)" ;;
+                    *)         echo "   $v = $val" ;;
+                  esac
+                else
+                  echo "   $v = (VIDE)"
+                fi
+              done'
+            echo
+
+            echo "📤 Tentative d'envoi..."
+            docker exec -e DEST="$DEST" "$CONTENEUR" node -e '
+              const nodemailer = require("nodemailer");
+              const port = Number(process.env.SMTP_PORT || 587);
+              const t = nodemailer.createTransport({
+                host: process.env.SMTP_HOST,
+                port,
+                secure: port === 465,
+                auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+              });
+              t.verify()
+                .then(() => {
+                  console.log("   ✅ Le serveur SMTP accepte la connexion et l’authentification.");
+                  return t.sendMail({
+                    from: process.env.MAIL_FROM,
+                    to: process.env.DEST,
+                    subject: "ticketick — essai d’envoi",
+                    text: "Ce message confirme que ticketick peut vous écrire.\n\nSi vous le recevez, les liens de réinitialisation de mot de passe vous parviendront également.\n",
+                  });
+                })
+                .then((info) => {
+                  console.log("   ✅ Message accepté par le serveur.");
+                  console.log("   ↳ identifiant : " + info.messageId);
+                  console.log("   ↳ réponse    : " + String(info.response || "").slice(0, 200));
+                })
+                .catch((e) => {
+                  console.error("   ✖ Échec : " + e.message);
+                  process.exit(1);
+                });'
