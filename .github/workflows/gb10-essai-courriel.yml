@@ -1,9 +1,12 @@
-name: ✉️ Essai d'envoi de courriel
+name: ✉️ Contrôle des envois de courriel
 
-# Vérifie que le serveur SMTP accepte réellement un message depuis le
-# conteneur applicatif. Sans cette preuve, une demande de réinitialisation
-# répondrait « lien envoyé » alors que rien ne part, et la personne resterait
-# enfermée dehors sans savoir pourquoi.
+# Répond à « je n'ai rien reçu ». La confirmation affichée à l'écran ne prouve
+# rien : elle est volontairement identique que le compte existe ou non. Seules
+# les traces du conteneur disent si un message est réellement parti.
+#
+# L'envoi n'est pas rejoué ici : nodemailer est empaqueté dans les bundles de
+# Next et n'est pas résoluble depuis un script extérieur. On lit donc ce que
+# l'application a elle-même journalisé.
 
 on:
   workflow_dispatch:
@@ -15,8 +18,8 @@ on:
         options: [betadev, production]
         default: betadev
       destinataire:
-        description: Adresse qui recevra le message d'essai
-        required: true
+        description: Adresse à rechercher dans les traces (facultatif)
+        required: false
         type: string
 
 jobs:
@@ -48,7 +51,7 @@ jobs:
             fi
 
             echo "🎯 Conteneur : $CONTENEUR"
-            echo "📮 Destinataire : $DEST"
+            echo "📮 Adresse recherchée : ${DEST:-(toutes)}"
             echo
 
             # Présence des variables, sans jamais en afficher la valeur.
@@ -99,32 +102,8 @@ jobs:
               | tail -15 | sed 's/^/   /' || echo "   (aucune trace liée aux courriels)"
             echo
 
-            echo "📤 Tentative d'envoi direct..."
-            docker exec -e DEST="$DEST" -w /app "$CONTENEUR" node -e '
-              const nodemailer = require("nodemailer");
-              const port = Number(process.env.SMTP_PORT || 587);
-              const t = nodemailer.createTransport({
-                host: process.env.SMTP_HOST,
-                port,
-                secure: port === 465,
-                auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-              });
-              t.verify()
-                .then(() => {
-                  console.log("   ✅ Le serveur SMTP accepte la connexion et l’authentification.");
-                  return t.sendMail({
-                    from: process.env.MAIL_FROM,
-                    to: process.env.DEST,
-                    subject: "ticketick — essai d’envoi",
-                    text: "Ce message confirme que ticketick peut vous écrire.\n\nSi vous le recevez, les liens de réinitialisation de mot de passe vous parviendront également.\n",
-                  });
-                })
-                .then((info) => {
-                  console.log("   ✅ Message accepté par le serveur.");
-                  console.log("   ↳ identifiant : " + info.messageId);
-                  console.log("   ↳ réponse    : " + String(info.response || "").slice(0, 200));
-                })
-                .catch((e) => {
-                  console.error("   ✖ Échec : " + e.message);
-                  process.exit(1);
-                });' || echo "   ↳ Envoi direct impossible. Voir ci-dessus si nodemailer est empaqueté : dans ce cas seul cet essai échoue, pas l'application."
+            echo "════════════════════════════════════════════"
+            echo "  Une ligne « [email] … envoyé à … » ci-dessus atteste que"
+            echo "  le serveur de messagerie a accepté le message."
+            echo "  Une ligne « envoi impossible » signale l'inverse."
+            echo "════════════════════════════════════════════"
