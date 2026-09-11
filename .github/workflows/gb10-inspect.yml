@@ -1,0 +1,50 @@
+name: 🔍 Inspecter gb10
+
+# Outil d'exploitation, déclenché à la main uniquement. Ne modifie rien :
+# sert à connaître l'état Docker du serveur (conteneurs, réseaux, ports)
+# avant de brancher une nouvelle stack derrière Nginx Proxy Manager.
+on:
+  workflow_dispatch:
+
+jobs:
+  inspect:
+    name: État Docker de gb10
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📋 Inspection via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GB10_HOST }}
+          username: ${{ secrets.GB10_USER }}
+          key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.GB10_PORT }}
+          script: |
+            echo "════════ Conteneurs ════════"
+            docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Ports}}'
+
+            echo
+            echo "════════ Réseaux ════════"
+            docker network ls
+
+            echo
+            echo "════════ Nginx Proxy Manager ════════"
+            NPM=$(docker ps --format '{{.Names}}' | grep -iE 'npm|nginx.?proxy|proxy.?manager' | head -1 || true)
+            if [ -n "$NPM" ]; then
+              echo "Conteneur : $NPM"
+              echo "Réseaux   :"
+              docker inspect "$NPM" \
+                --format '{{range $k,$v := .NetworkSettings.Networks}}  - {{$k}} (IP {{$v.IPAddress}}){{println}}{{end}}'
+              echo "Ports     :"
+              docker inspect "$NPM" --format '{{json .NetworkSettings.Ports}}'
+            else
+              echo "Aucun conteneur NPM détecté — il tourne peut-être sous un autre nom."
+            fi
+
+            echo
+            echo "════════ Passerelle du bridge par défaut ════════"
+            docker network inspect bridge \
+              --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}' 2>/dev/null || true
+
+            echo
+            echo "════════ Ports en écoute sur l'hôte ════════"
+            (ss -tlnp 2>/dev/null || netstat -tlnp 2>/dev/null) | grep LISTEN | head -30
