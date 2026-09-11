@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { EventsBrowser } from "@/components/events/events-browser";
 import { EventCard } from "@/components/events/event-card";
 import {
-  categories,
-  getAllEvents,
+  getCategories,
   getCities,
   getFeaturedEvents,
-} from "@/lib/mock-data";
+  getPublishedEvents,
+} from "@/lib/data/events";
+
+// Catalogue et stocks vivent en base : rendu à la demande.
+export const dynamic = "force-dynamic";
 
 export default async function HomePage({
   params,
@@ -25,9 +28,12 @@ export default async function HomePage({
   const t = await getTranslations("home");
   const te = await getTranslations("event");
 
-  const events = getAllEvents();
-  const featured = getFeaturedEvents();
-  const cities = getCities();
+  const [events, featured, cities, categories] = await Promise.all([
+    getPublishedEvents(),
+    getFeaturedEvents(),
+    getCities(),
+    getCategories(),
+  ]);
 
   return (
     <>
@@ -81,10 +87,14 @@ export default async function HomePage({
                       ? "Biglietti via e-mail"
                       : "Tickets by email"}
               </span>
-              <span className="inline-flex items-center gap-2">
-                <Ticket className="size-4 text-primary" />
-                {getAllEvents().length}+ {te("tickets").toLowerCase()}
-              </span>
+              {/* Masqué tant que rien n'est à l'affiche : « 0+ billets »
+                  annoncerait le vide comme un argument de vente. */}
+              {events.length > 0 && (
+                <span className="inline-flex items-center gap-2">
+                  <Ticket className="size-4 text-primary" />
+                  {events.length}+ {te("tickets").toLowerCase()}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -104,7 +114,11 @@ export default async function HomePage({
                 key={event.id}
                 event={event}
                 locale={locale}
-                labels={{ from: te("from"), soldOut: te("soldOut") }}
+                labels={{
+                  from: te("from"),
+                  soldOut: te("soldOut"),
+                  dates: (n) => te("datesCount", { count: n }),
+                }}
               />
             ))}
           </div>

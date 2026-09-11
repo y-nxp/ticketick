@@ -7,7 +7,7 @@ import { Link } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
-import { formatPrice } from "@/lib/utils";
+import { formatDate, formatPrice } from "@/lib/utils";
 
 const SERVICE_FEE_RATE = 0.05;
 
@@ -63,6 +63,11 @@ export default function CartPage() {
                 </Link>
                 <p className="text-sm text-muted-foreground">
                   {line.ticketName}
+                </p>
+                {/* Sans la date, deux séances d'un même spectacle seraient
+                    indiscernables dans le panier. */}
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(line.sessionStartsAt, `${locale}-CH`)}
                 </p>
                 <p className="mt-1 text-sm font-medium">
                   {formatPrice(line.unitPriceCents, `${locale}-CH`)}

@@ -1,5 +1,13 @@
 // ticketick — schéma de données
 // Billetterie suisse. PostgreSQL.
+//
+// Principe structurant : un Event est l'œuvre (titre, description, visuel,
+// catégories) ; une EventSession est une représentation datée de cette œuvre
+// (date, lieu, plan de salle, inventaire, tarifs). Un événement à date unique
+// a simplement une seule session.
+//
+// Les montants sont toujours en centimes (Int) et les taux en points de base
+// (250 = 2,50 %) : jamais de Float sur de l'argent.
 
 generator client {
   provider = "prisma-client-js"
@@ -13,7 +21,31 @@ datasource db {
 enum UserRole {
   CUSTOMER
   ORGANIZER
+  RESELLER_AGENT
   ADMIN
+}
+
+/// Session ouverte par une connexion réussie.
+///
+/// Conservée en base plutôt que portée entièrement par le cookie : c'est ce
+/// qui permet de révoquer un accès. Un jeton auto-porteur resterait valable
+/// jusqu'à son échéance même après la désactivation du compte.
+model Session {
+  id     String @id @default(cuid())
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  expiresAt DateTime
+
+  /// Contexte de la connexion, pour qu'un utilisateur reconnaisse ses propres
+  /// sessions dans la liste de ses appareils.
+  userAgent String?
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 enum EventStatus {
@@ -22,6 +54,14 @@ enum EventStatus {
   CANCELLED
   SOLD_OUT
   PAST
+}
+
+/// Portée de diffusion. MEMBERS couvre le besoin des organisateurs
+/// d'entreprise qui réservent un événement à leur communauté.
+enum EventVisibility {
+  PUBLIC
+  UNLISTED
+  MEMBERS
 }
 
 enum OrderStatus {
@@ -35,6 +75,7 @@ enum OrderStatus {
 enum PaymentMethod {
   CARD
   IBAN
+  CASH
 }
 
 enum PaymentStatus {
@@ -51,47 +92,108 @@ enum TicketStatus {
   CANCELLED
 }
 
+/// Canal par lequel la commande a été passée.
+enum SalesChannel {
+  ONLINE
+  RESELLER
+  BOX_OFFICE
+}
+
+enum ResellerType {
+  TOURISM_OFFICE
+  PARTNER_SHOP
+  BOX_OFFICE
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum DiscountScope {
+  ORDER
+  EVENT
+  SESSION
+  TICKET_TYPE
+}
+
+/// Sens de l'écriture au grand livre revendeur.
+enum LedgerEntryType {
+  COMMISSION_EARNED
+  CASH_COLLECTED
+  SETTLEMENT
+  ADJUSTMENT
+}
+
+enum SettlementStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
+  id           String   @id @default(cuid())
+  email        String   @unique
   passwordHash String?
   name         String?
-  role         UserRole   @default(CUSTOMER)
-  locale       String     @default("fr")
+  role         UserRole @default(CUSTOMER)
+  locale       String   @default("fr")
   phone        String?
-  // Accès "amis du festival" (session PWA)
+
+  /// Un compte désactivé conserve son historique mais ne peut plus se
+  /// connecter : on ne supprime pas un utilisateur rattaché à des commandes.
+  active      Boolean   @default(true)
+  lastLoginAt DateTime?
+
+  sessions Session[]
+
+  /// Accès "amis du festival" (session PWA)
   isFestivalFriend Boolean @default(false)
-  organizer    Organizer?
-  orders       Order[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+
+  organizer Organizer?
+
+  /// Renseigné pour les agents d'un point de vente revendeur.
+  reseller   Reseller? @relation(fields: [resellerId], references: [id])
+  resellerId String?
+
+  orders     Order[]
+  soldOrders Order[] @relation("OrderSoldBy")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([resellerId])
 }
 
 model Organizer {
-  id          String   @id @default(cuid())
-  slug        String   @unique
+  id          String  @id @default(cuid())
+  slug        String  @unique
   name        String
   email       String
   description String?
   logoUrl     String?
   website     String?
-  // Active la PWA "amis du festival" pour cet organisateur
+
+  /// Active la PWA "amis du festival" pour cet organisateur
   friendsAppEnabled Boolean @default(false)
-  user        User?    @relation(fields: [userId], references: [id])
-  userId      String?  @unique
-  events      Event[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String? @unique
+
+  events Event[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Category {
-  id       String  @id @default(cuid())
-  slug     String  @unique
-  // Traductions du nom { fr, en, de, it }
-  name     Json
-  color    String  @default("#6C5CE7")
-  icon     String?
-  events   Event[] @relation("EventCategories")
+  id     String  @id @default(cuid())
+  slug   String  @unique
+  /// Traductions du nom { fr, en, de, it }
+  name   Json
+  color  String  @default("#6C5CE7")
+  icon   String?
+  events Event[] @relation("EventCategories")
 }
 
 model Venue {
@@ -102,95 +204,273 @@ model Venue {
   canton  String?
   country String  @default("CH")
   zip     String?
+  /// Coordonnées facultatives : une session sans lat/lng n'affiche pas de carte.
   lat     Float?
   lng     Float?
-  events  Event[]
+
+  sessions EventSession[]
 }
 
+/// L'œuvre. Ne porte ni date, ni lieu, ni inventaire : tout cela vit
+/// sur ses sessions.
 model Event {
-  id          String      @id @default(cuid())
-  slug        String      @unique
-  // Traductions { fr, en, de, it }
+  id          String          @id @default(cuid())
+  slug        String          @unique
+  /// Traductions { fr, en, de, it }
   title       Json
   description Json
-  status      EventStatus @default(DRAFT)
-  featured    Boolean     @default(false)
+  status      EventStatus     @default(DRAFT)
+  visibility  EventVisibility @default(PUBLIC)
+  featured    Boolean         @default(false)
   coverImage  String?
-  gallery     String[]    @default([])
+  gallery     String[]        @default([])
 
-  startsAt    DateTime
-  endsAt      DateTime?
-  doorsAt     DateTime?
-
-  venue       Venue?      @relation(fields: [venueId], references: [id])
-  venueId     String?
-
-  organizer   Organizer   @relation(fields: [organizerId], references: [id])
+  organizer   Organizer @relation(fields: [organizerId], references: [id])
   organizerId String
 
-  categories  Category[]  @relation("EventCategories")
+  /// Facultatif : un événement peut n'avoir aucune catégorie.
+  categories Category[] @relation("EventCategories")
+
+  sessions  EventSession[]
+  discounts Discount[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, visibility])
+  @@index([organizerId])
+}
+
+/// Une représentation datée. Un événement à date unique en a exactement une.
+model EventSession {
+  id      String @id @default(cuid())
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String
+
+  /// Libellé facultatif pour distinguer les séances ("Première", "Matinée").
+  label Json?
+
+  startsAt DateTime
+  endsAt   DateTime?
+  doorsAt  DateTime?
+
+  status EventStatus @default(PUBLISHED)
+
+  /// Facultatif : certaines sessions n'ont pas de lieu physique renseigné.
+  venue   Venue?  @relation(fields: [venueId], references: [id])
+  venueId String?
+
+  /// Plan de salle facultatif : placement libre si absent.
+  seatMap SeatMap?
+
   ticketTypes TicketType[]
+  discounts   Discount[]
 
-  // Plan de salle optionnel
-  hasMap      Boolean     @default(false)
-  seatMap     SeatMap?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  @@index([status, startsAt])
+  @@index([eventId, startsAt])
+  @@index([startsAt, status])
 }
 
 model SeatMap {
-  id      String @id @default(cuid())
-  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId String @unique
-  // Définition JSON du plan (sections, rangées, sièges)
-  layout  Json
+  id        String       @id @default(cuid())
+  session   EventSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String       @unique
+  /// Définition JSON du plan (sections, rangées, sièges)
+  layout    Json
 }
 
+/// Inventaire et tarif, rattachés à une session précise.
 model TicketType {
-  id          String   @id @default(cuid())
-  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId     String
-  name        Json     // { fr, en, de, it }
+  id          String       @id @default(cuid())
+  session     EventSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId   String
+  name        Json // { fr, en, de, it }
   description Json?
   priceCents  Int
-  currency    String   @default("CHF")
+  currency    String       @default("CHF")
   quantity    Int
-  sold        Int      @default(0)
-  maxPerOrder Int      @default(10)
+  sold        Int          @default(0)
+  maxPerOrder Int          @default(10)
+
   salesStartAt DateTime?
   salesEndAt   DateTime?
-  orderItems  OrderItem[]
-  tickets     Ticket[]
+
+  orderItems OrderItem[]
+  tickets    Ticket[]
+  discounts  Discount[]
+
+  @@index([sessionId])
+}
+
+/// Point de vente tiers : office du tourisme, boutique partenaire, guichet.
+model Reseller {
+  id      String       @id @default(cuid())
+  slug    String       @unique
+  name    String
+  type    ResellerType @default(TOURISM_OFFICE)
+  email   String
+  phone   String?
+  address String?
+  city    String?
+
+  /// Commission retenue par le revendeur, en points de base (250 = 2,50 %).
+  commissionBps Int @default(0)
+
+  /// Autorise l'encaissement en espèces (génère une dette envers ticketick).
+  allowCashSales Boolean @default(true)
+
+  active Boolean @default(true)
+
+  agents      User[]
+  orders      Order[]
+  ledger      ResellerLedgerEntry[]
+  settlements ResellerSettlement[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Grand livre d'un revendeur. Montants signés **du point de vue du revendeur** :
+/// positif = ticketick lui doit, négatif = il doit à ticketick.
+/// Son solde est la somme des écritures, ce qui rend le calcul auditable.
+model ResellerLedgerEntry {
+  id         String   @id @default(cuid())
+  reseller   Reseller @relation(fields: [resellerId], references: [id], onDelete: Cascade)
+  resellerId String
+
+  order   Order?  @relation(fields: [orderId], references: [id])
+  orderId String?
+
+  type        LedgerEntryType
+  amountCents Int
+  note        String?
+
+  createdAt DateTime @default(now())
+
+  @@index([resellerId, createdAt])
+  @@index([orderId])
+}
+
+/// Règlement périodique entre ticketick et un revendeur.
+model ResellerSettlement {
+  id         String   @id @default(cuid())
+  reseller   Reseller @relation(fields: [resellerId], references: [id], onDelete: Cascade)
+  resellerId String
+
+  periodStart DateTime
+  periodEnd   DateTime
+  /// Même convention de signe que le grand livre.
+  amountCents Int
+  status      SettlementStatus @default(PENDING)
+  reference   String?
+  paidAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([resellerId, periodEnd])
+}
+
+/// Rabais. `code` renseigné = code promo à saisir ; `code` nul = rabais
+/// automatique appliqué dès que les conditions sont réunies.
+model Discount {
+  id    String  @id @default(cuid())
+  code  String? @unique
+  label Json // { fr, en, de, it }
+
+  type  DiscountType
+  /// Pourcentage en points de base (1000 = 10 %) ou montant fixe en centimes,
+  /// selon `type`.
+  value Int
+
+  scope DiscountScope @default(ORDER)
+
+  event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String?
+
+  session   EventSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String?
+
+  ticketType   TicketType? @relation(fields: [ticketTypeId], references: [id], onDelete: Cascade)
+  ticketTypeId String?
+
+  /// Conditions d'application
+  minQuantity    Int?
+  minAmountCents Int?
+  validFrom      DateTime?
+  validUntil     DateTime?
+  maxRedemptions Int?
+  redemptions    Int       @default(0)
+
+  active Boolean @default(true)
+
+  orders OrderDiscount[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([eventId])
+  @@index([sessionId])
+}
+
+model OrderDiscount {
+  id          String   @id @default(cuid())
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String
+  discount    Discount @relation(fields: [discountId], references: [id])
+  discountId  String
+  /// Montant réellement déduit, figé au moment de la commande.
+  amountCents Int
+
+  @@unique([orderId, discountId])
 }
 
 model Order {
-  id            String        @id @default(cuid())
-  reference     String        @unique
-  user          User?         @relation(fields: [userId], references: [id])
-  userId        String?
-  email         String
-  firstName     String
-  lastName      String
-  phone         String?
-  locale        String        @default("fr")
+  id        String @id @default(cuid())
+  reference String @unique
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
+
+  email     String
+  firstName String
+  lastName  String
+  phone     String?
+  locale    String  @default("fr")
+
   status        OrderStatus   @default(PENDING)
   paymentMethod PaymentMethod
+
+  /// Attribution de la vente
+  channel         SalesChannel @default(ONLINE)
+  reseller        Reseller?    @relation(fields: [resellerId], references: [id])
+  resellerId      String?
+  /// Agent du point de vente ayant saisi la commande.
+  soldBy          User?        @relation("OrderSoldBy", fields: [soldByUserId], references: [id])
+  soldByUserId    String?
+  /// Commission due au revendeur sur cette commande, figée à la vente.
+  commissionCents Int          @default(0)
+
   subtotalCents Int
-  feeCents      Int           @default(0)
+  discountCents Int    @default(0)
+  feeCents      Int    @default(0)
   totalCents    Int
-  currency      String        @default("CHF")
-  items         OrderItem[]
-  tickets       Ticket[]
-  payment       Payment?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  currency      String @default("CHF")
+
+  items     OrderItem[]
+  discounts OrderDiscount[]
+  tickets   Ticket[]
+  payment   Payment?
+  ledger    ResellerLedgerEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([email])
+  @@index([resellerId, createdAt])
+  @@index([status, createdAt])
 }
 
 model OrderItem {
@@ -201,6 +481,8 @@ model OrderItem {
   ticketTypeId   String
   quantity       Int
   unitPriceCents Int
+
+  @@index([orderId])
 }
 
 model Ticket {
@@ -213,15 +495,19 @@ model Ticket {
   attendeeName String?
   seatLabel    String?
   status       TicketStatus @default(VALID)
+  usedAt       DateTime?
   createdAt    DateTime     @default(now())
+
+  @@index([orderId])
+  @@index([ticketTypeId])
 }
 
 model Payment {
   id          String        @id @default(cuid())
   order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId     String        @unique
-  provider    String        // "postfinance" | "iban"
-  providerRef String?       // ID de transaction PostFinance Checkout
+  provider    String // "stripe" | "iban" | "cash"
+  providerRef String? // id de session/paiement Stripe
   method      PaymentMethod
   status      PaymentStatus @default(PENDING)
   amountCents Int

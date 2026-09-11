@@ -12,7 +12,10 @@
     "language": "Lingua",
     "organizer": "Sono un organizzatore",
     "search": "Cerca uno spettacolo, un artista, un luogo…",
-    "menu": "Menu"
+    "menu": "Menu",
+    "theme": "Tema",
+    "themeLight": "Passa alla modalità chiara",
+    "themeDark": "Passa alla modalità scura"
   },
   "home": {
     "heroBadge": "Biglietteria svizzera",
@@ -25,7 +28,9 @@
     "sectionUpcoming": "Prossimamente",
     "resultsCount": "{count, plural, =0 {Nessuno spettacolo} =1 {# spettacolo} other {# spettacoli}}",
     "noResults": "Nessuno spettacolo corrisponde alla tua ricerca.",
-    "noResultsHint": "Prova ad ampliare i filtri."
+    "noResultsHint": "Prova ad ampliare i filtri.",
+    "emptyCatalog": "Nessuno spettacolo in cartellone al momento.",
+    "emptyCatalogHint": "Il programma arriva a breve. Torna presto a trovarci."
   },
   "filters": {
     "title": "Filtri",
@@ -67,7 +72,11 @@
     "selectTickets": "Scegli i tuoi biglietti",
     "quantity": "Quantità",
     "availableUntil": "Disponibile fino al {date}",
-    "backToEvents": "Torna agli spettacoli"
+    "backToEvents": "Torna agli spettacoli",
+    "selectSession": "Scegli una data",
+    "sessionCount": "{count} date disponibili",
+    "noSessions": "Nessuna data in programma al momento.",
+    "datesCount": "{count} date"
   },
   "cart": {
     "title": "Il tuo carrello",
@@ -82,7 +91,8 @@
     "serviceFee": "Costi di servizio",
     "total": "Totale",
     "checkout": "Vai al pagamento",
-    "continue": "Continua gli acquisti"
+    "continue": "Continua gli acquisti",
+    "session": "Replica"
   },
   "checkout": {
     "title": "Pagamento",
@@ -102,7 +112,9 @@
     "orderSummary": "Riepilogo",
     "success": "Grazie! Il tuo ordine è confermato.",
     "successHint": "I tuoi biglietti sono stati inviati a {email}.",
-    "backHome": "Torna alla home"
+    "backHome": "Torna alla home",
+    "failed": "Si è verificato un errore. Riprova.",
+    "unavailable": "Il pagamento online è temporaneamente non disponibile. L'ordine non è stato registrato e i posti sono stati rimessi in vendita. Riprova più tardi."
   },
   "account": {
     "title": "Il mio spazio",
@@ -110,13 +122,39 @@
     "signUp": "Crea un account",
     "signOut": "Esci",
     "email": "E-mail",
-    "password": "Password",
+    "password": {
+      "title": "Password",
+      "hint": "Almeno dodici caratteri. Tutte le sue sessioni saranno chiuse.",
+      "current": "Password attuale",
+      "next": "Nuova password",
+      "confirm": "Confermare la nuova password",
+      "submit": "Cambiare la password",
+      "pending": "Salvataggio…",
+      "done": "Password modificata. Le altre sessioni sono state chiuse.",
+      "wrong": "La password attuale non è corretta.",
+      "tooShort": "La nuova password deve avere almeno 12 caratteri.",
+      "mismatch": "Le due voci non corrispondono.",
+      "same": "La nuova password è identica alla precedente.",
+      "throttled": "Troppi tentativi. Riprovi tra una quindicina di minuti.",
+      "unavailable": "Servizio momentaneamente non disponibile. Riprovi tra poco."
+    },
     "myTickets": "I miei biglietti",
     "myOrders": "I miei ordini",
     "profile": "Profilo",
     "noTickets": "Non hai ancora biglietti.",
     "welcome": "Bentornato",
-    "loginToContinue": "Accedi per entrare nel tuo spazio."
+    "loginToContinue": "Accedi per entrare nel tuo spazio.",
+    "role": "Ruolo",
+    "noOrders": "Nessun ordine per il momento.",
+    "adminAccess": "Amministrazione",
+    "adminAccessHint": "Gestire spettacoli, date, ordini e rivenditori.",
+    "roles": {
+      "CUSTOMER": "Cliente",
+      "ORGANIZER": "Organizzatore",
+      "RESELLER_AGENT": "Punto vendita",
+      "ADMIN": "Amministratore"
+    },
+    "ticketCount": "{count} biglietto/i"
   },
   "organizer": {
     "title": "Spazio organizzatore",
@@ -128,7 +166,8 @@
     "events": "I miei eventi",
     "sales": "Vendite",
     "revenue": "Ricavi",
-    "ticketsSold": "Biglietti venduti"
+    "ticketsSold": "Biglietti venduti",
+    "sessions": "repliche"
   },
   "friends": {
     "title": "Amici del festival",
@@ -144,5 +183,126 @@
     "help": "Centro assistenza",
     "rights": "Tutti i diritti riservati.",
     "madeIn": "Realizzato in Svizzera"
+  },
+  "auth": {
+    "signIn": "Accedi",
+    "signInSubtitle": "Accedi al tuo spazio ticketick.",
+    "email": "E-mail",
+    "password": "Password",
+    "submit": "Accedi",
+    "pending": "Accesso…",
+    "invalid": "E-mail o password non corretti.",
+    "throttled": "Troppi tentativi. Riprovi tra una quindicina di minuti.",
+    "unavailable": "Servizio momentaneamente non disponibile. Riprovi tra poco.",
+    "signOut": "Esci",
+    "forbiddenTitle": "Accesso negato",
+    "forbiddenBody": "Il suo account non dispone dei diritti per questa pagina.",
+    "backHome": "Torna alla home"
+  },
+  "admin": {
+    "title": "Amministrazione",
+    "nav": {
+      "overview": "Panoramica",
+      "events": "Spettacoli",
+      "orders": "Ordini",
+      "resellers": "Punti vendita",
+      "users": "Account"
+    },
+    "overview": {
+      "title": "Panoramica",
+      "subtitle": "Stato della biglietteria in tempo reale.",
+      "events": "Spettacoli",
+      "eventsHint": "{published} pubblicati · {draft} in bozza",
+      "sessions": "Date",
+      "sessionsHint": "{upcoming} in arrivo",
+      "sold": "Biglietti venduti",
+      "soldHint": "{percent} % dello stock",
+      "revenue": "Ricavi",
+      "revenueHint": "Calcolati sui biglietti venduti",
+      "orders": "Ordini",
+      "users": "Account",
+      "usersHint": "di cui {admins} amministratore/i",
+      "resellers": "Punti vendita",
+      "noOrdersYet": "Nessun ordine per il momento. Le vendite appariranno qui dal primo acquisto pagato."
+    },
+    "events": {
+      "title": "Spettacoli",
+      "subtitle": "{count} spettacolo/i a catalogo.",
+      "event": "Spettacolo",
+      "status": "Stato",
+      "sessions": "Date",
+      "next": "Prossima",
+      "sold": "Venduti",
+      "revenue": "Ricavi",
+      "empty": "Nessuno spettacolo."
+    },
+    "orders": {
+      "title": "Ordini",
+      "subtitle": "Gli ultimi 100 ordini.",
+      "reference": "Riferimento",
+      "customer": "Cliente",
+      "channel": "Canale",
+      "status": "Stato",
+      "date": "Data",
+      "total": "Totale",
+      "notWiredYet": "Nessun ordine per il momento. Le vendite compaiono qui non appena un acquisto è pagato."
+    },
+    "resellers": {
+      "title": "Punti vendita",
+      "subtitle": "Uffici del turismo e partner.",
+      "name": "Punto vendita",
+      "type": "Tipo",
+      "commission": "Commissione",
+      "orders": "Ordini",
+      "balance": "Saldo",
+      "agents": "{count} agente/i",
+      "empty": "Nessun punto vendita.",
+      "balanceHint": "Saldo dal punto di vista del rivenditore: negativo significa che deve denaro a ticketick."
+    },
+    "users": {
+      "title": "Account",
+      "subtitle": "{count} account.",
+      "account": "Account",
+      "role": "Ruolo",
+      "state": "Stato",
+      "lastLogin": "Ultimo accesso",
+      "sessions": "Sessioni",
+      "active": "Attivo",
+      "suspended": "Sospeso",
+      "you": "Lei",
+      "changeRole": "Modificare il ruolo di {email}",
+      "hint": "Modificare un ruolo o sospendere un account chiude subito le sessioni aperte.",
+      "errors": {
+        "forbidden": "Diritti insufficienti.",
+        "self": "Non può modificare il proprio account.",
+        "lastAdmin": "Impossibile: sarebbe l’ultimo amministratore attivo.",
+        "notFound": "Account non trovato.",
+        "invalid": "Richiesta non valida."
+      }
+    },
+    "status": {
+      "DRAFT": "Bozza",
+      "PUBLISHED": "Pubblicato",
+      "CANCELLED": "Annullato",
+      "SOLD_OUT": "Esaurito",
+      "PAST": "Passato"
+    },
+    "orderStatus": {
+      "PENDING": "In attesa",
+      "AWAITING_PAYMENT": "In attesa di pagamento",
+      "PAID": "Pagato",
+      "CANCELLED": "Annullato",
+      "REFUNDED": "Rimborsato"
+    },
+    "channel": {
+      "ONLINE": "Online",
+      "RESELLER": "Punto vendita",
+      "BOX_OFFICE": "Botteghino"
+    },
+    "resellerType": {
+      "TOURISM_OFFICE": "Ufficio del turismo",
+      "PARTNER_SHOP": "Negozio partner",
+      "BOX_OFFICE": "Botteghino"
+    }
   }
 }

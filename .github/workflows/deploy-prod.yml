@@ -1,0 +1,211 @@
+name: 🌐 Deploy Production → GB10 (ticketick.ch)
+
+# La branche main porte la production. Le déclenchement manuel reste ouvert
+# pour rejouer un déploiement sans nouveau commit.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod-gb10
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to GB10 (production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: 🌐 Deploy via SSH to GB10
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          # Clés distinctes de la recette : mélanger des clés de test et des
+          # clés réelles ferait encaisser pour de vrai depuis betadev, ou
+          # l'inverse.
+          STRIPE_SECRET_KEY: ${{ secrets.PROD_STRIPE_SECRET_KEY }}
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.PROD_STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.PROD_STRIPE_WEBHOOK_SECRET }}
+          BANK_IBAN: ${{ secrets.PROD_BANK_IBAN }}
+          BANK_BENEFICIARY: ${{ secrets.PROD_BANK_BENEFICIARY }}
+        with:
+          host: ${{ secrets.GB10_HOST }}
+          username: ${{ secrets.GB10_USER }}
+          key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.GB10_PORT }}
+          envs: STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,BANK_IBAN,BANK_BENEFICIARY
+          command_timeout: 30m
+          script: |
+            set -euo pipefail
+
+            APP_DIR="$HOME/ticketick-v2-prod"
+            SECRETS_FILE="$HOME/.ticketick-v2-prod.secrets"
+            REPO="https://github.com/${{ github.repository }}.git"
+            BRANCH="${{ github.ref_name }}"
+
+            echo "════════════════════════════════════════════"
+            echo "  ticketick PRODUCTION — Deploy"
+            echo "  Branch : $BRANCH"
+            echo "  Host   : $(hostname)"
+            echo "════════════════════════════════════════════"
+
+            # ── 1. Clone ou mise à jour
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "📦 Premier déploiement — clonage..."
+              git clone --branch "$BRANCH" "$REPO" "$APP_DIR"
+            else
+              echo "🔄 Mise à jour du repo..."
+              cd "$APP_DIR"
+              git remote set-url origin "$REPO"
+              git fetch origin "$BRANCH"
+              git reset --hard "origin/$BRANCH"
+            fi
+            cd "$APP_DIR"
+
+            # ── 2. Secrets figés au premier déploiement.
+            # Régénérer le mot de passe Postgres après l'initialisation du
+            # volume rendrait la base inaccessible ; régénérer AUTH_SECRET
+            # déconnecterait tout le monde à chaque livraison.
+            if [ ! -f "$SECRETS_FILE" ]; then
+              echo "🔑 Génération des secrets locaux (premier déploiement)..."
+              {
+                echo "POSTGRES_USER=ticketick"
+                echo "POSTGRES_DB=ticketick"
+                echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)"
+                echo "AUTH_SECRET=$(openssl rand -base64 32)"
+              } > "$SECRETS_FILE"
+              chmod 600 "$SECRETS_FILE"
+            fi
+            # shellcheck disable=SC1090
+            . "$SECRETS_FILE"
+
+            # ── 2b. Port hôte figé une fois pour toutes : la configuration de
+            # Nginx Proxy Manager doit rester valable d'un déploiement à l'autre.
+            # Plage distincte de la recette (3005-3060) pour éviter qu'un
+            # redémarrage ne les intervertisse.
+            listening_ports() {
+              if command -v ss > /dev/null 2>&1; then
+                ss -ltnH 2>/dev/null | awk '{print $4}'
+              else
+                netstat -ltn 2>/dev/null | awk '{print $4}'
+              fi
+            }
+            if [ -z "${APP_PORT:-}" ]; then
+              echo "🔎 Recherche d'un port libre..."
+              USED=$(listening_ports)
+              for p in $(seq 3061 3090); do
+                if ! echo "$USED" | grep -qE "[:.]${p}$"; then
+                  APP_PORT=$p
+                  break
+                fi
+              done
+              if [ -z "${APP_PORT:-}" ]; then
+                echo "❌ Aucun port libre entre 3061 et 3090."
+                exit 1
+              fi
+              echo "APP_PORT=$APP_PORT" >> "$SECRETS_FILE"
+              echo "   ✅ Port retenu : $APP_PORT"
+            else
+              echo "🔁 Port déjà attribué : $APP_PORT"
+            fi
+            HOST_PORT="$APP_PORT"
+
+            # ── 3. Environnement
+            # Ni SEED_ON_START ni ALLOW_MOCK_PAYMENTS n'y figurent : la donnée
+            # est réelle, et un paiement non configuré doit échouer plutôt que
+            # d'émettre des billets gratuits.
+            echo "🔐 Génération de .env.prod..."
+            umask 077
+            cat > "$APP_DIR/.env.prod" <<EOF
+            NODE_ENV=production
+            NEXT_PUBLIC_APP_URL=https://ticketick.ch
+            APP_PORT=${APP_PORT}
+            POSTGRES_USER=${POSTGRES_USER}
+            POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            POSTGRES_DB=${POSTGRES_DB}
+            AUTH_SECRET=${AUTH_SECRET}
+            STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+            STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
+            STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+            BANK_IBAN=${BANK_IBAN:-}
+            BANK_BENEFICIARY=${BANK_BENEFICIARY:-}
+            MAIL_FROM=billets@ticketick.ch
+            EOF
+            cp "$APP_DIR/.env.prod" "$APP_DIR/.env"
+            echo "   ✅ .env.prod créé"
+
+            # ── 4. Build et démarrage
+            NET="nginx-proxy-manager_default"
+            if ! docker network inspect "$NET" > /dev/null 2>&1; then
+              echo "✖ Réseau Docker '$NET' introuvable."
+              docker network ls
+              exit 1
+            fi
+
+            echo "🏗️  Build de l'image Next.js..."
+            docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
+
+            # ── 5. Health check
+            echo "⏳ Attente du démarrage..."
+            OK=0
+            for i in $(seq 1 24); do
+              if curl -sf "http://127.0.0.1:${HOST_PORT}/api/health" > /dev/null 2>&1; then
+                OK=1
+                echo "✅ Application opérationnelle sur :${HOST_PORT}"
+                break
+              fi
+              sleep 5
+            done
+
+            if [ "$OK" -ne 1 ]; then
+              echo "❌ Health check en échec — logs :"
+              docker compose -f docker-compose.prod.yml logs --tail=80 app || true
+              exit 1
+            fi
+
+            # ── 6. Contrôles propres à la production
+            echo "🔎 État de la base :"
+            docker compose -f docker-compose.prod.yml exec -T db \
+              psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -qtc \
+              "SELECT '   spectacles=' || (SELECT count(*) FROM \"Event\")
+                   || ' publiés=' || (SELECT count(*) FROM \"Event\" WHERE status = 'PUBLISHED')
+                   || ' comptes=' || (SELECT count(*) FROM \"User\")
+                   || ' commandes=' || (SELECT count(*) FROM \"Order\");" \
+              || echo "   ⚠ Contrôle impossible"
+
+            # Un encaissement absent n'empêche pas le site de tourner, mais
+            # aucune vente ne pourra aboutir : autant le dire ici plutôt que
+            # de le découvrir sur une commande refusée.
+            if grep -qE '^STRIPE_SECRET_KEY=.+' "$APP_DIR/.env.prod"; then
+              echo "   ✅ Stripe configuré"
+            else
+              echo "   ⚠ Stripe NON configuré — le paiement par carte sera refusé (503)."
+            fi
+            if grep -qE '^BANK_IBAN=.+' "$APP_DIR/.env.prod"; then
+              echo "   ✅ IBAN configuré"
+            else
+              echo "   ⚠ BANK_IBAN absent — le virement sera refusé (503)."
+            fi
+
+            # ── 7. Nettoyage
+            docker image prune -f --filter "until=24h" > /dev/null 2>&1 || true
+
+            # ── 8. Chemin réellement emprunté par le proxy
+            echo "🔎 Accès depuis Nginx Proxy Manager :"
+            if docker exec nginx-proxy-manager-app-1 \
+                 curl -sf -o /dev/null -w '   ↳ HTTP %{http_code}\n' \
+                 http://ticketick-v2-prod-app:3000/api/health 2>/dev/null; then
+              echo "   ✅ NPM atteint l'application."
+            else
+              echo "   ⚠ NPM ne joint pas l'application. Conteneurs sur le réseau :"
+              docker network inspect nginx-proxy-manager_default \
+                --format '{{range .Containers}}     - {{.Name}}{{println}}{{end}}' || true
+            fi
+
+            echo "════════════════════════════════════════════"
+            echo "  ✅ Production déployée"
+            echo "  ↳ NPM : Forward Hostname 'ticketick-v2-prod-app', Port 3000"
+            echo "  ↳ Tant que NPM pointe sur 'ticketick-landing',"
+            echo "    ticketick.ch continue de servir la page d'attente."
+            echo "════════════════════════════════════════════"

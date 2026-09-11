@@ -13,11 +13,32 @@ import Stripe from "stripe";
  * (`checkout.session.completed`) -> la commande est marquée payée et les
  * billets sont émis.
  *
- * Sans clé configurée, on fonctionne en mode mock (aucun appel réseau).
+ * Sans clé configurée, un mode simulé permet de dérouler le tunnel sans appel
+ * réseau — mais il doit être demandé explicitement. Voir `mockPaymentsAllowed`.
  */
 
 export function isStripeConfigured(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY);
+}
+
+/**
+ * Le paiement simulé solde la commande et émet les billets sans qu'un centime
+ * ait été encaissé. Sur un site ouvert au public, une clé Stripe oubliée
+ * distribuerait donc des billets gratuits.
+ *
+ * D'où l'opt-in explicite plutôt qu'un repli automatique : l'absence de
+ * configuration fait échouer le paiement, elle ne l'offre pas.
+ */
+export function mockPaymentsAllowed(): boolean {
+  return process.env.ALLOW_MOCK_PAYMENTS === "true";
+}
+
+/** Levée quand aucun moyen d'encaisser n'est configuré. */
+export class PaymentNotConfiguredError extends Error {
+  constructor() {
+    super("Aucun encaissement configuré (STRIPE_SECRET_KEY manquant).");
+    this.name = "PaymentNotConfiguredError";
+  }
 }
 
 let client: Stripe | null = null;
@@ -61,6 +82,8 @@ export async function createCheckoutSession(
   input: CreateCheckoutInput,
 ): Promise<CreateCheckoutResult> {
   if (!isStripeConfigured()) {
+    if (!mockPaymentsAllowed()) throw new PaymentNotConfiguredError();
+
     return {
       provider: "stripe",
       sessionId: `mock_${input.reference}`,

@@ -1,6 +1,7 @@
 # ticketick — image de production (Next.js standalone)
 FROM node:22-alpine AS base
-RUN apk add --no-cache libc6-compat
+# openssl est requis par les moteurs Prisma sur musl
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 # --- Dépendances ---
@@ -26,11 +27,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Client Prisma + CLI + schéma pour appliquer les migrations au démarrage
+# Client Prisma et moteur de requêtes. Le CLI, lui, n'est pas embarqué : il
+# tire une longue chaîne de dépendances absentes du build standalone. Les
+# migrations sont appliquées par le service `migrate` (stage builder).
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/prisma ./prisma
 COPY --chown=nextjs:nodejs docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 

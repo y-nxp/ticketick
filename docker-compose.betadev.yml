@@ -28,23 +28,68 @@ services:
       timeout: 5s
       retries: 12
 
-  app:
+  # Applique les migrations puis, en recette, réinjecte le catalogue de
+  # démonstration. Bâti sur le stage `builder`, seul à disposer des
+  # dépendances du CLI Prisma et de tsx. S'exécute une fois puis s'arrête.
+  migrate:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ticketick-v2-betadev-app
-    restart: unless-stopped
+      target: builder
+      network: host
+    container_name: ticketick-v2-betadev-migrate
+    restart: "no"
     depends_on:
       db:
         condition: service_healthy
     env_file:
       - .env.betadev
     environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        echo "▶ Prisma migrate deploy…"
+        npx prisma migrate deploy
+        if [ "${SEED_ON_START:-false}" = "true" ]; then
+          echo "▶ Seed du catalogue de démonstration…"
+          npx tsx prisma/seed.ts
+        fi
+        echo "✅ Base prête."
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Le conteneur de build de gb10 ne résout pas le DNS public (échec sur
+      # dl-cdn.alpinelinux.org) : on lui prête la pile réseau de l'hôte.
+      network: host
+    container_name: ticketick-v2-betadev-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    env_file:
+      - .env.betadev
+    environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    networks:
+      # `default` reste nécessaire pour joindre la base ; `npm` permet à Nginx
+      # Proxy Manager, qui tourne en conteneur, d'atteindre l'application par
+      # son nom. Un port publié sur la boucle locale de l'hôte lui serait
+      # inaccessible.
+      - default
+      - npm
     ports:
-      - "127.0.0.1:3005:3000"
+      # Conservé pour les contrôles depuis l'hôte (health check du déploiement).
+      # Lié à la boucle locale : rien n'est exposé sur Internet.
+      - "127.0.0.1:${APP_PORT:-3005}:3000"
     healthcheck:
       test:
         [
@@ -57,6 +102,12 @@ services:
       timeout: 5s
       retries: 6
       start_period: 20s
+
+networks:
+  # Réseau créé par la stack Nginx Proxy Manager.
+  npm:
+    external: true
+    name: nginx-proxy-manager_default
 
 volumes:
   db-data:

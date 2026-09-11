@@ -1,14 +1,9 @@
 #!/bin/sh
 set -e
 
-# Applique les migrations Prisma avant de démarrer le serveur.
-# (nécessite DATABASE_URL et le CLI Prisma présents dans l'image)
-if [ -f "./node_modules/prisma/build/index.js" ]; then
-  echo "▶ Prisma migrate deploy…"
-  node ./node_modules/prisma/build/index.js migrate deploy || {
-    echo "⚠ Aucune migration appliquée (schéma vide ?). On continue."
-  }
-fi
+# Les migrations et le seed sont pris en charge par le service `migrate`,
+# qui dispose de l'arbre de dépendances complet du CLI Prisma. Le conteneur
+# applicatif ne démarre qu'une fois ce service terminé avec succès.
 
 echo "▶ Démarrage de ticketick sur :${PORT:-3000}"
 exec node server.js

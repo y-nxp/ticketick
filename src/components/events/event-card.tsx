@@ -3,7 +3,14 @@ import { CalendarDays, MapPin } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatPrice } from "@/lib/utils";
-import { isSoldOut, minPriceCents, t, type EventItem } from "@/lib/types";
+import {
+  isSoldOut,
+  minPriceCents,
+  nextSession,
+  t,
+  upcomingSessions,
+  type EventItem,
+} from "@/lib/types";
 
 export function EventCard({
   event,
@@ -12,15 +19,21 @@ export function EventCard({
 }: {
   event: EventItem;
   locale: string;
-  labels: { from: string; soldOut: string };
+  labels: { from: string; soldOut: string; dates: (n: number) => string };
 }) {
   const soldOut = isSoldOut(event);
   const price = minPriceCents(event);
+  // La carte annonce la prochaine séance ; le nombre de dates restantes
+  // signale les spectacles joués plusieurs fois.
+  const session = nextSession(event);
+  const upcomingCount = upcomingSessions(event).length;
 
   return (
     <Link
       href={`/events/${event.slug}`}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5"
+      // En mode sombre l'ombre noire est invisible : le relief au survol
+      // est porté par un halo violet et une bordure accentuée.
+      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 dark:hover:border-primary/40 dark:hover:shadow-primary/20"
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         <Image
@@ -53,18 +66,27 @@ export function EventCard({
           {t(event.title, locale)}
         </h3>
         <div className="mt-auto space-y-1.5 pt-2 text-sm text-muted-foreground">
-          <p className="flex items-center gap-1.5">
-            <CalendarDays className="size-4 shrink-0" />
-            {formatDate(event.startsAt, `${locale}-CH`, {
-              weekday: undefined,
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
-          <p className="flex items-center gap-1.5">
-            <MapPin className="size-4 shrink-0" />
-            {event.venue.name}, {event.venue.city}
-          </p>
+          {session && (
+            <p className="flex items-center gap-1.5">
+              <CalendarDays className="size-4 shrink-0" />
+              {formatDate(session.startsAt, `${locale}-CH`, {
+                weekday: undefined,
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+              {upcomingCount > 1 && (
+                <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  {labels.dates(upcomingCount)}
+                </span>
+              )}
+            </p>
+          )}
+          {session?.venue && (
+            <p className="flex items-center gap-1.5">
+              <MapPin className="size-4 shrink-0" />
+              {session.venue.name}, {session.venue.city}
+            </p>
+          )}
         </div>
         <div className="flex items-center justify-between border-t border-border pt-3">
           <span className="text-xs text-muted-foreground">{labels.from}</span>

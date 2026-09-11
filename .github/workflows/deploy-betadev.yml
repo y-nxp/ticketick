@@ -36,7 +36,6 @@ jobs:
             SECRETS_FILE="$HOME/.ticketick-v2-betadev.secrets"
             REPO="https://github.com/${{ github.repository }}.git"
             BRANCH="${{ github.ref_name }}"
-            HOST_PORT=3005
 
             echo "════════════════════════════════════════════"
             echo "  ticketick BetaDev — Deploy"
@@ -73,12 +72,42 @@ jobs:
             # shellcheck disable=SC1090
             . "$SECRETS_FILE"
 
+            # ── 2b. Port hôte : choisi une fois puis figé, pour que la
+            # configuration Nginx Proxy Manager reste valable d'un déploiement à l'autre.
+            listening_ports() {
+              if command -v ss > /dev/null 2>&1; then
+                ss -ltnH 2>/dev/null | awk '{print $4}'
+              else
+                netstat -ltn 2>/dev/null | awk '{print $4}'
+              fi
+            }
+            if [ -z "${APP_PORT:-}" ]; then
+              echo "🔎 Recherche d'un port libre..."
+              USED=$(listening_ports)
+              for p in $(seq 3005 3060); do
+                if ! echo "$USED" | grep -qE "[:.]${p}$"; then
+                  APP_PORT=$p
+                  break
+                fi
+              done
+              if [ -z "${APP_PORT:-}" ]; then
+                echo "❌ Aucun port libre entre 3005 et 3060."
+                exit 1
+              fi
+              echo "APP_PORT=$APP_PORT" >> "$SECRETS_FILE"
+              echo "   ✅ Port retenu : $APP_PORT (mémorisé pour les prochains déploiements)"
+            else
+              echo "🔁 Port déjà attribué : $APP_PORT"
+            fi
+            HOST_PORT="$APP_PORT"
+
             # ── 3. Fichier d'environnement consommé par docker compose
             echo "🔐 Génération de .env.betadev..."
             umask 077
             cat > "$APP_DIR/.env.betadev" <<EOF
             NODE_ENV=production
             NEXT_PUBLIC_APP_URL=https://appbetadev.ticketick.ch
+            APP_PORT=${APP_PORT}
             POSTGRES_USER=${POSTGRES_USER}
             POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
             POSTGRES_DB=${POSTGRES_DB}
@@ -87,12 +116,30 @@ jobs:
             STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
             STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
             MAIL_FROM=billets@ticketick.ch
+            # Recette : pas de clé Stripe, le tunnel doit rester déroulable.
+            # L'autorisation est explicite — sans elle le paiement échoue, ce
+            # qui est le comportement voulu partout ailleurs.
+            ALLOW_MOCK_PAYMENTS=true
+            # Catalogue de démonstration. Coupé : la programmation est
+            # désormais saisie depuis le backoffice, et un réamorçage à
+            # chaque démarrage remettrait les spectacles fictifs en ligne.
+            SEED_ON_START=false
             EOF
             # docker compose lit POSTGRES_* depuis .env pour l'interpolation
             cp "$APP_DIR/.env.betadev" "$APP_DIR/.env"
             echo "   ✅ .env.betadev créé"
 
             # ── 4. Build et démarrage
+            # Le réseau de NPM est déclaré externe : sans lui le proxy ne
+            # pourrait pas résoudre le conteneur applicatif.
+            NET="nginx-proxy-manager_default"
+            if ! docker network inspect "$NET" > /dev/null 2>&1; then
+              echo "✖ Réseau Docker '$NET' introuvable."
+              echo "  Nginx Proxy Manager tourne-t-il toujours ? Réseaux existants :"
+              docker network ls
+              exit 1
+            fi
+
             echo "🏗️  Build de l'image Next.js (standalone)..."
             docker compose -f docker-compose.betadev.yml up -d --build --remove-orphans
 
@@ -114,11 +161,50 @@ jobs:
               exit 1
             fi
 
-            # ── 6. Nettoyage
+            # Migrations et seed s'exécutent dans l'entrypoint : leur sortie
+            # n'apparaît que dans les logs du conteneur.
+            echo "📜 Démarrage applicatif :"
+            docker compose -f docker-compose.betadev.yml logs --tail=30 app 2>&1 \
+              | grep -iE "prisma|migrat|seed|✖|⚠" || true
+
+            # ── 6. Vérification du catalogue
+            # Un /api/health vert ne dit rien du contenu : une base vide
+            # produirait un site en ligne mais sans aucun spectacle.
+            echo "🔎 Contrôle du catalogue..."
+            docker compose -f docker-compose.betadev.yml exec -T db \
+              psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -qtc \
+              "SELECT 'événements=' || (SELECT count(*) FROM \"Event\")
+                   || ' séances=' || (SELECT count(*) FROM \"EventSession\")
+                   || ' à venir=' || (SELECT count(*) FROM \"EventSession\" WHERE \"startsAt\" > now());" \
+              || echo "⚠ Contrôle impossible"
+
+            # grep sort en erreur quand il ne trouve rien : sans le `|| true`,
+            # pipefail ferait échouer le déploiement au lieu de diagnostiquer.
+            NB_EVENTS=$(curl -s "http://127.0.0.1:${HOST_PORT}/" | grep -oE 'href="/events/[a-z0-9-]+"' | sort -u | wc -l || true)
+            echo "   ↳ ${NB_EVENTS} spectacle(s) affiché(s) sur l'accueil"
+            if [ "$NB_EVENTS" -eq 0 ]; then
+              echo "⚠ Accueil sans spectacle — vérifier le seed :"
+              docker compose -f docker-compose.betadev.yml logs --tail=40 app || true
+            fi
+
+            # ── 7. Nettoyage
             docker image prune -f --filter "until=24h" > /dev/null 2>&1 || true
+
+            # Contrôle depuis NPM : c'est lui qui doit joindre l'application,
+            # une réponse ici valide donc le chemin réellement emprunté.
+            echo "🔎 Accès depuis Nginx Proxy Manager :"
+            if docker exec nginx-proxy-manager-app-1 \
+                 curl -sf -o /dev/null -w '   ↳ HTTP %{http_code} sur http://ticketick-v2-betadev-app:3000/\n' \
+                 http://ticketick-v2-betadev-app:3000/api/health 2>/dev/null; then
+              echo "   ✅ NPM atteint l'application."
+            else
+              echo "   ⚠ NPM ne joint pas l'application. Conteneurs sur le réseau :"
+              docker network inspect nginx-proxy-manager_default \
+                --format '{{range .Containers}}     - {{.Name}}{{println}}{{end}}' || true
+            fi
 
             echo "════════════════════════════════════════════"
             echo "  ✅ Déploiement terminé"
             echo "  🌐 https://appbetadev.ticketick.ch"
-            echo "  ↳ Nginx Proxy Manager doit pointer sur 127.0.0.1:${HOST_PORT}"
+            echo "  ↳ NPM : Forward Hostname 'ticketick-v2-betadev-app', Port 3000"
             echo "════════════════════════════════════════════"

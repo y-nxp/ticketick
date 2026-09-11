@@ -2,15 +2,20 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { User, Search, Menu, X, Sparkles } from "lucide-react";
+import { Search, Menu, X, Sparkles } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Logo } from "./logo";
 import { LanguageSwitcher } from "./language-switcher";
+import { ThemeSwitcher } from "./theme-switcher";
 import { CartButton } from "./cart-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export function Header() {
+/**
+ * `accountSlot` est rendu par le serveur et transmis en propriété : l'en-tête
+ * est un composant client, il ne peut pas lire la session lui-même.
+ */
+export function Header({ accountSlot }: { accountSlot?: React.ReactNode }) {
   const t = useTranslations("nav");
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -63,19 +68,15 @@ export function Header() {
             </Button>
           </Link>
 
+          <ThemeSwitcher />
+
           <div className="hidden sm:block">
             <LanguageSwitcher />
           </div>
 
           <CartButton />
 
-          <Link
-            href="/account"
-            aria-label={t("account")}
-            className="inline-flex size-10 items-center justify-center rounded-full hover:bg-secondary/70 transition-colors"
-          >
-            <User className="size-5" />
-          </Link>
+          {accountSlot}
 
           <button
             type="button"

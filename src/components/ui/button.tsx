@@ -7,8 +7,9 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // En mode sombre : léger dégradé + halo violet pour détacher le bouton du fond.
         default:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover hover:shadow-md",
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary-hover hover:shadow-md dark:bg-gradient-to-br dark:from-[#7b6bf0] dark:to-[#5f4fdd] dark:shadow-[0_6px_20px_-6px_rgba(108,92,231,0.65)] dark:hover:shadow-[0_10px_28px_-6px_rgba(108,92,231,0.85)]",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/70",
         outline:

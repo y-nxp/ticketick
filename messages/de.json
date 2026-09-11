@@ -12,7 +12,10 @@
     "language": "Sprache",
     "organizer": "Ich bin Veranstalter",
     "search": "Suche nach Show, Künstler, Ort…",
-    "menu": "Menü"
+    "menu": "Menü",
+    "theme": "Design",
+    "themeLight": "Zum hellen Modus wechseln",
+    "themeDark": "Zum dunklen Modus wechseln"
   },
   "home": {
     "heroBadge": "Schweizer Ticketing",
@@ -25,7 +28,9 @@
     "sectionUpcoming": "Demnächst",
     "resultsCount": "{count, plural, =0 {Keine Veranstaltungen} =1 {# Veranstaltung} other {# Veranstaltungen}}",
     "noResults": "Keine Veranstaltungen entsprechen Ihrer Suche.",
-    "noResultsHint": "Versuchen Sie, die Filter zu erweitern."
+    "noResultsHint": "Versuchen Sie, die Filter zu erweitern.",
+    "emptyCatalog": "Zurzeit sind keine Veranstaltungen im Programm.",
+    "emptyCatalogHint": "Das Programm folgt in Kürze. Schauen Sie bald wieder vorbei."
   },
   "filters": {
     "title": "Filter",
@@ -67,7 +72,11 @@
     "selectTickets": "Wählen Sie Ihre Tickets",
     "quantity": "Menge",
     "availableUntil": "Verfügbar bis {date}",
-    "backToEvents": "Zurück zu den Veranstaltungen"
+    "backToEvents": "Zurück zu den Veranstaltungen",
+    "selectSession": "Datum wählen",
+    "sessionCount": "{count} Termine verfügbar",
+    "noSessions": "Derzeit keine Termine geplant.",
+    "datesCount": "{count} Termine"
   },
   "cart": {
     "title": "Ihr Warenkorb",
@@ -82,7 +91,8 @@
     "serviceFee": "Servicegebühr",
     "total": "Gesamt",
     "checkout": "Zur Kasse",
-    "continue": "Weiter einkaufen"
+    "continue": "Weiter einkaufen",
+    "session": "Vorstellung"
   },
   "checkout": {
     "title": "Kasse",
@@ -102,7 +112,9 @@
     "orderSummary": "Übersicht",
     "success": "Vielen Dank! Ihre Bestellung ist bestätigt.",
     "successHint": "Ihre Tickets wurden an {email} gesendet.",
-    "backHome": "Zurück zur Startseite"
+    "backHome": "Zurück zur Startseite",
+    "failed": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "unavailable": "Die Online-Zahlung ist vorübergehend nicht verfügbar. Ihre Bestellung wurde nicht aufgegeben und Ihre Plätze wurden wieder freigegeben. Bitte versuchen Sie es später erneut."
   },
   "account": {
     "title": "Mein Konto",
@@ -110,13 +122,39 @@
     "signUp": "Konto erstellen",
     "signOut": "Abmelden",
     "email": "E-Mail",
-    "password": "Passwort",
+    "password": {
+      "title": "Passwort",
+      "hint": "Mindestens zwölf Zeichen. Alle Ihre Sitzungen werden geschlossen.",
+      "current": "Aktuelles Passwort",
+      "next": "Neues Passwort",
+      "confirm": "Neues Passwort bestätigen",
+      "submit": "Passwort ändern",
+      "pending": "Speichern…",
+      "done": "Passwort geändert. Ihre übrigen Sitzungen wurden geschlossen.",
+      "wrong": "Das aktuelle Passwort ist falsch.",
+      "tooShort": "Das neue Passwort muss mindestens 12 Zeichen haben.",
+      "mismatch": "Die beiden Eingaben stimmen nicht überein.",
+      "same": "Das neue Passwort entspricht dem alten.",
+      "throttled": "Zu viele Versuche. Bitte versuchen Sie es in etwa fünfzehn Minuten erneut.",
+      "unavailable": "Dienst vorübergehend nicht verfügbar. Bitte versuchen Sie es gleich erneut."
+    },
     "myTickets": "Meine Tickets",
     "myOrders": "Meine Bestellungen",
     "profile": "Profil",
     "noTickets": "Sie haben noch keine Tickets.",
     "welcome": "Willkommen zurück",
-    "loginToContinue": "Melden Sie sich an, um auf Ihr Konto zuzugreifen."
+    "loginToContinue": "Melden Sie sich an, um auf Ihr Konto zuzugreifen.",
+    "role": "Rolle",
+    "noOrders": "Noch keine Bestellungen.",
+    "adminAccess": "Verwaltung",
+    "adminAccessHint": "Veranstaltungen, Termine, Bestellungen und Wiederverkäufer verwalten.",
+    "roles": {
+      "CUSTOMER": "Kunde",
+      "ORGANIZER": "Veranstalter",
+      "RESELLER_AGENT": "Verkaufsstelle",
+      "ADMIN": "Administrator"
+    },
+    "ticketCount": "{count} Ticket(s)"
   },
   "organizer": {
     "title": "Veranstalterbereich",
@@ -128,7 +166,8 @@
     "events": "Meine Veranstaltungen",
     "sales": "Verkäufe",
     "revenue": "Einnahmen",
-    "ticketsSold": "Verkaufte Tickets"
+    "ticketsSold": "Verkaufte Tickets",
+    "sessions": "Vorstellungen"
   },
   "friends": {
     "title": "Festivalfreunde",
@@ -144,5 +183,126 @@
     "help": "Hilfezentrum",
     "rights": "Alle Rechte vorbehalten.",
     "madeIn": "Hergestellt in der Schweiz"
+  },
+  "auth": {
+    "signIn": "Anmelden",
+    "signInSubtitle": "Zugang zu Ihrem ticketick-Konto.",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "pending": "Anmeldung…",
+    "invalid": "E-Mail oder Passwort ist falsch.",
+    "throttled": "Zu viele Versuche. Bitte versuchen Sie es in etwa fünfzehn Minuten erneut.",
+    "unavailable": "Dienst vorübergehend nicht verfügbar. Bitte versuchen Sie es gleich erneut.",
+    "signOut": "Abmelden",
+    "forbiddenTitle": "Zugriff verweigert",
+    "forbiddenBody": "Ihr Konto verfügt nicht über die Rechte für diese Seite.",
+    "backHome": "Zurück zur Startseite"
+  },
+  "admin": {
+    "title": "Verwaltung",
+    "nav": {
+      "overview": "Übersicht",
+      "events": "Veranstaltungen",
+      "orders": "Bestellungen",
+      "resellers": "Verkaufsstellen",
+      "users": "Konten"
+    },
+    "overview": {
+      "title": "Übersicht",
+      "subtitle": "Aktueller Stand des Ticketverkaufs.",
+      "events": "Veranstaltungen",
+      "eventsHint": "{published} veröffentlicht · {draft} Entwurf",
+      "sessions": "Termine",
+      "sessionsHint": "{upcoming} bevorstehend",
+      "sold": "Verkaufte Tickets",
+      "soldHint": "{percent} % des Bestands",
+      "revenue": "Umsatz",
+      "revenueHint": "Berechnet auf verkauften Tickets",
+      "orders": "Bestellungen",
+      "users": "Konten",
+      "usersHint": "davon {admins} Administrator(en)",
+      "resellers": "Verkaufsstellen",
+      "noOrdersYet": "Noch keine Bestellungen. Verkäufe erscheinen hier ab dem ersten bezahlten Kauf."
+    },
+    "events": {
+      "title": "Veranstaltungen",
+      "subtitle": "{count} Veranstaltung(en) im Katalog.",
+      "event": "Veranstaltung",
+      "status": "Status",
+      "sessions": "Termine",
+      "next": "Nächster",
+      "sold": "Verkauft",
+      "revenue": "Einnahmen",
+      "empty": "Keine Veranstaltungen."
+    },
+    "orders": {
+      "title": "Bestellungen",
+      "subtitle": "Die 100 neuesten Bestellungen.",
+      "reference": "Referenz",
+      "customer": "Kunde",
+      "channel": "Kanal",
+      "status": "Status",
+      "date": "Datum",
+      "total": "Total",
+      "notWiredYet": "Noch keine Bestellungen. Verkäufe erscheinen hier, sobald ein Kauf bezahlt ist."
+    },
+    "resellers": {
+      "title": "Verkaufsstellen",
+      "subtitle": "Tourismusbüros und Partner.",
+      "name": "Verkaufsstelle",
+      "type": "Typ",
+      "commission": "Provision",
+      "orders": "Bestellungen",
+      "balance": "Saldo",
+      "agents": "{count} Agent(en)",
+      "empty": "Keine Verkaufsstellen.",
+      "balanceHint": "Saldo aus Sicht der Verkaufsstelle: negativ bedeutet, sie schuldet ticketick Geld."
+    },
+    "users": {
+      "title": "Konten",
+      "subtitle": "{count} Konto/Konten.",
+      "account": "Konto",
+      "role": "Rolle",
+      "state": "Status",
+      "lastLogin": "Letzte Anmeldung",
+      "sessions": "Sitzungen",
+      "active": "Aktiv",
+      "suspended": "Gesperrt",
+      "you": "Sie",
+      "changeRole": "Rolle von {email} ändern",
+      "hint": "Eine Rollenänderung oder Sperrung schliesst offene Sitzungen sofort.",
+      "errors": {
+        "forbidden": "Unzureichende Rechte.",
+        "self": "Sie können Ihr eigenes Konto nicht ändern.",
+        "lastAdmin": "Nicht möglich: Dies wäre der letzte aktive Administrator.",
+        "notFound": "Konto nicht gefunden.",
+        "invalid": "Ungültige Anfrage."
+      }
+    },
+    "status": {
+      "DRAFT": "Entwurf",
+      "PUBLISHED": "Veröffentlicht",
+      "CANCELLED": "Abgesagt",
+      "SOLD_OUT": "Ausverkauft",
+      "PAST": "Vergangen"
+    },
+    "orderStatus": {
+      "PENDING": "Ausstehend",
+      "AWAITING_PAYMENT": "Zahlung ausstehend",
+      "PAID": "Bezahlt",
+      "CANCELLED": "Storniert",
+      "REFUNDED": "Erstattet"
+    },
+    "channel": {
+      "ONLINE": "Online",
+      "RESELLER": "Verkaufsstelle",
+      "BOX_OFFICE": "Abendkasse"
+    },
+    "resellerType": {
+      "TOURISM_OFFICE": "Tourismusbüro",
+      "PARTNER_SHOP": "Partnergeschäft",
+      "BOX_OFFICE": "Abendkasse"
+    }
   }
 }

@@ -1,0 +1,116 @@
+# ============================================================
+# ticketick — stack de PRODUCTION sur gb10
+# URL   : https://ticketick.ch
+# Déployée par .github/workflows/deploy-prod.yml (branche main)
+# ============================================================
+# Strictement cloisonnée de la recette : nom de projet, conteneurs, volume et
+# base distincts. Les deux tournent côte à côte sur la même machine, et une
+# opération menée sur betadev ne doit jamais pouvoir toucher la production.
+#
+# Deux différences volontaires avec docker-compose.betadev.yml :
+#   — aucun amorçage de catalogue, sous aucune condition. La donnée y est
+#     réelle ; il n'existe pas de cas où réinjecter des spectacles fictifs
+#     en production serait souhaitable.
+#   — ALLOW_MOCK_PAYMENTS n'est pas transmis. Sans clé Stripe, le paiement
+#     est refusé plutôt que simulé.
+#
+# Dans Nginx Proxy Manager, le Proxy Host de ticketick.ch doit pointer sur :
+#   Forward Hostname / IP : ticketick-v2-prod-app
+#   Forward Port          : 3000
+# ============================================================
+
+name: ticketick-v2-prod
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ticketick-v2-prod-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    # Non publié sur l'hôte : seul `app` y accède, par le réseau interne.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # Applique les migrations, rien de plus. Bâti sur le stage `builder`, seul à
+  # disposer du CLI Prisma. S'exécute une fois puis s'arrête.
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+      network: host
+    container_name: ticketick-v2-prod-migrate
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env.prod
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        echo "▶ Prisma migrate deploy…"
+        npx prisma migrate deploy
+        echo "✅ Base prête."
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Le conteneur de build de gb10 ne résout pas le DNS public : on lui
+      # prête la pile réseau de l'hôte.
+      network: host
+    container_name: ticketick-v2-prod-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    env_file:
+      - .env.prod
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    networks:
+      # `default` pour joindre la base ; `npm` pour que Nginx Proxy Manager,
+      # qui tourne en conteneur, atteigne l'application par son nom.
+      - default
+      - npm
+    ports:
+      # Lié à la boucle locale : sert au contrôle de santé du déploiement,
+      # rien n'est exposé sur Internet.
+      - "127.0.0.1:${APP_PORT:-3061}:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+networks:
+  npm:
+    external: true
+    name: nginx-proxy-manager_default
+
+volumes:
+  db-data:
