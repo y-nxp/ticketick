@@ -1,0 +1,386 @@
+<!doctype html>
+<!--
+  ticketick — page d'attente de ticketick.ch
+
+  Provisoire : servie le temps que la nouvelle billetterie soit opérationnelle.
+  Volontairement autonome (un fichier, aucune dépendance réseau) pour être
+  servie par un simple nginx, sans lien avec l'application Next.js.
+
+  Couleurs et typographie reprises de la charte : violet #6C5CE7,
+  anthracite #2A2C30, fond sombre #1E1F23, Inter.
+-->
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ticketick — La billetterie suisse</title>
+    <meta
+      name="description"
+      content="ticketick, la billetterie suisse, prépare sa nouvelle plateforme. Les ventes reprendront prochainement."
+    />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" href="/icon_purple_transparent.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#6C5CE7" />
+
+    <style>
+      /* Inter est chargée si disponible localement ; sinon on retombe sur la
+         police système, ce qui évite toute dépendance à un CDN. */
+      :root {
+        --violet: #6c5ce7;
+        --violet-dark: #5b4bd6;
+        --anthracite: #2a2c30;
+        --bg: #ffffff;
+        --bg-soft: #f8f9fa;
+        --fg: #2a2c30;
+        --fg-muted: #6b7076;
+        --border: #e6e8ea;
+        --card: #ffffff;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1e1f23;
+          --bg-soft: #1e1f23;
+          --fg: #ffffff;
+          /* Assez clair pour rester lisible sur fond sombre (WCAG AA). */
+          --fg-muted: #a9aeb5;
+          --border: #3a3d43;
+          --card: #2a2c30;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+      }
+
+      body {
+        font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+          sans-serif;
+        background-color: var(--bg);
+        color: var(--fg);
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      /* Halo violet discret, repris du hero de l'application. */
+      body::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 60vh;
+        background-image: radial-gradient(
+            circle at 20% 15%,
+            rgba(108, 92, 231, 0.18),
+            transparent 42%
+          ),
+          radial-gradient(
+            circle at 82% 0%,
+            rgba(108, 92, 231, 0.14),
+            transparent 38%
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      main {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 48px 24px;
+      }
+
+      .logo {
+        height: 34px;
+        width: auto;
+      }
+
+      /* Une seule variante de logo visible selon le thème : anthracite sur
+         fond clair, blanc sur fond sombre. */
+      .logo--dark {
+        display: none;
+      }
+      @media (prefers-color-scheme: dark) {
+        .logo--light {
+          display: none;
+        }
+        .logo--dark {
+          display: block;
+        }
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 40px;
+        padding: 7px 16px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background-color: var(--card);
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+
+      .badge .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background-color: var(--violet);
+      }
+
+      h1 {
+        margin: 24px 0 0;
+        font-size: clamp(30px, 6vw, 52px);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+        max-width: 18em;
+      }
+
+      .lead {
+        margin: 20px 0 0;
+        font-size: clamp(16px, 2.2vw, 19px);
+        line-height: 1.6;
+        color: var(--fg-muted);
+        max-width: 34em;
+      }
+
+      .contact {
+        margin-top: 36px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .contact-label {
+        font-size: 14px;
+        color: var(--fg-muted);
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 13px 26px;
+        border-radius: 12px;
+        background-color: var(--violet);
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: background-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .btn:hover {
+        background-color: var(--violet-dark);
+        box-shadow: 0 8px 22px -8px rgba(108, 92, 231, 0.7);
+      }
+
+      .btn:focus-visible {
+        outline: 2px solid var(--violet);
+        outline-offset: 3px;
+      }
+
+      .langs {
+        display: flex;
+        gap: 6px;
+        margin-top: 48px;
+      }
+
+      .langs button {
+        min-width: 44px;
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background-color: transparent;
+        color: var(--fg-muted);
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+
+      .langs button:hover {
+        color: var(--fg);
+        border-color: var(--fg-muted);
+      }
+
+      .langs button[aria-current="true"] {
+        background-color: var(--violet);
+        border-color: var(--violet);
+        color: #ffffff;
+      }
+
+      footer {
+        position: relative;
+        z-index: 1;
+        padding: 28px 24px;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        font-size: 13px;
+        color: var(--fg-muted);
+      }
+
+      footer .domains {
+        margin-top: 6px;
+        letter-spacing: 0.02em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main>
+      <img
+        class="logo logo--light"
+        src="/logo_standard.svg"
+        alt="ticketick"
+        width="240"
+        height="34"
+      />
+      <img
+        class="logo logo--dark"
+        src="/logo_white_purple.svg"
+        alt="ticketick"
+        width="240"
+        height="34"
+      />
+
+      <p class="badge">
+        <span class="dot" aria-hidden="true"></span>
+        <span data-i18n="badge">Billetterie suisse</span>
+      </p>
+
+      <h1 data-i18n="title">Notre billetterie fait peau neuve</h1>
+
+      <p class="lead" data-i18n="lead">
+        ticketick prépare une nouvelle plateforme pour découvrir et réserver les
+        plus beaux spectacles de Suisse. La vente de billets reprendra
+        prochainement.
+      </p>
+
+      <div class="contact">
+        <span class="contact-label" data-i18n="contactLabel">
+          Organisateur ou spectateur, une question ?
+        </span>
+        <a class="btn" id="contact-link" href="mailto:contact@ticketick.ch">
+          <span data-i18n="contactCta">Nous écrire</span>
+        </a>
+      </div>
+
+      <nav class="langs" aria-label="Langue">
+        <button type="button" data-lang="fr">fr</button>
+        <button type="button" data-lang="en">en</button>
+        <button type="button" data-lang="de">de</button>
+        <button type="button" data-lang="it">it</button>
+      </nav>
+    </main>
+
+    <footer>
+      <div data-i18n="rights">© 2026 ticketick — Tous droits réservés.</div>
+      <div class="domains">ticketick.ch · ticketick.net</div>
+    </footer>
+
+    <script>
+      (function () {
+        var STRINGS = {
+          fr: {
+            badge: "Billetterie suisse",
+            title: "Notre billetterie fait peau neuve",
+            lead:
+              "ticketick prépare une nouvelle plateforme pour découvrir et réserver les plus beaux spectacles de Suisse. La vente de billets reprendra prochainement.",
+            contactLabel: "Organisateur ou spectateur, une question ?",
+            contactCta: "Nous écrire",
+            rights: "© 2026 ticketick — Tous droits réservés.",
+          },
+          en: {
+            badge: "Swiss ticketing",
+            title: "Our ticketing platform is being rebuilt",
+            lead:
+              "ticketick is preparing a new platform to discover and book the finest shows in Switzerland. Ticket sales will resume shortly.",
+            contactLabel: "Organizer or theatregoer, any question?",
+            contactCta: "Get in touch",
+            rights: "© 2026 ticketick — All rights reserved.",
+          },
+          de: {
+            badge: "Schweizer Ticketing",
+            title: "Unser Ticketing wird neu gebaut",
+            lead:
+              "ticketick arbeitet an einer neuen Plattform, um die schönsten Veranstaltungen der Schweiz zu entdecken und zu buchen. Der Ticketverkauf wird in Kürze wieder aufgenommen.",
+            contactLabel: "Veranstalter oder Besucher, eine Frage?",
+            contactCta: "Kontakt aufnehmen",
+            rights: "© 2026 ticketick — Alle Rechte vorbehalten.",
+          },
+          it: {
+            badge: "Biglietteria svizzera",
+            title: "La nostra biglietteria si rinnova",
+            lead:
+              "ticketick sta preparando una nuova piattaforma per scoprire e prenotare i più bei spettacoli della Svizzera. La vendita dei biglietti riprenderà a breve.",
+            contactLabel: "Organizzatore o spettatore, una domanda?",
+            contactCta: "Scrivici",
+            rights: "© 2026 ticketick — Tutti i diritti riservati.",
+          },
+        };
+
+        var STORAGE_KEY = "ticketick-landing-lang";
+        var buttons = document.querySelectorAll(".langs button");
+
+        function apply(lang) {
+          var dict = STRINGS[lang] || STRINGS.fr;
+          document.documentElement.lang = lang;
+          document.querySelectorAll("[data-i18n]").forEach(function (el) {
+            var key = el.getAttribute("data-i18n");
+            if (dict[key]) el.textContent = dict[key];
+          });
+          buttons.forEach(function (b) {
+            // aria-current doit être absent, et non "false" : sinon les
+            // lecteurs d'écran annoncent chaque langue comme active.
+            if (b.getAttribute("data-lang") === lang) {
+              b.setAttribute("aria-current", "true");
+            } else {
+              b.removeAttribute("aria-current");
+            }
+          });
+        }
+
+        // Langue retenue, sinon celle du navigateur, sinon le français.
+        var stored = null;
+        try {
+          stored = localStorage.getItem(STORAGE_KEY);
+        } catch (e) {}
+        var browser = (navigator.language || "fr").slice(0, 2).toLowerCase();
+        apply(stored || (STRINGS[browser] ? browser : "fr"));
+
+        buttons.forEach(function (b) {
+          b.addEventListener("click", function () {
+            var lang = b.getAttribute("data-lang");
+            apply(lang);
+            try {
+              localStorage.setItem(STORAGE_KEY, lang);
+            } catch (e) {}
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
