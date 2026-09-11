@@ -7,6 +7,8 @@ on:
     branches: [main]
     paths:
       - "landing/**"
+      - "mailer/**"
+      - "nginx/**"
       - "docker-compose.landing.yml"
       - ".github/workflows/deploy-landing.yml"
   workflow_dispatch:
@@ -126,6 +128,11 @@ jobs:
             SMTP_STATE=$(docker exec ticketick-landing-mailer node -e \
               "fetch('http://127.0.0.1:3000/health').then(r=>r.json()).then(d=>console.log(d.smtp)).catch(()=>console.log('unreachable'))" \
               2>/dev/null || echo "unreachable")
+
+            # Le commit servi est affiché : sans lui, un filtre `paths` trop
+            # étroit peut laisser croire qu'une correction est déployée alors
+            # qu'aucun déploiement n'a été déclenché.
+            echo "📌 Version servie : $(git rev-parse --short HEAD) — $(git log -1 --format=%s)"
 
             case "$SMTP_STATE" in
               ok)
