@@ -79,8 +79,16 @@ services:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    networks:
+      # `default` reste nécessaire pour joindre la base ; `npm` permet à Nginx
+      # Proxy Manager, qui tourne en conteneur, d'atteindre l'application par
+      # son nom. Un port publié sur la boucle locale de l'hôte lui serait
+      # inaccessible.
+      - default
+      - npm
     ports:
-      # Port choisi automatiquement au premier déploiement puis figé (voir workflow)
+      # Conservé pour les contrôles depuis l'hôte (health check du déploiement).
+      # Lié à la boucle locale : rien n'est exposé sur Internet.
       - "127.0.0.1:${APP_PORT:-3005}:3000"
     healthcheck:
       test:
@@ -94,6 +102,12 @@ services:
       timeout: 5s
       retries: 6
       start_period: 20s
+
+networks:
+  # Réseau créé par la stack Nginx Proxy Manager.
+  npm:
+    external: true
+    name: nginx-proxy-manager_default
 
 volumes:
   db-data:

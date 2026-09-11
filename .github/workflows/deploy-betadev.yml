@@ -125,6 +125,16 @@ jobs:
             echo "   ✅ .env.betadev créé"
 
             # ── 4. Build et démarrage
+            # Le réseau de NPM est déclaré externe : sans lui le proxy ne
+            # pourrait pas résoudre le conteneur applicatif.
+            NET="nginx-proxy-manager_default"
+            if ! docker network inspect "$NET" > /dev/null 2>&1; then
+              echo "✖ Réseau Docker '$NET' introuvable."
+              echo "  Nginx Proxy Manager tourne-t-il toujours ? Réseaux existants :"
+              docker network ls
+              exit 1
+            fi
+
             echo "🏗️  Build de l'image Next.js (standalone)..."
             docker compose -f docker-compose.betadev.yml up -d --build --remove-orphans
 
@@ -175,8 +185,21 @@ jobs:
             # ── 7. Nettoyage
             docker image prune -f --filter "until=24h" > /dev/null 2>&1 || true
 
+            # Contrôle depuis NPM : c'est lui qui doit joindre l'application,
+            # une réponse ici valide donc le chemin réellement emprunté.
+            echo "🔎 Accès depuis Nginx Proxy Manager :"
+            if docker exec nginx-proxy-manager-app-1 \
+                 curl -sf -o /dev/null -w '   ↳ HTTP %{http_code} sur http://ticketick-v2-betadev-app:3000/\n' \
+                 http://ticketick-v2-betadev-app:3000/api/health 2>/dev/null; then
+              echo "   ✅ NPM atteint l'application."
+            else
+              echo "   ⚠ NPM ne joint pas l'application. Conteneurs sur le réseau :"
+              docker network inspect nginx-proxy-manager_default \
+                --format '{{range .Containers}}     - {{.Name}}{{println}}{{end}}' || true
+            fi
+
             echo "════════════════════════════════════════════"
             echo "  ✅ Déploiement terminé"
             echo "  🌐 https://appbetadev.ticketick.ch"
-            echo "  ↳ Nginx Proxy Manager doit pointer sur 127.0.0.1:${HOST_PORT}"
+            echo "  ↳ NPM : Forward Hostname 'ticketick-v2-betadev-app', Port 3000"
             echo "════════════════════════════════════════════"
