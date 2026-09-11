@@ -35,10 +35,16 @@ const transporter = nodemailer.createTransport({
   // 465 impose TLS d'emblée ; les autres ports passent par STARTTLS.
   secure: SMTP_PORT === 465,
   auth: { user: SMTP_USER, pass: SMTP_PASSWORD },
+  // Bornes explicites : sans elles, un serveur injoignable retiendrait le
+  // démarrage pendant les deux minutes du délai par défaut.
+  connectionTimeout: 10_000,
+  greetingTimeout: 10_000,
+  socketTimeout: 20_000,
 });
 
 /**
- * État de la connexion SMTP, éprouvée au démarrage puis exposée sur /health.
+ * État de la connexion SMTP, éprouvée avant l'ouverture du port puis exposée
+ * sur /health.
  *
  * Sans ce contrôle, un conteneur « en ligne » ne dirait rien de la validité
  * des identifiants : la panne n'apparaîtrait qu'au premier message d'un
@@ -46,15 +52,17 @@ const transporter = nodemailer.createTransport({
  * indisponibilité passagère du serveur de messagerie ne devant pas empêcher
  * la page de fonctionner.
  */
-let smtpReady = false;
+let smtpState = "pending";
 
 async function verifySmtp() {
   try {
     await transporter.verify();
-    smtpReady = true;
-    console.log(`✅ Connexion SMTP validée (${SMTP_HOST}:${SMTP_PORT})`);
+    if (smtpState !== "ok") {
+      console.log(`✅ Connexion SMTP validée (${SMTP_HOST}:${SMTP_PORT})`);
+    }
+    smtpState = "ok";
   } catch (error) {
-    smtpReady = false;
+    smtpState = "failed";
     console.error(`✖ Connexion SMTP refusée : ${error.message}`);
   }
 }
@@ -139,7 +147,7 @@ function json(res, status, payload) {
 
 const server = createServer(async (req, res) => {
   if (req.method === "GET" && req.url === "/health") {
-    return json(res, 200, { status: "ok", smtp: smtpReady ? "ok" : "failed" });
+    return json(res, 200, { status: "ok", smtp: smtpState });
   }
 
   if (req.method !== "POST" || !req.url?.startsWith("/api/contact")) {
@@ -214,8 +222,17 @@ const server = createServer(async (req, res) => {
   }
 });
 
+console.log(`  SMTP ${SMTP_HOST}:${SMTP_PORT} → ${MAIL_TO}`);
+
+// Éprouvée avant d'ouvrir le port : /health livre ainsi un état définitif dès
+// sa première réponse, au lieu d'un « en attente » que le déploiement
+// interpréterait à tort comme une panne.
+await verifySmtp();
+
+// Réévaluation périodique, pour qu'une coupure passagère du serveur de
+// messagerie se résorbe sans redémarrer le conteneur.
+setInterval(verifySmtp, 5 * 60 * 1000).unref();
+
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`▶ Service de contact en écoute sur :${PORT}`);
-  console.log(`  SMTP ${SMTP_HOST}:${SMTP_PORT} → ${MAIL_TO}`);
-  verifySmtp();
 });
