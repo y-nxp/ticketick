@@ -1,0 +1,14 @@
+{
+  "name": "ticketick-mailer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Service d'envoi du formulaire de contact de la page d'attente ticketick.ch",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.16"
+  }
+}

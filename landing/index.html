@@ -163,16 +163,127 @@
       }
 
       .contact {
-        margin-top: 36px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
+        margin-top: 44px;
+        width: 100%;
+        max-width: 560px;
+        padding: 28px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background-color: var(--card);
+        box-shadow: 0 10px 30px -18px rgba(42, 44, 48, 0.35);
+        text-align: left;
       }
 
-      .contact-label {
-        font-size: 14px;
+      .contact-title {
+        margin: 0 0 20px;
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      @media (max-width: 520px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
+        .contact {
+          padding: 20px;
+        }
+      }
+
+      .field {
+        display: block;
+        margin-bottom: 14px;
+      }
+
+      .field > span {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 500;
         color: var(--fg-muted);
+      }
+
+      .field input,
+      .field textarea {
+        width: 100%;
+        padding: 11px 13px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background-color: var(--bg);
+        color: var(--fg);
+        font-family: inherit;
+        font-size: 15px;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .field textarea {
+        resize: vertical;
+        min-height: 110px;
+      }
+
+      .field input:focus,
+      .field textarea:focus {
+        outline: none;
+        border-color: var(--violet);
+        box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.22);
+      }
+
+      /* Champ leurre : retiré du flux sans utiliser display:none, que certains
+         robots savent détecter. */
+      .honeypot {
+        position: absolute;
+        left: -9999px;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+      }
+
+      #contact-form .btn {
+        width: 100%;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+      }
+
+      #contact-form .btn[disabled] {
+        opacity: 0.6;
+        cursor: progress;
+      }
+
+      .form-status {
+        margin: 14px 0 0;
+        min-height: 1.2em;
+        font-size: 14px;
+        text-align: center;
+      }
+
+      .form-status[data-state="error"] {
+        /* Rouge lisible sur fond clair comme sur fond sombre. */
+        color: #d1344b;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .form-status[data-state="error"] {
+          color: #ff8095;
+        }
+      }
+
+      .form-status[data-state="success"] {
+        color: #1a8a5a;
+        font-weight: 500;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .form-status[data-state="success"] {
+          color: #4ed69b;
+        }
       }
 
       .btn {
@@ -279,14 +390,49 @@
         prochainement.
       </p>
 
-      <div class="contact">
-        <span class="contact-label" data-i18n="contactLabel">
+      <section class="contact" aria-labelledby="contact-title">
+        <h2 class="contact-title" id="contact-title" data-i18n="contactLabel">
           Organisateur ou spectateur, une question ?
-        </span>
-        <a class="btn" id="contact-link" href="mailto:contact@ticketick.ch">
-          <span data-i18n="contactCta">Nous écrire</span>
-        </a>
-      </div>
+        </h2>
+
+        <form id="contact-form" novalidate>
+          <div class="row">
+            <label class="field">
+              <span data-i18n="fieldName">Nom</span>
+              <input type="text" name="name" required maxlength="120" autocomplete="name" />
+            </label>
+            <label class="field">
+              <span data-i18n="fieldEmail">E-mail</span>
+              <input type="email" name="email" required maxlength="200" autocomplete="email" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span data-i18n="fieldSubject">Objet</span>
+            <input type="text" name="subject" maxlength="160" />
+          </label>
+
+          <label class="field">
+            <span data-i18n="fieldMessage">Message</span>
+            <textarea name="message" required rows="5" maxlength="5000"></textarea>
+          </label>
+
+          <!-- Leurre : masqué aux humains, rempli par les robots. -->
+          <div class="honeypot" aria-hidden="true">
+            <label>
+              Website
+              <input type="text" name="website" tabindex="-1" autocomplete="off" />
+            </label>
+          </div>
+
+          <button class="btn" type="submit">
+            <span data-i18n="contactCta">Envoyer</span>
+          </button>
+
+          <!-- Les retours sont annoncés aux lecteurs d'écran. -->
+          <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
 
       <nav class="langs" aria-label="Langue">
         <button type="button" data-lang="fr">fr</button>
@@ -310,7 +456,19 @@
             lead:
               "ticketick prépare une nouvelle plateforme pour découvrir et réserver les plus beaux spectacles de Suisse. La vente de billets reprendra prochainement.",
             contactLabel: "Organisateur ou spectateur, une question ?",
-            contactCta: "Nous écrire",
+            contactCta: "Envoyer",
+            fieldName: "Nom",
+            fieldEmail: "E-mail",
+            fieldSubject: "Objet",
+            fieldMessage: "Message",
+            sending: "Envoi en cours…",
+            sent: "Merci, votre message est bien parti. Nous vous répondrons rapidement.",
+            errInvalid:
+              "Merci de renseigner votre nom, un e-mail valide et un message d'au moins dix caractères.",
+            errRate:
+              "Trop de messages envoyés depuis cette connexion. Merci de réessayer plus tard.",
+            errSend:
+              "L'envoi a échoué. Merci de réessayer dans quelques instants.",
             rights: "© 2026 ticketick — Tous droits réservés.",
           },
           en: {
@@ -319,7 +477,18 @@
             lead:
               "ticketick is preparing a new platform to discover and book the finest shows in Switzerland. Ticket sales will resume shortly.",
             contactLabel: "Organizer or theatregoer, any question?",
-            contactCta: "Get in touch",
+            contactCta: "Send",
+            fieldName: "Name",
+            fieldEmail: "Email",
+            fieldSubject: "Subject",
+            fieldMessage: "Message",
+            sending: "Sending…",
+            sent: "Thank you, your message has been sent. We will get back to you shortly.",
+            errInvalid:
+              "Please provide your name, a valid email address and a message of at least ten characters.",
+            errRate:
+              "Too many messages sent from this connection. Please try again later.",
+            errSend: "Sending failed. Please try again in a moment.",
             rights: "© 2026 ticketick — All rights reserved.",
           },
           de: {
@@ -328,7 +497,19 @@
             lead:
               "ticketick arbeitet an einer neuen Plattform, um die schönsten Veranstaltungen der Schweiz zu entdecken und zu buchen. Der Ticketverkauf wird in Kürze wieder aufgenommen.",
             contactLabel: "Veranstalter oder Besucher, eine Frage?",
-            contactCta: "Kontakt aufnehmen",
+            contactCta: "Senden",
+            fieldName: "Name",
+            fieldEmail: "E-Mail",
+            fieldSubject: "Betreff",
+            fieldMessage: "Nachricht",
+            sending: "Wird gesendet…",
+            sent: "Vielen Dank, Ihre Nachricht wurde gesendet. Wir melden uns in Kürze.",
+            errInvalid:
+              "Bitte geben Sie Ihren Namen, eine gültige E-Mail-Adresse und eine Nachricht mit mindestens zehn Zeichen an.",
+            errRate:
+              "Zu viele Nachrichten von dieser Verbindung. Bitte versuchen Sie es später erneut.",
+            errSend:
+              "Senden fehlgeschlagen. Bitte versuchen Sie es in einem Moment erneut.",
             rights: "© 2026 ticketick — Alle Rechte vorbehalten.",
           },
           it: {
@@ -337,16 +518,34 @@
             lead:
               "ticketick sta preparando una nuova piattaforma per scoprire e prenotare i più bei spettacoli della Svizzera. La vendita dei biglietti riprenderà a breve.",
             contactLabel: "Organizzatore o spettatore, una domanda?",
-            contactCta: "Scrivici",
+            contactCta: "Invia",
+            fieldName: "Nome",
+            fieldEmail: "E-mail",
+            fieldSubject: "Oggetto",
+            fieldMessage: "Messaggio",
+            sending: "Invio in corso…",
+            sent: "Grazie, il suo messaggio è stato inviato. Le risponderemo a breve.",
+            errInvalid:
+              "Si prega di indicare il nome, un indirizzo e-mail valido e un messaggio di almeno dieci caratteri.",
+            errRate:
+              "Troppi messaggi inviati da questa connessione. Riprovi più tardi.",
+            errSend: "Invio non riuscito. Riprovi tra qualche istante.",
             rights: "© 2026 ticketick — Tutti i diritti riservati.",
           },
         };
 
         var STORAGE_KEY = "ticketick-landing-lang";
         var buttons = document.querySelectorAll(".langs button");
+        var form = document.getElementById("contact-form");
+        var status = document.getElementById("form-status");
+        var submit = form.querySelector("button[type=submit]");
+        // Dictionnaire courant : les messages du formulaire doivent suivre la
+        // langue choisie, y compris après un changement en cours de saisie.
+        var current = STRINGS.fr;
 
         function apply(lang) {
           var dict = STRINGS[lang] || STRINGS.fr;
+          current = dict;
           document.documentElement.lang = lang;
           document.querySelectorAll("[data-i18n]").forEach(function (el) {
             var key = el.getAttribute("data-i18n");
@@ -379,6 +578,57 @@
               localStorage.setItem(STORAGE_KEY, lang);
             } catch (e) {}
           });
+        });
+
+        function setStatus(state, text) {
+          status.setAttribute("data-state", state);
+          status.textContent = text;
+        }
+
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          var data = {
+            name: form.name.value.trim(),
+            email: form.email.value.trim(),
+            subject: form.subject.value.trim(),
+            message: form.message.value.trim(),
+            website: form.website.value,
+          };
+
+          // Contrôle côté client pour un retour immédiat ; le service revalide
+          // de toute façon, la vérification du navigateur n'étant pas fiable.
+          if (!data.name || !data.email.includes("@") || data.message.length < 10) {
+            setStatus("error", current.errInvalid);
+            return;
+          }
+
+          submit.disabled = true;
+          setStatus("pending", current.sending);
+
+          fetch("/api/contact", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(data),
+          })
+            .then(function (response) {
+              if (response.ok) {
+                form.reset();
+                setStatus("success", current.sent);
+              } else if (response.status === 429) {
+                setStatus("error", current.errRate);
+              } else if (response.status === 422) {
+                setStatus("error", current.errInvalid);
+              } else {
+                setStatus("error", current.errSend);
+              }
+            })
+            .catch(function () {
+              setStatus("error", current.errSend);
+            })
+            .finally(function () {
+              submit.disabled = false;
+            });
         });
       })();
     </script>

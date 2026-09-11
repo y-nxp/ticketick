@@ -27,8 +27,37 @@ jobs:
           username: ${{ secrets.GB10_USER }}
           key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
           port: ${{ secrets.GB10_PORT }}
+        env:
+          # Le port n'est pas un secret : surchargeable par une variable de
+          # dépôt si le fournisseur n'utilise pas STARTTLS sur 587.
+          SMTP_HOST: ${{ secrets.NOREPLY_HOST }}
+          SMTP_PORT: ${{ vars.NOREPLY_PORT || '587' }}
+          SMTP_USER: ${{ secrets.NOREPLY_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.NOREPLY_PASSWORD }}
+          MAIL_TO: ${{ vars.CONTACT_TO }}
+          # Certains fournisseurs authentifient sur un identifiant qui n'est pas
+          # une adresse : dans ce cas renseigner la variable MAIL_FROM.
+          MAIL_FROM: ${{ vars.MAIL_FROM || secrets.NOREPLY_USERNAME }}
+        with:
+          envs: SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,MAIL_TO,MAIL_FROM
           script: |
             set -euo pipefail
+
+            # Contrôlé avant toute modification : si la configuration SMTP est
+            # incomplète, le déploiement s'arrête sans toucher à la page en
+            # ligne, plutôt que de publier un formulaire qui n'enverrait rien.
+            MISSING=""
+            for v in SMTP_HOST SMTP_USER SMTP_PASSWORD MAIL_TO; do
+              eval "value=\${$v:-}"
+              [ -n "$value" ] || MISSING="$MISSING $v"
+            done
+            if [ -n "$MISSING" ]; then
+              echo "✖ Configuration du formulaire incomplète :$MISSING"
+              echo "  Secrets attendus  : NOREPLY_HOST, NOREPLY_USERNAME, NOREPLY_PASSWORD"
+              echo "  Variable attendue : CONTACT_TO (adresse de réception)"
+              echo "  La page actuellement en ligne reste inchangée."
+              exit 1
+            fi
 
             APP_DIR="$HOME/ticketick-landing"
             REPO="https://github.com/${{ github.repository }}.git"
@@ -56,8 +85,22 @@ jobs:
               exit 1
             fi
 
-            echo "🚀 Démarrage du conteneur..."
-            docker compose -f docker-compose.landing.yml up -d --remove-orphans
+            echo "🔐 Configuration du service de contact..."
+            umask 077
+            cat > .env.landing <<EOF
+            SMTP_HOST=${SMTP_HOST}
+            SMTP_PORT=${SMTP_PORT}
+            SMTP_USER=${SMTP_USER}
+            SMTP_PASSWORD=${SMTP_PASSWORD}
+            MAIL_FROM=${MAIL_FROM}
+            MAIL_TO=${MAIL_TO}
+            EOF
+            # Le heredoc ci-dessus est indenté pour la lisibilité du workflow :
+            # on retire cette indentation, sinon les clés seraient invalides.
+            sed -i 's/^[[:space:]]*//' .env.landing
+
+            echo "🚀 Démarrage des conteneurs..."
+            docker compose -f docker-compose.landing.yml up -d --build --remove-orphans
 
             echo "⏳ Vérification..."
             OK=0
@@ -72,7 +115,20 @@ jobs:
 
             if [ "$OK" -ne 1 ]; then
               echo "❌ La page ne répond pas — logs :"
-              docker compose -f docker-compose.landing.yml logs --tail=40 landing || true
+              docker compose -f docker-compose.landing.yml logs --tail=40 || true
+              exit 1
+            fi
+
+            # Le service d'envoi vérifie sa configuration au démarrage et sort
+            # en erreur si elle est incomplète : un conteneur vivant vaut donc
+            # validation des identifiants SMTP.
+            echo "✉ Service de contact :"
+            if docker exec ticketick-landing-mailer \
+                 node -e "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" 2>/dev/null; then
+              echo "   ✅ En ligne, destinataire configuré."
+            else
+              echo "   ❌ Injoignable — logs :"
+              docker compose -f docker-compose.landing.yml logs --tail=30 mailer || true
               exit 1
             fi
 
