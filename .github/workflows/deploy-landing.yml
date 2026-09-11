@@ -22,11 +22,6 @@ jobs:
     steps:
       - name: 📋 Déploiement via SSH
         uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.GB10_HOST }}
-          username: ${{ secrets.GB10_USER }}
-          key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
-          port: ${{ secrets.GB10_PORT }}
         env:
           # Le port n'est pas un secret : surchargeable par une variable de
           # dépôt si le fournisseur n'utilise pas STARTTLS sur 587.
@@ -39,6 +34,11 @@ jobs:
           # une adresse : dans ce cas renseigner la variable MAIL_FROM.
           MAIL_FROM: ${{ vars.MAIL_FROM || secrets.NOREPLY_USERNAME }}
         with:
+          host: ${{ secrets.GB10_HOST }}
+          username: ${{ secrets.GB10_USER }}
+          key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.GB10_PORT }}
+          # Variables transmises à la session distante.
           envs: SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,MAIL_TO,MAIL_FROM
           script: |
             set -euo pipefail
