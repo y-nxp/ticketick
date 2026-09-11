@@ -41,6 +41,14 @@ jobs:
             fi
 
             echo
+            echo "════════ Ce que NPM peut joindre par son nom ════════"
+            docker network inspect nginx-proxy-manager_default \
+              --format '{{range .Containers}}  - {{.Name}}{{println}}{{end}}' 2>/dev/null || true
+            echo "  Port interne de chaque conteneur (colonne de droite) :"
+            docker ps --format '  {{.Names}}\t{{.Ports}}' \
+              | grep -E "ticketick" || true
+
+            echo
             echo "════════ Passerelle du bridge par défaut ════════"
             docker network inspect bridge \
               --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}' 2>/dev/null || true
