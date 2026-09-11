@@ -38,6 +38,28 @@ const transporter = nodemailer.createTransport({
 });
 
 /**
+ * État de la connexion SMTP, éprouvée au démarrage puis exposée sur /health.
+ *
+ * Sans ce contrôle, un conteneur « en ligne » ne dirait rien de la validité
+ * des identifiants : la panne n'apparaîtrait qu'au premier message d'un
+ * visiteur, donc trop tard. L'échec n'est pas fatal pour autant, une
+ * indisponibilité passagère du serveur de messagerie ne devant pas empêcher
+ * la page de fonctionner.
+ */
+let smtpReady = false;
+
+async function verifySmtp() {
+  try {
+    await transporter.verify();
+    smtpReady = true;
+    console.log(`✅ Connexion SMTP validée (${SMTP_HOST}:${SMTP_PORT})`);
+  } catch (error) {
+    smtpReady = false;
+    console.error(`✖ Connexion SMTP refusée : ${error.message}`);
+  }
+}
+
+/**
  * Limitation par adresse IP. Un formulaire public sans garde-fou est
  * rapidement exploité pour du spam. Fenêtre glissante en mémoire : suffisant
  * pour une page d'attente, et remis à zéro au redémarrage.
@@ -117,7 +139,7 @@ function json(res, status, payload) {
 
 const server = createServer(async (req, res) => {
   if (req.method === "GET" && req.url === "/health") {
-    return json(res, 200, { status: "ok" });
+    return json(res, 200, { status: "ok", smtp: smtpReady ? "ok" : "failed" });
   }
 
   if (req.method !== "POST" || !req.url?.startsWith("/api/contact")) {
@@ -195,4 +217,5 @@ const server = createServer(async (req, res) => {
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`▶ Service de contact en écoute sur :${PORT}`);
   console.log(`  SMTP ${SMTP_HOST}:${SMTP_PORT} → ${MAIL_TO}`);
+  verifySmtp();
 });
