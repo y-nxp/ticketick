@@ -52,7 +52,8 @@ jobs:
 
             echo
             echo "════════ Ce qui reste en place ════════"
-            docker ps --format '  {{.Names}}' | grep -E "^  ticketick-(v2|landing)" || true
+            docker ps --format '{{.Names}}' | grep -E '^ticketick-(v2|landing)' \
+              | sed 's/^/  - /' || true
 
             if [ "${SUPPRIMER:-false}" != "true" ]; then
               echo
@@ -76,7 +77,8 @@ jobs:
             echo "════════ Contrôle ════════"
             echo "  Port 3003 encore en écoute ? $( (ss -tln 2>/dev/null || netstat -tln 2>/dev/null) | grep -c ':3003 ' ) (0 attendu)"
             echo "  Stack ticketick restante :"
-            docker ps --format '    {{.Names}}\t{{.Status}}' | grep -E "ticketick" || true
+            docker ps --format '{{.Names}} ({{.Status}})' | grep -E '^ticketick' \
+              | sed 's/^/    - /' || true
 
             echo
             echo "════════ Volumes conservés ════════"
