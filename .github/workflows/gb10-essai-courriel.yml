@@ -66,16 +66,27 @@ jobs:
               done'
             echo
 
-            # L'image est une sortie « standalone » : seules les dépendances
-            # tracées y figurent. Si nodemailer en est absent, l'application
-            # elle-même ne peut pas écrire, et pas seulement cet essai.
-            echo "🔎 Présence de nodemailer dans l'image :"
+            # L'image est une sortie « standalone ». Next empaquette la plupart
+            # des dépendances dans ses propres fichiers plutôt que de les
+            # laisser dans node_modules : l'absence du dossier ne prouve donc
+            # rien. On cherche les deux formes.
+            echo "🔎 Où se trouve nodemailer :"
             docker exec "$CONTENEUR" sh -lc '
-              find / -maxdepth 6 -type d -name nodemailer -path "*node_modules*" 2>/dev/null | head -5' \
-              | sed 's/^/   /' || true
+              echo "   — en tant que module :"
+              find / -maxdepth 7 -type d -name nodemailer -path "*node_modules*" 2>/dev/null \
+                | head -3 | sed "s/^/     /" || true
+              echo "   — empaqueté par Next :"
+              grep -rl "nodemailer" /app/.next/server 2>/dev/null | head -3 | sed "s/^/     /" || true' \
+              || true
             echo
 
-            echo "📤 Tentative d'envoi..."
+            echo "📜 Dernières traces de l'application (recherche d'échecs d'envoi) :"
+            docker logs --tail 200 "$CONTENEUR" 2>&1 \
+              | grep -iE "\[email|envoi impossible|réinitialisation|SMTP" \
+              | tail -15 | sed 's/^/   /' || echo "   (aucune trace liée aux courriels)"
+            echo
+
+            echo "📤 Tentative d'envoi direct..."
             docker exec -e DEST="$DEST" -w /app "$CONTENEUR" node -e '
               const nodemailer = require("nodemailer");
               const port = Number(process.env.SMTP_PORT || 587);
@@ -103,4 +114,4 @@ jobs:
                 .catch((e) => {
                   console.error("   ✖ Échec : " + e.message);
                   process.exit(1);
-                });'
+                });' || echo "   ↳ Envoi direct impossible. Voir ci-dessus si nodemailer est empaqueté : dans ce cas seul cet essai échoue, pas l'application."
