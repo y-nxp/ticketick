@@ -149,7 +149,8 @@
       "ORGANIZER": "Organizzatore",
       "RESELLER_AGENT": "Punto vendita",
       "ADMIN": "Amministratore"
-    }
+    },
+    "ticketCount": "{count} biglietto/i"
   },
   "organizer": {
     "title": "Spazio organizzatore",
@@ -218,7 +219,7 @@
       "users": "Account",
       "usersHint": "di cui {admins} amministratore/i",
       "resellers": "Punti vendita",
-      "noOrdersYet": "Nessun ordine registrato: il processo d’acquisto non salva ancora le vendite."
+      "noOrdersYet": "Nessun ordine per il momento. Le vendite appariranno qui dal primo acquisto pagato."
     },
     "events": {
       "title": "Spettacoli",
@@ -240,7 +241,7 @@
       "status": "Stato",
       "date": "Data",
       "total": "Totale",
-      "notWiredYet": "Nessun ordine registrato. Il pagamento non crea ancora un ordine nel database: questa pagina si popolerà quando il processo d’acquisto sarà collegato."
+      "notWiredYet": "Nessun ordine per il momento. Le vendite compaiono qui non appena un acquisto è pagato."
     },
     "resellers": {
       "title": "Punti vendita",

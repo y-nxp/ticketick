@@ -149,7 +149,8 @@
       "ORGANIZER": "Veranstalter",
       "RESELLER_AGENT": "Verkaufsstelle",
       "ADMIN": "Administrator"
-    }
+    },
+    "ticketCount": "{count} Ticket(s)"
   },
   "organizer": {
     "title": "Veranstalterbereich",
@@ -218,7 +219,7 @@
       "users": "Konten",
       "usersHint": "davon {admins} Administrator(en)",
       "resellers": "Verkaufsstellen",
-      "noOrdersYet": "Noch keine Bestellungen erfasst: Der Kaufvorgang speichert Verkäufe bisher nicht."
+      "noOrdersYet": "Noch keine Bestellungen. Verkäufe erscheinen hier ab dem ersten bezahlten Kauf."
     },
     "events": {
       "title": "Veranstaltungen",
@@ -240,7 +241,7 @@
       "status": "Status",
       "date": "Datum",
       "total": "Total",
-      "notWiredYet": "Keine Bestellungen erfasst. Die Zahlung legt noch keine Bestellung in der Datenbank an: Diese Seite füllt sich, sobald der Kaufvorgang angebunden ist."
+      "notWiredYet": "Noch keine Bestellungen. Verkäufe erscheinen hier, sobald ein Kauf bezahlt ist."
     },
     "resellers": {
       "title": "Verkaufsstellen",

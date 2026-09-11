@@ -149,7 +149,8 @@
       "ORGANIZER": "Organisateur",
       "RESELLER_AGENT": "Point de vente",
       "ADMIN": "Administrateur"
-    }
+    },
+    "ticketCount": "{count} billet(s)"
   },
   "organizer": {
     "title": "Espace organisateur",
@@ -218,7 +219,7 @@
       "users": "Comptes",
       "usersHint": "dont {admins} administrateur(s)",
       "resellers": "Points de vente",
-      "noOrdersYet": "Aucune commande n’est encore enregistrée : le tunnel d’achat ne persiste pas encore les ventes."
+      "noOrdersYet": "Aucune commande pour le moment. Les ventes apparaîtront ici dès le premier achat réglé."
     },
     "events": {
       "title": "Spectacles",
@@ -240,7 +241,7 @@
       "status": "Statut",
       "date": "Date",
       "total": "Total",
-      "notWiredYet": "Aucune commande enregistrée. Le paiement ne crée pas encore de commande en base : cette page se remplira dès que le tunnel d’achat sera raccordé."
+      "notWiredYet": "Aucune commande pour le moment. Les ventes s’inscrivent ici dès qu’un achat est réglé."
     },
     "resellers": {
       "title": "Points de vente",

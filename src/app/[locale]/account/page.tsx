@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { requireAuth } from "@/lib/auth/dal";
 import { logout } from "@/lib/auth/actions";
+import { getMyOrders } from "@/lib/data/my-orders";
+import { formatDate, formatPrice } from "@/lib/utils";
+import { t as translate, type Translated } from "@/lib/types";
 import { PasswordForm } from "./password-form";
 
 // Dépend de la session : jamais mise en cache.
@@ -20,7 +23,12 @@ export default async function AccountPage({
 
   const user = await requireAuth("/account");
   const t = await getTranslations("account");
-  const ta = await getTranslations("auth");
+  const ta = await getTranslations("admin");
+  const tAuth = await getTranslations("auth");
+
+  // L'identifiant vient de la session : on ne consulte que ses propres
+  // commandes.
+  const orders = await getMyOrders(user.id);
 
   return (
     <div className="container-page py-10">
@@ -38,7 +46,7 @@ export default async function AccountPage({
         <form action={logout}>
           <Button type="submit" variant="outline">
             <LogOut className="size-4" />
-            {ta("signOut")}
+            {tAuth("signOut")}
           </Button>
         </form>
       </div>
@@ -79,18 +87,83 @@ export default async function AccountPage({
 
         <section className="rounded-2xl border border-border bg-card p-6">
           <h2 className="flex items-center gap-2 font-semibold">
-            <Ticket className="size-4 text-muted-foreground" />
-            {t("myTickets")}
-          </h2>
-          {/* Les commandes ne sont pas encore enregistrées : afficher un
-              tableau vide serait plus trompeur que de le dire. */}
-          <p className="mt-4 text-sm text-muted-foreground">{t("noTickets")}</p>
-
-          <h2 className="mt-6 flex items-center gap-2 font-semibold">
             <Receipt className="size-4 text-muted-foreground" />
             {t("myOrders")}
           </h2>
-          <p className="mt-4 text-sm text-muted-foreground">{t("noOrders")}</p>
+
+          {orders.length === 0 ? (
+            <p className="mt-4 text-sm text-muted-foreground">
+              {t("noOrders")}
+            </p>
+          ) : (
+            <ul className="mt-4 space-y-4">
+              {orders.map((order) => (
+                <li
+                  key={order.id}
+                  className="rounded-xl border border-border p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {order.reference}
+                    </span>
+                    <Badge
+                      variant={
+                        order.status === "PAID" ? "default" : "secondary"
+                      }
+                    >
+                      {ta(`orderStatus.${order.status}`)}
+                    </Badge>
+                  </div>
+
+                  <ul className="mt-3 space-y-1 text-sm">
+                    {order.items.map((item, index) => (
+                      <li key={index}>
+                        {item.quantity} × {translate(
+                          item.ticketType.session.event.title as Translated,
+                          locale,
+                        )}
+                        <span className="text-muted-foreground">
+                          {" — "}
+                          {formatDate(
+                            item.ticketType.session.startsAt,
+                            `${locale}-CH`,
+                            { day: "2-digit", month: "short", year: "numeric" },
+                          )}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-sm">
+                    <span className="font-medium tabular-nums">
+                      {formatPrice(order.totalCents, locale)}
+                    </span>
+                    {/* Les billets n'existent qu'après confirmation du
+                        paiement : une commande en attente n'en a pas. */}
+                    {order.tickets.length > 0 ? (
+                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                        <Ticket className="size-3.5" />
+                        {t("ticketCount", { count: order.tickets.length })}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  {order.tickets.length > 0 ? (
+                    <ul className="mt-3 flex flex-wrap gap-1.5">
+                      {order.tickets.map((ticket) => (
+                        <li
+                          key={ticket.code}
+                          className="rounded-lg bg-muted px-2 py-1 font-mono text-xs"
+                        >
+                          {ticket.code}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
 

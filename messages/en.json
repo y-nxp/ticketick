@@ -149,7 +149,8 @@
       "ORGANIZER": "Organizer",
       "RESELLER_AGENT": "Point of sale",
       "ADMIN": "Administrator"
-    }
+    },
+    "ticketCount": "{count} ticket(s)"
   },
   "organizer": {
     "title": "Organizer space",
@@ -218,7 +219,7 @@
       "users": "Accounts",
       "usersHint": "including {admins} administrator(s)",
       "resellers": "Points of sale",
-      "noOrdersYet": "No orders recorded yet: checkout does not persist sales at this stage."
+      "noOrdersYet": "No orders yet. Sales will appear here from the first completed purchase."
     },
     "events": {
       "title": "Shows",
@@ -240,7 +241,7 @@
       "status": "Status",
       "date": "Date",
       "total": "Total",
-      "notWiredYet": "No orders recorded. Payment does not yet create an order in the database: this page will fill up once checkout is wired in."
+      "notWiredYet": "No orders yet. Sales appear here as soon as a purchase is paid for."
     },
     "resellers": {
       "title": "Points of sale",
