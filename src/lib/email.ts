@@ -82,13 +82,20 @@ async function envoyer(options: {
   }
 
   try {
-    await getTransport().sendMail({
+    const info = await getTransport().sendMail({
       from: expediteur(),
       to: options.to,
       subject: options.subject,
       text: options.text,
       html: options.html,
     });
+    // Le succès est journalisé autant que l'échec : sans cette trace, un
+    // message parti et un message jamais tenté se ressemblent, et l'on ne
+    // peut pas répondre à « je n'ai rien reçu ». Le contenu, lui, n'y figure
+    // pas : un lien de réinitialisation dans un journal serait exploitable.
+    console.info(
+      `[email] ${options.etiquette} envoyé à ${options.to} — ${info.messageId}`,
+    );
     return { sent: true, mock: false };
   } catch (error) {
     console.error(`[email] envoi impossible (${options.etiquette})`, error);

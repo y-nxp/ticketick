@@ -80,6 +80,19 @@ jobs:
               || true
             echo
 
+            # Sans jeton en base, l'absence d'erreur d'envoi ne prouverait
+            # rien : cela voudrait dire que le parcours n'a pas été exécuté.
+            echo "🔎 Demandes de réinitialisation enregistrées :"
+            BDD="${CONTENEUR%-app}-db"
+            PGU=$(docker exec "$BDD" printenv POSTGRES_USER)
+            PGD=$(docker exec "$BDD" printenv POSTGRES_DB)
+            docker exec "$BDD" psql -U "$PGU" -d "$PGD" -qtc \
+              "SELECT '   ' || count(*) || ' jeton(s), dont '
+                    || count(*) FILTER (WHERE \"usedAt\" IS NULL AND \"expiresAt\" > now())
+                    || ' encore valable(s)' FROM \"PasswordResetToken\";" \
+              || echo "   ⚠ Lecture impossible"
+            echo
+
             echo "📜 Dernières traces de l'application (recherche d'échecs d'envoi) :"
             docker logs --tail 200 "$CONTENEUR" 2>&1 \
               | grep -iE "\[email|envoi impossible|réinitialisation|SMTP" \
