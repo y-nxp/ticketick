@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getPublishedEvents } from "@/lib/data/events";
+import { requireRole } from "@/lib/auth/dal";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { minPriceCents, nextSession, t } from "@/lib/types";
 
@@ -16,6 +17,11 @@ export default async function OrganizerDashboardPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+
+  // Contrôle dans la page et non dans un layout : un layout ne décide pas du
+  // rendu des segments qu'il englobe, la page s'exécuterait malgré tout.
+  await requireRole(["ORGANIZER", "ADMIN"], "/organizer/dashboard");
+
   const to = await getTranslations("organizer");
 
   const events = await getPublishedEvents();

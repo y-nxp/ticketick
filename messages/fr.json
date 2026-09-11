@@ -124,7 +124,17 @@
     "profile": "Profil",
     "noTickets": "Vous n'avez pas encore de billets.",
     "welcome": "Bon retour",
-    "loginToContinue": "Connectez-vous pour accéder à votre espace."
+    "loginToContinue": "Connectez-vous pour accéder à votre espace.",
+    "role": "Rôle",
+    "noOrders": "Aucune commande pour le moment.",
+    "adminAccess": "Administration",
+    "adminAccessHint": "Gérer les spectacles, les séances, les commandes et les revendeurs.",
+    "roles": {
+      "CUSTOMER": "Client",
+      "ORGANIZER": "Organisateur",
+      "RESELLER_AGENT": "Point de vente",
+      "ADMIN": "Administrateur"
+    }
   },
   "organizer": {
     "title": "Espace organisateur",
@@ -153,5 +163,126 @@
     "help": "Centre d'aide",
     "rights": "Tous droits réservés.",
     "madeIn": "Conçu en Suisse"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "signInSubtitle": "Accédez à votre espace ticketick.",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "pending": "Connexion…",
+    "invalid": "E-mail ou mot de passe incorrect.",
+    "throttled": "Trop de tentatives. Réessayez dans une quinzaine de minutes.",
+    "unavailable": "Service momentanément indisponible. Réessayez dans un instant.",
+    "signOut": "Se déconnecter",
+    "forbiddenTitle": "Accès refusé",
+    "forbiddenBody": "Votre compte n’a pas les droits nécessaires pour consulter cette page.",
+    "backHome": "Retour à l’accueil"
+  },
+  "admin": {
+    "title": "Administration",
+    "nav": {
+      "overview": "Vue d’ensemble",
+      "events": "Spectacles",
+      "orders": "Commandes",
+      "resellers": "Points de vente",
+      "users": "Comptes"
+    },
+    "overview": {
+      "title": "Vue d’ensemble",
+      "subtitle": "État de la billetterie en temps réel.",
+      "events": "Spectacles",
+      "eventsHint": "{published} publiés · {draft} en brouillon",
+      "sessions": "Séances",
+      "sessionsHint": "{upcoming} à venir",
+      "sold": "Billets vendus",
+      "soldHint": "{percent} % du stock",
+      "revenue": "Chiffre d’affaires",
+      "revenueHint": "Calculé sur les billets vendus",
+      "orders": "Commandes",
+      "users": "Comptes",
+      "usersHint": "dont {admins} administrateur(s)",
+      "resellers": "Points de vente",
+      "noOrdersYet": "Aucune commande n’est encore enregistrée : le tunnel d’achat ne persiste pas encore les ventes."
+    },
+    "events": {
+      "title": "Spectacles",
+      "subtitle": "{count} spectacle(s) au catalogue.",
+      "event": "Spectacle",
+      "status": "Statut",
+      "sessions": "Séances",
+      "next": "Prochaine",
+      "sold": "Vendus",
+      "revenue": "Recettes",
+      "empty": "Aucun spectacle."
+    },
+    "orders": {
+      "title": "Commandes",
+      "subtitle": "Les 100 dernières commandes.",
+      "reference": "Référence",
+      "customer": "Client",
+      "channel": "Canal",
+      "status": "Statut",
+      "date": "Date",
+      "total": "Total",
+      "notWiredYet": "Aucune commande enregistrée. Le paiement ne crée pas encore de commande en base : cette page se remplira dès que le tunnel d’achat sera raccordé."
+    },
+    "resellers": {
+      "title": "Points de vente",
+      "subtitle": "Offices du tourisme et partenaires.",
+      "name": "Point de vente",
+      "type": "Type",
+      "commission": "Commission",
+      "orders": "Commandes",
+      "balance": "Solde",
+      "agents": "{count} agent(s)",
+      "empty": "Aucun point de vente.",
+      "balanceHint": "Solde vu du point de vente : négatif, il doit de l’argent à ticketick."
+    },
+    "users": {
+      "title": "Comptes",
+      "subtitle": "{count} compte(s).",
+      "account": "Compte",
+      "role": "Rôle",
+      "state": "État",
+      "lastLogin": "Dernière connexion",
+      "sessions": "Sessions",
+      "active": "Actif",
+      "suspended": "Suspendu",
+      "you": "Vous",
+      "changeRole": "Modifier le rôle de {email}",
+      "hint": "Changer un rôle ou suspendre un compte ferme immédiatement les sessions ouvertes.",
+      "errors": {
+        "forbidden": "Droits insuffisants.",
+        "self": "Vous ne pouvez pas modifier votre propre compte.",
+        "lastAdmin": "Impossible : ce serait le dernier administrateur actif.",
+        "notFound": "Compte introuvable.",
+        "invalid": "Requête invalide."
+      }
+    },
+    "status": {
+      "DRAFT": "Brouillon",
+      "PUBLISHED": "Publié",
+      "CANCELLED": "Annulé",
+      "SOLD_OUT": "Complet",
+      "PAST": "Passé"
+    },
+    "orderStatus": {
+      "PENDING": "En attente",
+      "AWAITING_PAYMENT": "Paiement attendu",
+      "PAID": "Payée",
+      "CANCELLED": "Annulée",
+      "REFUNDED": "Remboursée"
+    },
+    "channel": {
+      "ONLINE": "En ligne",
+      "RESELLER": "Point de vente",
+      "BOX_OFFICE": "Guichet"
+    },
+    "resellerType": {
+      "TOURISM_OFFICE": "Office du tourisme",
+      "PARTNER_SHOP": "Boutique partenaire",
+      "BOX_OFFICE": "Guichet"
+    }
   }
 }

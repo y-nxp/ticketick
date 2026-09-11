@@ -124,7 +124,17 @@
     "profile": "Profile",
     "noTickets": "You don't have any tickets yet.",
     "welcome": "Welcome back",
-    "loginToContinue": "Sign in to access your account."
+    "loginToContinue": "Sign in to access your account.",
+    "role": "Role",
+    "noOrders": "No orders yet.",
+    "adminAccess": "Administration",
+    "adminAccessHint": "Manage shows, dates, orders and resellers.",
+    "roles": {
+      "CUSTOMER": "Customer",
+      "ORGANIZER": "Organizer",
+      "RESELLER_AGENT": "Point of sale",
+      "ADMIN": "Administrator"
+    }
   },
   "organizer": {
     "title": "Organizer space",
@@ -153,5 +163,126 @@
     "help": "Help center",
     "rights": "All rights reserved.",
     "madeIn": "Made in Switzerland"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signInSubtitle": "Access your ticketick account.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "pending": "Signing in…",
+    "invalid": "Incorrect email or password.",
+    "throttled": "Too many attempts. Please try again in about fifteen minutes.",
+    "unavailable": "Service temporarily unavailable. Please try again shortly.",
+    "signOut": "Sign out",
+    "forbiddenTitle": "Access denied",
+    "forbiddenBody": "Your account does not have the rights to view this page.",
+    "backHome": "Back to home"
+  },
+  "admin": {
+    "title": "Administration",
+    "nav": {
+      "overview": "Overview",
+      "events": "Shows",
+      "orders": "Orders",
+      "resellers": "Points of sale",
+      "users": "Accounts"
+    },
+    "overview": {
+      "title": "Overview",
+      "subtitle": "Live state of the ticket office.",
+      "events": "Shows",
+      "eventsHint": "{published} published · {draft} draft",
+      "sessions": "Dates",
+      "sessionsHint": "{upcoming} upcoming",
+      "sold": "Tickets sold",
+      "soldHint": "{percent}% of stock",
+      "revenue": "Revenue",
+      "revenueHint": "Based on tickets sold",
+      "orders": "Orders",
+      "users": "Accounts",
+      "usersHint": "including {admins} administrator(s)",
+      "resellers": "Points of sale",
+      "noOrdersYet": "No orders recorded yet: checkout does not persist sales at this stage."
+    },
+    "events": {
+      "title": "Shows",
+      "subtitle": "{count} show(s) in the catalogue.",
+      "event": "Show",
+      "status": "Status",
+      "sessions": "Dates",
+      "next": "Next",
+      "sold": "Sold",
+      "revenue": "Revenue",
+      "empty": "No shows."
+    },
+    "orders": {
+      "title": "Orders",
+      "subtitle": "The 100 most recent orders.",
+      "reference": "Reference",
+      "customer": "Customer",
+      "channel": "Channel",
+      "status": "Status",
+      "date": "Date",
+      "total": "Total",
+      "notWiredYet": "No orders recorded. Payment does not yet create an order in the database: this page will fill up once checkout is wired in."
+    },
+    "resellers": {
+      "title": "Points of sale",
+      "subtitle": "Tourism offices and partners.",
+      "name": "Point of sale",
+      "type": "Type",
+      "commission": "Commission",
+      "orders": "Orders",
+      "balance": "Balance",
+      "agents": "{count} agent(s)",
+      "empty": "No points of sale.",
+      "balanceHint": "Balance from the reseller’s point of view: negative means they owe ticketick."
+    },
+    "users": {
+      "title": "Accounts",
+      "subtitle": "{count} account(s).",
+      "account": "Account",
+      "role": "Role",
+      "state": "State",
+      "lastLogin": "Last sign-in",
+      "sessions": "Sessions",
+      "active": "Active",
+      "suspended": "Suspended",
+      "you": "You",
+      "changeRole": "Change role of {email}",
+      "hint": "Changing a role or suspending an account immediately closes its open sessions.",
+      "errors": {
+        "forbidden": "Insufficient rights.",
+        "self": "You cannot modify your own account.",
+        "lastAdmin": "Not possible: this would be the last active administrator.",
+        "notFound": "Account not found.",
+        "invalid": "Invalid request."
+      }
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "PUBLISHED": "Published",
+      "CANCELLED": "Cancelled",
+      "SOLD_OUT": "Sold out",
+      "PAST": "Past"
+    },
+    "orderStatus": {
+      "PENDING": "Pending",
+      "AWAITING_PAYMENT": "Awaiting payment",
+      "PAID": "Paid",
+      "CANCELLED": "Cancelled",
+      "REFUNDED": "Refunded"
+    },
+    "channel": {
+      "ONLINE": "Online",
+      "RESELLER": "Point of sale",
+      "BOX_OFFICE": "Box office"
+    },
+    "resellerType": {
+      "TOURISM_OFFICE": "Tourism office",
+      "PARTNER_SHOP": "Partner shop",
+      "BOX_OFFICE": "Box office"
+    }
   }
 }

@@ -25,6 +25,29 @@ enum UserRole {
   ADMIN
 }
 
+/// Session ouverte par une connexion réussie.
+///
+/// Conservée en base plutôt que portée entièrement par le cookie : c'est ce
+/// qui permet de révoquer un accès. Un jeton auto-porteur resterait valable
+/// jusqu'à son échéance même après la désactivation du compte.
+model Session {
+  id     String @id @default(cuid())
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  expiresAt DateTime
+
+  /// Contexte de la connexion, pour qu'un utilisateur reconnaisse ses propres
+  /// sessions dans la liste de ses appareils.
+  userAgent String?
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 enum EventStatus {
   DRAFT
   PUBLISHED
@@ -116,6 +139,13 @@ model User {
   role         UserRole @default(CUSTOMER)
   locale       String   @default("fr")
   phone        String?
+
+  /// Un compte désactivé conserve son historique mais ne peut plus se
+  /// connecter : on ne supprime pas un utilisateur rattaché à des commandes.
+  active      Boolean   @default(true)
+  lastLoginAt DateTime?
+
+  sessions Session[]
 
   /// Accès "amis du festival" (session PWA)
   isFestivalFriend Boolean @default(false)
