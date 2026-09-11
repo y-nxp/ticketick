@@ -1,0 +1,57 @@
+name: 🧹 Dépublier le catalogue de démonstration (GB10)
+
+# Déclenchement manuel : retirer des spectacles de la vente ne doit jamais
+# être un effet de bord d'un déploiement.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: unpublish-demo-gb10
+  cancel-in-progress: false
+
+jobs:
+  unpublish:
+    name: Mise en brouillon sur BetaDev
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 🧹 Dépublier via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GB10_HOST }}
+          username: ${{ secrets.GB10_USER }}
+          key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.GB10_PORT }}
+          command_timeout: 10m
+          script: |
+            set -euo pipefail
+
+            APP_DIR="$HOME/ticketick-v2-betadev"
+
+            if [ ! -d "$APP_DIR" ]; then
+              echo "✖ $APP_DIR est absent : déployer l'application d'abord."
+              exit 1
+            fi
+
+            cd "$APP_DIR"
+            echo "  Version déployée : $(git rev-parse --short HEAD)"
+
+            echo "════════ Mise en brouillon ════════"
+
+            # Exécuté dans l'image de build : elle porte le schéma Prisma et
+            # tsx, absents de l'image d'exécution allégée.
+            docker compose -f docker-compose.betadev.yml run --rm \
+              migrate npx tsx prisma/unpublish-demo.ts
+
+            echo "════════ Contrôle ════════"
+
+            # Relecture indépendante du script : on veut voir la base, pas
+            # se fier au seul code de sortie.
+            docker compose -f docker-compose.betadev.yml exec -T db \
+              psql -U "$(grep -E '^POSTGRES_USER=' .env.betadev | cut -d= -f2)" \
+                   -d "$(grep -E '^POSTGRES_DB=' .env.betadev | cut -d= -f2)" \
+                   -qtc "SELECT '  publiés=' || count(*) FILTER (WHERE status = 'PUBLISHED' AND visibility = 'PUBLIC') || ' | brouillons=' || count(*) FILTER (WHERE status = 'DRAFT') FROM \"Event\";"
+
+            echo ""
+            echo "✅ Site public : https://appbetadev.ticketick.ch/"

@@ -42,22 +42,36 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const sessionId = await readSessionId(await currentSessionToken());
   if (!sessionId) return null;
 
-  const session = await prisma.session.findUnique({
-    where: { id: sessionId },
-    select: {
-      expiresAt: true,
-      user: {
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          locale: true,
-          active: true,
+  let session;
+  try {
+    session = await prisma.session.findUnique({
+      where: { id: sessionId },
+      select: {
+        expiresAt: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            locale: true,
+            active: true,
+          },
         },
       },
-    },
-  });
+    });
+  } catch (error) {
+    // Une base injoignable ne doit pas propager d'exception : elle ferait
+    // disparaître l'entrée de connexion de l'en-tête, sans message, et la
+    // page répondrait malgré tout 200. Un visiteur se retrouverait sans
+    // aucun moyen de se connecter ni d'en comprendre la raison.
+    //
+    // La panne se traduit donc par « personne n'est connecté » : les
+    // vérifications en aval refusent l'accès au lieu de l'accorder. Journalisé
+    // pour ne pas laisser l'incident invisible.
+    console.error("[auth] lecture de session impossible", error);
+    return null;
+  }
 
   if (!session) return null;
 

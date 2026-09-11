@@ -28,7 +28,9 @@
     "sectionUpcoming": "Prossimamente",
     "resultsCount": "{count, plural, =0 {Nessuno spettacolo} =1 {# spettacolo} other {# spettacoli}}",
     "noResults": "Nessuno spettacolo corrisponde alla tua ricerca.",
-    "noResultsHint": "Prova ad ampliare i filtri."
+    "noResultsHint": "Prova ad ampliare i filtri.",
+    "emptyCatalog": "Nessuno spettacolo in cartellone al momento.",
+    "emptyCatalogHint": "Il programma arriva a breve. Torna presto a trovarci."
   },
   "filters": {
     "title": "Filtri",

@@ -28,7 +28,9 @@
     "sectionUpcoming": "Demnächst",
     "resultsCount": "{count, plural, =0 {Keine Veranstaltungen} =1 {# Veranstaltung} other {# Veranstaltungen}}",
     "noResults": "Keine Veranstaltungen entsprechen Ihrer Suche.",
-    "noResultsHint": "Versuchen Sie, die Filter zu erweitern."
+    "noResultsHint": "Versuchen Sie, die Filter zu erweitern.",
+    "emptyCatalog": "Zurzeit sind keine Veranstaltungen im Programm.",
+    "emptyCatalogHint": "Das Programm folgt in Kürze. Schauen Sie bald wieder vorbei."
   },
   "filters": {
     "title": "Filter",

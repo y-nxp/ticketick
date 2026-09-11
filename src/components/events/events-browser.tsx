@@ -137,6 +137,20 @@ export function EventsBrowser({
     setSort("date");
   }
 
+  // Catalogue vide : ni recherche ni filtres, il n'y a rien à parcourir.
+  // Le message d'absence de résultat parlerait à tort d'une recherche à
+  // élargir alors qu'aucun spectacle n'est encore à l'affiche.
+  if (events.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border py-16 text-center">
+        <p className="font-medium">{th("emptyCatalog")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {th("emptyCatalogHint")}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Barre de catégories */}

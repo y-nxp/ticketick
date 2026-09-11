@@ -28,7 +28,9 @@
     "sectionUpcoming": "Coming up",
     "resultsCount": "{count, plural, =0 {No events} =1 {# event} other {# events}}",
     "noResults": "No events match your search.",
-    "noResultsHint": "Try broadening your filters."
+    "noResultsHint": "Try broadening your filters.",
+    "emptyCatalog": "No shows on sale at the moment.",
+    "emptyCatalogHint": "The programme is on its way. Do check back soon."
   },
   "filters": {
     "title": "Filters",

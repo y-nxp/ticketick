@@ -116,9 +116,10 @@ jobs:
             STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
             STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
             MAIL_FROM=billets@ticketick.ch
-            # Recette : catalogue de démonstration réinjecté à chaque
-            # démarrage. À ne pas activer en production.
-            SEED_ON_START=true
+            # Catalogue de démonstration. Coupé : la programmation est
+            # désormais saisie depuis le backoffice, et un réamorçage à
+            # chaque démarrage remettrait les spectacles fictifs en ligne.
+            SEED_ON_START=false
             EOF
             # docker compose lit POSTGRES_* depuis .env pour l'interpolation
             cp "$APP_DIR/.env.betadev" "$APP_DIR/.env"

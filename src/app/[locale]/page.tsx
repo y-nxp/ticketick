@@ -87,10 +87,14 @@ export default async function HomePage({
                       ? "Biglietti via e-mail"
                       : "Tickets by email"}
               </span>
-              <span className="inline-flex items-center gap-2">
-                <Ticket className="size-4 text-primary" />
-                {events.length}+ {te("tickets").toLowerCase()}
-              </span>
+              {/* Masqué tant que rien n'est à l'affiche : « 0+ billets »
+                  annoncerait le vide comme un argument de vente. */}
+              {events.length > 0 && (
+                <span className="inline-flex items-center gap-2">
+                  <Ticket className="size-4 text-primary" />
+                  {events.length}+ {te("tickets").toLowerCase()}
+                </span>
+              )}
             </div>
           </div>
         </div>
