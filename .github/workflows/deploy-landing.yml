@@ -119,18 +119,31 @@ jobs:
               exit 1
             fi
 
-            # Le service d'envoi vérifie sa configuration au démarrage et sort
-            # en erreur si elle est incomplète : un conteneur vivant vaut donc
-            # validation des identifiants SMTP.
+            # Le service éprouve la connexion SMTP au démarrage et en publie le
+            # résultat : un conteneur vivant ne suffirait pas à prouver que les
+            # identifiants sont bons.
             echo "✉ Service de contact :"
-            if docker exec ticketick-landing-mailer \
-                 node -e "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))" 2>/dev/null; then
-              echo "   ✅ En ligne, destinataire configuré."
-            else
-              echo "   ❌ Injoignable — logs :"
-              docker compose -f docker-compose.landing.yml logs --tail=30 mailer || true
-              exit 1
-            fi
+            SMTP_STATE=$(docker exec ticketick-landing-mailer node -e \
+              "fetch('http://127.0.0.1:3000/health').then(r=>r.json()).then(d=>console.log(d.smtp)).catch(()=>console.log('unreachable'))" \
+              2>/dev/null || echo "unreachable")
+
+            case "$SMTP_STATE" in
+              ok)
+                echo "   ✅ Connexion SMTP validée, formulaire opérationnel."
+                ;;
+              failed)
+                echo "   ❌ Le service tourne mais le serveur SMTP refuse la connexion."
+                echo "     Vérifier NOREPLY_HOST / NOREPLY_USERNAME / NOREPLY_PASSWORD"
+                echo "     et la variable NOREPLY_PORT. Détail :"
+                docker compose -f docker-compose.landing.yml logs --tail=20 mailer || true
+                exit 1
+                ;;
+              *)
+                echo "   ❌ Service injoignable — logs :"
+                docker compose -f docker-compose.landing.yml logs --tail=30 mailer || true
+                exit 1
+                ;;
+            esac
 
             # Contrôle depuis NPM lui-même : c'est lui qui devra joindre le
             # conteneur, une réponse ici valide donc le chemin réel.
