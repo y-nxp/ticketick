@@ -66,8 +66,17 @@ jobs:
               done'
             echo
 
+            # L'image est une sortie « standalone » : seules les dépendances
+            # tracées y figurent. Si nodemailer en est absent, l'application
+            # elle-même ne peut pas écrire, et pas seulement cet essai.
+            echo "🔎 Présence de nodemailer dans l'image :"
+            docker exec "$CONTENEUR" sh -lc '
+              find / -maxdepth 6 -type d -name nodemailer -path "*node_modules*" 2>/dev/null | head -5' \
+              | sed 's/^/   /' || true
+            echo
+
             echo "📤 Tentative d'envoi..."
-            docker exec -e DEST="$DEST" "$CONTENEUR" node -e '
+            docker exec -e DEST="$DEST" -w /app "$CONTENEUR" node -e '
               const nodemailer = require("nodemailer");
               const port = Number(process.env.SMTP_PORT || 587);
               const t = nodemailer.createTransport({
