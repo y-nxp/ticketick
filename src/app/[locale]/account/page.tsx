@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { requireAuth } from "@/lib/auth/dal";
 import { logout } from "@/lib/auth/actions";
+import { PasswordForm } from "./password-form";
 
 // Dépend de la session : jamais mise en cache.
 export const dynamic = "force-dynamic";
@@ -91,6 +92,10 @@ export default async function AccountPage({
           </h2>
           <p className="mt-4 text-sm text-muted-foreground">{t("noOrders")}</p>
         </section>
+      </div>
+
+      <div className="mt-4 max-w-xl">
+        <PasswordForm />
       </div>
     </div>
   );
