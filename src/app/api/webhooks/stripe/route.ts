@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getStripe, isStripeConfigured } from "@/lib/payment/stripe";
 import { sendTicketEmail } from "@/lib/email";
+import { markOrderPaid } from "@/lib/orders/mark-paid";
 
 // Le webhook a besoin du corps brut pour vérifier la signature.
 export const runtime = "nodejs";
@@ -84,7 +85,29 @@ async function handlePaidSession(
     // best-effort
   }
 
-  // TODO (prod) : marquer la commande PAID en base et générer les billets (PDF/QR).
+  const paid = await markOrderPaid({
+    reference,
+    provider: "stripe",
+    providerRef: session.id,
+    method: "CARD",
+    amountCents: totalCents,
+    currency,
+  });
+
+  if (!paid.ok) {
+    // Journalisé sans relancer d'exception : renvoyer une erreur ferait
+    // rejouer l'événement par Stripe alors que rien ne changerait.
+    console.error(
+      `[stripe] commande ${reference} non soldée : ${paid.error}`,
+      { sessionId: session.id, amountCents: totalCents },
+    );
+    return;
+  }
+
+  // Le rejeu d'un même événement ne doit pas renvoyer les billets une
+  // seconde fois à l'acheteur.
+  if (paid.alreadyPaid) return;
+
   if (email) {
     await sendTicketEmail({
       to: email,

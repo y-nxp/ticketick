@@ -1,37 +1,34 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
+import * as z from "zod";
 import { createCheckoutSession } from "@/lib/payment/stripe";
 import { sendTicketEmail } from "@/lib/email";
+import { createOrder } from "@/lib/orders/create-order";
+import { markOrderPaid } from "@/lib/orders/mark-paid";
+import { getCurrentUser } from "@/lib/auth/dal";
 
+/**
+ * Seuls l'identifiant du tarif et la quantité sont acceptés. Le libellé et le
+ * prix affichés par le navigateur ne sont pas repris : ils sont relus en base,
+ * faute de quoi l'acheteur fixerait lui-même le montant à payer.
+ */
 const lineSchema = z.object({
-  ticketTypeId: z.string(),
-  ticketName: z.string(),
-  eventTitle: z.string(),
-  unitPriceCents: z.number().int().nonnegative(),
-  quantity: z.number().int().positive(),
-  currency: z.string().default("CHF"),
+  ticketTypeId: z.string().min(1),
+  quantity: z.number().int().positive().max(100),
 });
 
 const checkoutSchema = z.object({
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  email: z.string().email(),
-  phone: z.string().optional(),
-  locale: z.string().default("fr"),
+  firstName: z.string().min(1).max(120),
+  lastName: z.string().min(1).max(120),
+  email: z.email().max(200),
+  phone: z.string().max(40).optional(),
+  locale: z.string().max(5).default("fr"),
   paymentMethod: z.enum(["CARD", "IBAN"]),
-  lines: z.array(lineSchema).min(1),
+  lines: z.array(lineSchema).min(1).max(50),
 });
 
 // IBAN de démonstration (à remplacer par le compte réel de l'organisateur)
 const DEMO_IBAN = "CH93 0076 2011 6238 5295 7";
 const DEMO_BENEFICIARY = "ticketick SA, Lausanne";
-
-function generateReference() {
-  const n = Math.floor(Math.random() * 1_000_000)
-    .toString()
-    .padStart(6, "0");
-  return `TT-${n}`;
-}
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -39,101 +36,121 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     return NextResponse.json(
-      { error: "invalid_request", details: parsed.error.flatten() },
+      { error: "invalid_request", details: z.treeifyError(parsed.error) },
       { status: 400 },
     );
   }
 
   const data = parsed.data;
-  const subtotalCents = data.lines.reduce(
-    (sum, l) => sum + l.unitPriceCents * l.quantity,
-    0,
-  );
-  const feeCents = Math.round(subtotalCents * 0.05);
-  const totalCents = subtotalCents + feeCents;
-  const reference = generateReference();
-  const currency = data.lines[0]?.currency ?? "CHF";
 
+  // Rattache la commande au compte si l'acheteur est connecté, sans l'exiger :
+  // l'achat reste possible sans création de compte.
+  const user = await getCurrentUser();
+
+  const created = await createOrder({
+    lines: data.lines,
+    email: data.email,
+    firstName: data.firstName,
+    lastName: data.lastName,
+    phone: data.phone,
+    locale: data.locale,
+    paymentMethod: data.paymentMethod,
+    userId: user?.id,
+  });
+
+  if (!created.ok) {
+    // 409 : la demande était bien formée, c'est l'état du catalogue qui s'y
+    // oppose — stock épuisé, vente fermée, tarif disparu.
+    return NextResponse.json(
+      { error: created.error, ticketTypeId: created.ticketTypeId },
+      { status: 409 },
+    );
+  }
+
+  const order = created.order;
   const origin = new URL(request.url).origin;
 
   if (data.paymentMethod === "CARD") {
     const session = await createCheckoutSession({
-      reference,
-      currency,
+      reference: order.reference,
+      currency: order.currency,
       customerEmail: data.email,
       locale: data.locale,
-      // {CHECKOUT_SESSION_ID} est remplacé par Stripe lors de la redirection.
-      successUrl: `${origin}/${data.locale}/checkout/success?ref=${reference}&session_id={CHECKOUT_SESSION_ID}`,
+      successUrl: `${origin}/${data.locale}/checkout/success?ref=${order.reference}&session_id={CHECKOUT_SESSION_ID}`,
       cancelUrl: `${origin}/${data.locale}/checkout?canceled=1`,
-      feeCents,
-      lineItems: data.lines.map((l) => ({
-        name: `${l.eventTitle} — ${l.ticketName}`,
+      feeCents: order.feeCents,
+      lineItems: order.lines.map((l) => ({
+        name: l.label,
         quantity: l.quantity,
         unitPriceCents: l.unitPriceCents,
       })),
       metadata: {
         firstName: data.firstName,
         lastName: data.lastName,
+        reference: order.reference,
       },
     });
 
-    // Mode mock (Stripe non configuré) : pas de webhook, on confirme et on
-    // envoie l'e-mail immédiatement.
+    // Mode mock (Stripe non configuré) : aucun webhook ne viendra confirmer,
+    // la commande est donc soldée ici même.
     if (session.mock) {
+      await markOrderPaid({
+        reference: order.reference,
+        provider: "mock",
+        method: "CARD",
+        amountCents: order.totalCents,
+        currency: order.currency,
+      });
+
       await sendTicketEmail({
         to: data.email,
         firstName: data.firstName,
-        reference,
+        reference: order.reference,
         locale: data.locale,
         paymentMethod: "CARD",
-        totalCents,
-        currency,
-        items: data.lines.map((l) => ({
-          name: `${l.eventTitle} — ${l.ticketName}`,
+        totalCents: order.totalCents,
+        currency: order.currency,
+        items: order.lines.map((l) => ({
+          name: l.label,
           quantity: l.quantity,
         })),
       });
     }
-    // En mode réel, l'e-mail des billets est envoyé par le webhook Stripe
-    // après confirmation du paiement (checkout.session.completed).
 
     return NextResponse.json({
-      reference,
+      reference: order.reference,
       status: session.mock ? "PAID" : "AWAITING_PAYMENT",
       checkoutUrl: session.checkoutUrl,
       mock: session.mock,
-      totalCents,
-      currency,
+      totalCents: order.totalCents,
+      currency: order.currency,
     });
   }
 
-  // Virement IBAN : commande en attente de paiement, instructions par e-mail.
+  // Virement : la commande reste en attente, le stock est déjà retenu.
   await sendTicketEmail({
     to: data.email,
     firstName: data.firstName,
-    reference,
+    reference: order.reference,
     locale: data.locale,
     paymentMethod: "IBAN",
-    totalCents,
-    currency,
-    items: data.lines.map((l) => ({
-      name: `${l.eventTitle} — ${l.ticketName}`,
-      quantity: l.quantity,
-    })),
+    totalCents: order.totalCents,
+    currency: order.currency,
+    items: order.lines.map((l) => ({ name: l.label, quantity: l.quantity })),
     ibanInstructions: {
       iban: DEMO_IBAN,
       beneficiary: DEMO_BENEFICIARY,
-      amountCents: totalCents,
-      reference,
+      amountCents: order.totalCents,
+      reference: order.reference,
     },
   });
 
   return NextResponse.json({
-    reference,
+    reference: order.reference,
     status: "AWAITING_PAYMENT",
     iban: DEMO_IBAN,
     beneficiary: DEMO_BENEFICIARY,
-    totalCents,
-    currency,
+    totalCents: order.totalCents,
+    currency: order.currency,
   });
 }
