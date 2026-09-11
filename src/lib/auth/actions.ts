@@ -91,9 +91,14 @@ export async function login(
       where: { email },
       select: { id: true, passwordHash: true, active: true },
     });
-  } catch {
-    // Base injoignable : ce n'est pas un échec d'authentification, et le dire
-    // évite à l'utilisateur de croire qu'il se trompe de mot de passe.
+  } catch (error) {
+    // Journalisé sans détour : la panne se voit côté visiteur comme un
+    // « service indisponible », message identique pour tous et qui ne révèle
+    // donc rien, mais qui masquerait aussi bien une base injoignable qu'une
+    // requête fautive. Sans cette trace, la seconde resterait invisible.
+    console.error("[auth] lecture du compte impossible", error);
+    // Ce n'est pas un échec d'authentification, et le dire évite à
+    // l'utilisateur de croire qu'il se trompe de mot de passe.
     return { error: "unavailable" };
   }
 
