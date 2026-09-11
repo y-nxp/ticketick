@@ -112,7 +112,9 @@
     "orderSummary": "Übersicht",
     "success": "Vielen Dank! Ihre Bestellung ist bestätigt.",
     "successHint": "Ihre Tickets wurden an {email} gesendet.",
-    "backHome": "Zurück zur Startseite"
+    "backHome": "Zurück zur Startseite",
+    "failed": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "unavailable": "Die Online-Zahlung ist vorübergehend nicht verfügbar. Ihre Bestellung wurde nicht aufgegeben und Ihre Plätze wurden wieder freigegeben. Bitte versuchen Sie es später erneut."
   },
   "account": {
     "title": "Mein Konto",

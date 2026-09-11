@@ -116,6 +116,10 @@ jobs:
             STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
             STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
             MAIL_FROM=billets@ticketick.ch
+            # Recette : pas de clé Stripe, le tunnel doit rester déroulable.
+            # L'autorisation est explicite — sans elle le paiement échoue, ce
+            # qui est le comportement voulu partout ailleurs.
+            ALLOW_MOCK_PAYMENTS=true
             # Catalogue de démonstration. Coupé : la programmation est
             # désormais saisie depuis le backoffice, et un réamorçage à
             # chaque démarrage remettrait les spectacles fictifs en ligne.

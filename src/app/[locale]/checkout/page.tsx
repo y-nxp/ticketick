@@ -72,6 +72,13 @@ function CheckoutInner() {
           })),
         }),
       });
+      // 503 : aucun encaissement n'est configuré. La commande a été annulée
+      // côté serveur et les places rendues ; le dire plutôt que d'inviter à
+      // réessayer, ce qui échouerait autant de fois que l'acheteur insiste.
+      if (res.status === 503) {
+        setError(t("unavailable"));
+        return;
+      }
       if (!res.ok) throw new Error("checkout_failed");
       const data: OrderResult & { checkoutUrl?: string } = await res.json();
 
@@ -86,7 +93,7 @@ function CheckoutInner() {
       setResult(data);
       clear();
     } catch {
-      setError("Une erreur est survenue. Veuillez réessayer.");
+      setError(t("failed"));
     } finally {
       setSubmitting(false);
     }

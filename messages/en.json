@@ -112,7 +112,9 @@
     "orderSummary": "Summary",
     "success": "Thank you! Your order is confirmed.",
     "successHint": "Your tickets have been sent to {email}.",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "failed": "Something went wrong. Please try again.",
+    "unavailable": "Online payment is temporarily unavailable. Your order was not placed and your seats have been released. Please try again later."
   },
   "account": {
     "title": "My account",

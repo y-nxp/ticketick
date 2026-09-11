@@ -112,7 +112,9 @@
     "orderSummary": "Riepilogo",
     "success": "Grazie! Il tuo ordine è confermato.",
     "successHint": "I tuoi biglietti sono stati inviati a {email}.",
-    "backHome": "Torna alla home"
+    "backHome": "Torna alla home",
+    "failed": "Si è verificato un errore. Riprova.",
+    "unavailable": "Il pagamento online è temporaneamente non disponibile. L'ordine non è stato registrato e i posti sono stati rimessi in vendita. Riprova più tardi."
   },
   "account": {
     "title": "Il mio spazio",

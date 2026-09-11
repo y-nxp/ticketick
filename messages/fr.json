@@ -112,7 +112,9 @@
     "orderSummary": "Récapitulatif",
     "success": "Merci ! Votre commande est confirmée.",
     "successHint": "Vos billets ont été envoyés à {email}.",
-    "backHome": "Retour à l'accueil"
+    "backHome": "Retour à l'accueil",
+    "failed": "Une erreur est survenue. Veuillez réessayer.",
+    "unavailable": "Le paiement en ligne est momentanément indisponible. Votre commande n'a pas été enregistrée et vos places ont été remises en vente. Merci de réessayer plus tard."
   },
   "account": {
     "title": "Mon espace",
