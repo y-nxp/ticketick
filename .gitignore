@@ -40,3 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Bundle du seed généré au build de l'image
+prisma/seed.mjs
+mailer/node_modules/
