@@ -1,0 +1,99 @@
+name: 🚧 Déployer la page d'attente (ticketick.ch)
+
+# Page provisoire servie sur ticketick.ch le temps que la billetterie soit
+# opérationnelle. Indépendante de l'application : un simple nginx statique.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "landing/**"
+      - "docker-compose.landing.yml"
+      - ".github/workflows/deploy-landing.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-landing
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Déployer sur gb10
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📋 Déploiement via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GB10_HOST }}
+          username: ${{ secrets.GB10_USER }}
+          key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.GB10_PORT }}
+          script: |
+            set -euo pipefail
+
+            APP_DIR="$HOME/ticketick-landing"
+            REPO="https://github.com/${{ github.repository }}.git"
+            BRANCH="${{ github.ref_name }}"
+
+            echo "📥 Récupération des sources ($BRANCH)..."
+            if [ -d "$APP_DIR/.git" ]; then
+              cd "$APP_DIR"
+              git remote set-url origin "$REPO"
+              git fetch --depth 1 origin "$BRANCH"
+              git reset --hard "origin/$BRANCH"
+            else
+              rm -rf "$APP_DIR"
+              git clone --depth 1 --branch "$BRANCH" "$REPO" "$APP_DIR"
+              cd "$APP_DIR"
+            fi
+
+            # Le réseau de NPM doit exister : sans lui le proxy ne pourrait pas
+            # résoudre le conteneur, et un port publié serait nécessaire.
+            NET="nginx-proxy-manager_default"
+            if ! docker network inspect "$NET" > /dev/null 2>&1; then
+              echo "✖ Réseau Docker '$NET' introuvable."
+              echo "  Nginx Proxy Manager tourne-t-il toujours ? Réseaux existants :"
+              docker network ls
+              exit 1
+            fi
+
+            echo "🚀 Démarrage du conteneur..."
+            docker compose -f docker-compose.landing.yml up -d --remove-orphans
+
+            echo "⏳ Vérification..."
+            OK=0
+            for i in $(seq 1 12); do
+              if docker exec ticketick-landing \
+                   wget -q -O /dev/null http://127.0.0.1/ 2>/dev/null; then
+                OK=1
+                break
+              fi
+              sleep 3
+            done
+
+            if [ "$OK" -ne 1 ]; then
+              echo "❌ La page ne répond pas — logs :"
+              docker compose -f docker-compose.landing.yml logs --tail=40 landing || true
+              exit 1
+            fi
+
+            # Contrôle depuis NPM lui-même : c'est lui qui devra joindre le
+            # conteneur, une réponse ici valide donc le chemin réel.
+            echo "🔎 Accès depuis Nginx Proxy Manager :"
+            if docker exec nginx-proxy-manager-app-1 \
+                 curl -sf -o /dev/null -w '   ↳ HTTP %{http_code} sur http://ticketick-landing/\n' \
+                 http://ticketick-landing/ 2>/dev/null; then
+              echo "   ✅ NPM atteint le conteneur."
+            else
+              echo "   ⚠ NPM ne joint pas encore le conteneur."
+              echo "     Vérifier qu'il est bien sur le réseau $NET :"
+              docker network inspect "$NET" \
+                --format '{{range .Containers}}     - {{.Name}}{{println}}{{end}}'
+            fi
+
+            docker image prune -f --filter "until=24h" > /dev/null 2>&1 || true
+
+            echo "════════════════════════════════════════════"
+            echo "  ✅ Page d'attente déployée"
+            echo "  🌐 https://ticketick.ch"
+            echo "  ↳ NPM : Forward Hostname 'ticketick-landing', Port 80"
+            echo "════════════════════════════════════════════"

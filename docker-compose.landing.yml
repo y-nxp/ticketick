@@ -1,0 +1,41 @@
+# ============================================================
+# ticketick — page d'attente de ticketick.ch (provisoire)
+#
+# Sert la page statique de landing/ le temps que la billetterie soit
+# opérationnelle. Sera remplacée par l'application dès qu'elle sera prête.
+#
+# Aucun port n'est publié sur l'hôte : le conteneur rejoint directement le
+# réseau de Nginx Proxy Manager, qui l'atteint par son nom. Rien n'est donc
+# exposé sur Internet en dehors de NPM lui-même.
+#
+# Dans NPM, créer un Proxy Host :
+#   Domain Names          : ticketick.ch, www.ticketick.ch
+#   Scheme                : http
+#   Forward Hostname / IP : ticketick-landing
+#   Forward Port          : 80
+# ============================================================
+
+name: ticketick-landing
+
+services:
+  landing:
+    image: nginx:1.27-alpine
+    container_name: ticketick-landing
+    restart: unless-stopped
+    volumes:
+      - ./landing:/usr/share/nginx/html:ro
+    networks:
+      - npm
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+networks:
+  # Réseau créé par la stack Nginx Proxy Manager, déclaré externe pour que
+  # NPM puisse résoudre `ticketick-landing`.
+  npm:
+    external: true
+    name: nginx-proxy-manager_default
