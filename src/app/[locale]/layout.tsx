@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { notFound } from "next/navigation";
@@ -7,6 +8,10 @@ import "../globals.css";
 import { routing } from "@/i18n/routing";
 import { CartProvider } from "@/components/cart/cart-context";
 import { Header } from "@/components/layout/header";
+import {
+  AccountNav,
+  AccountNavFallback,
+} from "@/components/layout/account-nav";
 import { Footer } from "@/components/layout/footer";
 import { themeInitScript } from "@/components/layout/theme";
 
@@ -60,7 +65,15 @@ export default async function LocaleLayout({
       <body className="min-h-full flex flex-col antialiased">
         <NextIntlClientProvider>
           <CartProvider>
-            <Header />
+            {/* La lecture de session vit sous `Suspense` : le reste de
+                l'en-tête et la page conservent ainsi leur prérendu. */}
+            <Header
+              accountSlot={
+                <Suspense fallback={<AccountNavFallback />}>
+                  <AccountNav />
+                </Suspense>
+              }
+            />
             <main className="flex-1">{children}</main>
             <Footer />
           </CartProvider>
