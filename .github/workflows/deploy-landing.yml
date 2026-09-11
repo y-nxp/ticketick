@@ -12,6 +12,11 @@ on:
       - "docker-compose.landing.yml"
       - ".github/workflows/deploy-landing.yml"
   workflow_dispatch:
+    inputs:
+      message_test:
+        description: "Envoyer un message de test à l'adresse de contact"
+        type: boolean
+        default: false
 
 concurrency:
   group: deploy-landing
@@ -35,13 +40,14 @@ jobs:
           # Certains fournisseurs authentifient sur un identifiant qui n'est pas
           # une adresse : dans ce cas renseigner la variable MAIL_FROM.
           MAIL_FROM: ${{ vars.MAIL_FROM || secrets.NOREPLY_USERNAME }}
+          MESSAGE_TEST: ${{ inputs.message_test }}
         with:
           host: ${{ secrets.GB10_HOST }}
           username: ${{ secrets.GB10_USER }}
           key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
           port: ${{ secrets.GB10_PORT }}
           # Variables transmises à la session distante.
-          envs: SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,MAIL_TO,MAIL_FROM
+          envs: SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,MAIL_TO,MAIL_FROM,MESSAGE_TEST
           script: |
             set -euo pipefail
 
@@ -173,6 +179,26 @@ jobs:
               echo "     Vérifier qu'il est bien sur le réseau $NET :"
               docker network inspect "$NET" \
                 --format '{{range .Containers}}     - {{.Name}}{{println}}{{end}}'
+            fi
+
+            # La validation SMTP prouve l'authentification, pas l'acheminement
+            # jusqu'à la boîte : seul un envoi réel le démontre. Emprunte le
+            # même chemin qu'un visiteur, à travers nginx.
+            if [ "${MESSAGE_TEST:-false}" = "true" ]; then
+              echo "📨 Envoi d'un message de test vers ${MAIL_TO}..."
+              CODE=$(docker exec ticketick-landing sh -c '
+                wget -q -O /dev/null -S \
+                  --header="content-type: application/json" \
+                  --post-data="{\"name\":\"Test de déploiement\",\"email\":\"noreply@ticketick.ch\",\"subject\":\"Vérification du formulaire\",\"message\":\"Message de contrôle émis par le déploiement. Si vous le recevez, le formulaire de ticketick.ch est opérationnel.\"}" \
+                  http://127.0.0.1/api/contact 2>&1 | grep -oE "HTTP/1.1 [0-9]+" | head -1
+              ' || true)
+              echo "   ↳ ${CODE:-aucune réponse}"
+              case "$CODE" in
+                *200) echo "   ✅ Message accepté. Vérifier la réception dans ${MAIL_TO}." ;;
+                *429) echo "   ⚠ Quota atteint pour cette adresse IP : réessayer dans une heure." ;;
+                *)    echo "   ❌ Envoi refusé — logs :"
+                      docker compose -f docker-compose.landing.yml logs --tail=20 mailer || true ;;
+              esac
             fi
 
             docker image prune -f --filter "until=24h" > /dev/null 2>&1 || true
