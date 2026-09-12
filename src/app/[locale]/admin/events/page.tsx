@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "@/i18n/navigation";
 import { getAdminEvents } from "@/lib/data/admin";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { t as translate, type Translated } from "@/lib/types";
@@ -20,10 +21,21 @@ export default async function AdminEventsPage({
 
   return (
     <div>
-      <h1 className="text-2xl font-bold tracking-tight">{t("events.title")}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {t("events.subtitle", { count: events.length })}
-      </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t("events.title")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("events.subtitle", { count: events.length })}
+          </p>
+        </div>
+        <Link
+          href="/admin/events/new"
+          className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary-hover"
+        >
+          <Plus className="size-4" />
+          {t("events.create")}
+        </Link>
+      </div>
 
       <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
         <table className="w-full min-w-[52rem] text-sm">
@@ -47,9 +59,12 @@ export default async function AdminEventsPage({
             {events.map((event) => (
               <tr key={event.id} className="hover:bg-muted/30">
                 <td className="px-4 py-3">
-                  <p className="font-medium">
+                  <Link
+                    href={`/admin/events/${event.id}`}
+                    className="font-medium hover:text-primary hover:underline"
+                  >
                     {translate(event.title as Translated, locale)}
-                  </p>
+                  </Link>
                   <p className="text-xs text-muted-foreground">
                     {event.organizer.name}
                   </p>

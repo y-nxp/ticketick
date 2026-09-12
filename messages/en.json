@@ -238,7 +238,8 @@
       "events": "Shows",
       "orders": "Orders",
       "resellers": "Points of sale",
-      "users": "Accounts"
+      "users": "Accounts",
+      "settings": "Settings"
     },
     "overview": {
       "title": "Overview",
@@ -266,7 +267,8 @@
       "next": "Next",
       "sold": "Sold",
       "revenue": "Revenue",
-      "empty": "No shows."
+      "empty": "No shows.",
+      "create": "New show"
     },
     "orders": {
       "title": "Orders",
@@ -335,6 +337,139 @@
       "TOURISM_OFFICE": "Tourism office",
       "PARTNER_SHOP": "Partner shop",
       "BOX_OFFICE": "Box office"
+    },
+    "form": {
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved.",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "hideTranslations": "Hide translations",
+      "showTranslations": "Translations ({count})",
+      "errors": {
+        "unavailable": "Could not save just now. Please try again.",
+        "notFound": "Item not found.",
+        "slugTaken": "This address identifier is already taken.",
+        "slugRequired": "The address identifier is required.",
+        "nameRequired": "The name is required.",
+        "emailInvalid": "Invalid email address.",
+        "cityRequired": "The city is required.",
+        "titleRequired": "The French title is required.",
+        "organizerRequired": "Choose an organizer.",
+        "statusInvalid": "Invalid status.",
+        "eventHasSales": "This show already has sold tickets and cannot be deleted.",
+        "startsAtRequired": "The start date and time are required.",
+        "endsAtInvalid": "The end date is not valid.",
+        "doorsAtInvalid": "The doors-open time is not valid.",
+        "endsBeforeStart": "The end must be after the start.",
+        "doorsAfterStart": "Doors cannot open after the start.",
+        "sessionHasSales": "This session already has sold tickets and cannot be deleted.",
+        "priceInvalid": "The price must be an amount in francs, e.g. 45 or 45.00.",
+        "quantityInvalid": "The allocation must be an integer of at least 1.",
+        "maxInvalid": "The per-order maximum must be an integer of at least 1.",
+        "salesWindowInvalid": "The sales window is not valid.",
+        "quantityBelowSold": "The allocation cannot fall below the number already sold.",
+        "ticketTypeHasSales": "This fare already has sold tickets and cannot be deleted.",
+        "organizerHasEvents": "This organizer still has shows attached.",
+        "venueHasSessions": "This venue is still used by sessions."
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Organizers, venues and categories: the catalogue depends on them.",
+      "startHere": "Create an organizer first: a show cannot exist without one.",
+      "organizers": {
+        "title": "Organizers",
+        "hint": "Every show is attached to an organizer.",
+        "add": "Add an organizer",
+        "delete": "Delete this organizer",
+        "name": "Name",
+        "email": "Email",
+        "website": "Website",
+        "eventCount": "{count} show(s)"
+      },
+      "venues": {
+        "title": "Venues",
+        "hint": "Halls and addresses where sessions take place.",
+        "add": "Add a venue",
+        "delete": "Delete this venue",
+        "name": "Name",
+        "city": "City",
+        "address": "Address",
+        "zip": "Postcode",
+        "lat": "Latitude",
+        "lng": "Longitude",
+        "coordsHint": "Optional. Both coordinates are needed to show a map.",
+        "sessionCount": "{count} session(s)"
+      },
+      "categories": {
+        "title": "Categories",
+        "hint": "Optional: used to filter the public catalogue.",
+        "add": "Add a category",
+        "delete": "Delete this category",
+        "name": "Name",
+        "color": "Colour",
+        "eventCount": "{count} show(s)"
+      }
+    },
+    "eventForm": {
+      "createTitle": "New show",
+      "createSubtitle": "Title, organizer and status. Dates and fares are added next.",
+      "editTitle": "Edit the show",
+      "editSubtitle": "Sessions and fares are managed below, on the same screen.",
+      "back": "← Shows",
+      "needOrganizer": "No organizer exists yet.",
+      "goToSettings": "Create an organizer",
+      "title": "Title",
+      "description": "Description",
+      "organizer": "Organizer",
+      "chooseOrganizer": "Choose…",
+      "slug": "Address",
+      "slugHint": "Left blank, it is derived from the French title.",
+      "status": "Status",
+      "visibility": "Visibility",
+      "visibilities": {
+        "PUBLIC": "Public",
+        "UNLISTED": "Unlisted (link only)",
+        "MEMBERS": "Members only"
+      },
+      "coverImage": "Cover image",
+      "coverImageHint": "Image URL. Uploads will come later.",
+      "categories": "Categories",
+      "featured": "Feature on the homepage",
+      "delete": "Delete the show"
+    },
+    "sessions": {
+      "title": "Sessions",
+      "hint": "A date, a venue, then at least one fare to start selling.",
+      "empty": "No sessions. Add a date to open sales.",
+      "add": "Add a session",
+      "edit": "Edit",
+      "delete": "Delete this session",
+      "noVenue": "No venue set",
+      "soldOf": "{sold} / {total} sold",
+      "startsAt": "Start",
+      "endsAt": "End",
+      "doorsAt": "Doors open",
+      "venue": "Venue",
+      "status": "Status",
+      "label": "Label (premiere, matinee…)",
+      "optional": "Optional"
+    },
+    "tickets": {
+      "title": "Fares",
+      "empty": "No fare: this session cannot sell anything.",
+      "add": "Add a fare",
+      "delete": "Delete this fare",
+      "name": "Fare name",
+      "price": "Price (CHF)",
+      "quantity": "Allocation",
+      "sold": "{n} already sold",
+      "soldOf": "{sold} / {total}",
+      "maxPerOrder": "Max. per order",
+      "salesStartAt": "Sales open",
+      "salesEndAt": "Sales close",
+      "optional": "Optional"
     }
   }
 }

@@ -238,7 +238,8 @@
       "events": "Veranstaltungen",
       "orders": "Bestellungen",
       "resellers": "Verkaufsstellen",
-      "users": "Konten"
+      "users": "Konten",
+      "settings": "Einstellungen"
     },
     "overview": {
       "title": "Übersicht",
@@ -266,7 +267,8 @@
       "next": "Nächster",
       "sold": "Verkauft",
       "revenue": "Einnahmen",
-      "empty": "Keine Veranstaltungen."
+      "empty": "Keine Veranstaltungen.",
+      "create": "Neue Veranstaltung"
     },
     "orders": {
       "title": "Bestellungen",
@@ -335,6 +337,139 @@
       "TOURISM_OFFICE": "Tourismusbüro",
       "PARTNER_SHOP": "Partnergeschäft",
       "BOX_OFFICE": "Abendkasse"
+    },
+    "form": {
+      "save": "Speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Gespeichert.",
+      "cancel": "Abbrechen",
+      "edit": "Bearbeiten",
+      "hideTranslations": "Übersetzungen ausblenden",
+      "showTranslations": "Übersetzungen ({count})",
+      "errors": {
+        "unavailable": "Speichern gerade nicht möglich. Bitte erneut versuchen.",
+        "notFound": "Eintrag nicht gefunden.",
+        "slugTaken": "Diese Adresse ist bereits vergeben.",
+        "slugRequired": "Die Adresse ist erforderlich.",
+        "nameRequired": "Der Name ist erforderlich.",
+        "emailInvalid": "Ungültige E-Mail-Adresse.",
+        "cityRequired": "Die Stadt ist erforderlich.",
+        "titleRequired": "Der französische Titel ist erforderlich.",
+        "organizerRequired": "Wählen Sie einen Veranstalter.",
+        "statusInvalid": "Ungültiger Status.",
+        "eventHasSales": "Für diese Veranstaltung wurden bereits Tickets verkauft: sie kann nicht gelöscht werden.",
+        "startsAtRequired": "Datum und Uhrzeit des Beginns sind erforderlich.",
+        "endsAtInvalid": "Das Enddatum ist ungültig.",
+        "doorsAtInvalid": "Die Einlasszeit ist ungültig.",
+        "endsBeforeStart": "Das Ende muss nach dem Beginn liegen.",
+        "doorsAfterStart": "Der Einlass kann nicht nach dem Beginn liegen.",
+        "sessionHasSales": "Für diese Vorstellung wurden bereits Tickets verkauft: sie kann nicht gelöscht werden.",
+        "priceInvalid": "Der Preis muss ein Betrag in Franken sein, z. B. 45 oder 45.00.",
+        "quantityInvalid": "Das Kontingent muss eine ganze Zahl von mindestens 1 sein.",
+        "maxInvalid": "Das Maximum pro Bestellung muss eine ganze Zahl von mindestens 1 sein.",
+        "salesWindowInvalid": "Das Verkaufsfenster ist ungültig.",
+        "quantityBelowSold": "Das Kontingent darf nicht unter die bereits verkaufte Menge fallen.",
+        "ticketTypeHasSales": "Für diesen Tarif wurden bereits Tickets verkauft: er kann nicht gelöscht werden.",
+        "organizerHasEvents": "Diesem Veranstalter sind noch Veranstaltungen zugeordnet.",
+        "venueHasSessions": "Dieser Ort wird noch von Vorstellungen genutzt."
+      }
+    },
+    "settings": {
+      "title": "Einstellungen",
+      "subtitle": "Veranstalter, Orte und Kategorien: der Katalog stützt sich darauf.",
+      "startHere": "Legen Sie zuerst einen Veranstalter an: eine Veranstaltung braucht einen.",
+      "organizers": {
+        "title": "Veranstalter",
+        "hint": "Jede Veranstaltung ist einem Veranstalter zugeordnet.",
+        "add": "Veranstalter hinzufügen",
+        "delete": "Diesen Veranstalter löschen",
+        "name": "Name",
+        "email": "E-Mail",
+        "website": "Website",
+        "eventCount": "{count} Veranstaltung(en)"
+      },
+      "venues": {
+        "title": "Orte",
+        "hint": "Säle und Adressen der Vorstellungen.",
+        "add": "Ort hinzufügen",
+        "delete": "Diesen Ort löschen",
+        "name": "Name",
+        "city": "Stadt",
+        "address": "Adresse",
+        "zip": "PLZ",
+        "lat": "Breitengrad",
+        "lng": "Längengrad",
+        "coordsHint": "Optional. Beide Koordinaten sind nötig, um eine Karte anzuzeigen.",
+        "sessionCount": "{count} Vorstellung(en)"
+      },
+      "categories": {
+        "title": "Kategorien",
+        "hint": "Optional: zum Filtern des öffentlichen Katalogs.",
+        "add": "Kategorie hinzufügen",
+        "delete": "Diese Kategorie löschen",
+        "name": "Name",
+        "color": "Farbe",
+        "eventCount": "{count} Veranstaltung(en)"
+      }
+    },
+    "eventForm": {
+      "createTitle": "Neue Veranstaltung",
+      "createSubtitle": "Titel, Veranstalter und Status. Termine und Tarife folgen danach.",
+      "editTitle": "Veranstaltung bearbeiten",
+      "editSubtitle": "Vorstellungen und Tarife werden darunter, auf derselben Seite, verwaltet.",
+      "back": "← Veranstaltungen",
+      "needOrganizer": "Es existiert noch kein Veranstalter.",
+      "goToSettings": "Veranstalter anlegen",
+      "title": "Titel",
+      "description": "Beschreibung",
+      "organizer": "Veranstalter",
+      "chooseOrganizer": "Wählen…",
+      "slug": "Adresse",
+      "slugHint": "Leer gelassen, wird sie aus dem französischen Titel abgeleitet.",
+      "status": "Status",
+      "visibility": "Sichtbarkeit",
+      "visibilities": {
+        "PUBLIC": "Öffentlich",
+        "UNLISTED": "Nicht gelistet (nur per Link)",
+        "MEMBERS": "Nur für Mitglieder"
+      },
+      "coverImage": "Titelbild",
+      "coverImageHint": "Bild-URL. Der Upload kommt später.",
+      "categories": "Kategorien",
+      "featured": "Auf der Startseite hervorheben",
+      "delete": "Veranstaltung löschen"
+    },
+    "sessions": {
+      "title": "Vorstellungen",
+      "hint": "Ein Termin, ein Ort, dann mindestens ein Tarif zum Verkauf.",
+      "empty": "Keine Vorstellung. Fügen Sie einen Termin hinzu, um den Verkauf zu öffnen.",
+      "add": "Vorstellung hinzufügen",
+      "edit": "Bearbeiten",
+      "delete": "Diese Vorstellung löschen",
+      "noVenue": "Kein Ort angegeben",
+      "soldOf": "{sold} / {total} verkauft",
+      "startsAt": "Beginn",
+      "endsAt": "Ende",
+      "doorsAt": "Einlass",
+      "venue": "Ort",
+      "status": "Status",
+      "label": "Bezeichnung (Premiere, Matinee…)",
+      "optional": "Optional"
+    },
+    "tickets": {
+      "title": "Tarife",
+      "empty": "Kein Tarif: diese Vorstellung kann nichts verkaufen.",
+      "add": "Tarif hinzufügen",
+      "delete": "Diesen Tarif löschen",
+      "name": "Tarifname",
+      "price": "Preis (CHF)",
+      "quantity": "Kontingent",
+      "sold": "{n} bereits verkauft",
+      "soldOf": "{sold} / {total}",
+      "maxPerOrder": "Max. pro Bestellung",
+      "salesStartAt": "Verkaufsstart",
+      "salesEndAt": "Verkaufsende",
+      "optional": "Optional"
     }
   }
 }

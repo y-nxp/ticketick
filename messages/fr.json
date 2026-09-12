@@ -238,7 +238,8 @@
       "events": "Spectacles",
       "orders": "Commandes",
       "resellers": "Points de vente",
-      "users": "Comptes"
+      "users": "Comptes",
+      "settings": "Paramètres"
     },
     "overview": {
       "title": "Vue d’ensemble",
@@ -266,7 +267,8 @@
       "next": "Prochaine",
       "sold": "Vendus",
       "revenue": "Recettes",
-      "empty": "Aucun spectacle."
+      "empty": "Aucun spectacle.",
+      "create": "Nouveau spectacle"
     },
     "orders": {
       "title": "Commandes",
@@ -335,6 +337,139 @@
       "TOURISM_OFFICE": "Office du tourisme",
       "PARTNER_SHOP": "Boutique partenaire",
       "BOX_OFFICE": "Guichet"
+    },
+    "form": {
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "saved": "Enregistré.",
+      "cancel": "Annuler",
+      "edit": "Modifier",
+      "hideTranslations": "Masquer les traductions",
+      "showTranslations": "Traductions ({count})",
+      "errors": {
+        "unavailable": "Enregistrement impossible pour le moment. Réessayez.",
+        "notFound": "Élément introuvable.",
+        "slugTaken": "Cet identifiant d’adresse est déjà pris.",
+        "slugRequired": "L’identifiant d’adresse est obligatoire.",
+        "nameRequired": "Le nom est obligatoire.",
+        "emailInvalid": "Adresse e-mail invalide.",
+        "cityRequired": "La ville est obligatoire.",
+        "titleRequired": "Le titre en français est obligatoire.",
+        "organizerRequired": "Choisissez un organisateur.",
+        "statusInvalid": "Statut invalide.",
+        "eventHasSales": "Ce spectacle a déjà des billets vendus : il ne peut pas être supprimé.",
+        "startsAtRequired": "La date et l’heure de début sont obligatoires.",
+        "endsAtInvalid": "La date de fin n’est pas valable.",
+        "doorsAtInvalid": "L’heure d’ouverture des portes n’est pas valable.",
+        "endsBeforeStart": "La fin doit être après le début.",
+        "doorsAfterStart": "Les portes ne peuvent pas ouvrir après le début.",
+        "sessionHasSales": "Cette séance a déjà des billets vendus : elle ne peut pas être supprimée.",
+        "priceInvalid": "Le prix doit être un montant en francs, par exemple 45 ou 45.00.",
+        "quantityInvalid": "Le contingent doit être un entier d’au moins 1.",
+        "maxInvalid": "Le maximum par commande doit être un entier d’au moins 1.",
+        "salesWindowInvalid": "La fenêtre de vente n’est pas valable.",
+        "quantityBelowSold": "Le contingent ne peut pas descendre sous le nombre déjà vendu.",
+        "ticketTypeHasSales": "Ce tarif a déjà des billets vendus : il ne peut pas être supprimé.",
+        "organizerHasEvents": "Cet organisateur porte encore des spectacles.",
+        "venueHasSessions": "Ce lieu est encore utilisé par des séances."
+      }
+    },
+    "settings": {
+      "title": "Paramètres",
+      "subtitle": "Organisateurs, lieux et catégories : le catalogue s’appuie dessus.",
+      "startHere": "Créez d’abord un organisateur : un spectacle ne peut pas exister sans.",
+      "organizers": {
+        "title": "Organisateurs",
+        "hint": "Chaque spectacle est rattaché à un organisateur.",
+        "add": "Ajouter un organisateur",
+        "delete": "Supprimer cet organisateur",
+        "name": "Nom",
+        "email": "E-mail",
+        "website": "Site web",
+        "eventCount": "{count} spectacle(s)"
+      },
+      "venues": {
+        "title": "Lieux",
+        "hint": "Salles et adresses où se jouent les séances.",
+        "add": "Ajouter un lieu",
+        "delete": "Supprimer ce lieu",
+        "name": "Nom",
+        "city": "Ville",
+        "address": "Adresse",
+        "zip": "NPA",
+        "lat": "Latitude",
+        "lng": "Longitude",
+        "coordsHint": "Facultatif. Les deux coordonnées sont nécessaires pour afficher une carte.",
+        "sessionCount": "{count} séance(s)"
+      },
+      "categories": {
+        "title": "Catégories",
+        "hint": "Facultatif : sert à filtrer le catalogue public.",
+        "add": "Ajouter une catégorie",
+        "delete": "Supprimer cette catégorie",
+        "name": "Nom",
+        "color": "Couleur",
+        "eventCount": "{count} spectacle(s)"
+      }
+    },
+    "eventForm": {
+      "createTitle": "Nouveau spectacle",
+      "createSubtitle": "Titre, organisateur et statut. Les dates et les tarifs s’ajoutent ensuite.",
+      "editTitle": "Modifier le spectacle",
+      "editSubtitle": "Les séances et les tarifs se gèrent plus bas, sur le même écran.",
+      "back": "← Spectacles",
+      "needOrganizer": "Aucun organisateur n’existe encore.",
+      "goToSettings": "Créer un organisateur",
+      "title": "Titre",
+      "description": "Description",
+      "organizer": "Organisateur",
+      "chooseOrganizer": "Choisir…",
+      "slug": "Adresse",
+      "slugHint": "Laissé vide, elle est dérivée du titre français.",
+      "status": "Statut",
+      "visibility": "Visibilité",
+      "visibilities": {
+        "PUBLIC": "Public",
+        "UNLISTED": "Non listé (lien seul)",
+        "MEMBERS": "Réservé aux membres"
+      },
+      "coverImage": "Image de couverture",
+      "coverImageHint": "URL d’une image. L’upload arrivera plus tard.",
+      "categories": "Catégories",
+      "featured": "Mettre en avant sur l’accueil",
+      "delete": "Supprimer le spectacle"
+    },
+    "sessions": {
+      "title": "Séances",
+      "hint": "Une date, un lieu, puis au moins un tarif pour pouvoir vendre.",
+      "empty": "Aucune séance. Ajoutez une date pour ouvrir la vente.",
+      "add": "Ajouter une séance",
+      "edit": "Modifier",
+      "delete": "Supprimer cette séance",
+      "noVenue": "Lieu non renseigné",
+      "soldOf": "{sold} / {total} vendus",
+      "startsAt": "Début",
+      "endsAt": "Fin",
+      "doorsAt": "Ouverture des portes",
+      "venue": "Lieu",
+      "status": "Statut",
+      "label": "Libellé (première, matinée…)",
+      "optional": "Facultatif"
+    },
+    "tickets": {
+      "title": "Tarifs",
+      "empty": "Aucun tarif : cette séance ne peut rien vendre.",
+      "add": "Ajouter un tarif",
+      "delete": "Supprimer ce tarif",
+      "name": "Nom du tarif",
+      "price": "Prix (CHF)",
+      "quantity": "Contingent",
+      "sold": "{n} déjà vendu(s)",
+      "soldOf": "{sold} / {total}",
+      "maxPerOrder": "Max. par commande",
+      "salesStartAt": "Ouverture des ventes",
+      "salesEndAt": "Clôture des ventes",
+      "optional": "Facultatif"
     }
   }
 }

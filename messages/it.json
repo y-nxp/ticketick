@@ -238,7 +238,8 @@
       "events": "Spettacoli",
       "orders": "Ordini",
       "resellers": "Punti vendita",
-      "users": "Account"
+      "users": "Account",
+      "settings": "Impostazioni"
     },
     "overview": {
       "title": "Panoramica",
@@ -266,7 +267,8 @@
       "next": "Prossima",
       "sold": "Venduti",
       "revenue": "Ricavi",
-      "empty": "Nessuno spettacolo."
+      "empty": "Nessuno spettacolo.",
+      "create": "Nuovo spettacolo"
     },
     "orders": {
       "title": "Ordini",
@@ -335,6 +337,139 @@
       "TOURISM_OFFICE": "Ufficio del turismo",
       "PARTNER_SHOP": "Negozio partner",
       "BOX_OFFICE": "Botteghino"
+    },
+    "form": {
+      "save": "Salva",
+      "saving": "Salvataggio…",
+      "saved": "Salvato.",
+      "cancel": "Annulla",
+      "edit": "Modifica",
+      "hideTranslations": "Nascondi le traduzioni",
+      "showTranslations": "Traduzioni ({count})",
+      "errors": {
+        "unavailable": "Salvataggio impossibile per il momento. Riprova.",
+        "notFound": "Elemento non trovato.",
+        "slugTaken": "Questo identificativo di indirizzo è già in uso.",
+        "slugRequired": "L’identificativo di indirizzo è obbligatorio.",
+        "nameRequired": "Il nome è obbligatorio.",
+        "emailInvalid": "Indirizzo e-mail non valido.",
+        "cityRequired": "La città è obbligatoria.",
+        "titleRequired": "Il titolo in francese è obbligatorio.",
+        "organizerRequired": "Scegli un organizzatore.",
+        "statusInvalid": "Stato non valido.",
+        "eventHasSales": "Questo spettacolo ha già biglietti venduti: non può essere eliminato.",
+        "startsAtRequired": "La data e l’ora di inizio sono obbligatorie.",
+        "endsAtInvalid": "La data di fine non è valida.",
+        "doorsAtInvalid": "L’orario di apertura delle porte non è valido.",
+        "endsBeforeStart": "La fine deve essere successiva all’inizio.",
+        "doorsAfterStart": "Le porte non possono aprire dopo l’inizio.",
+        "sessionHasSales": "Questa replica ha già biglietti venduti: non può essere eliminata.",
+        "priceInvalid": "Il prezzo deve essere un importo in franchi, ad es. 45 o 45.00.",
+        "quantityInvalid": "Il contingente deve essere un intero di almeno 1.",
+        "maxInvalid": "Il massimo per ordine deve essere un intero di almeno 1.",
+        "salesWindowInvalid": "La finestra di vendita non è valida.",
+        "quantityBelowSold": "Il contingente non può scendere sotto il numero già venduto.",
+        "ticketTypeHasSales": "Questa tariffa ha già biglietti venduti: non può essere eliminata.",
+        "organizerHasEvents": "Questo organizzatore ha ancora spettacoli collegati.",
+        "venueHasSessions": "Questo luogo è ancora usato da delle repliche."
+      }
+    },
+    "settings": {
+      "title": "Impostazioni",
+      "subtitle": "Organizzatori, luoghi e categorie: il catalogo si basa su di essi.",
+      "startHere": "Crea prima un organizzatore: uno spettacolo non può esistere senza.",
+      "organizers": {
+        "title": "Organizzatori",
+        "hint": "Ogni spettacolo è collegato a un organizzatore.",
+        "add": "Aggiungi un organizzatore",
+        "delete": "Elimina questo organizzatore",
+        "name": "Nome",
+        "email": "E-mail",
+        "website": "Sito web",
+        "eventCount": "{count} spettacolo/i"
+      },
+      "venues": {
+        "title": "Luoghi",
+        "hint": "Sale e indirizzi in cui si tengono le repliche.",
+        "add": "Aggiungi un luogo",
+        "delete": "Elimina questo luogo",
+        "name": "Nome",
+        "city": "Città",
+        "address": "Indirizzo",
+        "zip": "NPA",
+        "lat": "Latitudine",
+        "lng": "Longitudine",
+        "coordsHint": "Facoltativo. Entrambe le coordinate servono per mostrare una mappa.",
+        "sessionCount": "{count} replica/e"
+      },
+      "categories": {
+        "title": "Categorie",
+        "hint": "Facoltativo: serve a filtrare il catalogo pubblico.",
+        "add": "Aggiungi una categoria",
+        "delete": "Elimina questa categoria",
+        "name": "Nome",
+        "color": "Colore",
+        "eventCount": "{count} spettacolo/i"
+      }
+    },
+    "eventForm": {
+      "createTitle": "Nuovo spettacolo",
+      "createSubtitle": "Titolo, organizzatore e stato. Date e tariffe si aggiungono dopo.",
+      "editTitle": "Modifica lo spettacolo",
+      "editSubtitle": "Repliche e tariffe si gestiscono più in basso, sulla stessa schermata.",
+      "back": "← Spettacoli",
+      "needOrganizer": "Non esiste ancora alcun organizzatore.",
+      "goToSettings": "Crea un organizzatore",
+      "title": "Titolo",
+      "description": "Descrizione",
+      "organizer": "Organizzatore",
+      "chooseOrganizer": "Scegli…",
+      "slug": "Indirizzo",
+      "slugHint": "Se lasciato vuoto, è derivato dal titolo francese.",
+      "status": "Stato",
+      "visibility": "Visibilità",
+      "visibilities": {
+        "PUBLIC": "Pubblico",
+        "UNLISTED": "Non in elenco (solo link)",
+        "MEMBERS": "Riservato ai membri"
+      },
+      "coverImage": "Immagine di copertina",
+      "coverImageHint": "URL di un’immagine. Il caricamento arriverà più tardi.",
+      "categories": "Categorie",
+      "featured": "Metti in evidenza in home",
+      "delete": "Elimina lo spettacolo"
+    },
+    "sessions": {
+      "title": "Repliche",
+      "hint": "Una data, un luogo, poi almeno una tariffa per poter vendere.",
+      "empty": "Nessuna replica. Aggiungi una data per aprire la vendita.",
+      "add": "Aggiungi una replica",
+      "edit": "Modifica",
+      "delete": "Elimina questa replica",
+      "noVenue": "Luogo non indicato",
+      "soldOf": "{sold} / {total} venduti",
+      "startsAt": "Inizio",
+      "endsAt": "Fine",
+      "doorsAt": "Apertura porte",
+      "venue": "Luogo",
+      "status": "Stato",
+      "label": "Etichetta (prima, mattinata…)",
+      "optional": "Facoltativo"
+    },
+    "tickets": {
+      "title": "Tariffe",
+      "empty": "Nessuna tariffa: questa replica non può vendere nulla.",
+      "add": "Aggiungi una tariffa",
+      "delete": "Elimina questa tariffa",
+      "name": "Nome della tariffa",
+      "price": "Prezzo (CHF)",
+      "quantity": "Contingente",
+      "sold": "{n} già venduto/i",
+      "soldOf": "{sold} / {total}",
+      "maxPerOrder": "Max. per ordine",
+      "salesStartAt": "Apertura vendite",
+      "salesEndAt": "Chiusura vendite",
+      "optional": "Facoltativo"
     }
   }
 }
