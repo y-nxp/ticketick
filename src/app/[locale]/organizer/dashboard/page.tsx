@@ -20,7 +20,10 @@ export default async function OrganizerDashboardPage({
 
   // Contrôle dans la page et non dans un layout : un layout ne décide pas du
   // rendu des segments qu'il englobe, la page s'exécuterait malgré tout.
-  await requireRole(["ORGANIZER", "ADMIN"], "/organizer/dashboard");
+  // Les accès organisateur ne s'ouvrent pas tout seuls : pour l'instant seul
+  // le compte administrateur gère le catalogue. Un rôle ORGANIZER attribué
+  // plus tard aura son propre espace.
+  await requireRole(["ADMIN"], "/organizer/dashboard");
 
   const to = await getTranslations("organizer");
 
@@ -41,10 +44,12 @@ export default async function OrganizerDashboardPage({
     <div className="container-page py-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">{to("dashboard")}</h1>
-        <Button>
-          <CalendarPlus className="size-4" />
-          {to("createEvent")}
-        </Button>
+        <Link href="/admin/events/new">
+          <Button>
+            <CalendarPlus className="size-4" />
+            {to("createEvent")}
+          </Button>
+        </Link>
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">

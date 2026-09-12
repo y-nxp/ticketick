@@ -158,16 +158,42 @@
   },
   "organizer": {
     "title": "Organizer space",
-    "hero": "Sell your tickets effortlessly",
-    "heroSubtitle": "Create your events, manage your sales and track your revenue from a clear dashboard.",
-    "cta": "Go to dashboard",
+    "hero": "Let’s talk about your show",
+    "heroSubtitle": "Organizer access is not self-service. Tell us what you want to put on: we will then send you a meeting slot.",
     "createEvent": "Create an event",
     "dashboard": "Dashboard",
     "events": "My events",
     "sales": "Sales",
     "revenue": "Revenue",
     "ticketsSold": "Tickets sold",
-    "sessions": "sessions"
+    "sessions": "sessions",
+    "chat": {
+      "hello": "Hello — nobody creates their own space here. Tell us what you want to organize; we will get back to you with a meeting.",
+      "askFormat": "What format do you have in mind?",
+      "formats": {
+        "ONE_DAY": "A one-day event",
+        "MULTI_DAY": "Several days (festival, run…)",
+        "MULTI_SESSION": "Several sessions of the same show",
+        "UNSURE": "I’m not sure yet"
+      },
+      "askDetails": "A few words about the project? City, dates, capacity… (optional)",
+      "detailsPlaceholder": "For example: a play at Théâtre de Beaulieu, three evenings in November.",
+      "continue": "Continue",
+      "skip": "Skip",
+      "askEmail": "Your email, so we can send you the slot:",
+      "emailPlaceholder": "you@example.ch",
+      "askPhone": "And a number where we can reach you:",
+      "phonePlaceholder": "+41 79 000 00 00",
+      "send": "Send",
+      "pending": "Sending…",
+      "thanks": "Noted. We will write to you to arrange a meeting.",
+      "thanksHint": "Do check your spam folder. Ticketing access is only opened after that conversation.",
+      "invalidEmail": "Invalid email address.",
+      "invalidPhone": "Invalid phone number.",
+      "invalidFormat": "Please choose a format.",
+      "throttled": "Too many requests. Please try again in about fifteen minutes.",
+      "unavailable": "Service temporarily unavailable. Please try again shortly."
+    }
   },
   "friends": {
     "title": "Festival friends",
@@ -239,7 +265,8 @@
       "orders": "Orders",
       "resellers": "Points of sale",
       "users": "Accounts",
-      "settings": "Settings"
+      "settings": "Settings",
+      "inquiries": "Inquiries"
     },
     "overview": {
       "title": "Overview",
@@ -470,6 +497,23 @@
       "salesStartAt": "Sales open",
       "salesEndAt": "Sales close",
       "optional": "Optional"
+    },
+    "inquiries": {
+      "title": "Organizer inquiries",
+      "subtitle": "{count} inquirie(s).",
+      "hint": "Nobody opens their own access. After a conversation, send a meeting slot (NetPlanify) then create the account under Accounts.",
+      "when": "Received",
+      "email": "Email",
+      "phone": "Phone",
+      "format": "Format",
+      "message": "Project",
+      "empty": "No inquiries yet.",
+      "formats": {
+        "ONE_DAY": "One day",
+        "MULTI_DAY": "Several days",
+        "MULTI_SESSION": "Several sessions",
+        "UNSURE": "Not defined yet"
+      }
     }
   }
 }

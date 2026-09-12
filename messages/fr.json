@@ -158,16 +158,42 @@
   },
   "organizer": {
     "title": "Espace organisateur",
-    "hero": "Vendez vos billets en toute simplicité",
-    "heroSubtitle": "Créez vos événements, gérez vos ventes et suivez vos revenus depuis un tableau de bord clair.",
-    "cta": "Accéder au tableau de bord",
+    "hero": "Parlons de votre spectacle",
+    "heroSubtitle": "Les accès organisateur ne s’ouvrent pas tout seuls. Décrivez ce que vous voulez monter : nous vous proposons ensuite un créneau de rendez-vous.",
     "createEvent": "Créer un événement",
     "dashboard": "Tableau de bord",
     "events": "Mes événements",
     "sales": "Ventes",
     "revenue": "Revenus",
     "ticketsSold": "Billets vendus",
-    "sessions": "séances"
+    "sessions": "séances",
+    "chat": {
+      "hello": "Bonjour — personne ne crée son espace tout seul ici. Dites-nous ce que vous voulez organiser, on vous rappelle avec un rendez-vous.",
+      "askFormat": "Quel format avez-vous en tête ?",
+      "formats": {
+        "ONE_DAY": "Un événement sur un jour",
+        "MULTI_DAY": "Plusieurs jours (festival, run…)",
+        "MULTI_SESSION": "Plusieurs séances du même spectacle",
+        "UNSURE": "Je ne sais pas encore"
+      },
+      "askDetails": "Quelques mots sur le projet ? Ville, dates envisagées, jauge… (facultatif)",
+      "detailsPlaceholder": "Par exemple : une pièce au Théâtre de Beaulieu, trois soirs en novembre.",
+      "continue": "Continuer",
+      "skip": "Passer",
+      "askEmail": "Votre e-mail, pour vous écrire le créneau :",
+      "emailPlaceholder": "vous@exemple.ch",
+      "askPhone": "Et un numéro où vous joindre :",
+      "phonePlaceholder": "+41 79 000 00 00",
+      "send": "Envoyer",
+      "pending": "Envoi…",
+      "thanks": "C’est noté. Nous vous écrivons pour convenir d’un rendez-vous.",
+      "thanksHint": "Pensez à regarder dans les indésirables. Les accès à la billetterie ne sont ouverts qu’après cet échange.",
+      "invalidEmail": "Adresse e-mail invalide.",
+      "invalidPhone": "Numéro de téléphone invalide.",
+      "invalidFormat": "Choisissez un format.",
+      "throttled": "Trop de demandes. Réessayez dans une quinzaine de minutes.",
+      "unavailable": "Service momentanément indisponible. Réessayez dans un instant."
+    }
   },
   "friends": {
     "title": "Amis du festival",
@@ -239,7 +265,8 @@
       "orders": "Commandes",
       "resellers": "Points de vente",
       "users": "Comptes",
-      "settings": "Paramètres"
+      "settings": "Paramètres",
+      "inquiries": "Demandes"
     },
     "overview": {
       "title": "Vue d’ensemble",
@@ -470,6 +497,23 @@
       "salesStartAt": "Ouverture des ventes",
       "salesEndAt": "Clôture des ventes",
       "optional": "Facultatif"
+    },
+    "inquiries": {
+      "title": "Demandes d’organisateurs",
+      "subtitle": "{count} demande(s).",
+      "hint": "Personne ne s’ouvre un accès tout seul. Après un échange, envoyez un créneau (NetPlanify) puis créez le compte depuis Comptes.",
+      "when": "Reçue",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "format": "Format",
+      "message": "Projet",
+      "empty": "Aucune demande pour le moment.",
+      "formats": {
+        "ONE_DAY": "Un jour",
+        "MULTI_DAY": "Plusieurs jours",
+        "MULTI_SESSION": "Plusieurs séances",
+        "UNSURE": "Pas encore défini"
+      }
     }
   }
 }

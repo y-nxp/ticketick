@@ -72,6 +72,29 @@ model PasswordResetToken {
   @@index([expiresAt])
 }
 
+/// Candidature organisateur. Personne ne s'inscrit tout seul : la demande
+/// arrive ici, un rendez-vous est proposé à la main, les accès sont ouverts
+/// ensuite depuis le compte administrateur.
+enum InquiryFormat {
+  ONE_DAY
+  MULTI_DAY
+  MULTI_SESSION
+  UNSURE
+}
+
+model OrganizerInquiry {
+  id      String        @id @default(cuid())
+  email   String
+  phone   String
+  format  InquiryFormat
+  message String?
+  locale  String        @default("fr")
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 enum EventStatus {
   DRAFT
   PUBLISHED

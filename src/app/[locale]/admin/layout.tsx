@@ -6,6 +6,7 @@ import {
   Store,
   Users,
   Settings,
+  MessageSquare,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 
@@ -29,6 +30,7 @@ export default async function AdminLayout({
     { href: "/admin/orders", label: t("nav.orders"), icon: Receipt },
     { href: "/admin/resellers", label: t("nav.resellers"), icon: Store },
     { href: "/admin/users", label: t("nav.users"), icon: Users },
+    { href: "/admin/inquiries", label: t("nav.inquiries"), icon: MessageSquare },
     { href: "/admin/settings", label: t("nav.settings"), icon: Settings },
   ] as const;
 

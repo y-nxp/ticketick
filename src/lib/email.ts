@@ -194,6 +194,54 @@ const RESET_TEXTES: Record<
   },
 };
 
+export interface OrganizerInquiryPayload {
+  email: string;
+  phone: string;
+  format: "ONE_DAY" | "MULTI_DAY" | "MULTI_SESSION" | "UNSURE";
+  message: string | null;
+  locale: string;
+}
+
+const FORMAT_LIBELLES: Record<OrganizerInquiryPayload["format"], string> = {
+  ONE_DAY: "un jour",
+  MULTI_DAY: "plusieurs jours",
+  MULTI_SESSION: "plusieurs séances",
+  UNSURE: "pas encore défini",
+};
+
+function destinataireLeads(): string {
+  return process.env.MAIL_TO?.trim() || "info@ticketick.ch";
+}
+
+/** Prévenez l'administrateur qu'une candidature organisateur est arrivée. */
+export async function sendOrganizerInquiryEmail(
+  payload: OrganizerInquiryPayload,
+) {
+  const format = FORMAT_LIBELLES[payload.format];
+  const text = [
+    "Nouvelle demande d'organisateur",
+    "",
+    `E-mail   : ${payload.email}`,
+    `Téléphone: ${payload.phone}`,
+    `Format   : ${format}`,
+    payload.message ? `Message  : ${payload.message}` : "",
+    `Langue   : ${payload.locale}`,
+    "",
+    "Prochaine étape : envoyer un créneau de rendez-vous (NetPlanify).",
+    "Les accès ne s'ouvrent qu'après, depuis le compte administrateur.",
+  ]
+    .filter((l) => l !== "")
+    .join("\n");
+
+  return envoyer({
+    to: destinataireLeads(),
+    subject: `Organisateur — ${payload.email} (${format})`,
+    text,
+    html: `<pre style="font:14px/1.5 system-ui,sans-serif;color:#2A2C30">${echapper(text)}</pre>`,
+    etiquette: "candidature organisateur",
+  });
+}
+
 export async function sendPasswordResetEmail(payload: PasswordResetPayload) {
   const l = RESET_TEXTES[payload.locale] ?? RESET_TEXTES.fr;
   const salutation = payload.name ? `${l.bonjour} ${payload.name},` : `${l.bonjour},`;

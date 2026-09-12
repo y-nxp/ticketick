@@ -140,6 +140,7 @@ jobs:
             SMTP_USER=${SMTP_USER:-}
             SMTP_PASS=${SMTP_PASS:-}
             MAIL_FROM=billets@ticketick.ch
+            MAIL_TO=${MAIL_TO:-info@ticketick.ch}
             EOF
             cp "$APP_DIR/.env.prod" "$APP_DIR/.env"
             echo "   ✅ .env.prod créé"

@@ -125,6 +125,7 @@ jobs:
             SMTP_USER=${SMTP_USER:-}
             SMTP_PASS=${SMTP_PASS:-}
             MAIL_FROM=billets@ticketick.ch
+            MAIL_TO=${MAIL_TO:-info@ticketick.ch}
             # Recette : pas de clé Stripe, le tunnel doit rester déroulable.
             # L'autorisation est explicite — sans elle le paiement échoue, ce
             # qui est le comportement voulu partout ailleurs.

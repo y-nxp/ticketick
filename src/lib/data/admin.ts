@@ -189,3 +189,12 @@ export async function getAdminResellers() {
     balanceCents: ledger.reduce((sum, e) => sum + e.amountCents, 0),
   }));
 }
+
+export async function getAdminInquiries() {
+  await requireAdmin();
+
+  return prisma.organizerInquiry.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+}

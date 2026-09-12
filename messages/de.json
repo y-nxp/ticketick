@@ -158,16 +158,42 @@
   },
   "organizer": {
     "title": "Veranstalterbereich",
-    "hero": "Verkaufen Sie Ihre Tickets mühelos",
-    "heroSubtitle": "Erstellen Sie Veranstaltungen, verwalten Sie Verkäufe und verfolgen Sie Ihre Einnahmen über ein übersichtliches Dashboard.",
-    "cta": "Zum Dashboard",
+    "hero": "Sprechen wir über Ihre Veranstaltung",
+    "heroSubtitle": "Der Veranstalterzugang ist kein Selbstbedienungsangebot. Beschreiben Sie, was Sie planen: danach schlagen wir Ihnen einen Termin vor.",
     "createEvent": "Veranstaltung erstellen",
     "dashboard": "Dashboard",
     "events": "Meine Veranstaltungen",
     "sales": "Verkäufe",
     "revenue": "Einnahmen",
     "ticketsSold": "Verkaufte Tickets",
-    "sessions": "Vorstellungen"
+    "sessions": "Vorstellungen",
+    "chat": {
+      "hello": "Guten Tag — niemand richtet hier selbst einen Zugang ein. Sagen Sie uns, was Sie organisieren möchten; wir melden uns mit einem Termin.",
+      "askFormat": "Welches Format haben Sie im Sinn?",
+      "formats": {
+        "ONE_DAY": "Eine eintägige Veranstaltung",
+        "MULTI_DAY": "Mehrere Tage (Festival, Serie…)",
+        "MULTI_SESSION": "Mehrere Vorstellungen derselben Produktion",
+        "UNSURE": "Ich weiss es noch nicht"
+      },
+      "askDetails": "Ein paar Worte zum Projekt? Stadt, Daten, Kapazität… (optional)",
+      "detailsPlaceholder": "Zum Beispiel: ein Stück im Théâtre de Beaulieu, drei Abende im November.",
+      "continue": "Weiter",
+      "skip": "Überspringen",
+      "askEmail": "Ihre E-Mail, damit wir Ihnen den Termin schicken können:",
+      "emailPlaceholder": "sie@beispiel.ch",
+      "askPhone": "Und eine Nummer, unter der wir Sie erreichen:",
+      "phonePlaceholder": "+41 79 000 00 00",
+      "send": "Senden",
+      "pending": "Wird gesendet…",
+      "thanks": "Notiert. Wir schreiben Ihnen, um einen Termin zu vereinbaren.",
+      "thanksHint": "Prüfen Sie auch den Spam-Ordner. Der Zugang zur Ticketbörse wird erst nach diesem Gespräch geöffnet.",
+      "invalidEmail": "Ungültige E-Mail-Adresse.",
+      "invalidPhone": "Ungültige Telefonnummer.",
+      "invalidFormat": "Bitte wählen Sie ein Format.",
+      "throttled": "Zu viele Anfragen. Bitte versuchen Sie es in etwa fünfzehn Minuten erneut.",
+      "unavailable": "Dienst vorübergehend nicht verfügbar. Bitte versuchen Sie es gleich erneut."
+    }
   },
   "friends": {
     "title": "Festivalfreunde",
@@ -239,7 +265,8 @@
       "orders": "Bestellungen",
       "resellers": "Verkaufsstellen",
       "users": "Konten",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "inquiries": "Anfragen"
     },
     "overview": {
       "title": "Übersicht",
@@ -470,6 +497,23 @@
       "salesStartAt": "Verkaufsstart",
       "salesEndAt": "Verkaufsende",
       "optional": "Optional"
+    },
+    "inquiries": {
+      "title": "Veranstalteranfragen",
+      "subtitle": "{count} Anfrage(n).",
+      "hint": "Niemand richtet selbst einen Zugang ein. Nach dem Gespräch einen Termin senden (NetPlanify), dann das Konto unter Konten anlegen.",
+      "when": "Eingegangen",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "format": "Format",
+      "message": "Projekt",
+      "empty": "Noch keine Anfragen.",
+      "formats": {
+        "ONE_DAY": "Ein Tag",
+        "MULTI_DAY": "Mehrere Tage",
+        "MULTI_SESSION": "Mehrere Vorstellungen",
+        "UNSURE": "Noch nicht definiert"
+      }
     }
   }
 }

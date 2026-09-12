@@ -158,16 +158,42 @@
   },
   "organizer": {
     "title": "Spazio organizzatore",
-    "hero": "Vendi i tuoi biglietti senza sforzo",
-    "heroSubtitle": "Crea i tuoi eventi, gestisci le vendite e monitora i ricavi da una dashboard chiara.",
-    "cta": "Vai alla dashboard",
+    "hero": "Parliamo del vostro spettacolo",
+    "heroSubtitle": "L’accesso organizzatore non è in self-service. Descrivete cosa volete montare: vi proporremo poi un appuntamento.",
     "createEvent": "Crea un evento",
     "dashboard": "Dashboard",
     "events": "I miei eventi",
     "sales": "Vendite",
     "revenue": "Ricavi",
     "ticketsSold": "Biglietti venduti",
-    "sessions": "repliche"
+    "sessions": "repliche",
+    "chat": {
+      "hello": "Buongiorno — nessuno si crea da solo uno spazio qui. Diteci cosa volete organizzare; vi ricontatteremo con un appuntamento.",
+      "askFormat": "Che formato avete in mente?",
+      "formats": {
+        "ONE_DAY": "Un evento di un giorno",
+        "MULTI_DAY": "Più giorni (festival, serie…)",
+        "MULTI_SESSION": "Più repliche dello stesso spettacolo",
+        "UNSURE": "Non lo so ancora"
+      },
+      "askDetails": "Qualche parola sul progetto? Città, date, capienza… (facoltativo)",
+      "detailsPlaceholder": "Ad esempio: una pièce al Théâtre de Beaulieu, tre sere a novembre.",
+      "continue": "Continua",
+      "skip": "Salta",
+      "askEmail": "La vostra e-mail, per inviarvi l’appuntamento:",
+      "emailPlaceholder": "voi@esempio.ch",
+      "askPhone": "E un numero a cui potervi raggiungere:",
+      "phonePlaceholder": "+41 79 000 00 00",
+      "send": "Invia",
+      "pending": "Invio…",
+      "thanks": "Ricevuto. Vi scriveremo per fissare un appuntamento.",
+      "thanksHint": "Controllate anche la posta indesiderata. L’accesso alla biglietteria si apre solo dopo questo scambio.",
+      "invalidEmail": "Indirizzo e-mail non valido.",
+      "invalidPhone": "Numero di telefono non valido.",
+      "invalidFormat": "Scegliete un formato.",
+      "throttled": "Troppe richieste. Riprova tra una quindicina di minuti.",
+      "unavailable": "Servizio momentaneamente non disponibile. Riprova tra poco."
+    }
   },
   "friends": {
     "title": "Amici del festival",
@@ -239,7 +265,8 @@
       "orders": "Ordini",
       "resellers": "Punti vendita",
       "users": "Account",
-      "settings": "Impostazioni"
+      "settings": "Impostazioni",
+      "inquiries": "Richieste"
     },
     "overview": {
       "title": "Panoramica",
@@ -470,6 +497,23 @@
       "salesStartAt": "Apertura vendite",
       "salesEndAt": "Chiusura vendite",
       "optional": "Facoltativo"
+    },
+    "inquiries": {
+      "title": "Richieste organizzatori",
+      "subtitle": "{count} richiesta/e.",
+      "hint": "Nessuno si apre da solo un accesso. Dopo il colloquio, inviate un appuntamento (NetPlanify) poi create l’account in Conti.",
+      "when": "Ricevuta",
+      "email": "E-mail",
+      "phone": "Telefono",
+      "format": "Formato",
+      "message": "Progetto",
+      "empty": "Nessuna richiesta per il momento.",
+      "formats": {
+        "ONE_DAY": "Un giorno",
+        "MULTI_DAY": "Più giorni",
+        "MULTI_SESSION": "Più repliche",
+        "UNSURE": "Non ancora definito"
+      }
     }
   }
 }
