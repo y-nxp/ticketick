@@ -1,0 +1,19 @@
+{
+  "name": "Contrôle ticketick",
+  "short_name": "Contrôle",
+  "description": "Contrôle des billets par QR code",
+  "start_url": "/door",
+  "scope": "/door",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#6C5CE7",
+  "icons": [
+    {
+      "src": "/brand/icon_purple_transparent.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

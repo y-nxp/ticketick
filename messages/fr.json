@@ -156,6 +156,7 @@
     "role": "Rôle",
     "noOrders": "Aucune commande pour le moment.",
     "adminAccess": "Administration",
+    "doorAccess": "Contrôle des billets",
     "adminAccessHint": "Gérer les spectacles, les séances, les commandes et les revendeurs.",
     "roles": {
       "CUSTOMER": "Client",
@@ -208,6 +209,23 @@
     "title": "Amis du festival",
     "subtitle": "Gérez vos billets, vos prochains achats et vos avantages.",
     "install": "Installer l'application"
+  },
+  "door": {
+    "title": "Contrôle",
+    "subtitle": "Scannez le QR ou saisissez le code du billet.",
+    "installHint": "Sur iPhone : Partager → Sur l’écran d’accueil. Sur Android : menu du navigateur → Installer l’application.",
+    "startCamera": "Ouvrir la caméra",
+    "stopCamera": "Fermer la caméra",
+    "cameraHint": "Autorisez la caméra pour scanner les billets.",
+    "cameraDenied": "Caméra refusée. Saisissez le code à la main.",
+    "manualPlaceholder": "CODE DU BILLET",
+    "check": "Valider",
+    "admitted": "Entrée OK",
+    "alreadyUsed": "Déjà scanné",
+    "refused": "Refusé",
+    "unknown": "Billet introuvable.",
+    "cancelled": "Billet annulé.",
+    "forbidden": "Ce billet n’est pas sur vos spectacles."
   },
   "footer": {
     "about": "À propos",
@@ -275,7 +293,8 @@
       "resellers": "Points de vente",
       "users": "Comptes",
       "settings": "Paramètres",
-      "inquiries": "Demandes"
+      "inquiries": "Demandes",
+      "door": "Contrôle"
     },
     "overview": {
       "title": "Vue d’ensemble",
@@ -427,6 +446,8 @@
         "name": "Nom",
         "email": "E-mail",
         "website": "Site web",
+        "notifyEmails": "Copies des billets",
+        "notifyEmailsHint": "Une adresse par ligne. Chaque vente leur envoie le même e-mail que l’acheteur.",
         "eventCount": "{count} spectacle(s)"
       },
       "venues": {

@@ -98,7 +98,8 @@ prisma/                     # schema.prisma + seed.ts
    une transaction (`src/lib/payment/postfinance.ts`) et redirige vers la page
    hébergée. Le webhook (`/api/webhooks/postfinance`) et le retour acheteur
    soldent la commande puis envoient les billets. Dans le portail : Webhook URL
-   + listener nommé comme `PF_CHECKOUT_APP_NAME`, entité Transaction.
+   + listener `pf_paid`, entité Transaction. Les spectacles se distinguent
+   par la référence `{slug}:{commande}`.
 2. **E-mail** : configurer SMTP dans `src/lib/email.ts` + génération PDF des billets (QR).
 3. **Auth.js** : brancher l'authentification réelle sur le modèle `User`.
 4. **Persistance des commandes** : écrire les `Order`/`Ticket` en base dans `api/checkout`.

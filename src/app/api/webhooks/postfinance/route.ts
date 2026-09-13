@@ -7,8 +7,10 @@ import { settlePostfinanceById } from "@/lib/orders/settle-card";
  *
  * Dans le portail : Espace → Webhooks → URL
  *   https://ticketick.ch/api/webhooks/postfinance
- * Listener : nom `ticketick`, entité Transaction, états
- * AUTHORIZED / COMPLETED / FULFILL.
+ * Listener : nom `pf_paid` (commun à tous les clients), entité
+ * Transaction, états AUTHORIZED / COMPLETED / FULFILL.
+ * Le spectacle se distingue ensuite par la référence
+ * `{slug}:{commande}`, pas par le nom du listener.
  *
  * Le montant et l'état sont relus via l'API : le corps n'est pas une preuve.
  */

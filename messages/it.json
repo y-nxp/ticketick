@@ -156,6 +156,7 @@
     "role": "Ruolo",
     "noOrders": "Nessun ordine per il momento.",
     "adminAccess": "Amministrazione",
+    "doorAccess": "Controllo biglietti",
     "adminAccessHint": "Gestire spettacoli, date, ordini e rivenditori.",
     "roles": {
       "CUSTOMER": "Cliente",
@@ -208,6 +209,23 @@
     "title": "Amici del festival",
     "subtitle": "Gestisci i tuoi biglietti, i prossimi acquisti e i vantaggi.",
     "install": "Installa l'app"
+  },
+  "door": {
+    "title": "Controllo",
+    "subtitle": "Scansiona il QR o inserisci il codice del biglietto.",
+    "installHint": "Su iPhone: Condividi → Aggiungi a Home. Su Android: menu del browser → Installa app.",
+    "startCamera": "Apri la fotocamera",
+    "stopCamera": "Chiudi la fotocamera",
+    "cameraHint": "Autorizza la fotocamera per scansionare i biglietti.",
+    "cameraDenied": "Fotocamera rifiutata. Inserisci il codice a mano.",
+    "manualPlaceholder": "CODICE BIGLIETTO",
+    "check": "Controlla",
+    "admitted": "Ingresso OK",
+    "alreadyUsed": "Già scansionato",
+    "refused": "Rifiutato",
+    "unknown": "Biglietto introvabile.",
+    "cancelled": "Biglietto annullato.",
+    "forbidden": "Questo biglietto non è sui tuoi spettacoli."
   },
   "footer": {
     "about": "Chi siamo",
@@ -275,7 +293,8 @@
       "resellers": "Punti vendita",
       "users": "Account",
       "settings": "Impostazioni",
-      "inquiries": "Richieste"
+      "inquiries": "Richieste",
+      "door": "Controllo"
     },
     "overview": {
       "title": "Panoramica",
@@ -427,6 +446,8 @@
         "name": "Nome",
         "email": "E-mail",
         "website": "Sito web",
+        "notifyEmails": "Copie dei biglietti",
+        "notifyEmailsHint": "Un indirizzo per riga. Ogni vendita invia la stessa e-mail dell’acquirente.",
         "eventCount": "{count} spettacolo/i"
       },
       "venues": {

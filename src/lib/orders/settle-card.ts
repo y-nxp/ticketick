@@ -1,6 +1,6 @@
 import "server-only";
 
-import { sendTicketEmail } from "@/lib/email";
+import { sendPaidOrderTickets } from "@/lib/email/ticket-mail";
 import { markOrderPaid } from "@/lib/orders/mark-paid";
 import { prisma } from "@/lib/prisma";
 import {
@@ -44,21 +44,6 @@ export async function settlePostfinanceTransaction(
     return;
   }
 
-  const order = await prisma.order.findUnique({
-    where: { reference },
-    select: {
-      email: true,
-      firstName: true,
-      locale: true,
-      items: {
-        select: {
-          quantity: true,
-          ticketType: { select: { name: true } },
-        },
-      },
-    },
-  });
-
   const paid = await markOrderPaid({
     reference,
     provider: "postfinance",
@@ -76,21 +61,9 @@ export async function settlePostfinanceTransaction(
     return;
   }
 
-  if (paid.alreadyPaid || !order) return;
+  if (paid.alreadyPaid) return;
 
-  await sendTicketEmail({
-    to: order.email,
-    firstName: order.firstName,
-    reference,
-    locale: order.locale,
-    paymentMethod: "CARD",
-    totalCents: amountCents,
-    currency: (transaction.currency ?? "CHF").toUpperCase(),
-    items: order.items.map((item) => ({
-      name: readTitle(item.ticketType.name, order.locale) || "Billet",
-      quantity: item.quantity,
-    })),
-  });
+  await sendPaidOrderTickets(paid.orderId);
 }
 
 export async function settlePostfinanceById(transactionId: number): Promise<void> {
@@ -118,11 +91,3 @@ export async function settlePostfinanceOrder(reference: string): Promise<void> {
   await settlePostfinanceById(id);
 }
 
-function readTitle(value: unknown, locale: string): string {
-  if (value && typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    const hit = record[locale] ?? record.fr ?? Object.values(record)[0];
-    if (typeof hit === "string") return hit;
-  }
-  return "";
-}

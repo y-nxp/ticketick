@@ -223,6 +223,14 @@ function OrganizerForm({
       <Field label={t("website")}>
         <TextInput name="website" defaultValue={organizer?.website} />
       </Field>
+      <Field label={t("notifyEmails")} hint={t("notifyEmailsHint")}>
+        <textarea
+          name="notifyEmails"
+          defaultValue={organizer?.notifyEmails.join("\n")}
+          rows={3}
+          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+        />
+      </Field>
 
       <FormFeedback state={state} />
 

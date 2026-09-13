@@ -222,6 +222,9 @@ model Organizer {
   logoUrl     String?
   website     String?
 
+  /// Copies des billets émis, une adresse par ligne dans l'admin.
+  notifyEmails String[] @default([])
+
   /// Active la PWA "amis du festival" pour cet organisateur
   friendsAppEnabled Boolean @default(false)
 

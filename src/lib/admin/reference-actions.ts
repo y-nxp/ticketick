@@ -67,11 +67,17 @@ export async function saveOrganizer(
   if (name.length < 2) return failure("nameRequired");
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return failure("emailInvalid");
 
+  const notifyEmails = (data.get("notifyEmails")?.toString() ?? "")
+    .split(/[\n,;]+/)
+    .map((adresse) => adresse.trim().toLowerCase())
+    .filter((adresse) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(adresse));
+
   const fields = {
     name,
     email,
     description: readOptionalText(data, "description") ?? null,
     website: readOptionalText(data, "website") ?? null,
+    notifyEmails,
   };
 
   try {

@@ -23,6 +23,7 @@ export async function getReferenceData() {
         email: true,
         description: true,
         website: true,
+        notifyEmails: true,
         _count: { select: { events: true } },
       },
     }),

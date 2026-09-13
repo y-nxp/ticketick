@@ -156,6 +156,7 @@
     "role": "Rolle",
     "noOrders": "Noch keine Bestellungen.",
     "adminAccess": "Verwaltung",
+    "doorAccess": "Ticketkontrolle",
     "adminAccessHint": "Veranstaltungen, Termine, Bestellungen und Wiederverkäufer verwalten.",
     "roles": {
       "CUSTOMER": "Kunde",
@@ -208,6 +209,23 @@
     "title": "Festivalfreunde",
     "subtitle": "Verwalten Sie Ihre Tickets, kommenden Käufe und Vorteile.",
     "install": "App installieren"
+  },
+  "door": {
+    "title": "Kontrolle",
+    "subtitle": "QR-Code scannen oder Ticketcode eingeben.",
+    "installHint": "Auf dem iPhone: Teilen → Zum Home-Bildschirm. Auf Android: Browser-Menü → App installieren.",
+    "startCamera": "Kamera öffnen",
+    "stopCamera": "Kamera schliessen",
+    "cameraHint": "Erlauben Sie die Kamera, um Tickets zu scannen.",
+    "cameraDenied": "Kamera verweigert. Geben Sie den Code ein.",
+    "manualPlaceholder": "TICKETCODE",
+    "check": "Prüfen",
+    "admitted": "Einlass OK",
+    "alreadyUsed": "Bereits gescannt",
+    "refused": "Abgelehnt",
+    "unknown": "Ticket nicht gefunden.",
+    "cancelled": "Ticket storniert.",
+    "forbidden": "Dieses Ticket gehört nicht zu Ihren Veranstaltungen."
   },
   "footer": {
     "about": "Über uns",
@@ -275,7 +293,8 @@
       "resellers": "Verkaufsstellen",
       "users": "Konten",
       "settings": "Einstellungen",
-      "inquiries": "Anfragen"
+      "inquiries": "Anfragen",
+      "door": "Kontrolle"
     },
     "overview": {
       "title": "Übersicht",
@@ -427,6 +446,8 @@
         "name": "Name",
         "email": "E-Mail",
         "website": "Website",
+        "notifyEmails": "Ticketkopien",
+        "notifyEmailsHint": "Eine Adresse pro Zeile. Jeder Verkauf sendet dieselbe E-Mail wie an die Käuferin oder den Käufer.",
         "eventCount": "{count} Veranstaltung(en)"
       },
       "venues": {

@@ -64,11 +64,20 @@ function expediteur(): string {
   return process.env.MAIL_FROM ?? "ticketick <billets@ticketick.ch>";
 }
 
+export interface MailAttachment {
+  filename: string;
+  content: Buffer;
+  cid?: string;
+  contentType?: string;
+}
+
 async function envoyer(options: {
   to: string;
+  bcc?: string[];
   subject: string;
   text: string;
   html: string;
+  attachments?: MailAttachment[];
   etiquette: string;
 }): Promise<{ sent: boolean; mock: boolean }> {
   if (!isMailConfigured()) {
@@ -85,9 +94,11 @@ async function envoyer(options: {
     const info = await getTransport().sendMail({
       from: expediteur(),
       to: options.to,
+      bcc: options.bcc?.length ? options.bcc : undefined,
       subject: options.subject,
       text: options.text,
       html: options.html,
+      attachments: options.attachments,
     });
     // Le succès est journalisé autant que l'échec : sans cette trace, un
     // message parti et un message jamais tenté se ressemblent, et l'on ne
@@ -147,8 +158,11 @@ export async function sendTicketEmail(payload: TicketEmailPayload) {
     text,
     html: `<pre style="font:14px/1.5 system-ui">${echapper(text)}</pre>`,
     etiquette: "billets",
+    attachments: [],
   });
 }
+
+export { envoyer, echapper, expediteur };
 
 // ─────────────────────────────── Réinitialisation
 

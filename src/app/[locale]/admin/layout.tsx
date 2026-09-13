@@ -7,6 +7,7 @@ import {
   Users,
   Settings,
   MessageSquare,
+  ScanLine,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 
@@ -31,6 +32,7 @@ export default async function AdminLayout({
     { href: "/admin/resellers", label: t("nav.resellers"), icon: Store },
     { href: "/admin/users", label: t("nav.users"), icon: Users },
     { href: "/admin/inquiries", label: t("nav.inquiries"), icon: MessageSquare },
+    { href: "/door", label: t("nav.door"), icon: ScanLine },
     { href: "/admin/settings", label: t("nav.settings"), icon: Settings },
   ] as const;
 

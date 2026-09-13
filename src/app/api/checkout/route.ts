@@ -6,6 +6,7 @@ import {
   PaymentNotConfiguredError,
 } from "@/lib/payment/card";
 import { sendTicketEmail } from "@/lib/email";
+import { sendPaidOrderTickets } from "@/lib/email/ticket-mail";
 import { createOrder, releaseOrder } from "@/lib/orders/create-order";
 import { markOrderPaid } from "@/lib/orders/mark-paid";
 import { getCurrentUser } from "@/lib/auth/dal";
@@ -152,27 +153,16 @@ export async function POST(request: Request) {
     // Paiement simulé : aucun webhook ne viendra confirmer, la commande est
     // donc soldée ici même. N'arrive que si `ALLOW_MOCK_PAYMENTS` l'autorise.
     if (session.mock) {
-      await markOrderPaid({
+      const paid = await markOrderPaid({
         reference: order.reference,
         provider: "mock",
         method: "CARD",
         amountCents: order.totalCents,
         currency: order.currency,
       });
-
-      await sendTicketEmail({
-        to: data.email,
-        firstName: data.firstName,
-        reference: order.reference,
-        locale: data.locale,
-        paymentMethod: "CARD",
-        totalCents: order.totalCents,
-        currency: order.currency,
-        items: order.lines.map((l) => ({
-          name: l.label,
-          quantity: l.quantity,
-        })),
-      });
+      if (paid.ok && !paid.alreadyPaid) {
+        await sendPaidOrderTickets(paid.orderId);
+      }
     }
 
     return NextResponse.json({

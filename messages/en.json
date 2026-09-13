@@ -156,6 +156,7 @@
     "role": "Role",
     "noOrders": "No orders yet.",
     "adminAccess": "Administration",
+    "doorAccess": "Ticket check",
     "adminAccessHint": "Manage shows, dates, orders and resellers.",
     "roles": {
       "CUSTOMER": "Customer",
@@ -208,6 +209,23 @@
     "title": "Festival friends",
     "subtitle": "Manage your tickets, upcoming purchases and perks.",
     "install": "Install the app"
+  },
+  "door": {
+    "title": "Door check",
+    "subtitle": "Scan the QR code or type the ticket code.",
+    "installHint": "On iPhone: Share → Add to Home Screen. On Android: browser menu → Install app.",
+    "startCamera": "Open camera",
+    "stopCamera": "Close camera",
+    "cameraHint": "Allow the camera to scan tickets.",
+    "cameraDenied": "Camera denied. Enter the code manually.",
+    "manualPlaceholder": "TICKET CODE",
+    "check": "Check",
+    "admitted": "Entry OK",
+    "alreadyUsed": "Already scanned",
+    "refused": "Refused",
+    "unknown": "Ticket not found.",
+    "cancelled": "Ticket cancelled.",
+    "forbidden": "This ticket is not on your events."
   },
   "footer": {
     "about": "About",
@@ -275,7 +293,8 @@
       "resellers": "Points of sale",
       "users": "Accounts",
       "settings": "Settings",
-      "inquiries": "Inquiries"
+      "inquiries": "Inquiries",
+      "door": "Door"
     },
     "overview": {
       "title": "Overview",
@@ -427,6 +446,8 @@
         "name": "Name",
         "email": "Email",
         "website": "Website",
+        "notifyEmails": "Ticket copies",
+        "notifyEmailsHint": "One address per line. Each sale sends them the same email as the buyer.",
         "eventCount": "{count} show(s)"
       },
       "venues": {

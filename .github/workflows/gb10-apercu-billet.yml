@@ -1,0 +1,44 @@
+name: ✉️ Envoyer un aperçu de billet
+
+on:
+  workflow_dispatch:
+    inputs:
+      destinataire:
+        description: Adresse de l'aperçu
+        required: true
+        default: info@ticketick.ch
+        type: string
+
+jobs:
+  apercu:
+    name: Aperçu depuis la production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Envoyer l'aperçu
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DEST: ${{ inputs.destinataire }}
+        with:
+          host: ${{ secrets.GB10_HOST }}
+          username: ${{ secrets.GB10_USER }}
+          key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.GB10_PORT }}
+          envs: DEST
+          script: |
+            set -euo pipefail
+            docker exec -e DEST="$DEST" ticketick-v2-prod-app \
+              node -e '
+                fetch("http://127.0.0.1:3000/api/internal/preview-ticket", {
+                  method: "POST",
+                  headers: {
+                    "content-type": "application/json",
+                    "x-ticketick-preview": process.env.AUTH_SECRET ?? ""
+                  },
+                  body: JSON.stringify({ to: process.env.DEST })
+                }).then(async (r) => {
+                  const text = await r.text();
+                  console.log(r.status, text);
+                  if (!r.ok) process.exit(1);
+                })
+              '
