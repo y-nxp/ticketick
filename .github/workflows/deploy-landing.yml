@@ -32,14 +32,12 @@ jobs:
         env:
           # Le port n'est pas un secret : surchargeable par une variable de
           # dépôt si le fournisseur n'utilise pas STARTTLS sur 587.
-          SMTP_HOST: ${{ secrets.NOREPLY_HOST }}
-          SMTP_PORT: ${{ vars.NOREPLY_PORT || '587' }}
-          SMTP_USER: ${{ secrets.NOREPLY_USERNAME }}
-          SMTP_PASSWORD: ${{ secrets.NOREPLY_PASSWORD }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ vars.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASS }}
           MAIL_TO: ${{ vars.CONTACT_TO }}
-          # Certains fournisseurs authentifient sur un identifiant qui n'est pas
-          # une adresse : dans ce cas renseigner la variable MAIL_FROM.
-          MAIL_FROM: ${{ vars.MAIL_FROM || secrets.NOREPLY_USERNAME }}
+          MAIL_FROM: ${{ vars.MAIL_FROM || 'ticket@ticketick.ch' }}
           MESSAGE_TEST: ${{ inputs.message_test }}
         with:
           host: ${{ secrets.GB10_HOST }}
@@ -61,7 +59,7 @@ jobs:
             done
             if [ -n "$MISSING" ]; then
               echo "✖ Configuration du formulaire incomplète :$MISSING"
-              echo "  Secrets attendus  : NOREPLY_HOST, NOREPLY_USERNAME, NOREPLY_PASSWORD"
+              echo "  Secrets attendus  : SMTP_HOST, SMTP_USER, SMTP_PASS"
               echo "  Variable attendue : CONTACT_TO (adresse de réception)"
               echo "  La page actuellement en ligne reste inchangée."
               exit 1
@@ -155,8 +153,8 @@ jobs:
                 ;;
               failed)
                 echo "   ❌ Le service tourne mais le serveur SMTP refuse la connexion."
-                echo "     Vérifier NOREPLY_HOST / NOREPLY_USERNAME / NOREPLY_PASSWORD"
-                echo "     et la variable NOREPLY_PORT. Détail :"
+                echo "     Vérifier SMTP_HOST / SMTP_USER / SMTP_PASS"
+                echo "     et la variable SMTP_PORT. Détail :"
                 docker compose -f docker-compose.landing.yml logs --tail=20 mailer || true
                 exit 1
                 ;;
@@ -189,7 +187,7 @@ jobs:
               CODE=$(docker exec ticketick-landing sh -c '
                 wget -q -O /dev/null -S \
                   --header="content-type: application/json" \
-                  --post-data="{\"name\":\"Test de déploiement\",\"email\":\"noreply@ticketick.ch\",\"subject\":\"Vérification du formulaire\",\"message\":\"Message de contrôle émis par le déploiement. Si vous le recevez, le formulaire de ticketick.ch est opérationnel.\"}" \
+                  --post-data="{\"name\":\"Test de déploiement\",\"email\":\"ticket@ticketick.ch\",\"subject\":\"Vérification du formulaire\",\"message\":\"Message de contrôle émis par le déploiement. Si vous le recevez, le formulaire de ticketick.ch est opérationnel.\"}" \
                   http://127.0.0.1/api/contact 2>&1 | grep -oE "HTTP/1.1 [0-9]+" | head -1
               ' || true)
               echo "   ↳ ${CODE:-aucune réponse}"

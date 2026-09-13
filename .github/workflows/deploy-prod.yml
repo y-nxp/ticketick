@@ -32,11 +32,9 @@ jobs:
           PF_CHECKOUT_SECRET: ${{ secrets.PF_CHECKOUT_SECRET }}
           BANK_IBAN: ${{ secrets.PROD_BANK_IBAN }}
           BANK_BENEFICIARY: ${{ secrets.PROD_BANK_BENEFICIARY }}
-          # Mêmes identifiants que la vitrine : la boîte no-reply existe déjà
-          # et est acceptée par le domaine, inutile d'en ouvrir une seconde.
-          SMTP_HOST: ${{ secrets.NOREPLY_HOST }}
-          SMTP_USER: ${{ secrets.NOREPLY_USERNAME }}
-          SMTP_PASS: ${{ secrets.NOREPLY_PASSWORD }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
         with:
           host: ${{ secrets.GB10_HOST }}
           username: ${{ secrets.GB10_USER }}
@@ -146,7 +144,7 @@ jobs:
             SMTP_PORT=${SMTP_PORT:-587}
             SMTP_USER=${SMTP_USER:-}
             SMTP_PASS=${SMTP_PASS:-}
-            MAIL_FROM=billets@ticketick.ch
+            MAIL_FROM=ticketick <ticket@ticketick.ch>
             MAIL_TO=${MAIL_TO:-info@ticketick.ch}
             EOF
             cp "$APP_DIR/.env.prod" "$APP_DIR/.env"

@@ -61,7 +61,7 @@ function getTransport(): Transporter {
 }
 
 function expediteur(): string {
-  return process.env.MAIL_FROM ?? "ticketick <billets@ticketick.ch>";
+  return process.env.MAIL_FROM ?? "ticketick <ticket@ticketick.ch>";
 }
 
 export interface MailAttachment {

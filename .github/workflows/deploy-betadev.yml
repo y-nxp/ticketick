@@ -27,9 +27,9 @@ jobs:
           PF_CHECKOUT_SECRET: ${{ secrets.PF_CHECKOUT_SECRET }}
           # Même boîte no-reply que la vitrine et que la production : la
           # recette doit pouvoir éprouver un envoi réel avant la bascule.
-          SMTP_HOST: ${{ secrets.NOREPLY_HOST }}
-          SMTP_USER: ${{ secrets.NOREPLY_USERNAME }}
-          SMTP_PASS: ${{ secrets.NOREPLY_PASSWORD }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
         with:
           host: ${{ secrets.GB10_HOST }}
           username: ${{ secrets.GB10_USER }}
@@ -131,7 +131,7 @@ jobs:
             SMTP_PORT=${SMTP_PORT:-587}
             SMTP_USER=${SMTP_USER:-}
             SMTP_PASS=${SMTP_PASS:-}
-            MAIL_FROM=billets@ticketick.ch
+            MAIL_FROM=ticketick <ticket@ticketick.ch>
             MAIL_TO=${MAIL_TO:-info@ticketick.ch}
             # Recette : pas de clé Stripe, le tunnel doit rester déroulable.
             # L'autorisation est explicite — sans elle le paiement échoue, ce
