@@ -76,7 +76,10 @@
     "selectSession": "Choisir une date",
     "sessionCount": "{count} dates disponibles",
     "noSessions": "Aucune date programmée pour le moment.",
-    "datesCount": "{count} dates"
+    "datesCount": "{count} dates",
+    "free": "Gratuit",
+    "companionHint": "Jusqu’à {n} par billet payant, jusqu’à 16 ans révolus.",
+    "companionNeedsPaid": "Ajoutez d’abord un billet payant (2 places gratuites par billet)."
   },
   "cart": {
     "title": "Votre panier",
@@ -114,7 +117,11 @@
     "successHint": "Vos billets ont été envoyés à {email}.",
     "backHome": "Retour à l'accueil",
     "failed": "Une erreur est survenue. Veuillez réessayer.",
-    "unavailable": "Le paiement en ligne est momentanément indisponible. Votre commande n'a pas été enregistrée et vos places ont été remises en vente. Merci de réessayer plus tard."
+    "unavailable": "Le paiement en ligne est momentanément indisponible. Votre commande n'a pas été enregistrée et vos places ont été remises en vente. Merci de réessayer plus tard.",
+    "companion_limit": "Au plus 2 places gratuites (jusqu’à 16 ans) par billet payant.",
+    "companion_requires_paid": "Les places gratuites s’ajoutent à un billet payant.",
+    "sold_out": "Plus assez de places pour cette sélection.",
+    "max_per_order": "La quantité dépasse le maximum autorisé par commande."
   },
   "account": {
     "title": "Mon espace",
@@ -396,6 +403,9 @@
         "maxInvalid": "Le maximum par commande doit être un entier d’au moins 1.",
         "salesWindowInvalid": "La fenêtre de vente n’est pas valable.",
         "quantityBelowSold": "Le contingent ne peut pas descendre sous le nombre déjà vendu.",
+        "capacityInvalid": "La jauge doit être un entier d’au moins 1, ou rester vide.",
+        "capacityBelowSold": "La jauge ne peut pas descendre sous les places déjà retenues.",
+        "maxPerPaidInvalid": "Le plafond par billet payant doit être un entier d’au moins 1.",
         "ticketTypeHasSales": "Ce tarif a déjà des billets vendus : il ne peut pas être supprimé.",
         "organizerHasEvents": "Cet organisateur porte encore des spectacles.",
         "venueHasSessions": "Ce lieu est encore utilisé par des séances."
@@ -481,7 +491,10 @@
       "venue": "Lieu",
       "status": "Statut",
       "label": "Libellé (première, matinée…)",
-      "optional": "Facultatif"
+      "optional": "Facultatif",
+      "capacity": "Jauge (places)",
+      "capacityHint": "Tous tarifs confondus. Vide : seuls les contingents limitent.",
+      "soldOfCapacity": "{sold} / {total} places"
     },
     "tickets": {
       "title": "Tarifs",
@@ -494,6 +507,8 @@
       "sold": "{n} déjà vendu(s)",
       "soldOf": "{sold} / {total}",
       "maxPerOrder": "Max. par commande",
+      "maxPerPaidTicket": "Max. par billet payant",
+      "maxPerPaidHint": "Pour un tarif gratuit : 2 = deux places offertes par billet payant. Vide : pas de lien.",
       "salesStartAt": "Ouverture des ventes",
       "salesEndAt": "Clôture des ventes",
       "optional": "Facultatif"

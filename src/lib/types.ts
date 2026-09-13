@@ -51,6 +51,8 @@ export interface TicketType {
   quantity: number;
   sold: number;
   maxPerOrder: number;
+  /** Si renseigné : au plus N de ces places par billet payant de la séance. */
+  maxPerPaidTicket?: number;
   salesEndAt?: string;
 }
 
@@ -76,6 +78,9 @@ export interface SessionItem {
   status: EventStatus;
   venue?: Venue;
   hasMap: boolean;
+  /** Jauge de salle, tous tarifs confondus. Absente : seuls les contingents comptent. */
+  capacity?: number;
+  sold: number;
   ticketTypes: TicketType[];
 }
 
@@ -103,20 +108,25 @@ export interface EventItem {
 
 export function isSessionSoldOut(session: SessionItem): boolean {
   if (session.status === "SOLD_OUT") return true;
+  if (session.capacity != null && session.sold >= session.capacity) return true;
   if (!session.ticketTypes.length) return false;
   return session.ticketTypes.every((tt) => tt.sold >= tt.quantity);
 }
 
 export function sessionRemaining(session: SessionItem): number {
-  return session.ticketTypes.reduce(
+  const parTarif = session.ticketTypes.reduce(
     (sum, tt) => sum + Math.max(0, tt.quantity - tt.sold),
     0,
   );
+  if (session.capacity == null) return parTarif;
+  return Math.min(parTarif, Math.max(0, session.capacity - session.sold));
 }
 
 export function sessionMinPriceCents(session: SessionItem): number {
   if (!session.ticketTypes.length) return 0;
-  return Math.min(...session.ticketTypes.map((tt) => tt.priceCents));
+  const prices = session.ticketTypes.map((tt) => tt.priceCents);
+  const payants = prices.filter((p) => p > 0);
+  return Math.min(...(payants.length ? payants : prices));
 }
 
 /** Sessions encore à venir, dans l'ordre chronologique. */
@@ -150,7 +160,9 @@ export function minPriceCents(event: EventItem): number {
   const prices = event.sessions
     .flatMap((s) => s.ticketTypes.map((tt) => tt.priceCents))
     .filter((p) => Number.isFinite(p));
-  return prices.length ? Math.min(...prices) : 0;
+  const payants = prices.filter((p) => p > 0);
+  const retenus = payants.length ? payants : prices;
+  return retenus.length ? Math.min(...retenus) : 0;
 }
 
 export function isSoldOut(event: EventItem): boolean {

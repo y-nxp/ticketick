@@ -84,8 +84,10 @@ export async function getEventForEdit(id: string) {
           doorsAt: true,
           status: true,
           venueId: true,
+          capacity: true,
+          sold: true,
           ticketTypes: {
-            orderBy: { priceCents: "asc" },
+            orderBy: { priceCents: "desc" },
             select: {
               id: true,
               name: true,
@@ -94,6 +96,7 @@ export async function getEventForEdit(id: string) {
               quantity: true,
               sold: true,
               maxPerOrder: true,
+              maxPerPaidTicket: true,
               salesStartAt: true,
               salesEndAt: true,
             },

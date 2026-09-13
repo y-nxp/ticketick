@@ -35,9 +35,46 @@ export function TicketSelector({
     0,
   );
   const totalCount = Object.values(qty).reduce((a, b) => a + b, 0);
+  const paidCount = session.ticketTypes.reduce((sum, tt) => {
+    if (tt.maxPerPaidTicket != null || tt.priceCents <= 0) return sum;
+    return sum + (qty[tt.id] ?? 0);
+  }, 0);
 
-  function setQuantity(id: string, next: number, max: number) {
-    setQty((prev) => ({ ...prev, [id]: Math.max(0, Math.min(next, max)) }));
+  function maxFor(tt: TicketType, current: Record<string, number>) {
+    const resteTarif = Math.max(0, tt.quantity - tt.sold);
+    const autres = session.ticketTypes.reduce(
+      (sum, x) => (x.id === tt.id ? sum : sum + (current[x.id] ?? 0)),
+      0,
+    );
+    const resteJauge =
+      session.capacity == null
+        ? Number.POSITIVE_INFINITY
+        : Math.max(0, session.capacity - session.sold - autres);
+    let max = Math.min(tt.maxPerOrder, resteTarif, resteJauge);
+    if (tt.maxPerPaidTicket != null) {
+      const payants = session.ticketTypes.reduce((sum, x) => {
+        if (x.maxPerPaidTicket != null || x.priceCents <= 0) return sum;
+        return sum + (current[x.id] ?? 0);
+      }, 0);
+      max = Math.min(max, payants * tt.maxPerPaidTicket);
+    }
+    return max;
+  }
+
+  function setQuantity(id: string, next: number) {
+    setQty((prev) => {
+      const tt = session.ticketTypes.find((x) => x.id === id);
+      if (!tt) return prev;
+      const max = maxFor(tt, prev);
+      const suivant = { ...prev, [id]: Math.max(0, Math.min(next, max)) };
+      // Baisser les payants doit ramener les gratuits sous le nouveau plafond.
+      for (const autre of session.ticketTypes) {
+        if (autre.maxPerPaidTicket == null) continue;
+        const plafond = maxFor(autre, suivant);
+        if ((suivant[autre.id] ?? 0) > plafond) suivant[autre.id] = plafond;
+      }
+      return suivant;
+    });
   }
 
   function addToCart(goToCheckout = false) {
@@ -80,9 +117,9 @@ export function TicketSelector({
             ticket={tt}
             locale={locale}
             qty={qty[tt.id] ?? 0}
-            onChange={(n) =>
-              setQuantity(tt.id, n, Math.min(tt.maxPerOrder, tt.quantity - tt.sold))
-            }
+            onChange={(n) => setQuantity(tt.id, n)}
+            max={maxFor(tt, qty)}
+            paidCount={paidCount}
           />
         ))}
       </div>
@@ -129,24 +166,41 @@ function TicketRow({
   locale,
   qty,
   onChange,
+  max,
+  paidCount,
 }: {
   ticket: TicketType;
   locale: string;
   qty: number;
   onChange: (n: number) => void;
+  max: number;
+  paidCount: number;
 }) {
   const te = useTranslations("event");
   const remaining = ticket.quantity - ticket.sold;
   const soldOut = remaining <= 0;
+  const hint =
+    ticket.maxPerPaidTicket != null
+      ? paidCount === 0
+        ? te("companionNeedsPaid")
+        : te("companionHint", { n: ticket.maxPerPaidTicket })
+      : ticket.description
+        ? t(ticket.description, locale)
+        : null;
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
       <div className="min-w-0">
         <p className="truncate font-medium">{t(ticket.name, locale)}</p>
         <p className="text-sm text-muted-foreground">
-          {formatPrice(ticket.priceCents, `${locale}-CH`)}
+          {ticket.priceCents === 0
+            ? te("free")
+            : formatPrice(ticket.priceCents, `${locale}-CH`)}
           {soldOut && ` · ${te("soldOut")}`}
         </p>
+        {hint ? (
+          <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+        ) : null}
       </div>
       {soldOut ? (
         <span className="text-sm font-medium text-muted-foreground">
@@ -168,7 +222,8 @@ function TicketRow({
           <button
             type="button"
             onClick={() => onChange(qty + 1)}
-            className="grid size-9 place-items-center rounded-full border border-border hover:bg-secondary"
+            disabled={qty >= max}
+            className="grid size-9 place-items-center rounded-full border border-border hover:bg-secondary disabled:opacity-40"
           >
             <Plus className="size-4" />
           </button>

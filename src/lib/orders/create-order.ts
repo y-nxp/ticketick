@@ -55,6 +55,8 @@ export type OrderError =
   | "not_on_sale"
   | "sales_closed"
   | "max_per_order"
+  | "companion_limit"
+  | "companion_requires_paid"
   | "sold_out"
   | "reference_collision";
 
@@ -87,12 +89,15 @@ export async function createOrder(
       quantity: true,
       sold: true,
       maxPerOrder: true,
+      maxPerPaidTicket: true,
       salesStartAt: true,
       salesEndAt: true,
       session: {
         select: {
+          id: true,
           status: true,
           startsAt: true,
+          capacity: true,
           event: { select: { status: true, title: true } },
         },
       },
@@ -132,6 +137,40 @@ export async function createOrder(
     }
   }
 
+  // Places gratuites plafonnées par les billets payants de la même séance :
+  // sans cela on pourrait emporter uniquement des places à 0 fr.
+  const parSeance = new Map<
+    string,
+    { payants: number; accompagnants: { id: string; n: number; ratio: number }[] }
+  >();
+  const siegesParSeance = new Map<string, number>();
+  for (const [ticketTypeId, quantity] of merged) {
+    const tt = byId.get(ticketTypeId)!;
+    const sid = tt.session.id;
+    siegesParSeance.set(sid, (siegesParSeance.get(sid) ?? 0) + quantity);
+    const groupe = parSeance.get(sid) ?? { payants: 0, accompagnants: [] };
+    if (tt.maxPerPaidTicket != null) {
+      groupe.accompagnants.push({
+        id: ticketTypeId,
+        n: quantity,
+        ratio: tt.maxPerPaidTicket,
+      });
+    } else if (tt.priceCents > 0) {
+      groupe.payants += quantity;
+    }
+    parSeance.set(sid, groupe);
+  }
+  for (const groupe of parSeance.values()) {
+    for (const acc of groupe.accompagnants) {
+      if (groupe.payants === 0) {
+        return { ok: false, error: "companion_requires_paid", ticketTypeId: acc.id };
+      }
+      if (acc.n > groupe.payants * acc.ratio) {
+        return { ok: false, error: "companion_limit", ticketTypeId: acc.id };
+      }
+    }
+  }
+
   const lines = [...merged].map(([ticketTypeId, quantity]) => {
     const tt = byId.get(ticketTypeId)!;
     return {
@@ -165,6 +204,27 @@ export async function createOrder(
         `;
         if (reserved !== 1) {
           throw new SoldOutError(line.ticketTypeId);
+        }
+      }
+
+      for (const [sessionId, n] of siegesParSeance) {
+        const tt = ticketTypes.find((x) => x.session.id === sessionId);
+        if (!tt) continue;
+        if (tt.session.capacity == null) {
+          await tx.eventSession.update({
+            where: { id: sessionId },
+            data: { sold: { increment: n } },
+          });
+          continue;
+        }
+        const jauge = await tx.$executeRaw`
+          UPDATE "EventSession"
+          SET sold = sold + ${n}
+          WHERE id = ${sessionId}
+            AND sold + ${n} <= capacity
+        `;
+        if (jauge !== 1) {
+          throw new SoldOutError(tt.id);
         }
       }
 
@@ -238,7 +298,12 @@ export async function releaseOrder(orderId: string): Promise<void> {
       where: { id: orderId },
       select: {
         status: true,
-        items: { select: { ticketTypeId: true, quantity: true } },
+        items: {
+          select: {
+            quantity: true,
+            ticketType: { select: { id: true, sessionId: true } },
+          },
+        },
       },
     });
 
@@ -248,11 +313,21 @@ export async function releaseOrder(orderId: string): Promise<void> {
       return;
     }
 
+    const sieges = new Map<string, number>();
     for (const item of order.items) {
       await tx.$executeRaw`
         UPDATE "TicketType"
         SET sold = GREATEST(sold - ${item.quantity}, 0)
-        WHERE id = ${item.ticketTypeId}
+        WHERE id = ${item.ticketType.id}
+      `;
+      const sid = item.ticketType.sessionId;
+      sieges.set(sid, (sieges.get(sid) ?? 0) + item.quantity);
+    }
+    for (const [sessionId, n] of sieges) {
+      await tx.$executeRaw`
+        UPDATE "EventSession"
+        SET sold = GREATEST(sold - ${n}, 0)
+        WHERE id = ${sessionId}
       `;
     }
 

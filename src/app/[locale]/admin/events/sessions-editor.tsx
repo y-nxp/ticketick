@@ -129,7 +129,12 @@ function SessionRow({
             {" · "}
             {ts(session.status)}
             {" · "}
-            {t("soldOf", { sold: vendus, total: offre })}
+            {session.capacity != null
+              ? t("soldOfCapacity", {
+                  sold: session.sold,
+                  total: session.capacity,
+                })
+              : t("soldOf", { sold: vendus, total: offre })}
           </p>
         </div>
         <Button variant="ghost" size="sm" onClick={onEdit}>
@@ -212,6 +217,14 @@ function SessionForm({
             name="status"
             defaultValue={session?.status ?? "PUBLISHED"}
             options={STATUSES.map((s) => ({ value: s, label: ts(s) }))}
+          />
+        </Field>
+        <Field label={t("capacity")} hint={t("capacityHint")}>
+          <TextInput
+            name="capacity"
+            type="number"
+            min="1"
+            defaultValue={session?.capacity ?? ""}
           />
         </Field>
       </div>
@@ -377,6 +390,14 @@ function TicketTypeForm({
             min="1"
             defaultValue={ticket?.maxPerOrder ?? 10}
             required
+          />
+        </Field>
+        <Field label={t("maxPerPaidTicket")} hint={t("maxPerPaidHint")}>
+          <TextInput
+            name="maxPerPaidTicket"
+            type="number"
+            min="1"
+            defaultValue={ticket?.maxPerPaidTicket ?? ""}
           />
         </Field>
         <Field label={t("salesStartAt")} hint={t("optional")}>

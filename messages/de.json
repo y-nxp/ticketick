@@ -76,7 +76,10 @@
     "selectSession": "Datum wählen",
     "sessionCount": "{count} Termine verfügbar",
     "noSessions": "Derzeit keine Termine geplant.",
-    "datesCount": "{count} Termine"
+    "datesCount": "{count} Termine",
+    "free": "Gratis",
+    "companionHint": "Bis zu {n} pro bezahltes Ticket, bis 16 Jahre.",
+    "companionNeedsPaid": "Zuerst ein bezahltes Ticket hinzufügen (2 Freikarten pro Ticket)."
   },
   "cart": {
     "title": "Ihr Warenkorb",
@@ -114,7 +117,11 @@
     "successHint": "Ihre Tickets wurden an {email} gesendet.",
     "backHome": "Zurück zur Startseite",
     "failed": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
-    "unavailable": "Die Online-Zahlung ist vorübergehend nicht verfügbar. Ihre Bestellung wurde nicht aufgegeben und Ihre Plätze wurden wieder freigegeben. Bitte versuchen Sie es später erneut."
+    "unavailable": "Die Online-Zahlung ist vorübergehend nicht verfügbar. Ihre Bestellung wurde nicht aufgegeben und Ihre Plätze wurden wieder freigegeben. Bitte versuchen Sie es später erneut.",
+    "companion_limit": "Höchstens 2 Freikarten (bis 16 Jahre) pro bezahltes Ticket.",
+    "companion_requires_paid": "Freikarten gelten nur zusammen mit einem bezahlten Ticket.",
+    "sold_out": "Für diese Auswahl sind nicht genug Plätze frei.",
+    "max_per_order": "Die Menge übersteigt das Maximum pro Bestellung."
   },
   "account": {
     "title": "Mein Konto",
@@ -396,6 +403,9 @@
         "maxInvalid": "Das Maximum pro Bestellung muss eine ganze Zahl von mindestens 1 sein.",
         "salesWindowInvalid": "Das Verkaufsfenster ist ungültig.",
         "quantityBelowSold": "Das Kontingent darf nicht unter die bereits verkaufte Menge fallen.",
+        "capacityInvalid": "Die Kapazität muss eine ganze Zahl von mindestens 1 sein oder leer bleiben.",
+        "capacityBelowSold": "Die Kapazität darf nicht unter die bereits gehaltenen Plätze fallen.",
+        "maxPerPaidInvalid": "Die Obergrenze pro bezahltes Ticket muss eine ganze Zahl von mindestens 1 sein.",
         "ticketTypeHasSales": "Für diesen Tarif wurden bereits Tickets verkauft: er kann nicht gelöscht werden.",
         "organizerHasEvents": "Diesem Veranstalter sind noch Veranstaltungen zugeordnet.",
         "venueHasSessions": "Dieser Ort wird noch von Vorstellungen genutzt."
@@ -481,7 +491,10 @@
       "venue": "Ort",
       "status": "Status",
       "label": "Bezeichnung (Premiere, Matinee…)",
-      "optional": "Optional"
+      "optional": "Optional",
+      "capacity": "Kapazität (Plätze)",
+      "capacityHint": "Alle Tarife zusammen. Leer: nur die Kontingente gelten.",
+      "soldOfCapacity": "{sold} / {total} Plätze"
     },
     "tickets": {
       "title": "Tarife",
@@ -494,6 +507,8 @@
       "sold": "{n} bereits verkauft",
       "soldOf": "{sold} / {total}",
       "maxPerOrder": "Max. pro Bestellung",
+      "maxPerPaidTicket": "Max. pro bezahltes Ticket",
+      "maxPerPaidHint": "Für einen Gratistarif: 2 = zwei Freikarten pro bezahltes Ticket. Leer: keine Bindung.",
       "salesStartAt": "Verkaufsstart",
       "salesEndAt": "Verkaufsende",
       "optional": "Optional"

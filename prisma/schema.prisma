@@ -311,6 +311,12 @@ model EventSession {
   /// Plan de salle facultatif : placement libre si absent.
   seatMap SeatMap?
 
+  /// Jauge de la salle pour cette séance, toutes catégories confondues.
+  /// Absente : seuls les contingents de chaque tarif limitent la vente.
+  capacity Int?
+  /// Places déjà retenues (tous tarifs). Sert à faire respecter `capacity`.
+  sold     Int  @default(0)
+
   ticketTypes TicketType[]
   discounts   Discount[]
 
@@ -341,6 +347,9 @@ model TicketType {
   quantity    Int
   sold        Int          @default(0)
   maxPerOrder Int          @default(10)
+  /// Si renseigné, ce tarif n'est vendu qu'avec des billets payants de la
+  /// même séance : au plus N de ces places par billet payant.
+  maxPerPaidTicket Int?
 
   salesStartAt DateTime?
   salesEndAt   DateTime?

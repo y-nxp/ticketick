@@ -180,6 +180,21 @@ export async function saveSession(
 
   const label = readTranslated(data, "label");
 
+  const capacityRaw = readText(data, "capacity");
+  let capacity: number | null = null;
+  if (capacityRaw !== "") {
+    const n = readInteger(data, "capacity");
+    if (n === null || n < 1) return failure("capacityInvalid");
+    capacity = n;
+  }
+  if (id && capacity !== null) {
+    const actuel = await prisma.eventSession.findUnique({
+      where: { id },
+      select: { sold: true },
+    });
+    if (actuel && capacity < actuel.sold) return failure("capacityBelowSold");
+  }
+
   const fields = {
     startsAt,
     endsAt: endsAt ?? null,
@@ -187,6 +202,7 @@ export async function saveSession(
     status,
     label: Object.keys(label).length > 0 ? label : Prisma.DbNull,
     venueId: readOptionalText(data, "venueId") ?? null,
+    capacity,
   };
 
   try {
@@ -242,6 +258,13 @@ export async function saveTicketType(
   const priceCents = readMoneyCents(data, "price");
   const quantity = readInteger(data, "quantity");
   const maxPerOrder = readInteger(data, "maxPerOrder");
+  const maxPerPaidRaw = readText(data, "maxPerPaidTicket");
+  let maxPerPaidTicket: number | null = null;
+  if (maxPerPaidRaw !== "") {
+    const n = readInteger(data, "maxPerPaidTicket");
+    if (n === null || n < 1) return failure("maxPerPaidInvalid");
+    maxPerPaidTicket = n;
+  }
 
   if (!sessionId) return failure("notFound");
   if (!name.fr) return failure("nameRequired");
@@ -275,6 +298,7 @@ export async function saveTicketType(
     priceCents,
     quantity,
     maxPerOrder,
+    maxPerPaidTicket,
     salesStartAt: salesStartAt ?? null,
     salesEndAt: salesEndAt ?? null,
   };

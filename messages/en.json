@@ -76,7 +76,10 @@
     "selectSession": "Choose a date",
     "sessionCount": "{count} dates available",
     "noSessions": "No dates scheduled at the moment.",
-    "datesCount": "{count} dates"
+    "datesCount": "{count} dates",
+    "free": "Free",
+    "companionHint": "Up to {n} per paying ticket, 16 and under.",
+    "companionNeedsPaid": "Add a paying ticket first (2 free seats per ticket)."
   },
   "cart": {
     "title": "Your cart",
@@ -114,7 +117,11 @@
     "successHint": "Your tickets have been sent to {email}.",
     "backHome": "Back to home",
     "failed": "Something went wrong. Please try again.",
-    "unavailable": "Online payment is temporarily unavailable. Your order was not placed and your seats have been released. Please try again later."
+    "unavailable": "Online payment is temporarily unavailable. Your order was not placed and your seats have been released. Please try again later.",
+    "companion_limit": "At most 2 free seats (16 and under) per paying ticket.",
+    "companion_requires_paid": "Free seats must be added to a paying ticket.",
+    "sold_out": "Not enough seats left for this selection.",
+    "max_per_order": "The quantity exceeds the per-order maximum."
   },
   "account": {
     "title": "My account",
@@ -396,6 +403,9 @@
         "maxInvalid": "The per-order maximum must be an integer of at least 1.",
         "salesWindowInvalid": "The sales window is not valid.",
         "quantityBelowSold": "The allocation cannot fall below the number already sold.",
+        "capacityInvalid": "Capacity must be an integer of at least 1, or left empty.",
+        "capacityBelowSold": "Capacity cannot fall below seats already held.",
+        "maxPerPaidInvalid": "The per-paying-ticket cap must be an integer of at least 1.",
         "ticketTypeHasSales": "This fare already has sold tickets and cannot be deleted.",
         "organizerHasEvents": "This organizer still has shows attached.",
         "venueHasSessions": "This venue is still used by sessions."
@@ -481,7 +491,10 @@
       "venue": "Venue",
       "status": "Status",
       "label": "Label (premiere, matinee…)",
-      "optional": "Optional"
+      "optional": "Optional",
+      "capacity": "Capacity (seats)",
+      "capacityHint": "All fares combined. Empty: only each fare’s allocation applies.",
+      "soldOfCapacity": "{sold} / {total} seats"
     },
     "tickets": {
       "title": "Fares",
@@ -494,6 +507,8 @@
       "sold": "{n} already sold",
       "soldOf": "{sold} / {total}",
       "maxPerOrder": "Max. per order",
+      "maxPerPaidTicket": "Max. per paying ticket",
+      "maxPerPaidHint": "For a free fare: 2 = two free seats per paying ticket. Empty: no link.",
       "salesStartAt": "Sales open",
       "salesEndAt": "Sales close",
       "optional": "Optional"

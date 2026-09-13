@@ -79,7 +79,17 @@ function CheckoutInner() {
         setError(t("unavailable"));
         return;
       }
-      if (!res.ok) throw new Error("checkout_failed");
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        const cle = body?.error;
+        if (cle && t.has(cle)) {
+          setError(t(cle));
+          return;
+        }
+        throw new Error("checkout_failed");
+      }
       const data: OrderResult & { checkoutUrl?: string } = await res.json();
 
       // Paiement carte : redirection vers la page de paiement Stripe.

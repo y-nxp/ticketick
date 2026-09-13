@@ -28,7 +28,7 @@ const eventInclude = {
     include: {
       venue: true,
       seatMap: { select: { id: true } },
-      ticketTypes: { orderBy: { priceCents: "asc" } },
+      ticketTypes: { orderBy: { priceCents: "desc" } },
     },
     orderBy: { startsAt: "asc" },
   },
@@ -74,6 +74,7 @@ function mapTicketType(
     quantity: tt.quantity,
     sold: tt.sold,
     maxPerOrder: tt.maxPerOrder,
+    maxPerPaidTicket: tt.maxPerPaidTicket ?? undefined,
     salesEndAt: tt.salesEndAt?.toISOString(),
   };
 }
@@ -89,6 +90,8 @@ function mapSession(s: RawEvent["sessions"][number]): SessionItem {
     venue: mapVenue(s.venue),
     // Une carte n'est proposée que si le lieu est géolocalisé.
     hasMap: Boolean(s.seatMap) || Boolean(s.venue?.lat && s.venue?.lng),
+    capacity: s.capacity ?? undefined,
+    sold: s.sold,
     ticketTypes: s.ticketTypes.map(mapTicketType),
   };
 }
