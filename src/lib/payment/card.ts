@@ -28,6 +28,7 @@ export interface CreateCardCheckoutInput {
   cancelUrl: string;
   lineItems: CardCheckoutLineItem[];
   project: string;
+  organizerName?: string;
   feeCents?: number;
   metadata?: Record<string, string>;
 }

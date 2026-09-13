@@ -14,6 +14,7 @@ import {
 } from "@/lib/orders/create-order";
 import { markOrderPaid } from "@/lib/orders/mark-paid";
 import { getCurrentUser } from "@/lib/auth/dal";
+import { publicAppOrigin } from "@/lib/app-url";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
   }
 
   const order = created.order;
-  const origin = new URL(request.url).origin;
+  const origin = publicAppOrigin(request);
 
   if (data.paymentMethod === "CARD") {
     let session;
@@ -124,6 +125,7 @@ export async function POST(request: Request) {
         successUrl: `${origin}/${data.locale}/checkout/success?ref=${order.reference}`,
         cancelUrl: `${origin}/${data.locale}/checkout?canceled=1`,
         project: order.project,
+        organizerName: order.organizerName,
         feeCents: order.feeCents,
         lineItems: order.lines.map((l) => ({
           name: l.label,

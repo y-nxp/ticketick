@@ -50,6 +50,8 @@ export interface CreatedOrder {
   }[];
   /** Slug du spectacle, pour étiqueter l'encaissement chez l'organisateur. */
   project: string;
+  /** Nom affiché sur la page PostFinance (ex. Chœur Cantabile). */
+  organizerName: string;
 }
 
 export type OrderError =
@@ -115,6 +117,7 @@ export async function createOrder(
               title: true,
               acceptCard: true,
               acceptIban: true,
+              organizer: { select: { name: true, slug: true } },
             },
           },
         },
@@ -205,7 +208,13 @@ export async function createOrder(
       ticketTypeId,
       quantity,
       unitPriceCents: tt.priceCents,
-      label: `${readTitle(tt.session.event.title, input.locale)} — ${readTitle(tt.name, input.locale)}`,
+      label: paymentLineLabel({
+        organizer: tt.session.event.organizer.name,
+        eventTitle: readTitle(tt.session.event.title, input.locale),
+        sessionStartsAt: tt.session.startsAt,
+        ticketName: readTitle(tt.name, input.locale),
+        locale: input.locale,
+      }),
     };
   });
 
@@ -219,6 +228,7 @@ export async function createOrder(
   const project = [
     ...new Set(ticketTypes.map((tt) => tt.session.event.slug)),
   ].join("+");
+  const organizerName = ticketTypes[0]?.session.event.organizer.name.trim() ?? "";
 
   try {
     const order = await prisma.$transaction(async (tx) => {
@@ -300,6 +310,7 @@ export async function createOrder(
         currency,
         lines,
         project,
+        organizerName,
       },
     };
   } catch (error) {
@@ -424,6 +435,39 @@ function generateReference(): string {
     out += alphabet[bytes[i]! % alphabet.length];
   }
   return `TT-${out.slice(0, 4)}-${out.slice(4)}`;
+}
+
+function paymentLineLabel(input: {
+  organizer: string;
+  eventTitle: string;
+  sessionStartsAt: Date;
+  ticketName: string;
+  locale: string;
+}): string {
+  const date = new Intl.DateTimeFormat(dateLocale(input.locale), {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Europe/Zurich",
+  }).format(input.sessionStartsAt);
+  return [input.organizer, input.eventTitle, date, input.ticketName]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(" — ")
+    .slice(0, 150);
+}
+
+function dateLocale(locale: string): string {
+  switch (locale) {
+    case "de":
+      return "de-CH";
+    case "it":
+      return "it-CH";
+    case "en":
+      return "en-CH";
+    default:
+      return "fr-CH";
+  }
 }
 
 function readTitle(value: unknown, locale: string): string {

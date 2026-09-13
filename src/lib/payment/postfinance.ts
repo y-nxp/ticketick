@@ -41,6 +41,7 @@ export interface CreatePostfinanceInput {
   lineItems: CheckoutLineItem[];
   /** Slug du spectacle, visible dans Checkout à côté de la commande. */
   project: string;
+  organizerName?: string;
   feeCents?: number;
 }
 
@@ -146,6 +147,7 @@ export async function createPostfinanceCheckout(
       integrator: "ticketick",
       event: project,
       reference: input.reference,
+      ...(input.organizerName ? { organizer: input.organizerName } : {}),
     },
     lineItems,
   };
