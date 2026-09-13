@@ -7,7 +7,11 @@ import {
 } from "@/lib/payment/card";
 import { sendTicketEmail } from "@/lib/email";
 import { sendPaidOrderTickets } from "@/lib/email/ticket-mail";
-import { createOrder, releaseOrder } from "@/lib/orders/create-order";
+import {
+  createOrder,
+  releaseOrder,
+  releaseStaleUnpaidCardOrders,
+} from "@/lib/orders/create-order";
 import { markOrderPaid } from "@/lib/orders/mark-paid";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { prisma } from "@/lib/prisma";
@@ -74,6 +78,12 @@ export async function POST(request: Request) {
 
   const data = parsed.data;
 
+  // Les tentatives carte échouées retenaient le stock (500 après createOrder).
+  // On rend d'abord les places des commandes qui n'ont jamais atteint PF.
+  await releaseStaleUnpaidCardOrders().catch((error) => {
+    console.error("[checkout] nettoyage des commandes périmées", error);
+  });
+
   // Rattache la commande au compte si l'acheteur est connecté, sans l'exiger :
   // l'achat reste possible sans création de compte.
   const user = await getCurrentUser();
@@ -131,23 +141,31 @@ export async function POST(request: Request) {
         console.error("[checkout] paiement par carte indisponible", error);
         return refusePayment(order.id);
       }
-      throw error;
+      // Toute autre erreur (API PostFinance, JWT, réseau) laisserait sinon
+      // un 500 et des places bloquées jusqu'à la séance.
+      console.error("[checkout] création PostFinance impossible", error);
+      return refusePayment(order.id);
     }
 
     if (session.provider === "postfinance") {
-      await prisma.payment.upsert({
-        where: { orderId: order.id },
-        create: {
-          orderId: order.id,
-          provider: "postfinance",
-          providerRef: session.sessionId,
-          method: "CARD",
-          status: "PENDING",
-          amountCents: order.totalCents,
-          currency: order.currency,
-        },
-        update: { providerRef: session.sessionId },
-      });
+      try {
+        await prisma.payment.upsert({
+          where: { orderId: order.id },
+          create: {
+            orderId: order.id,
+            provider: "postfinance",
+            providerRef: session.sessionId,
+            method: "CARD",
+            status: "PENDING",
+            amountCents: order.totalCents,
+            currency: order.currency,
+          },
+          update: { providerRef: session.sessionId },
+        });
+      } catch (error) {
+        console.error("[checkout] enregistrement du paiement", error);
+        return refusePayment(order.id);
+      }
     }
 
     // Paiement simulé : aucun webhook ne viendra confirmer, la commande est

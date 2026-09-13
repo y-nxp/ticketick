@@ -105,9 +105,9 @@ export async function createPostfinanceCheckout(
   const language = languageFor(input.locale);
 
   const lineItems = input.lineItems.map((item, index) => ({
-    uniqueId: `${project}-item-${index + 1}`,
-    sku: `${project}:${input.reference}:${index + 1}`,
-    name: item.name,
+    uniqueId: lineToken(project, `item-${index + 1}`),
+    sku: lineToken(project, `${input.reference}-${index + 1}`),
+    name: item.name.slice(0, 150),
     quantity: item.quantity,
     amountIncludingTax: francs(item.unitPriceCents * item.quantity),
     type: "PRODUCT",
@@ -115,8 +115,8 @@ export async function createPostfinanceCheckout(
 
   if (input.feeCents && input.feeCents > 0) {
     lineItems.push({
-      uniqueId: `${project}-fee`,
-      sku: `${project}:fee`,
+      uniqueId: lineToken(project, "fee"),
+      sku: lineToken(project, "fee"),
       name: feeLabel(input.locale),
       quantity: 1,
       amountIncludingTax: francs(input.feeCents),
@@ -150,10 +150,8 @@ export async function createPostfinanceCheckout(
     lineItems,
   };
 
-  const environment = process.env.PF_CHECKOUT_ENVIRONMENT?.trim().toUpperCase();
-  if (environment === "LIVE" || environment === "PREVIEW") {
-    transactionCreate.environment = environment;
-  }
+  // Ne pas forcer LIVE : un espace encore en test refuse alors la création.
+  // Sans ce champ, PostFinance prend le mode de l'espace.
 
   const viewId = Number(process.env.PF_CHECKOUT_SPACE_VIEW_ID);
   if (Number.isInteger(viewId) && viewId > 0) {
@@ -277,6 +275,12 @@ function secret(): string {
 
 function francs(cents: number): number {
   return Number((cents / 100).toFixed(2));
+}
+
+/** uniqueId / sku : lettres, chiffres, point, underscore, tiret uniquement. */
+function lineToken(project: string, suffix: string): string {
+  const raw = `${project}-${suffix}`.replace(/[^a-zA-Z0-9._-]+/g, "-");
+  return raw.replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 200);
 }
 
 function languageFor(locale: string): string {

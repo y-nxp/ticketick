@@ -1,0 +1,35 @@
+name: 📜 Logs application gb10
+
+on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        description: Environnement
+        required: true
+        type: choice
+        options: [production, betadev]
+        default: production
+
+jobs:
+  logs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: appleboy/ssh-action@v1.0.3
+        env:
+          CIBLE: ${{ inputs.environnement }}
+        with:
+          host: ${{ secrets.GB10_HOST }}
+          username: ${{ secrets.GB10_USER }}
+          key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.GB10_PORT }}
+          envs: CIBLE
+          script: |
+            set -euo pipefail
+            if [ "$CIBLE" = "production" ]; then
+              CONTENEUR="ticketick-v2-prod-app"
+            else
+              CONTENEUR="ticketick-v2-betadev-app"
+            fi
+            echo "📜 $CONTENEUR — 250 dernières lignes"
+            docker logs --tail 250 "$CONTENEUR" 2>&1

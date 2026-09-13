@@ -324,6 +324,40 @@ export async function createOrder(
  * Sans cela, un panier abandonné retiendrait des places jusqu'à la date de la
  * séance.
  */
+/**
+ * Rend le stock des paiements carte qui n'ont jamais abouti.
+ *
+ * - sans ligne Payment : PostFinance n'a pas été joignable — 2 minutes suffisent
+ * - Payment encore PENDING : l'acheteur a pu être envoyé chez PF — 60 minutes
+ */
+export async function releaseStaleUnpaidCardOrders(): Promise<number> {
+  const sansEncaissement = new Date(Date.now() - 2 * 60 * 1000);
+  const encaissementEnCours = new Date(Date.now() - 60 * 60 * 1000);
+
+  const stale = await prisma.order.findMany({
+    where: {
+      status: "AWAITING_PAYMENT",
+      paymentMethod: "CARD",
+      OR: [
+        { payment: { is: null }, createdAt: { lt: sansEncaissement } },
+        {
+          payment: { is: { status: "PENDING" } },
+          createdAt: { lt: encaissementEnCours },
+        },
+      ],
+    },
+    select: { id: true },
+    take: 50,
+  });
+
+  for (const order of stale) {
+    await releaseOrder(order.id).catch((error) => {
+      console.error("[checkout] libération commande périmée", order.id, error);
+    });
+  }
+  return stale.length;
+}
+
 export async function releaseOrder(orderId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
