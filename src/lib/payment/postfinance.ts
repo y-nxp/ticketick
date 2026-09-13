@@ -188,7 +188,11 @@ export async function fetchPostfinanceTransaction(
 
 async function paymentPageUrl(transactionId: number): Promise<string> {
   const path = `/payment/transactions/${encodeURIComponent(String(transactionId))}/payment-page-url`;
-  const raw = await pfFetch<unknown>(path, { method: "GET" });
+  // Cet endpoint renvoie une URL en texte : Accept: application/json → 406.
+  const raw = await pfFetch<unknown>(path, {
+    method: "GET",
+    accept: "text/plain",
+  });
   const url = extractUrl(raw);
   if (!url) {
     throw new Error("PostFinance : URL de paiement absente.");
@@ -208,9 +212,12 @@ function extractUrl(raw: unknown): string | undefined {
   return undefined;
 }
 
-async function pfFetch<T>(path: string, init: { method: "GET" | "POST"; body?: unknown }): Promise<T> {
+async function pfFetch<T>(
+  path: string,
+  init: { method: "GET" | "POST"; body?: unknown; accept?: string },
+): Promise<T> {
   const headers: Record<string, string> = {
-    Accept: "application/json",
+    Accept: init.accept ?? "application/json",
     Space: String(spaceId()),
   };
   if (init.body !== undefined) {
