@@ -107,7 +107,7 @@
     "phone": "Téléphone",
     "paymentMethod": "Moyen de paiement",
     "card": "Carte de crédit",
-    "cardHint": "Paiement sécurisé par carte via Stripe",
+    "cardHint": "Paiement sécurisé par carte via PostFinance Checkout",
     "iban": "Virement bancaire (IBAN)",
     "ibanHint": "Vous recevrez les instructions de paiement par e-mail. Les billets sont émis après réception du virement.",
     "payNow": "Payer {amount}",

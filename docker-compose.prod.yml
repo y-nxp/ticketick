@@ -11,7 +11,7 @@
 #   — aucun amorçage de catalogue, sous aucune condition. La donnée y est
 #     réelle ; il n'existe pas de cas où réinjecter des spectacles fictifs
 #     en production serait souhaitable.
-#   — ALLOW_MOCK_PAYMENTS n'est pas transmis. Sans clé Stripe, le paiement
+#   — ALLOW_MOCK_PAYMENTS n'est pas transmis. Sans PostFinance, le paiement
 #     est refusé plutôt que simulé.
 #
 # Dans Nginx Proxy Manager, le Proxy Host de ticketick.ch doit pointer sur :

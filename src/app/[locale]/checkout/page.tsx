@@ -115,7 +115,7 @@ function CheckoutInner() {
       }
       const data: OrderResult & { checkoutUrl?: string } = await res.json();
 
-      // Paiement carte : redirection vers la page de paiement Stripe.
+      // Paiement carte : redirection vers PostFinance Checkout.
       // Le panier sera vidé sur la page de succès après confirmation.
       if (method === "CARD" && data.checkoutUrl) {
         window.location.href = data.checkoutUrl;

@@ -107,7 +107,7 @@
     "phone": "Telefono",
     "paymentMethod": "Metodo di pagamento",
     "card": "Carta di credito",
-    "cardHint": "Pagamento sicuro con carta tramite Stripe",
+    "cardHint": "Pagamento sicuro con carta tramite PostFinance Checkout",
     "iban": "Bonifico bancario (IBAN)",
     "ibanHint": "Riceverai le istruzioni di pagamento via e-mail. I biglietti vengono emessi dopo la ricezione del bonifico.",
     "payNow": "Paga {amount}",

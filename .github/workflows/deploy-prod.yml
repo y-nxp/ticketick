@@ -27,6 +27,9 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.PROD_STRIPE_SECRET_KEY }}
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.PROD_STRIPE_PUBLISHABLE_KEY }}
           STRIPE_WEBHOOK_SECRET: ${{ secrets.PROD_STRIPE_WEBHOOK_SECRET }}
+          PF_CHECKOUT_SPACE_ID: ${{ secrets.PF_CHECKOUT_SPACE_ID }}
+          PF_CHECKOUT_USER: ${{ secrets.PF_CHECKOUT_USER_ID }}
+          PF_CHECKOUT_SECRET: ${{ secrets.PF_CHECKOUT_SECRET }}
           BANK_IBAN: ${{ secrets.PROD_BANK_IBAN }}
           BANK_BENEFICIARY: ${{ secrets.PROD_BANK_BENEFICIARY }}
           # Mêmes identifiants que la vitrine : la boîte no-reply existe déjà
@@ -39,7 +42,7 @@ jobs:
           username: ${{ secrets.GB10_USER }}
           key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
           port: ${{ secrets.GB10_PORT }}
-          envs: STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,BANK_IBAN,BANK_BENEFICIARY,SMTP_HOST,SMTP_USER,SMTP_PASS
+          envs: STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,PF_CHECKOUT_SPACE_ID,PF_CHECKOUT_USER,PF_CHECKOUT_SECRET,BANK_IBAN,BANK_BENEFICIARY,SMTP_HOST,SMTP_USER,SMTP_PASS
           command_timeout: 30m
           script: |
             set -euo pipefail
@@ -133,6 +136,11 @@ jobs:
             STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
             STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
             STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+            PF_CHECKOUT_SPACE_ID=${PF_CHECKOUT_SPACE_ID:-}
+            PF_CHECKOUT_USER=${PF_CHECKOUT_USER:-}
+            PF_CHECKOUT_SECRET=${PF_CHECKOUT_SECRET:-}
+            PF_CHECKOUT_APP_NAME=ticketick
+            PF_CHECKOUT_ENVIRONMENT=LIVE
             BANK_IBAN=${BANK_IBAN:-}
             BANK_BENEFICIARY=${BANK_BENEFICIARY:-}
             SMTP_HOST=${SMTP_HOST:-}
@@ -187,10 +195,10 @@ jobs:
             # Un encaissement absent n'empêche pas le site de tourner, mais
             # aucune vente ne pourra aboutir : autant le dire ici plutôt que
             # de le découvrir sur une commande refusée.
-            if grep -qE '^STRIPE_SECRET_KEY=.+' "$APP_DIR/.env.prod"; then
-              echo "   ✅ Stripe configuré"
+            if grep -qE '^PF_CHECKOUT_SECRET=.+' "$APP_DIR/.env.prod"; then
+              echo "   ✅ PostFinance Checkout configuré"
             else
-              echo "   ⚠ Stripe NON configuré — le paiement par carte sera refusé (503)."
+              echo "   ⚠ PostFinance NON configuré — le paiement par carte sera refusé (503)."
             fi
             if grep -qE '^BANK_IBAN=.+' "$APP_DIR/.env.prod"; then
               echo "   ✅ IBAN configuré"

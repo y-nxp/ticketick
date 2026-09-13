@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import * as z from "zod";
 import {
-  createCheckoutSession,
+  createCardCheckout,
   mockPaymentsAllowed,
   PaymentNotConfiguredError,
-} from "@/lib/payment/stripe";
+} from "@/lib/payment/card";
 import { sendTicketEmail } from "@/lib/email";
 import { createOrder, releaseOrder } from "@/lib/orders/create-order";
 import { markOrderPaid } from "@/lib/orders/mark-paid";
 import { getCurrentUser } from "@/lib/auth/dal";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Seuls l'identifiant du tarif et la quantité sont acceptés. Le libellé et le
@@ -102,12 +103,14 @@ export async function POST(request: Request) {
   if (data.paymentMethod === "CARD") {
     let session;
     try {
-      session = await createCheckoutSession({
+      session = await createCardCheckout({
         reference: order.reference,
         currency: order.currency,
         customerEmail: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
         locale: data.locale,
-        successUrl: `${origin}/${data.locale}/checkout/success?ref=${order.reference}&session_id={CHECKOUT_SESSION_ID}`,
+        successUrl: `${origin}/${data.locale}/checkout/success?ref=${order.reference}`,
         cancelUrl: `${origin}/${data.locale}/checkout?canceled=1`,
         feeCents: order.feeCents,
         lineItems: order.lines.map((l) => ({
@@ -127,6 +130,22 @@ export async function POST(request: Request) {
         return refusePayment(order.id);
       }
       throw error;
+    }
+
+    if (session.provider === "postfinance") {
+      await prisma.payment.upsert({
+        where: { orderId: order.id },
+        create: {
+          orderId: order.id,
+          provider: "postfinance",
+          providerRef: session.sessionId,
+          method: "CARD",
+          status: "PENDING",
+          amountCents: order.totalCents,
+          currency: order.currency,
+        },
+        update: { providerRef: session.sessionId },
+      });
     }
 
     // Paiement simulé : aucun webhook ne viendra confirmer, la commande est

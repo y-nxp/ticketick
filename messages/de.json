@@ -107,7 +107,7 @@
     "phone": "Telefon",
     "paymentMethod": "Zahlungsart",
     "card": "Kreditkarte",
-    "cardHint": "Sichere Kartenzahlung über Stripe",
+    "cardHint": "Sichere Kartenzahlung über PostFinance Checkout",
     "iban": "Banküberweisung (IBAN)",
     "ibanHint": "Sie erhalten die Zahlungsanweisungen per E-Mail. Tickets werden nach Zahlungseingang ausgestellt.",
     "payNow": "{amount} bezahlen",

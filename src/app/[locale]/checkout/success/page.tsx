@@ -3,6 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { CartClearer } from "@/components/cart/cart-clearer";
+import { settlePostfinanceOrder } from "@/lib/orders/settle-card";
 
 export default async function CheckoutSuccessPage({
   params,
@@ -15,6 +16,12 @@ export default async function CheckoutSuccessPage({
   const { ref } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("checkout");
+
+  if (ref) {
+    await settlePostfinanceOrder(ref).catch((error) => {
+      console.error("[checkout/success] confirmation PostFinance", error);
+    });
+  }
 
   return (
     <div className="container-page max-w-2xl py-20 text-center">

@@ -56,7 +56,8 @@ Voir [`.env.example`](.env.example). Principales :
 | --- | --- |
 | `DATABASE_URL` | Connexion PostgreSQL |
 | `AUTH_SECRET` | Secret d'authentification (Auth.js) |
-| `STRIPE_SECRET_KEY` / `STRIPE_PUBLISHABLE_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe Checkout (vide = mode mock) |
+| `PF_CHECKOUT_SPACE_ID` / `PF_CHECKOUT_USER` / `PF_CHECKOUT_SECRET` | PostFinance Checkout (carte) |
+| `PF_CHECKOUT_APP_NAME` | Libellé du projet dans Checkout (`ticketick:TT-…`) |
 | `SMTP_*` / `MAIL_FROM` | Envoi des e-mails (vide = journalisation console) |
 | `BANK_IBAN` / `BANK_BENEFICIARY` | Coordonnées pour le paiement par virement |
 
@@ -93,10 +94,11 @@ prisma/                     # schema.prisma + seed.ts
 
 ## À brancher pour la production
 
-1. **Stripe** : renseigner `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET`. Le paiement
-   carte crée une Checkout Session (`src/lib/payment/stripe.ts`) et le webhook
-   (`/api/webhooks/stripe`) confirme le paiement puis déclenche l'envoi des billets.
-   Configurez l'endpoint webhook dans le dashboard Stripe.
+1. **PostFinance Checkout** : renseigner `PF_CHECKOUT_*`. Le paiement carte crée
+   une transaction (`src/lib/payment/postfinance.ts`) et redirige vers la page
+   hébergée. Le webhook (`/api/webhooks/postfinance`) et le retour acheteur
+   soldent la commande puis envoient les billets. Dans le portail : Webhook URL
+   + listener nommé comme `PF_CHECKOUT_APP_NAME`, entité Transaction.
 2. **E-mail** : configurer SMTP dans `src/lib/email.ts` + génération PDF des billets (QR).
 3. **Auth.js** : brancher l'authentification réelle sur le modèle `User`.
 4. **Persistance des commandes** : écrire les `Order`/`Ticket` en base dans `api/checkout`.

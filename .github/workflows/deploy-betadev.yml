@@ -22,6 +22,9 @@ jobs:
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           STRIPE_PUBLISHABLE_KEY: ${{ secrets.STRIPE_PUBLISHABLE_KEY }}
           STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          PF_CHECKOUT_SPACE_ID: ${{ secrets.PF_CHECKOUT_SPACE_ID }}
+          PF_CHECKOUT_USER: ${{ secrets.PF_CHECKOUT_USER_ID }}
+          PF_CHECKOUT_SECRET: ${{ secrets.PF_CHECKOUT_SECRET }}
           # Même boîte no-reply que la vitrine et que la production : la
           # recette doit pouvoir éprouver un envoi réel avant la bascule.
           SMTP_HOST: ${{ secrets.NOREPLY_HOST }}
@@ -32,7 +35,7 @@ jobs:
           username: ${{ secrets.GB10_USER }}
           key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
           port: ${{ secrets.GB10_PORT }}
-          envs: STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,SMTP_HOST,SMTP_USER,SMTP_PASS
+          envs: STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,PF_CHECKOUT_SPACE_ID,PF_CHECKOUT_USER,PF_CHECKOUT_SECRET,SMTP_HOST,SMTP_USER,SMTP_PASS
           command_timeout: 30m
           script: |
             set -euo pipefail
@@ -120,6 +123,11 @@ jobs:
             STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
             STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
             STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+            PF_CHECKOUT_SPACE_ID=${PF_CHECKOUT_SPACE_ID:-}
+            PF_CHECKOUT_USER=${PF_CHECKOUT_USER:-}
+            PF_CHECKOUT_SECRET=${PF_CHECKOUT_SECRET:-}
+            PF_CHECKOUT_APP_NAME=ticketick-betadev
+            PF_CHECKOUT_ENVIRONMENT=PREVIEW
             SMTP_HOST=${SMTP_HOST:-}
             SMTP_PORT=${SMTP_PORT:-587}
             SMTP_USER=${SMTP_USER:-}

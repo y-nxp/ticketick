@@ -1,44 +1,12 @@
 import Stripe from "stripe";
 
 /**
- * Intégration Stripe (paiement par carte via Stripe Checkout hébergé).
- *
- * Variables d'environnement (secrets GitHub) :
- *   STRIPE_SECRET_KEY       — clé secrète serveur (sk_...)
- *   STRIPE_WEBHOOK_SECRET   — secret de signature du webhook (whsec_...)
- *   STRIPE_PUBLISHABLE_KEY  — clé publique (pk_...) exposée au client si besoin
- *
- * Flux : le serveur crée une Checkout Session -> l'utilisateur est redirigé
- * vers la page de paiement Stripe -> Stripe appelle notre webhook
- * (`checkout.session.completed`) -> la commande est marquée payée et les
- * billets sont émis.
- *
- * Sans clé configurée, un mode simulé permet de dérouler le tunnel sans appel
- * réseau — mais il doit être demandé explicitement. Voir `mockPaymentsAllowed`.
+ * Intégration Stripe — repli si PostFinance n'est pas configuré.
+ * Le tunnel carte passe d'abord par `createCardCheckout`.
  */
 
 export function isStripeConfigured(): boolean {
   return Boolean(process.env.STRIPE_SECRET_KEY);
-}
-
-/**
- * Le paiement simulé solde la commande et émet les billets sans qu'un centime
- * ait été encaissé. Sur un site ouvert au public, une clé Stripe oubliée
- * distribuerait donc des billets gratuits.
- *
- * D'où l'opt-in explicite plutôt qu'un repli automatique : l'absence de
- * configuration fait échouer le paiement, elle ne l'offre pas.
- */
-export function mockPaymentsAllowed(): boolean {
-  return process.env.ALLOW_MOCK_PAYMENTS === "true";
-}
-
-/** Levée quand aucun moyen d'encaisser n'est configuré. */
-export class PaymentNotConfiguredError extends Error {
-  constructor() {
-    super("Aucun encaissement configuré (STRIPE_SECRET_KEY manquant).");
-    this.name = "PaymentNotConfiguredError";
-  }
 }
 
 let client: Stripe | null = null;
@@ -78,20 +46,9 @@ export interface CreateCheckoutResult {
 
 const SUPPORTED_LOCALES = ["fr", "en", "de", "it"] as const;
 
-export async function createCheckoutSession(
+export async function createStripeCheckout(
   input: CreateCheckoutInput,
 ): Promise<CreateCheckoutResult> {
-  if (!isStripeConfigured()) {
-    if (!mockPaymentsAllowed()) throw new PaymentNotConfiguredError();
-
-    return {
-      provider: "stripe",
-      sessionId: `mock_${input.reference}`,
-      checkoutUrl: `${input.successUrl}&mock=1`,
-      mock: true,
-    };
-  }
-
   const stripe = getStripe();
   const currency = input.currency.toLowerCase();
 
