@@ -1,8 +1,9 @@
 import Stripe from "stripe";
 
 /**
- * Intégration Stripe — repli si PostFinance n'est pas configuré.
- * Le tunnel carte passe d'abord par `createCardCheckout`.
+ * Stripe sert à facturer les organisateurs (abonnement / honoraires
+ * ticketick). L'achat de billets passe par le PostFinance du client,
+ * jamais par ici.
  */
 
 export function isStripeConfigured(): boolean {

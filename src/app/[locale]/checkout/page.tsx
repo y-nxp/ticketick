@@ -70,8 +70,7 @@ function CheckoutInner() {
     };
   }, [ticketIds]);
 
-  const fee = Math.round(subtotalCents * 0.05);
-  const total = subtotalCents + fee;
+  const total = subtotalCents;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -297,10 +296,6 @@ function CheckoutInner() {
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{tc("subtotal")}</dt>
                 <dd>{formatPrice(subtotalCents, `${locale}-CH`)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">{tc("serviceFee")}</dt>
-                <dd>{formatPrice(fee, `${locale}-CH`)}</dd>
               </div>
               <div className="flex justify-between border-t border-border pt-2 text-base font-bold">
                 <dt>{tc("total")}</dt>

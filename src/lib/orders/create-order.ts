@@ -48,6 +48,8 @@ export interface CreatedOrder {
     unitPriceCents: number;
     label: string;
   }[];
+  /** Slug du spectacle, pour étiqueter l'encaissement chez l'organisateur. */
+  project: string;
 }
 
 export type OrderError =
@@ -62,8 +64,12 @@ export type OrderError =
   | "method_not_allowed"
   | "reference_collision";
 
-/** Commission de la plateforme, en points de base (500 = 5 %). */
-const PLATFORM_FEE_BPS = 500;
+/**
+ * L'encaissement carte va sur le compte PostFinance de l'organisateur.
+ * ticketick ne prélève rien ici : la facturation des organisateurs passe
+ * par Stripe, à part.
+ */
+const PLATFORM_FEE_BPS = 0;
 
 export async function createOrder(
   input: CreateOrderInput,
@@ -105,6 +111,7 @@ export async function createOrder(
           event: {
             select: {
               status: true,
+              slug: true,
               title: true,
               acceptCard: true,
               acceptIban: true,
@@ -209,6 +216,9 @@ export async function createOrder(
   const feeCents = Math.round((subtotalCents * PLATFORM_FEE_BPS) / 10_000);
   const totalCents = subtotalCents + feeCents;
   const currency = byId.get(lines[0]!.ticketTypeId)!.currency;
+  const project = [
+    ...new Set(ticketTypes.map((tt) => tt.session.event.slug)),
+  ].join("+");
 
   try {
     const order = await prisma.$transaction(async (tx) => {
@@ -289,6 +299,7 @@ export async function createOrder(
         totalCents,
         currency,
         lines,
+        project,
       },
     };
   } catch (error) {

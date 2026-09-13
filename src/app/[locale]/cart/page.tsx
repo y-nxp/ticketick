@@ -9,15 +9,12 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
 import { formatDate, formatPrice } from "@/lib/utils";
 
-const SERVICE_FEE_RATE = 0.05;
-
 export default function CartPage() {
   const t = useTranslations("cart");
   const locale = useLocale();
   const { lines, updateQuantity, remove, subtotalCents } = useCart();
 
-  const fee = Math.round(subtotalCents * SERVICE_FEE_RATE);
-  const total = subtotalCents + fee;
+  const total = subtotalCents;
 
   if (lines.length === 0) {
     return (
@@ -114,10 +111,6 @@ export default function CartPage() {
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t("subtotal")}</dt>
                 <dd>{formatPrice(subtotalCents, `${locale}-CH`)}</dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">{t("serviceFee")}</dt>
-                <dd>{formatPrice(fee, `${locale}-CH`)}</dd>
               </div>
               <div className="flex justify-between border-t border-border pt-2 text-base font-bold">
                 <dt>{t("total")}</dt>

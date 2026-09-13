@@ -126,7 +126,6 @@ jobs:
             PF_CHECKOUT_SPACE_ID=${PF_CHECKOUT_SPACE_ID:-}
             PF_CHECKOUT_USER=${PF_CHECKOUT_USER:-}
             PF_CHECKOUT_SECRET=${PF_CHECKOUT_SECRET:-}
-            PF_CHECKOUT_APP_NAME=ticketick-betadev
             PF_CHECKOUT_ENVIRONMENT=PREVIEW
             SMTP_HOST=${SMTP_HOST:-}
             SMTP_PORT=${SMTP_PORT:-587}

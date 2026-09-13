@@ -12,7 +12,7 @@ export function mockPaymentsAllowed(): boolean {
 export class PaymentNotConfiguredError extends Error {
   constructor() {
     super(
-      "Aucun encaissement configuré (PF_CHECKOUT_* ou STRIPE_SECRET_KEY manquant).",
+      "Aucun encaissement configuré (PF_CHECKOUT_* manquant).",
     );
     this.name = "PaymentNotConfiguredError";
   }

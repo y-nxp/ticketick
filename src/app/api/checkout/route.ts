@@ -112,6 +112,7 @@ export async function POST(request: Request) {
         locale: data.locale,
         successUrl: `${origin}/${data.locale}/checkout/success?ref=${order.reference}`,
         cancelUrl: `${origin}/${data.locale}/checkout?canceled=1`,
+        project: order.project,
         feeCents: order.feeCents,
         lineItems: order.lines.map((l) => ({
           name: l.label,

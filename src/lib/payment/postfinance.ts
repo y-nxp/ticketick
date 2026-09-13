@@ -3,20 +3,19 @@ import "server-only";
 import { SignJWT } from "jose";
 
 /**
- * PostFinance Checkout (API v2).
+ * PostFinance Checkout de l'organisateur (API v2).
  *
- * Un même compte PF peut servir plusieurs projets. Chaque transaction porte
- * donc un libellé d'application (`PF_CHECKOUT_APP_NAME`, défaut `ticketick`)
- * dans `merchantReference`, `invoiceMerchantReference` et `metaData.app` :
- * c'est ce qui apparaît dans le back-office Checkout pour filtrer ticketick
- * des autres encaissements.
+ * L'acheteur paie le spectacle : l'argent arrive sur le compte PF du client
+ * (Chœur Cantabile, etc.). ticketick n'y prélève rien. Stripe, lui, sert
+ * plus tard à facturer l'organisateur, pas à encaisser les billets.
  *
- *   PF_CHECKOUT_SPACE_ID     — espace
- *   PF_CHECKOUT_USER         — id utilisateur d'application (alias : *_USER_ID)
- *   PF_CHECKOUT_SECRET       — clé d'authentification (base64)
- *   PF_CHECKOUT_APP_NAME     — nom visible côté Checkout (défaut : ticketick)
- *   PF_CHECKOUT_ENVIRONMENT  — LIVE | PREVIEW (facultatif)
- *   PF_CHECKOUT_SPACE_VIEW_ID — vue / page de paiement dédiée (facultatif)
+ * Un même espace PF peut porter plusieurs spectacles. La référence marchande
+ * est `{slug}:{commande}` (ex. beethoven-cantabile-2026:TT-ABCD-EFGH) pour
+ * les distinguer dans le back-office Checkout.
+ *
+ *   PF_CHECKOUT_SPACE_ID / USER / SECRET — accès de l'organisateur
+ *   PF_CHECKOUT_ENVIRONMENT              — LIVE | PREVIEW (facultatif)
+ *   PF_CHECKOUT_SPACE_VIEW_ID            — page de paiement dédiée (facultatif)
  */
 
 const API_PREFIX = "/api/v2.0";
@@ -40,6 +39,8 @@ export interface CreatePostfinanceInput {
   successUrl: string;
   cancelUrl: string;
   lineItems: CheckoutLineItem[];
+  /** Slug du spectacle, visible dans Checkout à côté de la commande. */
+  project: string;
   feeCents?: number;
 }
 
@@ -62,13 +63,18 @@ export interface PostfinanceTransaction {
   metaData?: Record<string, string>;
 }
 
-export function postfinanceAppName(): string {
-  const name = process.env.PF_CHECKOUT_APP_NAME?.trim();
-  return name && name.length > 0 ? name : "ticketick";
+export function projectLabel(project?: string): string {
+  const fromOrder = project?.trim();
+  if (fromOrder) return fromOrder;
+  const fromEnv = process.env.PF_CHECKOUT_APP_NAME?.trim();
+  return fromEnv && fromEnv.length > 0 ? fromEnv : "ticketick";
 }
 
-export function merchantReferenceFor(orderReference: string): string {
-  return `${postfinanceAppName()}:${orderReference}`;
+export function merchantReferenceFor(
+  orderReference: string,
+  project?: string,
+): string {
+  return `${projectLabel(project)}:${orderReference}`;
 }
 
 export function orderReferenceFromMerchant(value: string | undefined): string | undefined {
@@ -94,13 +100,13 @@ export function amountToCents(amount: number | undefined): number | undefined {
 export async function createPostfinanceCheckout(
   input: CreatePostfinanceInput,
 ): Promise<CreatePostfinanceResult> {
-  const app = postfinanceAppName();
-  const merchantReference = merchantReferenceFor(input.reference);
+  const project = projectLabel(input.project);
+  const merchantReference = merchantReferenceFor(input.reference, project);
   const language = languageFor(input.locale);
 
   const lineItems = input.lineItems.map((item, index) => ({
-    uniqueId: `${app}-item-${index + 1}`,
-    sku: `${app}:${input.reference}:${index + 1}`,
+    uniqueId: `${project}-item-${index + 1}`,
+    sku: `${project}:${input.reference}:${index + 1}`,
     name: item.name,
     quantity: item.quantity,
     amountIncludingTax: francs(item.unitPriceCents * item.quantity),
@@ -109,8 +115,8 @@ export async function createPostfinanceCheckout(
 
   if (input.feeCents && input.feeCents > 0) {
     lineItems.push({
-      uniqueId: `${app}-fee`,
-      sku: `${app}:fee`,
+      uniqueId: `${project}-fee`,
+      sku: `${project}:fee`,
       name: feeLabel(input.locale),
       quantity: 1,
       amountIncludingTax: francs(input.feeCents),
@@ -137,7 +143,8 @@ export async function createPostfinanceCheckout(
       country: "CH",
     },
     metaData: {
-      app,
+      integrator: "ticketick",
+      event: project,
       reference: input.reference,
     },
     lineItems,

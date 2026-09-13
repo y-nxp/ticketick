@@ -56,8 +56,8 @@ Voir [`.env.example`](.env.example). Principales :
 | --- | --- |
 | `DATABASE_URL` | Connexion PostgreSQL |
 | `AUTH_SECRET` | Secret d'authentification (Auth.js) |
-| `PF_CHECKOUT_SPACE_ID` / `PF_CHECKOUT_USER` / `PF_CHECKOUT_SECRET` | PostFinance Checkout (carte) |
-| `PF_CHECKOUT_APP_NAME` | Libellé du projet dans Checkout (`ticketick:TT-…`) |
+| `PF_CHECKOUT_SPACE_ID` / `PF_CHECKOUT_USER` / `PF_CHECKOUT_SECRET` | PostFinance de l'organisateur (billets, sans marge) |
+| `STRIPE_*` | Facturation des organisateurs (plus tard), pas les billets |
 | `SMTP_*` / `MAIL_FROM` | Envoi des e-mails (vide = journalisation console) |
 | `BANK_IBAN` / `BANK_BENEFICIARY` | Coordonnées pour le paiement par virement |
 

@@ -8,10 +8,6 @@ import {
   createPostfinanceCheckout,
   isPostfinanceConfigured,
 } from "@/lib/payment/postfinance";
-import {
-  createStripeCheckout,
-  isStripeConfigured,
-} from "@/lib/payment/stripe";
 
 export { mockPaymentsAllowed, PaymentNotConfiguredError };
 
@@ -31,12 +27,13 @@ export interface CreateCardCheckoutInput {
   successUrl: string;
   cancelUrl: string;
   lineItems: CardCheckoutLineItem[];
+  project: string;
   feeCents?: number;
   metadata?: Record<string, string>;
 }
 
 export interface CreateCardCheckoutResult {
-  provider: "postfinance" | "stripe" | "mock";
+  provider: "postfinance" | "mock";
   sessionId: string;
   checkoutUrl: string;
   mock: boolean;
@@ -47,10 +44,6 @@ export async function createCardCheckout(
 ): Promise<CreateCardCheckoutResult> {
   if (isPostfinanceConfigured()) {
     return createPostfinanceCheckout(input);
-  }
-
-  if (isStripeConfigured()) {
-    return createStripeCheckout(input);
   }
 
   if (!mockPaymentsAllowed()) throw new PaymentNotConfiguredError();
