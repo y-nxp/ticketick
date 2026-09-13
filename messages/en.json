@@ -121,7 +121,9 @@
     "companion_limit": "At most 2 free seats (16 and under) per paying ticket.",
     "companion_requires_paid": "Free seats must be added to a paying ticket.",
     "sold_out": "Not enough seats left for this selection.",
-    "max_per_order": "The quantity exceeds the per-order maximum."
+    "max_per_order": "The quantity exceeds the per-order maximum.",
+    "method_not_allowed": "This payment method is not offered for these tickets.",
+    "noMethod": "No payment method is open for these tickets."
   },
   "account": {
     "title": "My account",
@@ -406,6 +408,8 @@
         "capacityInvalid": "Capacity must be an integer of at least 1, or left empty.",
         "capacityBelowSold": "Capacity cannot fall below seats already held.",
         "maxPerPaidInvalid": "The per-paying-ticket cap must be an integer of at least 1.",
+        "paymentRequired": "Choose at least one payment method.",
+        "paymentOverrideInvalid": "That payment-method choice is not valid.",
         "ticketTypeHasSales": "This fare already has sold tickets and cannot be deleted.",
         "organizerHasEvents": "This organizer still has shows attached.",
         "venueHasSessions": "This venue is still used by sessions."
@@ -474,6 +478,10 @@
       "coverImageHint": "Image URL. Uploads will come later.",
       "categories": "Categories",
       "featured": "Feature on the homepage",
+      "payments": "Payment methods",
+      "paymentsHint": "At least one must stay on. A session can still restrict them.",
+      "acceptCard": "Card",
+      "acceptIban": "IBAN transfer",
       "delete": "Delete the show"
     },
     "sessions": {
@@ -494,7 +502,14 @@
       "optional": "Optional",
       "capacity": "Capacity (seats)",
       "capacityHint": "All fares combined. Empty: only each fare’s allocation applies.",
-      "soldOfCapacity": "{sold} / {total} seats"
+      "soldOfCapacity": "{sold} / {total} seats",
+      "moreOptions": "More options",
+      "paymentsOverrideHint": "Leave “same as the show” unless this session is an exception.",
+      "acceptCard": "Card",
+      "acceptIban": "IBAN transfer",
+      "inheritPayment": "Same as the show ({state})",
+      "paymentOn": "on",
+      "paymentOff": "off"
     },
     "tickets": {
       "title": "Fares",

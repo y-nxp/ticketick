@@ -72,6 +72,8 @@ export async function getEventForEdit(id: string) {
       visibility: true,
       featured: true,
       coverImage: true,
+      acceptCard: true,
+      acceptIban: true,
       organizerId: true,
       categories: { select: { id: true } },
       sessions: {
@@ -86,6 +88,8 @@ export async function getEventForEdit(id: string) {
           venueId: true,
           capacity: true,
           sold: true,
+          acceptCard: true,
+          acceptIban: true,
           ticketTypes: {
             orderBy: { priceCents: "desc" },
             select: {

@@ -3,6 +3,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { Prisma, type PaymentMethod } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { inheritPayment, intersectOffers } from "./payment-methods";
 
 /**
  * Création d'une commande.
@@ -58,6 +59,7 @@ export type OrderError =
   | "companion_limit"
   | "companion_requires_paid"
   | "sold_out"
+  | "method_not_allowed"
   | "reference_collision";
 
 /** Commission de la plateforme, en points de base (500 = 5 %). */
@@ -98,7 +100,16 @@ export async function createOrder(
           status: true,
           startsAt: true,
           capacity: true,
-          event: { select: { status: true, title: true } },
+          acceptCard: true,
+          acceptIban: true,
+          event: {
+            select: {
+              status: true,
+              title: true,
+              acceptCard: true,
+              acceptIban: true,
+            },
+          },
         },
       },
     },
@@ -169,6 +180,16 @@ export async function createOrder(
         return { ok: false, error: "companion_limit", ticketTypeId: acc.id };
       }
     }
+  }
+
+  const paiement = intersectOffers(
+    ticketTypes.map((tt) => inheritPayment(tt.session.event, tt.session)),
+  );
+  if (
+    (input.paymentMethod === "CARD" && !paiement.card) ||
+    (input.paymentMethod === "IBAN" && !paiement.iban)
+  ) {
+    return { ok: false, error: "method_not_allowed" };
   }
 
   const lines = [...merged].map(([ticketTypeId, quantity]) => {

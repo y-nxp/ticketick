@@ -8,6 +8,7 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
 import { formatPrice } from "@/lib/utils";
+import { getCartPaymentMethods } from "@/lib/orders/payment-actions";
 
 type Method = "CARD" | "IBAN";
 
@@ -37,6 +38,7 @@ function CheckoutInner() {
   const canceled = searchParams.get("canceled") === "1";
 
   const [method, setMethod] = React.useState<Method>("CARD");
+  const [offer, setOffer] = React.useState({ card: true, iban: true });
   const [form, setForm] = React.useState({
     firstName: "",
     lastName: "",
@@ -46,6 +48,27 @@ function CheckoutInner() {
   const [submitting, setSubmitting] = React.useState(false);
   const [result, setResult] = React.useState<OrderResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+
+  const ticketIds = lines.map((l) => l.ticketTypeId).join(",");
+  React.useEffect(() => {
+    let ignore = false;
+    getCartPaymentMethods(ticketIds ? ticketIds.split(",") : []).then(
+      (next) => {
+        if (ignore) return;
+        setOffer(next);
+        setMethod((actuel) => {
+          if (actuel === "CARD" && next.card) return actuel;
+          if (actuel === "IBAN" && next.iban) return actuel;
+          if (next.card) return "CARD";
+          if (next.iban) return "IBAN";
+          return actuel;
+        });
+      },
+    );
+    return () => {
+      ignore = true;
+    };
+  }, [ticketIds]);
 
   const fee = Math.round(subtotalCents * 0.05);
   const total = subtotalCents + fee;
@@ -213,20 +236,29 @@ function CheckoutInner() {
           <section className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">{t("paymentMethod")}</h2>
             <div className="mt-4 space-y-3">
-              <PaymentOption
-                active={method === "CARD"}
-                onClick={() => setMethod("CARD")}
-                icon={<CreditCard className="size-5" />}
-                title={t("card")}
-                hint={t("cardHint")}
-              />
-              <PaymentOption
-                active={method === "IBAN"}
-                onClick={() => setMethod("IBAN")}
-                icon={<Landmark className="size-5" />}
-                title={t("iban")}
-                hint={t("ibanHint")}
-              />
+              {offer.card ? (
+                <PaymentOption
+                  active={method === "CARD"}
+                  onClick={() => setMethod("CARD")}
+                  icon={<CreditCard className="size-5" />}
+                  title={t("card")}
+                  hint={t("cardHint")}
+                />
+              ) : null}
+              {offer.iban ? (
+                <PaymentOption
+                  active={method === "IBAN"}
+                  onClick={() => setMethod("IBAN")}
+                  icon={<Landmark className="size-5" />}
+                  title={t("iban")}
+                  hint={t("ibanHint")}
+                />
+              ) : null}
+              {!offer.card && !offer.iban ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("noMethod")}
+                </p>
+              ) : null}
             </div>
           </section>
 
@@ -279,7 +311,7 @@ function CheckoutInner() {
               type="submit"
               size="lg"
               className="mt-5 w-full"
-              disabled={submitting}
+              disabled={submitting || (!offer.card && !offer.iban)}
             >
               {submitting ? (
                 <>

@@ -121,7 +121,9 @@
     "companion_limit": "Au plus 2 places gratuites (jusqu’à 16 ans) par billet payant.",
     "companion_requires_paid": "Les places gratuites s’ajoutent à un billet payant.",
     "sold_out": "Plus assez de places pour cette sélection.",
-    "max_per_order": "La quantité dépasse le maximum autorisé par commande."
+    "max_per_order": "La quantité dépasse le maximum autorisé par commande.",
+    "method_not_allowed": "Ce moyen de paiement n’est pas proposé pour ces billets.",
+    "noMethod": "Aucun moyen de paiement n’est ouvert pour ces billets."
   },
   "account": {
     "title": "Mon espace",
@@ -406,6 +408,8 @@
         "capacityInvalid": "La jauge doit être un entier d’au moins 1, ou rester vide.",
         "capacityBelowSold": "La jauge ne peut pas descendre sous les places déjà retenues.",
         "maxPerPaidInvalid": "Le plafond par billet payant doit être un entier d’au moins 1.",
+        "paymentRequired": "Choisissez au moins un moyen de paiement.",
+        "paymentOverrideInvalid": "Le choix de moyen de paiement n’est pas valable.",
         "ticketTypeHasSales": "Ce tarif a déjà des billets vendus : il ne peut pas être supprimé.",
         "organizerHasEvents": "Cet organisateur porte encore des spectacles.",
         "venueHasSessions": "Ce lieu est encore utilisé par des séances."
@@ -474,6 +478,10 @@
       "coverImageHint": "URL d’une image. L’upload arrivera plus tard.",
       "categories": "Catégories",
       "featured": "Mettre en avant sur l’accueil",
+      "payments": "Moyens de paiement",
+      "paymentsHint": "Au moins un doit rester actif. Une séance peut encore restreindre.",
+      "acceptCard": "Carte",
+      "acceptIban": "Virement IBAN",
       "delete": "Supprimer le spectacle"
     },
     "sessions": {
@@ -494,7 +502,14 @@
       "optional": "Facultatif",
       "capacity": "Jauge (places)",
       "capacityHint": "Tous tarifs confondus. Vide : seuls les contingents limitent.",
-      "soldOfCapacity": "{sold} / {total} places"
+      "soldOfCapacity": "{sold} / {total} places",
+      "moreOptions": "Plus d’options",
+      "paymentsOverrideHint": "Laisser « comme le spectacle » sauf pour une séance particulière.",
+      "acceptCard": "Carte",
+      "acceptIban": "Virement IBAN",
+      "inheritPayment": "Comme le spectacle ({state})",
+      "paymentOn": "oui",
+      "paymentOff": "non"
     },
     "tickets": {
       "title": "Tarifs",

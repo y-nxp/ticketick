@@ -121,7 +121,9 @@
     "companion_limit": "Höchstens 2 Freikarten (bis 16 Jahre) pro bezahltes Ticket.",
     "companion_requires_paid": "Freikarten gelten nur zusammen mit einem bezahlten Ticket.",
     "sold_out": "Für diese Auswahl sind nicht genug Plätze frei.",
-    "max_per_order": "Die Menge übersteigt das Maximum pro Bestellung."
+    "max_per_order": "Die Menge übersteigt das Maximum pro Bestellung.",
+    "method_not_allowed": "Diese Zahlungsart wird für diese Tickets nicht angeboten.",
+    "noMethod": "Für diese Tickets ist keine Zahlungsart geöffnet."
   },
   "account": {
     "title": "Mein Konto",
@@ -406,6 +408,8 @@
         "capacityInvalid": "Die Kapazität muss eine ganze Zahl von mindestens 1 sein oder leer bleiben.",
         "capacityBelowSold": "Die Kapazität darf nicht unter die bereits gehaltenen Plätze fallen.",
         "maxPerPaidInvalid": "Die Obergrenze pro bezahltes Ticket muss eine ganze Zahl von mindestens 1 sein.",
+        "paymentRequired": "Wählen Sie mindestens eine Zahlungsart.",
+        "paymentOverrideInvalid": "Diese Zahlungsart-Auswahl ist ungültig.",
         "ticketTypeHasSales": "Für diesen Tarif wurden bereits Tickets verkauft: er kann nicht gelöscht werden.",
         "organizerHasEvents": "Diesem Veranstalter sind noch Veranstaltungen zugeordnet.",
         "venueHasSessions": "Dieser Ort wird noch von Vorstellungen genutzt."
@@ -474,6 +478,10 @@
       "coverImageHint": "Bild-URL. Der Upload kommt später.",
       "categories": "Kategorien",
       "featured": "Auf der Startseite hervorheben",
+      "payments": "Zahlungsarten",
+      "paymentsHint": "Mindestens eine muss aktiv bleiben. Eine Vorstellung kann sie weiter einschränken.",
+      "acceptCard": "Karte",
+      "acceptIban": "IBAN-Überweisung",
       "delete": "Veranstaltung löschen"
     },
     "sessions": {
@@ -494,7 +502,14 @@
       "optional": "Optional",
       "capacity": "Kapazität (Plätze)",
       "capacityHint": "Alle Tarife zusammen. Leer: nur die Kontingente gelten.",
-      "soldOfCapacity": "{sold} / {total} Plätze"
+      "soldOfCapacity": "{sold} / {total} Plätze",
+      "moreOptions": "Weitere Optionen",
+      "paymentsOverrideHint": "« Wie die Veranstaltung » belassen, ausser diese Vorstellung ist eine Ausnahme.",
+      "acceptCard": "Karte",
+      "acceptIban": "IBAN-Überweisung",
+      "inheritPayment": "Wie die Veranstaltung ({state})",
+      "paymentOn": "ja",
+      "paymentOff": "nein"
     },
     "tickets": {
       "title": "Tarife",

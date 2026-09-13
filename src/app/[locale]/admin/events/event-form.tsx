@@ -138,6 +138,23 @@ export function EventForm({
         defaultChecked={event?.featured}
       />
 
+      <fieldset>
+        <legend className="text-sm font-medium">{t("payments")}</legend>
+        <p className="mt-1 text-xs text-muted-foreground">{t("paymentsHint")}</p>
+        <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+          <Checkbox
+            name="acceptCard"
+            label={t("acceptCard")}
+            defaultChecked={event?.acceptCard ?? true}
+          />
+          <Checkbox
+            name="acceptIban"
+            label={t("acceptIban")}
+            defaultChecked={event?.acceptIban ?? true}
+          />
+        </div>
+      </fieldset>
+
       <FormFeedback state={state} />
     </form>
 

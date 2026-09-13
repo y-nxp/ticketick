@@ -273,6 +273,10 @@ model Event {
   coverImage  String?
   gallery     String[]        @default([])
 
+  /// Moyens d'encaissement proposés par défaut à toutes les séances.
+  acceptCard Boolean @default(true)
+  acceptIban Boolean @default(true)
+
   organizer   Organizer @relation(fields: [organizerId], references: [id])
   organizerId String
 
@@ -316,6 +320,10 @@ model EventSession {
   capacity Int?
   /// Places déjà retenues (tous tarifs). Sert à faire respecter `capacity`.
   sold     Int  @default(0)
+
+  /// Surcharge les moyens du spectacle. `null` = on hérite.
+  acceptCard Boolean?
+  acceptIban Boolean?
 
   ticketTypes TicketType[]
   discounts   Discount[]

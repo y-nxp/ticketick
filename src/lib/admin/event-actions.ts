@@ -12,6 +12,7 @@ import {
   readMoneyCents,
   readOptionalDateTime,
   readOptionalText,
+  readOverride,
   readText,
   readTranslated,
   slugify,
@@ -95,6 +96,10 @@ export async function saveEvent(
   const slug = readOptionalText(data, "slug") ?? slugify(title.fr);
   if (!slug) return failure("slugRequired");
 
+  const acceptCard = readBoolean(data, "acceptCard");
+  const acceptIban = readBoolean(data, "acceptIban");
+  if (!acceptCard && !acceptIban) return failure("paymentRequired");
+
   const fields = {
     title,
     description,
@@ -103,6 +108,8 @@ export async function saveEvent(
     visibility,
     featured: readBoolean(data, "featured"),
     coverImage: readOptionalText(data, "coverImage") ?? null,
+    acceptCard,
+    acceptIban,
   };
 
   const liens = categoryIds.map((cid) => ({ id: cid }));
@@ -195,6 +202,21 @@ export async function saveSession(
     if (actuel && capacity < actuel.sold) return failure("capacityBelowSold");
   }
 
+  const acceptCard = readOverride(data, "acceptCard");
+  const acceptIban = readOverride(data, "acceptIban");
+  if (acceptCard === undefined || acceptIban === undefined) {
+    return failure("paymentOverrideInvalid");
+  }
+
+  const spectacle = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { acceptCard: true, acceptIban: true },
+  });
+  if (!spectacle) return failure("notFound");
+  const carte = acceptCard ?? spectacle.acceptCard;
+  const virement = acceptIban ?? spectacle.acceptIban;
+  if (!carte && !virement) return failure("paymentRequired");
+
   const fields = {
     startsAt,
     endsAt: endsAt ?? null,
@@ -203,6 +225,8 @@ export async function saveSession(
     label: Object.keys(label).length > 0 ? label : Prisma.DbNull,
     venueId: readOptionalText(data, "venueId") ?? null,
     capacity,
+    acceptCard,
+    acceptIban,
   };
 
   try {

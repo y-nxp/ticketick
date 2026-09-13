@@ -69,6 +69,19 @@ export function readBoolean(data: FormData, name: string): boolean {
   return data.get(name) === "on" || data.get(name) === "true";
 }
 
+/** `inherit` (ou vide) → null ; `on` / `off` → booléen. */
+export function readOverride(
+  data: FormData,
+  name: string,
+): boolean | null | undefined {
+  const raw = readText(data, name);
+  if (raw === "") return undefined;
+  if (raw === "inherit") return null;
+  if (raw === "on") return true;
+  if (raw === "off") return false;
+  return undefined;
+}
+
 /**
  * Montant saisi en francs, stocké en centimes.
  *

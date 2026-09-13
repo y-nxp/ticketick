@@ -121,7 +121,9 @@
     "companion_limit": "Al massimo 2 posti gratuiti (fino a 16 anni) per biglietto a pagamento.",
     "companion_requires_paid": "I posti gratuiti si aggiungono a un biglietto a pagamento.",
     "sold_out": "Non ci sono abbastanza posti per questa selezione.",
-    "max_per_order": "La quantità supera il massimo per ordine."
+    "max_per_order": "La quantità supera il massimo per ordine.",
+    "method_not_allowed": "Questo mezzo di pagamento non è proposto per questi biglietti.",
+    "noMethod": "Nessun mezzo di pagamento è aperto per questi biglietti."
   },
   "account": {
     "title": "Il mio spazio",
@@ -406,6 +408,8 @@
         "capacityInvalid": "La capienza deve essere un intero di almeno 1, oppure restare vuota.",
         "capacityBelowSold": "La capienza non può scendere sotto i posti già trattenuti.",
         "maxPerPaidInvalid": "Il tetto per biglietto a pagamento deve essere un intero di almeno 1.",
+        "paymentRequired": "Scegli almeno un mezzo di pagamento.",
+        "paymentOverrideInvalid": "La scelta del mezzo di pagamento non è valida.",
         "ticketTypeHasSales": "Questa tariffa ha già biglietti venduti: non può essere eliminata.",
         "organizerHasEvents": "Questo organizzatore ha ancora spettacoli collegati.",
         "venueHasSessions": "Questo luogo è ancora usato da delle repliche."
@@ -474,6 +478,10 @@
       "coverImageHint": "URL di un’immagine. Il caricamento arriverà più tardi.",
       "categories": "Categorie",
       "featured": "Metti in evidenza in home",
+      "payments": "Mezzi di pagamento",
+      "paymentsHint": "Almeno uno deve restare attivo. Una replica può ancora restringerli.",
+      "acceptCard": "Carta",
+      "acceptIban": "Bonifico IBAN",
       "delete": "Elimina lo spettacolo"
     },
     "sessions": {
@@ -494,7 +502,14 @@
       "optional": "Facoltativo",
       "capacity": "Capienza (posti)",
       "capacityHint": "Tutte le tariffe insieme. Vuoto: valgono solo i contingenti.",
-      "soldOfCapacity": "{sold} / {total} posti"
+      "soldOfCapacity": "{sold} / {total} posti",
+      "moreOptions": "Altre opzioni",
+      "paymentsOverrideHint": "Lascia « come lo spettacolo » salvo eccezione su questa replica.",
+      "acceptCard": "Carta",
+      "acceptIban": "Bonifico IBAN",
+      "inheritPayment": "Come lo spettacolo ({state})",
+      "paymentOn": "sì",
+      "paymentOff": "no"
     },
     "tickets": {
       "title": "Tariffe",

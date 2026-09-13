@@ -65,6 +65,8 @@ export function SessionsEditor({
                 eventId={event.id}
                 session={s}
                 venues={reference.venues}
+                eventAcceptCard={event.acceptCard}
+                eventAcceptIban={event.acceptIban}
                 onClose={() => setEdite(null)}
               />
             ) : (
@@ -82,6 +84,8 @@ export function SessionsEditor({
             <SessionForm
               eventId={event.id}
               venues={reference.venues}
+              eventAcceptCard={event.acceptCard}
+              eventAcceptIban={event.acceptIban}
               onClose={() => setAjout(false)}
             />
           </div>
@@ -153,15 +157,25 @@ function SessionRow({
   );
 }
 
+function overrideValue(value: boolean | null | undefined): "inherit" | "on" | "off" {
+  if (value === true) return "on";
+  if (value === false) return "off";
+  return "inherit";
+}
+
 function SessionForm({
   eventId,
   session,
   venues,
+  eventAcceptCard,
+  eventAcceptIban,
   onClose,
 }: {
   eventId: string;
   session?: Session;
   venues: ReferenceData["venues"];
+  eventAcceptCard: boolean;
+  eventAcceptIban: boolean;
   onClose: () => void;
 }) {
   const t = useTranslations("admin.sessions");
@@ -235,6 +249,54 @@ function SessionForm({
         value={session?.label as Record<string, unknown> | undefined}
         required={false}
       />
+
+      <details
+        className="rounded-xl border border-border px-3 py-2"
+        open={
+          session?.acceptCard != null || session?.acceptIban != null
+        }
+      >
+        <summary className="cursor-pointer text-sm font-medium">
+          {t("moreOptions")}
+        </summary>
+        <p className="mt-2 text-xs text-muted-foreground">
+          {t("paymentsOverrideHint")}
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Field label={t("acceptCard")}>
+            <Select
+              name="acceptCard"
+              defaultValue={overrideValue(session?.acceptCard)}
+              options={[
+                {
+                  value: "inherit",
+                  label: t("inheritPayment", {
+                    state: eventAcceptCard ? t("paymentOn") : t("paymentOff"),
+                  }),
+                },
+                { value: "on", label: t("paymentOn") },
+                { value: "off", label: t("paymentOff") },
+              ]}
+            />
+          </Field>
+          <Field label={t("acceptIban")}>
+            <Select
+              name="acceptIban"
+              defaultValue={overrideValue(session?.acceptIban)}
+              options={[
+                {
+                  value: "inherit",
+                  label: t("inheritPayment", {
+                    state: eventAcceptIban ? t("paymentOn") : t("paymentOff"),
+                  }),
+                },
+                { value: "on", label: t("paymentOn") },
+                { value: "off", label: t("paymentOff") },
+              ]}
+            />
+          </Field>
+        </div>
+      </details>
 
       <FormFeedback state={state} />
 
