@@ -29,6 +29,9 @@ interface CartState {
   hydrated: boolean;
   /** Incrémenté à chaque ajout : l'aperçu du panier s'ouvre dessus. */
   addedRevision: number;
+  /** Popup panier ouvert : griser « Ajouter au panier ». */
+  previewOpen: boolean;
+  setPreviewOpen: (open: boolean) => void;
 }
 
 const CartContext = React.createContext<CartState | null>(null);
@@ -40,6 +43,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = React.useState<CartLine[]>([]);
   const [hydrated, setHydrated] = React.useState(false);
   const [addedRevision, setAddedRevision] = React.useState(0);
+  const [previewOpen, setPreviewOpen] = React.useState(false);
 
   React.useEffect(() => {
     // Hydratation unique depuis le stockage local (indisponible côté serveur).
@@ -109,6 +113,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     subtotalCents,
     hydrated,
     addedRevision,
+    previewOpen,
+    setPreviewOpen,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

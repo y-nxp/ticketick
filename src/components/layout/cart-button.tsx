@@ -14,7 +14,7 @@ export function CartButton({
   panelOffsetClass?: string;
 }) {
   const t = useTranslations("nav");
-  const { count, addedRevision } = useCart();
+  const { count, addedRevision, setPreviewOpen } = useCart();
   const [open, setOpen] = React.useState(false);
   const [pinned, setPinned] = React.useState(false);
   const [hoverFine, setHoverFine] = React.useState(false);
@@ -69,6 +69,11 @@ export function CartButton({
   }, [open]);
 
   React.useEffect(() => () => window.clearTimeout(leaveTimer.current), []);
+
+  React.useEffect(() => {
+    setPreviewOpen(open);
+    return () => setPreviewOpen(false);
+  }, [open, setPreviewOpen]);
 
   function onMouseEnter() {
     if (!hoverFine) return;

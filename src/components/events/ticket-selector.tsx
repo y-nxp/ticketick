@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useTranslations } from "next-intl";
 import { Minus, Plus, ShoppingBag } from "lucide-react";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { usePathname } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
 import { rememberShopOrigin } from "@/lib/shop-origin";
@@ -30,8 +30,7 @@ export function TicketSelector({
 }) {
   const te = useTranslations("event");
   const tc = useTranslations("cart");
-  const { add, count, lines, subtotalCents } = useCart();
-  const router = useRouter();
+  const { add, count, lines, subtotalCents, previewOpen } = useCart();
   const pathname = usePathname();
   const [qty, setQty] = React.useState<Record<string, number>>({});
 
@@ -103,15 +102,6 @@ export function TicketSelector({
     setQty({});
   }
 
-  function goCheckout() {
-    const path = locale === "fr" ? "/checkout" : `/${locale}/checkout`;
-    if (embed && window.top && window.top !== window) {
-      window.top.location.assign(`${window.location.origin}${path}`);
-      return;
-    }
-    router.push("/checkout");
-  }
-
   const pending = totalCount > 0;
 
   return (
@@ -168,21 +158,15 @@ export function TicketSelector({
       </div>
 
       <div className="mt-4">
-        {pending || count === 0 ? (
-          <Button
-            className="w-full"
-            size="lg"
-            disabled={!pending}
-            onClick={addToCart}
-          >
-            <ShoppingBag className="size-4" />
-            {te("addToCart")}
-          </Button>
-        ) : (
-          <Button className="w-full" size="lg" onClick={goCheckout}>
-            {te("reserveAndPay")}
-          </Button>
-        )}
+        <Button
+          className="w-full"
+          size="lg"
+          disabled={!pending || previewOpen}
+          onClick={addToCart}
+        >
+          <ShoppingBag className="size-4" />
+          {te("addToCart")}
+        </Button>
       </div>
     </div>
   );
