@@ -29,7 +29,7 @@ export function TicketSelector({
   embed?: boolean;
 }) {
   const te = useTranslations("event");
-  const { add, count, subtotalCents, previewOpen } = useCart();
+  const { add, previewOpen } = useCart();
   const pathname = usePathname();
   const [qty, setQty] = React.useState<Record<string, number>>({});
 
@@ -130,10 +130,7 @@ export function TicketSelector({
       <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
         <span className="text-sm text-muted-foreground">{te("tickets")}</span>
         <span className="text-xl font-bold">
-          {formatPrice(
-            pending ? totalCents : count > 0 ? subtotalCents : 0,
-            `${locale}-CH`,
-          )}
+          {formatPrice(totalCents, `${locale}-CH`)}
         </span>
       </div>
 
