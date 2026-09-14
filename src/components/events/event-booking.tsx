@@ -90,23 +90,13 @@ export function EventBooking({
     );
   }
 
-  const selectedHeading = (
-    <div>
-      {heading}
-      <p className={`text-sm text-muted-foreground ${heading ? "mt-2" : ""}`}>
-        {formatDate(session.startsAt, `${locale}-CH`)}
-        {session.label ? ` · ${t(session.label, locale)}` : null}
-      </p>
-    </div>
-  );
-
   return (
     <div className="space-y-8">
+      {heading ? <div key="event-heading">{heading}</div> : null}
       {picker}
       <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
         <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
           {tickets}
-          {selectedHeading}
         </aside>
         <div className="order-2 space-y-8 lg:order-1">
           <div className="grid gap-4 sm:grid-cols-2">

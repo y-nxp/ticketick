@@ -7,7 +7,7 @@ import { usePathname } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
 import { rememberShopOrigin } from "@/lib/shop-origin";
-import { formatPrice } from "@/lib/utils";
+import { formatDate, formatPrice } from "@/lib/utils";
 import {
   t,
   type EventItem,
@@ -110,6 +110,11 @@ export function TicketSelector({
       className="scroll-mt-24 rounded-2xl border border-border bg-card p-5 shadow-sm"
     >
       <h3 className="text-xl font-semibold">{te("selectTickets")}</h3>
+      <p className="mt-2 font-medium leading-snug">{t(event.title, locale)}</p>
+      <p className="mt-0.5 text-sm text-muted-foreground">
+        {formatDate(session.startsAt, `${locale}-CH`)}
+        {session.label ? ` · ${t(session.label, locale)}` : null}
+      </p>
       <div className="mt-4 space-y-3">
         {session.ticketTypes.map((tt) => (
           <TicketRow
