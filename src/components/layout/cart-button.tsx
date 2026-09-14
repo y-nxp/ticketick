@@ -7,11 +7,6 @@ import { Link } from "@/i18n/navigation";
 import { CartPreview } from "@/components/cart/cart-preview";
 import { useCart } from "@/components/cart/cart-context";
 
-function canHoverFine() {
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-}
-
 export function CartButton({
   panelOffsetClass = "top-[4.25rem]",
 }: {
@@ -21,13 +16,23 @@ export function CartButton({
   const t = useTranslations("nav");
   const { count, addedRevision } = useCart();
   const [open, setOpen] = React.useState(false);
+  const [hoverFine, setHoverFine] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const prevAdded = React.useRef(0);
   const ignoreOutsideUntil = React.useRef(0);
   const leaveTimer = React.useRef<number>(0);
 
+  React.useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const sync = () => setHoverFine(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   function openPinned() {
     ignoreOutsideUntil.current = Date.now() + 400;
+    window.clearTimeout(leaveTimer.current);
     setOpen(true);
   }
 
@@ -58,46 +63,46 @@ export function CartButton({
   React.useEffect(() => () => window.clearTimeout(leaveTimer.current), []);
 
   function onMouseEnter() {
-    if (!canHoverFine()) return;
+    if (!hoverFine) return;
     window.clearTimeout(leaveTimer.current);
     setOpen(true);
   }
 
   function onMouseLeave() {
-    if (!canHoverFine()) return;
+    if (!hoverFine) return;
     if (Date.now() < ignoreOutsideUntil.current) return;
     window.clearTimeout(leaveTimer.current);
-    leaveTimer.current = window.setTimeout(() => setOpen(false), 220);
+    leaveTimer.current = window.setTimeout(() => setOpen(false), 400);
   }
 
   function onTriggerClick(e: React.MouseEvent<HTMLAnchorElement>) {
-    if (canHoverFine()) return;
+    if (hoverFine) return;
     e.preventDefault();
     setOpen((v) => !v);
   }
 
   return (
     <div className="relative z-50">
-      {open ? (
-        <div
-          className="fixed inset-0 z-40 bg-foreground/25 md:hidden"
-          aria-hidden
-          onClick={() => setOpen(false)}
-        />
-      ) : null}
       <div
         ref={wrapRef}
-        className="relative"
+        className="relative z-50"
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
+        {open && !hoverFine ? (
+          <div
+            className="fixed inset-0 z-40 bg-foreground/25"
+            aria-hidden
+            onClick={() => setOpen(false)}
+          />
+        ) : null}
         <Link
           href="/cart"
           aria-label={t("cart")}
           aria-expanded={open}
           aria-haspopup="dialog"
           onClick={onTriggerClick}
-          className="relative inline-flex size-10 items-center justify-center rounded-full transition-colors hover:bg-secondary/70"
+          className="relative z-50 inline-flex size-10 items-center justify-center rounded-full transition-colors hover:bg-secondary/70"
         >
           <ShoppingBag className="size-5" />
           {count > 0 && (
