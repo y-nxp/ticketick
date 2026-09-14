@@ -81,6 +81,18 @@
     "companionHint": "Bis zu {n} pro bezahltes Ticket, bis 16 Jahre.",
     "companionNeedsPaid": "Zuerst ein bezahltes Ticket hinzufügen (2 Freikarten pro Ticket)."
   },
+  "portal": {
+    "tickets": "Ticketverkauf",
+    "upcoming": "Kommende Konzerte",
+    "noEvents": "Derzeit keine Veranstaltungen im Verkauf.",
+    "visitSite": "Offizielle Website",
+    "poweredBy": "Sicherer Ticketverkauf durch ticketick",
+    "backToList": "Alle Konzerte",
+    "from": "Ab",
+    "dateCount": "{count} Termine",
+    "openMenu": "Menü öffnen",
+    "closeMenu": "Menü schliessen"
+  },
   "cart": {
     "title": "Ihr Warenkorb",
     "empty": "Ihr Warenkorb ist leer.",
@@ -131,6 +143,11 @@
     "reserved": "Plätze noch {time} reserviert",
     "reservedHint": "Nach 10 Minuten kommen sie wieder in den Verkauf.",
     "reservedExpired": "Die 10 Minuten sind abgelaufen. Die Plätze sind wieder frei. Sie können neu beginnen.",
+    "checkAvailability": "Plätze prüfen",
+    "checkingAvailability": "Prüfung…",
+    "seatsStillAvailable": "Diese Plätze sind noch frei. Sie können die Zahlung neu starten.",
+    "seatsNoLongerAvailable": "Diese Plätze sind nicht mehr alle frei. Ändern Sie Ihre Auswahl oder wählen Sie ein anderes Datum.",
+    "changeSelection": "Auswahl ändern",
     "resumePayment": "Zahlung fortsetzen",
     "reserving": "Wir reservieren Ihre Plätze…"
   },
@@ -471,6 +488,13 @@
         "name": "Name",
         "email": "E-Mail",
         "website": "Website",
+        "logoUrl": "Logo (URL)",
+        "logoUrlHint": "Lokaler Pfad (/partners/…) oder URL. Erscheint auf der gehosteten Seite.",
+        "brandPrimary": "Buttonfarbe",
+        "brandAccent": "Titelfarbe",
+        "brandBg": "Seitenhintergrund",
+        "navLinks": "Menü zu ihrer Website",
+        "navLinksHint": "Eine Zeile pro Link: Bezeichnung | https://… — für die gehostete Seite, wenn WordPress nicht zugänglich ist.",
         "notifyEmails": "Ticketkopien",
         "notifyEmailsHint": "Eine Adresse pro Zeile. Jeder Verkauf sendet dieselbe E-Mail wie an die Käuferin oder den Käufer.",
         "eventCount": "{count} Veranstaltung(en)"
@@ -529,6 +553,18 @@
       "acceptCard": "Karte",
       "acceptIban": "IBAN-Überweisung",
       "delete": "Veranstaltung löschen"
+    },
+    "embed": {
+      "title": "Ticketverkauf einbinden",
+      "hint": "In WordPress einfügen, oder die gehostete Seite senden, wenn die Website nicht bearbeitet werden kann.",
+      "pageTitle": "Seite im Stil des Veranstalters",
+      "pageHint": "Wenn sie ihre Website nicht ändern können: wir hosten eine Seite in ihren Farben, mit Ticketverkauf.",
+      "scriptTitle": "WordPress-Widget",
+      "scriptHint": "Der Kunde fügt diesen Code in eine Seite oder einen Beitrag ein.",
+      "iframeTitle": "Iframe (Alternative)",
+      "iframeHint": "Dieses Iframe nutzen, wenn das Theme Skripte blockiert.",
+      "copy": "Kopieren",
+      "copied": "Kopiert"
     },
     "sessions": {
       "title": "Vorstellungen",

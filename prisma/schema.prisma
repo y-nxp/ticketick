@@ -228,6 +228,13 @@ model Organizer {
   logoUrl     String?
   website     String?
 
+  /// Charte de la page hébergée (`/go/…`) et du widget : boutons, titres, fond.
+  brandPrimary String?
+  brandAccent  String?
+  brandBg      String?
+  /// Menu vers le site de l'organisateur : [{ "label": "Accueil", "href": "https://…" }]
+  navLinks     Json?
+
   /// Copies des billets émis, une adresse par ligne dans l'admin.
   notifyEmails String[] @default([])
 

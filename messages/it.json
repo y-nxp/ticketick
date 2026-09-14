@@ -81,6 +81,18 @@
     "companionHint": "Fino a {n} per biglietto a pagamento, fino a 16 anni.",
     "companionNeedsPaid": "Aggiungi prima un biglietto a pagamento (2 posti gratuiti per biglietto)."
   },
+  "portal": {
+    "tickets": "Biglietteria",
+    "upcoming": "Prossimi concerti",
+    "noEvents": "Nessuno spettacolo in vendita al momento.",
+    "visitSite": "Sito ufficiale",
+    "poweredBy": "Biglietteria sicura di ticketick",
+    "backToList": "Tutti i concerti",
+    "from": "Da",
+    "dateCount": "{count} date",
+    "openMenu": "Apri il menu",
+    "closeMenu": "Chiudi il menu"
+  },
   "cart": {
     "title": "Il tuo carrello",
     "empty": "Il tuo carrello è vuoto.",
@@ -131,6 +143,11 @@
     "reserved": "Posti riservati ancora {time}",
     "reservedHint": "Dopo 10 minuti tornano in vendita.",
     "reservedExpired": "I 10 minuti sono scaduti. I posti sono di nuovo in vendita. Puoi ricominciare.",
+    "checkAvailability": "Verificare i posti",
+    "checkingAvailability": "Verifica…",
+    "seatsStillAvailable": "Questi posti sono ancora disponibili. Puoi riprendere il pagamento.",
+    "seatsNoLongerAvailable": "Questi posti non sono più tutti disponibili. Modifica la selezione o scegli un’altra data.",
+    "changeSelection": "Modificare la selezione",
     "resumePayment": "Riprendere il pagamento",
     "reserving": "Stiamo riservando i posti…"
   },
@@ -471,6 +488,13 @@
         "name": "Nome",
         "email": "E-mail",
         "website": "Sito web",
+        "logoUrl": "Logo (URL)",
+        "logoUrlHint": "Percorso locale (/partners/…) o URL. Mostrato sulla pagina ospitata.",
+        "brandPrimary": "Colore dei pulsanti",
+        "brandAccent": "Colore dei titoli",
+        "brandBg": "Sfondo della pagina",
+        "navLinks": "Menu verso il loro sito",
+        "navLinksHint": "Una riga per link: Etichetta | https://… — per la pagina ospitata se non possono modificare WordPress.",
         "notifyEmails": "Copie dei biglietti",
         "notifyEmailsHint": "Un indirizzo per riga. Ogni vendita invia la stessa e-mail dell’acquirente.",
         "eventCount": "{count} spettacolo/i"
@@ -529,6 +553,18 @@
       "acceptCard": "Carta",
       "acceptIban": "Bonifico IBAN",
       "delete": "Elimina lo spettacolo"
+    },
+    "embed": {
+      "title": "Integrare la biglietteria",
+      "hint": "Da incollare su WordPress, o da inviare se l’organizzatore non può modificare il sito.",
+      "pageTitle": "Pagina nello stile dell’organizzatore",
+      "pageHint": "Quando non possono cambiare il sito: ospitiamo una pagina nei loro colori, con la biglietteria.",
+      "scriptTitle": "Widget WordPress",
+      "scriptHint": "Il cliente incolla questo codice in una pagina o in un articolo.",
+      "iframeTitle": "Iframe (alternativa)",
+      "iframeHint": "Usare questo iframe se il tema blocca gli script.",
+      "copy": "Copia",
+      "copied": "Copiato"
     },
     "sessions": {
       "title": "Repliche",

@@ -81,6 +81,18 @@
     "companionHint": "Jusqu’à {n} par billet payant, jusqu’à 16 ans révolus.",
     "companionNeedsPaid": "Ajoutez d’abord un billet payant (2 places gratuites par billet)."
   },
+  "portal": {
+    "tickets": "Billetterie",
+    "upcoming": "Prochains concerts",
+    "noEvents": "Aucun spectacle en vente pour le moment.",
+    "visitSite": "Site officiel",
+    "poweredBy": "Billetterie sécurisée par ticketick",
+    "backToList": "Tous les concerts",
+    "from": "Dès",
+    "dateCount": "{count} dates",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu"
+  },
   "cart": {
     "title": "Votre panier",
     "empty": "Votre panier est vide.",
@@ -131,6 +143,11 @@
     "reserved": "Places réservées encore {time}",
     "reservedHint": "Au-delà de 10 minutes, elles sont remises en vente.",
     "reservedExpired": "Le délai de 10 minutes est écoulé. Les places ont été remises en vente. Vous pouvez recommencer.",
+    "checkAvailability": "Vérifier les places",
+    "checkingAvailability": "Vérification…",
+    "seatsStillAvailable": "Ces places sont encore disponibles. Vous pouvez reprendre le paiement.",
+    "seatsNoLongerAvailable": "Ces places ne sont plus toutes disponibles. Modifiez votre sélection ou choisissez une autre date.",
+    "changeSelection": "Modifier la sélection",
     "resumePayment": "Reprendre le paiement",
     "reserving": "Nous réservons vos places…"
   },
@@ -471,6 +488,13 @@
         "name": "Nom",
         "email": "E-mail",
         "website": "Site web",
+        "logoUrl": "Logo (URL)",
+        "logoUrlHint": "Chemin local (/partners/…) ou URL. Affiché sur la page hébergée.",
+        "brandPrimary": "Couleur des boutons",
+        "brandAccent": "Couleur des titres",
+        "brandBg": "Fond de page",
+        "navLinks": "Menu vers leur site",
+        "navLinksHint": "Une ligne par lien : Libellé | https://…  — pour la page hébergée quand ils n’ont pas la main sur WordPress.",
         "notifyEmails": "Copies des billets",
         "notifyEmailsHint": "Une adresse par ligne. Chaque vente leur envoie le même e-mail que l’acheteur.",
         "eventCount": "{count} spectacle(s)"
@@ -529,6 +553,18 @@
       "acceptCard": "Carte",
       "acceptIban": "Virement IBAN",
       "delete": "Supprimer le spectacle"
+    },
+    "embed": {
+      "title": "Intégrer la billetterie",
+      "hint": "À coller sur WordPress, ou à envoyer si l’organisateur n’a pas la main sur son site.",
+      "pageTitle": "Page au style de l’organisateur",
+      "pageHint": "Quand ils ne peuvent pas modifier leur site : on héberge une page à leurs couleurs, avec la billetterie.",
+      "scriptTitle": "Widget WordPress",
+      "scriptHint": "Le client colle ce code dans une page ou un article.",
+      "iframeTitle": "Iframe (alternative)",
+      "iframeHint": "Si le script est bloqué par le thème, utiliser cette iframe.",
+      "copy": "Copier",
+      "copied": "Copié"
     },
     "sessions": {
       "title": "Séances",

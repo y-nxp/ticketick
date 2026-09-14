@@ -8,7 +8,10 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
 import { formatPrice } from "@/lib/utils";
-import { getCartPaymentMethods } from "@/lib/orders/payment-actions";
+import {
+  checkCartAvailability,
+  getCartPaymentMethods,
+} from "@/lib/orders/payment-actions";
 import { formatHoldClock } from "@/lib/orders/reservation";
 
 type Method = "CARD" | "IBAN";
@@ -83,6 +86,8 @@ function CheckoutInner() {
   const [hold, setHold] = React.useState<SeatHold | null>(null);
   const [now, setNow] = React.useState(() => Date.now());
   const [holdExpired, setHoldExpired] = React.useState(false);
+  const [checkingSeats, setCheckingSeats] = React.useState(false);
+  const [seatsOk, setSeatsOk] = React.useState<boolean | null>(null);
 
   const ticketIds = lines.map((l) => l.ticketTypeId).join(",");
   React.useEffect(() => {
@@ -144,6 +149,7 @@ function CheckoutInner() {
     setSubmitting(true);
     setError(null);
     setHoldExpired(false);
+    setSeatsOk(null);
 
     if (holdActive && hold?.checkoutUrl) {
       window.location.href = hold.checkoutUrl;
@@ -288,9 +294,61 @@ function CheckoutInner() {
         </div>
       ) : null}
       {holdExpired ? (
-        <p className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {t("reservedExpired")}
-        </p>
+        <div className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm">
+          <p className="text-destructive">{t("reservedExpired")}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={checkingSeats}
+              onClick={async () => {
+                setCheckingSeats(true);
+                setSeatsOk(null);
+                try {
+                  const result = await checkCartAvailability(
+                    lines.map((l) => ({
+                      ticketTypeId: l.ticketTypeId,
+                      quantity: l.quantity,
+                    })),
+                  );
+                  setSeatsOk(result.available);
+                } catch {
+                  setSeatsOk(false);
+                } finally {
+                  setCheckingSeats(false);
+                }
+              }}
+            >
+              {checkingSeats ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  {t("checkingAvailability")}
+                </>
+              ) : (
+                t("checkAvailability")
+              )}
+            </Button>
+            {lines[0]?.eventSlug ? (
+              <Link
+                href={`/events/${lines[0].eventSlug}`}
+                className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
+              >
+                {t("changeSelection")}
+              </Link>
+            ) : null}
+          </div>
+          {seatsOk === true ? (
+            <p className="mt-3 font-medium text-[var(--success)]">
+              {t("seatsStillAvailable")}
+            </p>
+          ) : null}
+          {seatsOk === false ? (
+            <p className="mt-3 font-medium text-destructive">
+              {t("seatsNoLongerAvailable")}
+            </p>
+          ) : null}
+        </div>
       ) : null}
       {canceled && !holdActive && !holdExpired ? (
         <p className="mt-4 rounded-xl bg-warning/15 px-4 py-3 text-sm">
@@ -412,7 +470,12 @@ function CheckoutInner() {
               type="submit"
               size="lg"
               className="mt-5 w-full"
-              disabled={submitting || (!offer.card && !offer.iban)}
+              disabled={
+                submitting ||
+                checkingSeats ||
+                seatsOk === false ||
+                (!offer.card && !offer.iban)
+              }
             >
               {submitting ? (
                 <>

@@ -18,11 +18,14 @@ export function TicketSelector({
   event,
   session,
   locale,
+  embed = false,
 }: {
   event: EventItem;
   /** Séance retenue : c'est elle qui porte les tarifs et le stock. */
   session: SessionItem;
   locale: string;
+  /** Dans un iframe : le paiement s'ouvre dans la fenêtre parente. */
+  embed?: boolean;
 }) {
   const te = useTranslations("event");
   const { add } = useCart();
@@ -100,6 +103,12 @@ export function TicketSelector({
     });
     setQty({});
     if (goToCheckout) {
+      // Un iframe WordPress ne peut pas afficher PostFinance : on sort.
+      if (embed && window.top && window.top !== window) {
+        const path = locale === "fr" ? "/cart" : `/${locale}/cart`;
+        window.top.location.assign(`${window.location.origin}${path}`);
+        return;
+      }
       router.push("/cart");
     } else {
       setAdded(true);

@@ -19,6 +19,7 @@ import {
   saveOrganizer,
   saveVenue,
 } from "@/lib/admin/reference-actions";
+import { parseNavLinks, serializeNavLinks } from "@/lib/branding/theme";
 import type { FormState } from "@/lib/admin/types";
 import type { ReferenceData } from "@/lib/data/admin-catalog";
 
@@ -222,6 +223,40 @@ function OrganizerForm({
       </Field>
       <Field label={t("website")}>
         <TextInput name="website" defaultValue={organizer?.website} />
+      </Field>
+      <Field label={t("logoUrl")} hint={t("logoUrlHint")}>
+        <TextInput name="logoUrl" defaultValue={organizer?.logoUrl ?? ""} />
+      </Field>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Field label={t("brandPrimary")}>
+          <TextInput
+            name="brandPrimary"
+            defaultValue={organizer?.brandPrimary ?? ""}
+            placeholder="#3A1018"
+          />
+        </Field>
+        <Field label={t("brandAccent")}>
+          <TextInput
+            name="brandAccent"
+            defaultValue={organizer?.brandAccent ?? ""}
+            placeholder="#DE7C0C"
+          />
+        </Field>
+        <Field label={t("brandBg")}>
+          <TextInput
+            name="brandBg"
+            defaultValue={organizer?.brandBg ?? ""}
+            placeholder="#FFFFFF"
+          />
+        </Field>
+      </div>
+      <Field label={t("navLinks")} hint={t("navLinksHint")}>
+        <textarea
+          name="navLinks"
+          defaultValue={serializeNavLinks(parseNavLinks(organizer?.navLinks))}
+          rows={6}
+          className="w-full rounded-xl border border-border bg-background px-3 py-2 font-mono text-xs outline-none focus:border-ring"
+        />
       </Field>
       <Field label={t("notifyEmails")} hint={t("notifyEmailsHint")}>
         <textarea

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import { organizerBrandFromRow } from "@/lib/branding/theme";
 import type {
   Category,
   EventItem,
@@ -102,6 +103,8 @@ function mapOrganizer(o: RawEvent["organizer"]): Organizer {
     slug: o.slug,
     name: o.name,
     logoUrl: o.logoUrl ?? undefined,
+    website: o.website ?? undefined,
+    brand: organizerBrandFromRow(o),
     friendsAppEnabled: o.friendsAppEnabled,
   };
 }
@@ -173,6 +176,35 @@ export async function getEventBySlug(slug: string): Promise<EventItem | null> {
 export async function getCategories(): Promise<Category[]> {
   const rows = await prisma.category.findMany({ orderBy: { slug: "asc" } });
   return rows.map(mapCategory);
+}
+
+/** Organisateur public, pour la page hébergée `/go/[slug]`. */
+export async function getOrganizerBySlug(slug: string): Promise<Organizer | null> {
+  const row = await prisma.organizer.findUnique({ where: { slug } });
+  return row ? mapOrganizer(row) : null;
+}
+
+/** Spectacles d'un organisateur, y compris non listés (lien direct). */
+export async function getOrganizerEvents(
+  organizerId: string,
+): Promise<EventItem[]> {
+  const rows = await prisma.event.findMany({
+    where: {
+      organizerId,
+      status: { not: "DRAFT" },
+    },
+    include: eventInclude,
+  });
+
+  const now = Date.now();
+  const nextStart = (e: EventItem) => {
+    const upcoming = e.sessions
+      .map((s) => +new Date(s.startsAt))
+      .filter((d) => d >= now);
+    return upcoming.length ? Math.min(...upcoming) : Number.MAX_SAFE_INTEGER;
+  };
+
+  return rows.map(mapEvent).sort((a, b) => nextStart(a) - nextStart(b));
 }
 
 /** Villes proposant au moins une séance à venir. */

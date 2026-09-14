@@ -179,3 +179,38 @@ h6 {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/*
+  Page hébergée à la charte d'un organisateur (ex. Chœur Cantabile) :
+  titres or, serif, pas l'ExtraBold ticketick.
+*/
+.organizer-theme {
+  font-family: var(--font-organizer), "Open Sans", system-ui, sans-serif;
+}
+
+.organizer-theme h1,
+.organizer-theme h2,
+.organizer-theme h3 {
+  font-family: var(--font-heading), Lora, Georgia, serif;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--brand-accent, #de7c0c);
+}
+
+.organizer-wordmark,
+.organizer-title {
+  font-family: var(--font-heading), Lora, Georgia, serif;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-accent, #de7c0c);
+}
+
+.organizer-kicker {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #6b6e76;
+}

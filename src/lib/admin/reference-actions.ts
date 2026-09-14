@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth/dal";
 import { prisma } from "@/lib/prisma";
+import { parseHexColor, parseNavLinksText } from "@/lib/branding/theme";
 import {
   failure,
   readOptionalText,
@@ -50,6 +51,8 @@ function refreshCatalog() {
   revalidatePath("/admin/settings");
   revalidatePath("/admin/events");
   revalidatePath("/");
+  revalidatePath("/go", "layout");
+  revalidatePath("/embed", "layout");
 }
 
 // ─────────────────────────────── Organisateurs
@@ -77,6 +80,13 @@ export async function saveOrganizer(
     email,
     description: readOptionalText(data, "description") ?? null,
     website: readOptionalText(data, "website") ?? null,
+    logoUrl: readOptionalText(data, "logoUrl") ?? null,
+    brandPrimary: parseHexColor(readOptionalText(data, "brandPrimary")) ?? null,
+    brandAccent: parseHexColor(readOptionalText(data, "brandAccent")) ?? null,
+    brandBg: parseHexColor(readOptionalText(data, "brandBg")) ?? null,
+    navLinks: parseNavLinksText(
+      data.get("navLinks")?.toString() ?? "",
+    ) as unknown as Prisma.InputJsonValue,
     notifyEmails,
   };
 

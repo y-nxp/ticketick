@@ -56,11 +56,26 @@ export interface TicketType {
   salesEndAt?: string;
 }
 
+export interface OrganizerNavLink {
+  label: string;
+  href: string;
+}
+
+/** Charte de la page hébergée et du widget. Absente : couleurs ticketick. */
+export interface OrganizerBrand {
+  primary?: string;
+  accent?: string;
+  background?: string;
+  nav: OrganizerNavLink[];
+}
+
 export interface Organizer {
   id: string;
   slug: string;
   name: string;
   logoUrl?: string;
+  website?: string;
+  brand: OrganizerBrand;
   friendsAppEnabled: boolean;
 }
 

@@ -19,9 +19,12 @@ import { t, upcomingSessions, type EventItem } from "@/lib/types";
 export function EventBooking({
   event,
   locale,
+  variant = "page",
 }: {
   event: EventItem;
   locale: string;
+  /** `widget` : dates + tarifs seulement, pour l'iframe WordPress. */
+  variant?: "page" | "widget";
 }) {
   const te = useTranslations("event");
 
@@ -45,6 +48,27 @@ export function EventBooking({
 
   const venue = session.venue;
   const showMap = Boolean(venue?.lat && venue?.lng);
+  const widget = variant === "widget";
+
+  if (widget) {
+    return (
+      <div className="space-y-4">
+        <SessionPicker
+          sessions={sessions}
+          selectedId={session.id}
+          onSelect={setSelectedId}
+          locale={locale}
+        />
+        <TicketSelector
+          event={event}
+          session={session}
+          locale={locale}
+          embed
+          key={session.id}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_380px]">

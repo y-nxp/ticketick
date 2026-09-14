@@ -81,6 +81,18 @@
     "companionHint": "Up to {n} per paying ticket, 16 and under.",
     "companionNeedsPaid": "Add a paying ticket first (2 free seats per ticket)."
   },
+  "portal": {
+    "tickets": "Tickets",
+    "upcoming": "Upcoming concerts",
+    "noEvents": "No shows on sale at the moment.",
+    "visitSite": "Official website",
+    "poweredBy": "Secure ticketing by ticketick",
+    "backToList": "All concerts",
+    "from": "From",
+    "dateCount": "{count} dates",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
+  },
   "cart": {
     "title": "Your cart",
     "empty": "Your cart is empty.",
@@ -131,6 +143,11 @@
     "reserved": "Seats reserved for {time}",
     "reservedHint": "After 10 minutes they go back on sale.",
     "reservedExpired": "The 10-minute hold has ended. The seats have been released. You can start again.",
+    "checkAvailability": "Check availability",
+    "checkingAvailability": "Checking…",
+    "seatsStillAvailable": "These seats are still available. You can resume payment.",
+    "seatsNoLongerAvailable": "These seats are no longer all available. Change your selection or pick another date.",
+    "changeSelection": "Change selection",
     "resumePayment": "Resume payment",
     "reserving": "Reserving your seats…"
   },
@@ -471,6 +488,13 @@
         "name": "Name",
         "email": "Email",
         "website": "Website",
+        "logoUrl": "Logo (URL)",
+        "logoUrlHint": "Local path (/partners/…) or URL. Shown on the hosted page.",
+        "brandPrimary": "Button colour",
+        "brandAccent": "Heading colour",
+        "brandBg": "Page background",
+        "navLinks": "Menu to their site",
+        "navLinksHint": "One line per link: Label | https://… — for the hosted page when they cannot edit WordPress.",
         "notifyEmails": "Ticket copies",
         "notifyEmailsHint": "One address per line. Each sale sends them the same email as the buyer.",
         "eventCount": "{count} show(s)"
@@ -529,6 +553,18 @@
       "acceptCard": "Card",
       "acceptIban": "IBAN transfer",
       "delete": "Delete the show"
+    },
+    "embed": {
+      "title": "Embed ticketing",
+      "hint": "Paste this on WordPress, or send the hosted page if they cannot edit their site.",
+      "pageTitle": "Page in the organizer’s style",
+      "pageHint": "When they cannot change their site: we host a page in their colours, with ticketing.",
+      "scriptTitle": "WordPress widget",
+      "scriptHint": "The client pastes this code into a page or post.",
+      "iframeTitle": "Iframe (fallback)",
+      "iframeHint": "Use this iframe if the theme blocks scripts.",
+      "copy": "Copy",
+      "copied": "Copied"
     },
     "sessions": {
       "title": "Sessions",

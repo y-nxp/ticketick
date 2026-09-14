@@ -1,6 +1,8 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
+import { ShareEmbed } from "@/components/admin/share-embed";
+import { publicAppOrigin } from "@/lib/app-url";
 import { getEventForEdit, getReferenceData } from "@/lib/data/admin-catalog";
 import { EventForm } from "../event-form";
 import { SessionsEditor } from "../sessions-editor";
@@ -38,6 +40,12 @@ export default async function EditEventPage({
       <div className="rounded-2xl border border-border bg-card p-6">
         <EventForm event={event} reference={reference} />
       </div>
+
+      <ShareEmbed
+        origin={publicAppOrigin()}
+        eventSlug={event.slug}
+        organizerSlug={event.organizer.slug}
+      />
 
       <SessionsEditor event={event} reference={reference} />
     </div>
