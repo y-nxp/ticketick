@@ -46,10 +46,7 @@ export function CartPreview({
 
   return (
     <div className="flex max-h-[min(36rem,80vh)] flex-col">
-      <div className="border-b border-border px-4 py-3">
-        <p className="font-semibold">{t("title")}</p>
-      </div>
-      <ul className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3">
+      <ul className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pt-4 pb-3">
         {lines.map((line) => (
           <li key={line.ticketTypeId} className="flex gap-3">
             <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-secondary">
@@ -135,7 +132,7 @@ export function CartPreview({
           <Link
             href="/cart"
             onClick={onNavigate}
-            className="block py-1 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
+            className="block py-2 text-center text-base font-semibold text-foreground hover:text-primary"
           >
             {t("viewCart")}
           </Link>
@@ -143,7 +140,7 @@ export function CartPreview({
         <ContinueShopping
           eventSlug={lines[0]?.eventSlug}
           onClick={onNavigate}
-          className="block py-1 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
+          className="block py-2 text-center text-base font-semibold text-foreground hover:text-primary"
         >
           {t("continue")}
         </ContinueShopping>

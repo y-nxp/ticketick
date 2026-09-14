@@ -15,8 +15,8 @@ import { t, upcomingSessions, type EventItem } from "@/lib/types";
 /**
  * Bloc réservation de la page événement.
  *
- * Le titre du spectacle précède le choix de date. Les tarifs et le plan
- * suivent la séance retenue.
+ * Le choix de date précède les tarifs. Le titre et la date retenue
+ * s’affichent sous « Choisissez vos billets ».
  */
 export function EventBooking({
   event,
@@ -90,13 +90,23 @@ export function EventBooking({
     );
   }
 
+  const selectedHeading = (
+    <div>
+      {heading}
+      <p className={`text-sm text-muted-foreground ${heading ? "mt-2" : ""}`}>
+        {formatDate(session.startsAt, `${locale}-CH`)}
+        {session.label ? ` · ${t(session.label, locale)}` : null}
+      </p>
+    </div>
+  );
+
   return (
     <div className="space-y-8">
-      {heading ? <div key="event-heading">{heading}</div> : null}
       {picker}
       <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
         <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
           {tickets}
+          {selectedHeading}
         </aside>
         <div className="order-2 space-y-8 lg:order-1">
           <div className="grid gap-4 sm:grid-cols-2">
