@@ -106,6 +106,7 @@
     "serviceFee": "Frais de service",
     "total": "Total",
     "checkout": "Passer au paiement",
+    "reserveHint": "Les places ne sont réservées qu’une fois le paiement commencé.",
     "continue": "Continuer mes achats",
     "session": "Séance"
   },
@@ -143,7 +144,7 @@
     "canceledHold": "Paiement interrompu. Vos places restent réservées — le délai continue.",
     "continueToPayment": "Continuer vers le paiement",
     "reserved": "Places réservées encore {time}",
-    "reservedHint": "Au-delà de 10 minutes, elles sont remises en vente.",
+    "reservedHint": "Elles sont bloquées pour vous : personne d’autre ne peut les prendre. Au-delà de 10 minutes, elles reviennent en vente.",
     "reservedExpired": "Le délai de 10 minutes est écoulé. Les places ont été remises en vente. Vous pouvez recommencer.",
     "checkAvailability": "Vérifier les places",
     "checkingAvailability": "Vérification…",
@@ -151,7 +152,9 @@
     "seatsNoLongerAvailable": "Ces places ne sont plus toutes disponibles. Modifiez votre sélection ou choisissez une autre date.",
     "changeSelection": "Modifier la sélection",
     "resumePayment": "Reprendre le paiement",
-    "reserving": "Nous réservons vos places…"
+    "reserving": "Nous réservons vos places…",
+    "hold_expired": "La réservation a expiré. Recommencez le paiement.",
+    "hold_mismatch": "Votre panier a changé. Nous reprenons la réservation."
   },
   "account": {
     "title": "Mon espace",

@@ -27,19 +27,26 @@ interface OrderResult {
 
 interface SeatHold {
   reference: string;
-  checkoutUrl: string;
+  checkoutUrl?: string;
   reservedUntil: string;
   cartKey: string;
 }
 
 const HOLD_KEY = "ticketick.hold.v1";
 
+type HoldOutcome =
+  | { ok: true; hold: SeatHold }
+  | { ok: false; error: string };
+
+const inflightHolds = new Map<string, Promise<HoldOutcome>>();
+
 function readHold(): SeatHold | null {
   try {
-    const raw = sessionStorage.getItem(HOLD_KEY);
+    const raw =
+      localStorage.getItem(HOLD_KEY) ?? sessionStorage.getItem(HOLD_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as SeatHold;
-    if (!parsed.checkoutUrl || !parsed.reservedUntil || !parsed.cartKey) {
+    if (!parsed.reference || !parsed.reservedUntil || !parsed.cartKey) {
       return null;
     }
     return parsed;
@@ -49,11 +56,55 @@ function readHold(): SeatHold | null {
 }
 
 function writeHold(hold: SeatHold): void {
-  sessionStorage.setItem(HOLD_KEY, JSON.stringify(hold));
+  localStorage.setItem(HOLD_KEY, JSON.stringify(hold));
+  sessionStorage.removeItem(HOLD_KEY);
 }
 
 function clearHold(): void {
+  localStorage.removeItem(HOLD_KEY);
   sessionStorage.removeItem(HOLD_KEY);
+}
+
+function requestHold(args: {
+  cartKey: string;
+  lines: { ticketTypeId: string; quantity: number }[];
+  locale: string;
+  replaceReference?: string;
+}): Promise<HoldOutcome> {
+  const existing = inflightHolds.get(args.cartKey);
+  if (existing) return existing;
+  const promise = (async (): Promise<HoldOutcome> => {
+    const res = await fetch("/api/hold", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        locale: args.locale,
+        lines: args.lines,
+        replaceReference: args.replaceReference,
+      }),
+    });
+    const body = (await res.json().catch(() => null)) as {
+      reference?: string;
+      reservedUntil?: string;
+      error?: string;
+    } | null;
+    if (!res.ok || !body?.reference || !body.reservedUntil) {
+      inflightHolds.delete(args.cartKey);
+      return { ok: false, error: body?.error ?? "failed" };
+    }
+    const hold: SeatHold = {
+      reference: body.reference,
+      reservedUntil: body.reservedUntil,
+      cartKey: args.cartKey,
+    };
+    writeHold(hold);
+    return { ok: true, hold };
+  })().catch(() => {
+    inflightHolds.delete(args.cartKey);
+    return { ok: false, error: "failed" };
+  });
+  inflightHolds.set(args.cartKey, promise);
+  return promise;
 }
 
 export default function CheckoutPage() {
@@ -86,8 +137,12 @@ function CheckoutInner() {
   const [hold, setHold] = React.useState<SeatHold | null>(null);
   const [now, setNow] = React.useState(() => Date.now());
   const [holdExpired, setHoldExpired] = React.useState(false);
+  const [creatingHold, setCreatingHold] = React.useState(false);
   const [checkingSeats, setCheckingSeats] = React.useState(false);
   const [seatsOk, setSeatsOk] = React.useState<boolean | null>(null);
+
+  const linesRef = React.useRef(lines);
+  linesRef.current = lines;
 
   const ticketIds = lines.map((l) => l.ticketTypeId).join(",");
   React.useEffect(() => {
@@ -117,22 +172,61 @@ function CheckoutInner() {
     .join(",");
 
   React.useEffect(() => {
-    // Attendre le panier : au premier rendu `cartKey` est vide et ferait
-    // croire à tort que la réservation de 10 min est périmée (retour PF).
-    if (!hydrated) return;
+    // Le chrono démarre à l'arrivée sur /checkout, pas à l'ajout au panier.
+    // Attendre le panier : un `cartKey` vide au premier rendu ferait
+    // croire à tort que la rétention est périmée (retour PostFinance).
+    if (!hydrated || !cartKey) return;
+    if (holdExpired) return;
+
     const stored = readHold();
-    if (!stored) return;
-    const until = Date.parse(stored.reservedUntil);
-    if (!Number.isFinite(until) || until <= Date.now()) {
-      clearHold();
-      setHold(null);
-      setHoldExpired(true);
-      return;
+    if (stored) {
+      const until = Date.parse(stored.reservedUntil);
+      if (!Number.isFinite(until) || until <= Date.now()) {
+        inflightHolds.delete(stored.cartKey);
+        clearHold();
+        setHold(null);
+        setHoldExpired(true);
+        return;
+      }
+      if (stored.cartKey === cartKey) {
+        setHoldExpired(false);
+        setHold(stored);
+        return;
+      }
     }
-    if (stored.cartKey !== cartKey) return;
-    setHoldExpired(false);
-    setHold(stored);
-  }, [hydrated, cartKey, canceled]);
+
+    let cancelled = false;
+    setCreatingHold(true);
+    requestHold({
+      cartKey,
+      locale,
+      lines: linesRef.current.map((l) => ({
+        ticketTypeId: l.ticketTypeId,
+        quantity: l.quantity,
+      })),
+      replaceReference:
+        stored && stored.cartKey !== cartKey ? stored.reference : undefined,
+    }).then((outcome) => {
+      if (cancelled) return;
+      setCreatingHold(false);
+      if (outcome.ok) {
+        setHold(outcome.hold);
+        setHoldExpired(false);
+        setError(null);
+        return;
+      }
+      setHold(null);
+      if (t.has(outcome.error)) {
+        setError(t(outcome.error));
+        return;
+      }
+      setError(t("failed"));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hydrated, cartKey, holdExpired, locale, t]);
 
   React.useEffect(() => {
     if (!hold) return;
@@ -140,6 +234,7 @@ function CheckoutInner() {
       const left = Date.parse(hold.reservedUntil) - Date.now();
       setNow(Date.now());
       if (left <= 0) {
+        inflightHolds.delete(hold.cartKey);
         clearHold();
         setHold(null);
         setHoldExpired(true);
@@ -171,6 +266,7 @@ function CheckoutInner() {
           ...form,
           locale,
           paymentMethod: method,
+          holdReference: hold?.reference,
           lines: lines.map((l) => ({
             ticketTypeId: l.ticketTypeId,
             ticketName: l.ticketName,
@@ -281,6 +377,12 @@ function CheckoutInner() {
   return (
     <div className="container-page py-10">
       <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+      {creatingHold && !holdActive ? (
+        <div className="mt-4 flex items-start gap-3 rounded-xl border border-primary/25 bg-primary/8 px-4 py-3">
+          <Loader2 className="mt-0.5 size-5 shrink-0 animate-spin text-primary" />
+          <p className="font-semibold">{t("reserving")}</p>
+        </div>
+      ) : null}
       {holdActive ? (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/8 px-4 py-3">
           <div className="flex items-start gap-3">
@@ -296,7 +398,7 @@ function CheckoutInner() {
             <Button
               type="button"
               onClick={() => {
-                window.location.href = hold.checkoutUrl;
+                window.location.href = hold.checkoutUrl!;
               }}
             >
               {canceled ? t("resumePayment") : t("continueToPayment")}
@@ -329,6 +431,10 @@ function CheckoutInner() {
                     })),
                   );
                   setSeatsOk(result.available);
+                  if (result.available) {
+                    inflightHolds.delete(cartKey);
+                    setHoldExpired(false);
+                  }
                 } catch {
                   setSeatsOk(false);
                 } finally {
@@ -488,6 +594,7 @@ function CheckoutInner() {
               className="mt-5 w-full"
               disabled={
                 submitting ||
+                creatingHold ||
                 checkingSeats ||
                 seatsOk === false ||
                 (!offer.card && !offer.iban)
@@ -496,9 +603,9 @@ function CheckoutInner() {
               {submitting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  {holdActive ? t("reserving") : t("processing")}
+                  {t("processing")}
                 </>
-              ) : holdActive ? (
+              ) : holdActive && hold?.checkoutUrl ? (
                 canceled ? t("resumePayment") : t("continueToPayment")
               ) : (
                 t("payNow", { amount: formatPrice(total, `${locale}-CH`) })

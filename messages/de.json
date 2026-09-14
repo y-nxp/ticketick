@@ -106,6 +106,7 @@
     "serviceFee": "Servicegebühr",
     "total": "Gesamt",
     "checkout": "Zur Kasse",
+    "reserveHint": "Plätze werden erst an der Kasse reserviert.",
     "continue": "Weiter einkaufen",
     "session": "Vorstellung"
   },
@@ -143,7 +144,7 @@
     "canceledHold": "Zahlung unterbrochen. Ihre Plätze bleiben reserviert — die Frist läuft weiter.",
     "continueToPayment": "Weiter zur Zahlung",
     "reserved": "Plätze noch {time} reserviert",
-    "reservedHint": "Nach 10 Minuten kommen sie wieder in den Verkauf.",
+    "reservedHint": "Diese Plätze sind für Sie gesperrt: niemand sonst kann sie nehmen. Nach 10 Minuten kommen sie wieder in den Verkauf.",
     "reservedExpired": "Die 10 Minuten sind abgelaufen. Die Plätze sind wieder frei. Sie können neu beginnen.",
     "checkAvailability": "Plätze prüfen",
     "checkingAvailability": "Prüfung…",
@@ -151,7 +152,9 @@
     "seatsNoLongerAvailable": "Diese Plätze sind nicht mehr alle frei. Ändern Sie Ihre Auswahl oder wählen Sie ein anderes Datum.",
     "changeSelection": "Auswahl ändern",
     "resumePayment": "Zahlung fortsetzen",
-    "reserving": "Wir reservieren Ihre Plätze…"
+    "reserving": "Wir reservieren Ihre Plätze…",
+    "hold_expired": "Die Reservierung ist abgelaufen. Bitte starten Sie die Zahlung erneut.",
+    "hold_mismatch": "Ihr Warenkorb hat sich geändert. Wir reservieren die neue Auswahl."
   },
   "account": {
     "title": "Mein Konto",

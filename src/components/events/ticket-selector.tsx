@@ -103,13 +103,13 @@ export function TicketSelector({
     });
     setQty({});
     if (goToCheckout) {
-      // Un iframe WordPress ne peut pas afficher PostFinance : on sort.
+      // Réserver ouvre le checkout : c'est là que le stock est retenu.
+      const path = locale === "fr" ? "/checkout" : `/${locale}/checkout`;
       if (embed && window.top && window.top !== window) {
-        const path = locale === "fr" ? "/cart" : `/${locale}/cart`;
         window.top.location.assign(`${window.location.origin}${path}`);
         return;
       }
-      router.push("/cart");
+      router.push("/checkout");
     } else {
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);

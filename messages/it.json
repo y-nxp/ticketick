@@ -106,6 +106,7 @@
     "serviceFee": "Costi di servizio",
     "total": "Totale",
     "checkout": "Vai al pagamento",
+    "reserveHint": "I posti sono riservati solo all’inizio del pagamento.",
     "continue": "Continua gli acquisti",
     "session": "Replica"
   },
@@ -143,7 +144,7 @@
     "canceledHold": "Pagamento interrotto. I posti restano riservati — il tempo continua a scorrere.",
     "continueToPayment": "Continuare il pagamento",
     "reserved": "Posti riservati ancora {time}",
-    "reservedHint": "Dopo 10 minuti tornano in vendita.",
+    "reservedHint": "Questi posti sono bloccati per voi: nessun altro può prenderli. Dopo 10 minuti tornano in vendita.",
     "reservedExpired": "I 10 minuti sono scaduti. I posti sono di nuovo in vendita. Puoi ricominciare.",
     "checkAvailability": "Verificare i posti",
     "checkingAvailability": "Verifica…",
@@ -151,7 +152,9 @@
     "seatsNoLongerAvailable": "Questi posti non sono più tutti disponibili. Modifica la selezione o scegli un’altra data.",
     "changeSelection": "Modificare la selezione",
     "resumePayment": "Riprendere il pagamento",
-    "reserving": "Stiamo riservando i posti…"
+    "reserving": "Stiamo riservando i posti…",
+    "hold_expired": "La prenotazione è scaduta. Ricominciate il pagamento.",
+    "hold_mismatch": "Il carrello è cambiato. Stiamo riservando la nuova selezione."
   },
   "account": {
     "title": "Il mio spazio",

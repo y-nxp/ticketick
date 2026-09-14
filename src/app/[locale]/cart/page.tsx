@@ -123,6 +123,9 @@ export default function CartPage() {
                 <ArrowRight className="size-4" />
               </Button>
             </Link>
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              {t("reserveHint")}
+            </p>
             <Link href="/" className="mt-2 block">
               <Button variant="ghost" className="w-full">
                 {t("continue")}

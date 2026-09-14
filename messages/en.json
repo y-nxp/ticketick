@@ -106,6 +106,7 @@
     "serviceFee": "Service fee",
     "total": "Total",
     "checkout": "Proceed to checkout",
+    "reserveHint": "Seats are only reserved once you start checkout.",
     "continue": "Continue shopping",
     "session": "Session"
   },
@@ -143,7 +144,7 @@
     "canceledHold": "Payment interrupted. Your seats are still reserved — the timer keeps running.",
     "continueToPayment": "Continue to payment",
     "reserved": "Seats reserved for {time}",
-    "reservedHint": "After 10 minutes they go back on sale.",
+    "reservedHint": "These seats are held for you — nobody else can take them. After 10 minutes they go back on sale.",
     "reservedExpired": "The 10-minute hold has ended. The seats have been released. You can start again.",
     "checkAvailability": "Check availability",
     "checkingAvailability": "Checking…",
@@ -151,7 +152,9 @@
     "seatsNoLongerAvailable": "These seats are no longer all available. Change your selection or pick another date.",
     "changeSelection": "Change selection",
     "resumePayment": "Resume payment",
-    "reserving": "Reserving your seats…"
+    "reserving": "Reserving your seats…",
+    "hold_expired": "The reservation has expired. Please start payment again.",
+    "hold_mismatch": "Your cart has changed. We are reserving the new selection."
   },
   "account": {
     "title": "My account",

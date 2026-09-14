@@ -9,7 +9,9 @@ import { sendTicketEmail } from "@/lib/email";
 import { sendPaidOrderTickets } from "@/lib/email/ticket-mail";
 import {
   createOrder,
+  fulfillCheckoutHold,
   releaseOrder,
+  releaseOrderByReference,
   releaseStaleUnpaidCardOrders,
 } from "@/lib/orders/create-order";
 import { markOrderPaid } from "@/lib/orders/mark-paid";
@@ -36,6 +38,7 @@ const checkoutSchema = z.object({
   locale: z.string().max(5).default("fr"),
   paymentMethod: z.enum(["CARD", "IBAN"]),
   lines: z.array(lineSchema).min(1).max(50),
+  holdReference: z.string().min(3).max(32).optional(),
 });
 
 // IBAN d'exemple, réservé aux environnements d'essai. Envoyé à un acheteur
@@ -90,7 +93,7 @@ export async function POST(request: Request) {
   // l'achat reste possible sans création de compte.
   const user = await getCurrentUser();
 
-  const created = await createOrder({
+  const payload = {
     lines: data.lines,
     email: data.email,
     firstName: data.firstName,
@@ -99,7 +102,22 @@ export async function POST(request: Request) {
     locale: data.locale,
     paymentMethod: data.paymentMethod,
     userId: user?.id,
-  });
+  };
+
+  // La rétention a déjà prélevé le stock à l'arrivée sur /checkout.
+  // On la relie aux coordonnées plutôt que de créer une seconde commande.
+  let created = data.holdReference
+    ? await fulfillCheckoutHold(data.holdReference, payload)
+    : await createOrder(payload);
+
+  if (!created.ok && data.holdReference) {
+    if (created.error === "hold_mismatch") {
+      await releaseOrderByReference(data.holdReference).catch((error) => {
+        console.error("[checkout] libération rétention incompatible", error);
+      });
+    }
+    created = await createOrder(payload);
+  }
 
   if (!created.ok) {
     // 409 : la demande était bien formée, c'est l'état du catalogue qui s'y

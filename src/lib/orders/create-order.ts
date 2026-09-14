@@ -66,7 +66,9 @@ export type OrderError =
   | "companion_requires_paid"
   | "sold_out"
   | "method_not_allowed"
-  | "reference_collision";
+  | "reference_collision"
+  | "hold_expired"
+  | "hold_mismatch";
 
 /**
  * L'encaissement carte va sur le compte PostFinance de l'organisateur.
@@ -366,6 +368,16 @@ export async function releaseStaleUnpaidCardOrders(): Promise<number> {
   return stale.length;
 }
 
+export async function releaseOrderByReference(
+  reference: string,
+): Promise<void> {
+  const order = await prisma.order.findFirst({
+    where: { reference, status: "AWAITING_PAYMENT" },
+    select: { id: true },
+  });
+  if (order) await releaseOrder(order.id);
+}
+
 export async function releaseOrder(orderId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({
@@ -410,6 +422,140 @@ export async function releaseOrder(orderId: string): Promise<void> {
       data: { status: "CANCELLED" },
     });
   });
+}
+
+const HOLD_PLACEHOLDER_DOMAIN = "hold.ticketick.invalid";
+
+/** Retient le stock dès l'arrivée sur le checkout, avant les coordonnées. */
+export async function createCheckoutHold(input: {
+  lines: OrderLineInput[];
+  locale: string;
+}): Promise<CreateOrderResult> {
+  const token = randomBytes(8).toString("hex");
+  return createOrder({
+    lines: input.lines,
+    email: `hold+${token}@${HOLD_PLACEHOLDER_DOMAIN}`,
+    firstName: "—",
+    lastName: "—",
+    locale: input.locale,
+    paymentMethod: "CARD",
+  });
+}
+
+/**
+ * Relie une rétention encore valable aux coordonnées de l'acheteur,
+ * sans re-prélever le stock.
+ */
+export async function fulfillCheckoutHold(
+  reference: string,
+  input: Omit<CreateOrderInput, "lines"> & { lines: OrderLineInput[] },
+): Promise<CreateOrderResult> {
+  const limite = new Date(Date.now() - CARD_HOLD_MS);
+  const order = await prisma.order.findFirst({
+    where: {
+      reference,
+      status: "AWAITING_PAYMENT",
+      createdAt: { gt: limite },
+    },
+    select: {
+      id: true,
+      reference: true,
+      createdAt: true,
+      subtotalCents: true,
+      feeCents: true,
+      totalCents: true,
+      currency: true,
+      items: {
+        select: { ticketTypeId: true, quantity: true, unitPriceCents: true },
+      },
+    },
+  });
+  if (!order) return { ok: false, error: "hold_expired" };
+
+  const attendu = new Map<string, number>();
+  for (const line of input.lines) {
+    attendu.set(
+      line.ticketTypeId,
+      (attendu.get(line.ticketTypeId) ?? 0) + line.quantity,
+    );
+  }
+  if (order.items.length !== attendu.size) {
+    return { ok: false, error: "hold_mismatch" };
+  }
+  for (const item of order.items) {
+    if (attendu.get(item.ticketTypeId) !== item.quantity) {
+      return { ok: false, error: "hold_mismatch" };
+    }
+  }
+
+  await prisma.order.update({
+    where: { id: order.id },
+    data: {
+      email: input.email,
+      firstName: input.firstName,
+      lastName: input.lastName,
+      phone: input.phone,
+      locale: input.locale,
+      paymentMethod: input.paymentMethod,
+      userId: input.userId,
+    },
+  });
+
+  const ticketTypes = await prisma.ticketType.findMany({
+    where: { id: { in: order.items.map((item) => item.ticketTypeId) } },
+    select: {
+      id: true,
+      name: true,
+      session: {
+        select: {
+          startsAt: true,
+          event: {
+            select: {
+              slug: true,
+              title: true,
+              organizer: { select: { name: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+  const byId = new Map(ticketTypes.map((tt) => [tt.id, tt]));
+  const lines = order.items.map((item) => {
+    const tt = byId.get(item.ticketTypeId);
+    return {
+      ticketTypeId: item.ticketTypeId,
+      quantity: item.quantity,
+      unitPriceCents: item.unitPriceCents,
+      label: tt
+        ? paymentLineLabel({
+            organizer: tt.session.event.organizer.name,
+            eventTitle: readTitle(tt.session.event.title, input.locale),
+            sessionStartsAt: tt.session.startsAt,
+            ticketName: readTitle(tt.name, input.locale),
+            locale: input.locale,
+          })
+        : item.ticketTypeId,
+    };
+  });
+
+  return {
+    ok: true,
+    order: {
+      id: order.id,
+      reference: order.reference,
+      subtotalCents: order.subtotalCents,
+      feeCents: order.feeCents,
+      totalCents: order.totalCents,
+      currency: order.currency,
+      lines,
+      project: [
+        ...new Set(ticketTypes.map((tt) => tt.session.event.slug)),
+      ].join("+"),
+      organizerName: ticketTypes[0]?.session.event.organizer.name.trim() ?? "",
+      createdAt: order.createdAt,
+    },
+  };
 }
 
 class SoldOutError extends Error {
