@@ -3,7 +3,7 @@
 import * as React from "react";
 import { ShoppingBag } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import { CartPreview } from "@/components/cart/cart-preview";
 import { useCart } from "@/components/cart/cart-context";
 
@@ -14,14 +14,23 @@ export function CartButton({
   panelOffsetClass?: string;
 }) {
   const t = useTranslations("nav");
+  const pathname = usePathname();
+  const onCartPage = pathname === "/cart" || pathname.startsWith("/cart/");
   const { count, addedRevision, setPreviewOpen } = useCart();
   const [open, setOpen] = React.useState(false);
   const [pinned, setPinned] = React.useState(false);
   const [hoverFine, setHoverFine] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
-  const prevAdded = React.useRef(0);
+  /** `null` tant que le bouton n’a pas vu `addedRevision` : un remount
+   *  (Continuer mes achats, Aller au panier) ne doit pas rouvrir le popup. */
+  const prevAdded = React.useRef<number | null>(null);
   const ignoreOutsideUntil = React.useRef(0);
   const leaveTimer = React.useRef<number>(0);
+  const suppressHoverUntil = React.useRef(0);
+
+  React.useEffect(() => {
+    suppressHoverUntil.current = Date.now() + 800;
+  }, [pathname]);
 
   React.useEffect(() => {
     const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -33,6 +42,7 @@ export function CartButton({
 
   function close() {
     window.clearTimeout(leaveTimer.current);
+    suppressHoverUntil.current = Date.now() + 800;
     setPinned(false);
     setOpen(false);
   }
@@ -45,11 +55,21 @@ export function CartButton({
   }
 
   React.useEffect(() => {
-    if (addedRevision > 0 && addedRevision !== prevAdded.current) {
+    if (onCartPage) {
+      prevAdded.current = addedRevision;
+      setPinned(false);
+      setOpen(false);
+      return;
+    }
+    if (prevAdded.current === null) {
+      prevAdded.current = addedRevision;
+      return;
+    }
+    if (addedRevision > prevAdded.current) {
       prevAdded.current = addedRevision;
       openPinned();
     }
-  }, [addedRevision]);
+  }, [addedRevision, onCartPage]);
 
   React.useEffect(() => {
     if (!open) return;
@@ -77,6 +97,7 @@ export function CartButton({
 
   function onMouseEnter() {
     if (!hoverFine) return;
+    if (Date.now() < suppressHoverUntil.current) return;
     window.clearTimeout(leaveTimer.current);
     setOpen(true);
   }
@@ -94,6 +115,8 @@ export function CartButton({
     if (open) close();
     else openPinned();
   }
+
+  if (onCartPage) return null;
 
   return (
     <div className="relative z-50">
