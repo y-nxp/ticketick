@@ -20,7 +20,7 @@ const holdSchema = z.object({
 
 /**
  * Retient le stock dès l'arrivée sur /checkout, avant les coordonnées.
- * Le chrono de 10 min commence ici — pas à l'ajout au panier.
+ * Le chrono de 25 min commence ici — pas à l'ajout au panier.
  */
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);

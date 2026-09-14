@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { Minus, Plus, Check, ShoppingBag } from "lucide-react";
-import { useRouter } from "@/i18n/navigation";
+import { Minus, Plus, ShoppingBag } from "lucide-react";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
+import { rememberShopOrigin } from "@/lib/shop-origin";
 import { formatPrice } from "@/lib/utils";
 import {
   t,
@@ -30,8 +31,8 @@ export function TicketSelector({
   const te = useTranslations("event");
   const { add, count } = useCart();
   const router = useRouter();
+  const pathname = usePathname();
   const [qty, setQty] = React.useState<Record<string, number>>({});
-  const [added, setAdded] = React.useState(false);
 
   const totalCents = session.ticketTypes.reduce(
     (sum, tt) => sum + (qty[tt.id] ?? 0) * tt.priceCents,
@@ -97,9 +98,8 @@ export function TicketSelector({
         );
       }
     });
+    rememberShopOrigin(pathname);
     setQty({});
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
   }
 
   function goCheckout() {
@@ -111,8 +111,13 @@ export function TicketSelector({
     router.push("/checkout");
   }
 
+  const pending = totalCount > 0;
+
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+    <div
+      id="ticket-selector"
+      className="scroll-mt-24 rounded-2xl border border-border bg-card p-5 shadow-sm"
+    >
       <h3 className="text-lg font-semibold">{te("selectTickets")}</h3>
       <div className="mt-4 space-y-3">
         {session.ticketTypes.map((tt) => (
@@ -134,35 +139,22 @@ export function TicketSelector({
         </span>
       </div>
 
-      <div className="mt-4 space-y-2">
-        <Button
-          className="w-full"
-          size="lg"
-          disabled={totalCount === 0}
-          onClick={addToCart}
-        >
-          {added ? (
-            <>
-              <Check className="size-4" />
-              {te("addedToCart")}
-            </>
-          ) : (
-            <>
-              <ShoppingBag className="size-4" />
-              {te("addToCart")}
-            </>
-          )}
-        </Button>
-        {count > 0 ? (
+      <div className="mt-4">
+        {pending || count === 0 ? (
           <Button
-            variant="outline"
             className="w-full"
             size="lg"
-            onClick={goCheckout}
+            disabled={!pending}
+            onClick={addToCart}
           >
-            {te("buyTickets")}
+            <ShoppingBag className="size-4" />
+            {te("addToCart")}
           </Button>
-        ) : null}
+        ) : (
+          <Button className="w-full" size="lg" onClick={goCheckout}>
+            {te("reserveAndPay")}
+          </Button>
+        )}
       </div>
     </div>
   );

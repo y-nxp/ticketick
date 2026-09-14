@@ -14,7 +14,7 @@ export async function getCartPaymentMethods(
   return resolveCartPayments(ticketTypeIds);
 }
 
-/** Stock réel après libération des rétentions de 10 minutes expirées. */
+/** Stock réel après libération des rétentions de 25 minutes expirées. */
 export async function checkCartAvailability(
   lines: AvailabilityLine[],
 ): Promise<AvailabilityResult> {

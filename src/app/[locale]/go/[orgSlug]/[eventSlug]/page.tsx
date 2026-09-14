@@ -60,11 +60,19 @@ export default async function OrganizerEventPage({
         </div>
       ) : null}
 
-      <h1 className="organizer-title mt-8">{t(event.title, locale)}</h1>
-      <p className="mt-2 text-sm text-neutral-600">{event.organizer.name}</p>
-
       <div className="mt-8">
-        <EventBooking event={event} locale={locale} />
+        <EventBooking
+          event={event}
+          locale={locale}
+          heading={
+            <div>
+              <h1 className="organizer-title">{t(event.title, locale)}</h1>
+              <p className="mt-2 text-sm text-neutral-600">
+                {event.organizer.name}
+              </p>
+            </div>
+          }
+        />
       </div>
     </OrganizerShell>
   );

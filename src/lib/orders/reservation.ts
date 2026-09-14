@@ -1,5 +1,5 @@
 /** Durée pendant laquelle une commande carte retient les places. */
-export const CARD_HOLD_MINUTES = 10;
+export const CARD_HOLD_MINUTES = 25;
 export const CARD_HOLD_MS = CARD_HOLD_MINUTES * 60 * 1000;
 
 export function reservedUntilFrom(createdAt: Date): Date {

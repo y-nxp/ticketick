@@ -344,7 +344,7 @@ export async function createOrder(
 /**
  * Rend le stock des paiements carte qui n'ont jamais abouti.
  *
- * Au-delà de 10 minutes, les places sont remises en vente. Sans cela, un
+ * Au-delà de 25 minutes, les places sont remises en vente. Sans cela, un
  * panier abandonné retiendrait des sièges jusqu'à la séance.
  */
 export async function releaseStaleUnpaidCardOrders(): Promise<number> {

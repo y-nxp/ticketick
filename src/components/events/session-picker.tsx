@@ -29,7 +29,10 @@ export function SessionPicker({
   if (sessions.length <= 1) return null;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+    <div
+      id="session-picker"
+      className="scroll-mt-24 rounded-2xl border border-border bg-card p-5 shadow-sm"
+    >
       <h3 className="flex items-center gap-2 text-lg font-semibold">
         <CalendarDays className="size-5 text-primary" />
         {te("selectSession")}
@@ -49,7 +52,7 @@ export function SessionPicker({
               onClick={() => onSelect(s.id)}
               aria-pressed={selected}
               className={cn(
-                "flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition-colors",
+                "flex w-full flex-col gap-2 rounded-xl border p-3 text-left transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-3",
                 selected
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border hover:bg-secondary",
@@ -57,20 +60,35 @@ export function SessionPicker({
               )}
             >
               <span className="min-w-0">
-                <span className="block truncate font-medium">
+                <span className="block font-medium">
                   {formatDate(s.startsAt, `${locale}-CH`)}
                 </span>
-                <span
-                  className={cn(
-                    "block truncate text-sm",
-                    selected
-                      ? "text-primary-foreground/85"
-                      : "text-muted-foreground",
-                  )}
-                >
-                  {s.label ? `${t(s.label, locale)} · ` : ""}
-                  {s.venue ? s.venue.name : ""}
-                </span>
+                {s.label ? (
+                  <span
+                    className={cn(
+                      "block text-sm",
+                      selected
+                        ? "text-primary-foreground/85"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {t(s.label, locale)}
+                  </span>
+                ) : null}
+                {s.venue ? (
+                  <span
+                    className={cn(
+                      "block text-sm",
+                      selected
+                        ? "text-primary-foreground/85"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {s.venue.city
+                      ? `${s.venue.name}, ${s.venue.city}`
+                      : s.venue.name}
+                  </span>
+                ) : null}
               </span>
               <span className="shrink-0 text-sm font-semibold">
                 {soldOut

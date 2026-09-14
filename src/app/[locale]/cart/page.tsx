@@ -5,9 +5,10 @@ import { useTranslations } from "next-intl";
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { ContinueShopping } from "@/components/cart/continue-shopping";
 import { useCart } from "@/components/cart/cart-context";
-import { formatDate, formatPrice } from "@/lib/utils";
+import { cn, formatDate, formatPrice } from "@/lib/utils";
 
 export default function CartPage() {
   const t = useTranslations("cart");
@@ -25,9 +26,11 @@ export default function CartPage() {
         <h1 className="mt-6 text-2xl font-bold">{t("title")}</h1>
         <p className="mt-2 text-muted-foreground">{t("empty")}</p>
         <p className="text-sm text-muted-foreground">{t("emptyHint")}</p>
-        <Link href="/" className="mt-6 inline-block">
-          <Button size="lg">{t("browse")}</Button>
-        </Link>
+        <ContinueShopping
+          className={`mt-6 inline-flex ${buttonVariants({ size: "lg" })}`}
+        >
+          {t("browse")}
+        </ContinueShopping>
       </div>
     );
   }
@@ -54,12 +57,12 @@ export default function CartPage() {
                 ) : null}
               </div>
               <div className="flex min-w-0 flex-1 flex-col">
-                <Link
-                  href={`/events/${line.eventSlug}`}
+                <ContinueShopping
+                  eventSlug={line.eventSlug}
                   className="truncate font-semibold hover:text-primary"
                 >
                   {line.eventTitle}
-                </Link>
+                </ContinueShopping>
                 <p className="text-sm text-muted-foreground">
                   {line.ticketName}
                 </p>
@@ -128,11 +131,15 @@ export default function CartPage() {
             <p className="mt-3 text-center text-xs text-muted-foreground">
               {t("reserveHint")}
             </p>
-            <Link href="/" className="mt-2 block">
-              <Button variant="ghost" className="w-full">
-                {t("continue")}
-              </Button>
-            </Link>
+            <ContinueShopping
+              eventSlug={lines[0]?.eventSlug}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "lg" }),
+                "mt-2 w-full",
+              )}
+            >
+              {t("continue")}
+            </ContinueShopping>
           </div>
         </aside>
       </div>

@@ -21,7 +21,7 @@ export type AvailabilityResult = {
 
 /**
  * Indique si le panier est encore vendable, après avoir rendu les places
- * des commandes carte abandonnées (délai de 10 min).
+ * des commandes carte abandonnées (délai de 25 min).
  */
 export async function checkLinesAvailability(
   lines: AvailabilityLine[],

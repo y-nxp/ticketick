@@ -5,9 +5,14 @@ import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { CreditCard, Landmark, CheckCircle2, Loader2, Copy, Clock } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { ContinueShopping } from "@/components/cart/continue-shopping";
 import { useCart } from "@/components/cart/cart-context";
-import { formatPrice } from "@/lib/utils";
+import {
+  isStackedLayout,
+  scrollToIdIfStacked,
+} from "@/lib/scroll-into-view";
+import { cn, formatPrice } from "@/lib/utils";
 import {
   checkCartAvailability,
   getCartPaymentMethods,
@@ -145,6 +150,12 @@ function CheckoutInner() {
   linesRef.current = lines;
 
   const ticketIds = lines.map((l) => l.ticketTypeId).join(",");
+
+  React.useEffect(() => {
+    if (!hydrated || lines.length === 0) return;
+    scrollToIdIfStacked("checkout-form");
+  }, [hydrated, lines.length]);
+
   React.useEffect(() => {
     let ignore = false;
     getCartPaymentMethods(ticketIds ? ticketIds.split(",") : []).then(
@@ -301,7 +312,7 @@ function CheckoutInner() {
       } = await res.json();
 
       // Paiement carte : on reste sur le formulaire. Le compte à rebours
-      // de 10 min commence ici ; l'acheteur part ensuite vers PostFinance.
+      // de 25 min commence ici ; l'acheteur part ensuite vers PostFinance.
       if (method === "CARD" && data.checkoutUrl && data.reservedUntil) {
         const nextHold = {
           reference: data.reference,
@@ -352,9 +363,12 @@ function CheckoutInner() {
             </div>
           )}
         </div>
-        <Link href="/" className="mt-6 inline-block">
-          <Button size="lg">{t("backHome")}</Button>
-        </Link>
+        <ContinueShopping
+          eventSlug={lines[0]?.eventSlug}
+          className={`mt-6 inline-flex ${buttonVariants({ size: "lg" })}`}
+        >
+          {t("backHome")}
+        </ContinueShopping>
       </div>
     );
   }
@@ -367,9 +381,11 @@ function CheckoutInner() {
     return (
       <div className="container-page py-20 text-center">
         <h1 className="text-2xl font-bold">{tc("empty")}</h1>
-        <Link href="/" className="mt-6 inline-block">
-          <Button size="lg">{tc("browse")}</Button>
-        </Link>
+        <ContinueShopping
+          className={`mt-6 inline-flex ${buttonVariants({ size: "lg" })}`}
+        >
+          {tc("browse")}
+        </ContinueShopping>
       </div>
     );
   }
@@ -452,12 +468,12 @@ function CheckoutInner() {
               )}
             </Button>
             {lines[0]?.eventSlug ? (
-              <Link
-                href={`/events/${lines[0].eventSlug}`}
+              <ContinueShopping
+                eventSlug={lines[0].eventSlug}
                 className="text-sm font-medium text-foreground underline-offset-4 hover:underline"
               >
                 {t("changeSelection")}
-              </Link>
+              </ContinueShopping>
             ) : null}
           </div>
           {seatsOk === true ? (
@@ -478,8 +494,9 @@ function CheckoutInner() {
         </p>
       ) : null}
       <form
+        id="checkout-form"
         onSubmit={submit}
-        className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]"
+        className="mt-8 grid scroll-mt-24 gap-8 lg:grid-cols-[1fr_360px]"
       >
         <div className="space-y-8">
           {/* Coordonnées */}
@@ -524,7 +541,10 @@ function CheckoutInner() {
               {offer.card ? (
                 <PaymentOption
                   active={method === "CARD"}
-                  onClick={() => setMethod("CARD")}
+                  onClick={() => {
+                    setMethod("CARD");
+                    scrollToIdIfStacked("checkout-pay");
+                  }}
                   icon={<CreditCard className="size-5" />}
                   title={t("card")}
                   hint={t("cardHint")}
@@ -533,7 +553,10 @@ function CheckoutInner() {
               {offer.iban ? (
                 <PaymentOption
                   active={method === "IBAN"}
-                  onClick={() => setMethod("IBAN")}
+                  onClick={() => {
+                    setMethod("IBAN");
+                    scrollToIdIfStacked("checkout-pay");
+                  }}
                   icon={<Landmark className="size-5" />}
                   title={t("iban")}
                   hint={t("ibanHint")}
@@ -589,9 +612,10 @@ function CheckoutInner() {
               </div>
             </dl>
             <Button
+              id="checkout-pay"
               type="submit"
               size="lg"
-              className="mt-5 w-full"
+              className="mt-5 w-full scroll-mt-24"
               disabled={
                 submitting ||
                 creatingHold ||
@@ -611,6 +635,15 @@ function CheckoutInner() {
                 t("payNow", { amount: formatPrice(total, `${locale}-CH`) })
               )}
             </Button>
+            <ContinueShopping
+              eventSlug={lines[0]?.eventSlug}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "lg" }),
+                "mt-2 w-full",
+              )}
+            >
+              {tc("continue")}
+            </ContinueShopping>
           </div>
         </aside>
       </form>
@@ -642,6 +675,13 @@ function Input({
         type={type}
         value={value}
         required={required}
+        onFocus={(e) => {
+          if (!isStackedLayout()) return;
+          e.currentTarget.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }}
         onChange={(e) => onChange(e.target.value)}
         className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm outline-none focus:border-ring"
       />
