@@ -99,7 +99,7 @@ function requestHold(args: {
     };
     writeHold(hold);
     return { ok: true, hold };
-  })().catch(() => {
+  })().catch((): HoldOutcome => {
     inflightHolds.delete(args.cartKey);
     return { ok: false, error: "failed" };
   });
