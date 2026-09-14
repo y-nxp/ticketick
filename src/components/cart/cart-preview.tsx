@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { ContinueShopping } from "@/components/cart/continue-shopping";
 import { useCart } from "@/components/cart/cart-context";
@@ -20,8 +20,10 @@ export function CartPreview({
 }) {
   const t = useTranslations("cart");
   const locale = useLocale();
+  const pathname = usePathname();
   const router = useRouter();
   const { lines, updateQuantity, remove, subtotalCents } = useCart();
+  const onCartPage = pathname === "/cart" || pathname.startsWith("/cart/");
 
   if (lines.length === 0) {
     return (
@@ -129,13 +131,15 @@ export function CartPreview({
         <Button size="lg" className="w-full" onClick={goCheckout}>
           {t("pay")}
         </Button>
-        <Link
-          href="/cart"
-          onClick={onNavigate}
-          className="block py-1 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
-        >
-          {t("viewCart")}
-        </Link>
+        {onCartPage ? null : (
+          <Link
+            href="/cart"
+            onClick={onNavigate}
+            className="block py-1 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            {t("viewCart")}
+          </Link>
+        )}
         <ContinueShopping
           eventSlug={lines[0]?.eventSlug}
           onClick={onNavigate}
