@@ -8,7 +8,7 @@ export function Footer() {
 
   return (
     <footer className="mt-24 border-t border-border/70 bg-secondary/30">
-      <div className="container-page grid gap-10 py-14 md:grid-cols-4">
+      <div className="container-page grid gap-10 py-14 md:grid-cols-3">
         <div className="space-y-3 md:col-span-1">
           <Logo />
           <p className="text-sm text-muted-foreground">
@@ -19,11 +19,6 @@ export function Footer() {
         <FooterCol title={t("about")}>
           <FooterLink href="/about">{t("about")}</FooterLink>
           <FooterLink href="/contact">{t("contact")}</FooterLink>
-          <FooterLink href="/help">{t("help")}</FooterLink>
-        </FooterCol>
-
-        <FooterCol title={t("organizers")}>
-          <FooterLink href="/organizer">{t("organizers")}</FooterLink>
           <FooterLink href="/help">{t("help")}</FooterLink>
         </FooterCol>
 

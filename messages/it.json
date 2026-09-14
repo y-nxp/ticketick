@@ -23,6 +23,7 @@
     "heroSubtitle": "Concerti, teatro, festival, comicità e molto altro. Prenota i tuoi biglietti in pochi secondi.",
     "heroCta": "Scopri gli spettacoli",
     "heroSecondary": "Come funziona",
+    "payments": "PostFinance, Stripe, PayPal",
     "sectionAll": "Tutti gli spettacoli",
     "sectionFeatured": "In evidenza",
     "sectionUpcoming": "Prossimamente",
@@ -64,8 +65,8 @@
     "doors": "Apertura porte",
     "categories": "Categorie",
     "about": "Informazioni",
-    "map": "Mappa dei posti",
-    "noMap": "Posti liberi — nessuna mappa dei posti per questo evento.",
+    "map": "Accesso",
+    "noMap": "Indirizzo e piano d’accesso da confermare.",
     "share": "Condividi",
     "organizer": "Organizzato da",
     "tickets": "Biglietti",
@@ -79,7 +80,7 @@
     "datesCount": "{count} date",
     "free": "Gratuito",
     "companionHint": "Fino a {n} per biglietto a pagamento, fino a 16 anni.",
-    "companionNeedsPaid": "Aggiungi prima un biglietto a pagamento (2 posti gratuiti per biglietto)."
+    "companionNeedsPaid": "Aggiungi prima un biglietto a pagamento (2 posti gratuiti per biglietto a pagamento)."
   },
   "portal": {
     "tickets": "Biglietteria",
@@ -200,8 +201,8 @@
   },
   "organizer": {
     "title": "Spazio organizzatore",
-    "hero": "Parliamo del vostro spettacolo",
-    "heroSubtitle": "L’accesso organizzatore non è in self-service. Descrivete cosa volete montare: vi proporremo poi un appuntamento.",
+    "hero": "Avete un evento?",
+    "heroSubtitle": "Contattateci.",
     "createEvent": "Crea un evento",
     "dashboard": "Dashboard",
     "events": "I miei eventi",
@@ -267,7 +268,7 @@
     "organizers": "Organizzatori",
     "help": "Centro assistenza",
     "rights": "Tutti i diritti riservati.",
-    "madeIn": "Realizzato in Svizzera"
+    "madeIn": "Concepito e gestito in Svizzera"
   },
   "auth": {
     "signIn": "Accedi",

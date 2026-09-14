@@ -51,7 +51,7 @@ export function SessionPicker({
               className={cn(
                 "flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition-colors",
                 selected
-                  ? "border-primary bg-primary/5"
+                  ? "border-primary bg-primary text-primary-foreground"
                   : "border-border hover:bg-secondary",
                 soldOut && "opacity-60",
               )}
@@ -60,7 +60,14 @@ export function SessionPicker({
                 <span className="block truncate font-medium">
                   {formatDate(s.startsAt, `${locale}-CH`)}
                 </span>
-                <span className="block truncate text-sm text-muted-foreground">
+                <span
+                  className={cn(
+                    "block truncate text-sm",
+                    selected
+                      ? "text-primary-foreground/85"
+                      : "text-muted-foreground",
+                  )}
+                >
                   {s.label ? `${t(s.label, locale)} · ` : ""}
                   {s.venue ? s.venue.name : ""}
                 </span>

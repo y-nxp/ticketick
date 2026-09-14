@@ -23,6 +23,7 @@
     "heroSubtitle": "Concerts, théâtre, festivals, humour et bien plus. Réservez vos billets en quelques secondes.",
     "heroCta": "Découvrir les spectacles",
     "heroSecondary": "Comment ça marche",
+    "payments": "PostFinance, Stripe, PayPal",
     "sectionAll": "Tous les spectacles",
     "sectionFeatured": "À l'affiche",
     "sectionUpcoming": "Prochainement",
@@ -64,8 +65,8 @@
     "doors": "Ouverture des portes",
     "categories": "Catégories",
     "about": "À propos",
-    "map": "Plan de salle",
-    "noMap": "Placement libre — aucun plan de salle pour cet événement.",
+    "map": "Accès",
+    "noMap": "Adresse et plan d’accès à confirmer.",
     "share": "Partager",
     "organizer": "Organisé par",
     "tickets": "Billets",
@@ -79,7 +80,7 @@
     "datesCount": "{count} dates",
     "free": "Gratuit",
     "companionHint": "Jusqu’à {n} par billet payant, jusqu’à 16 ans révolus.",
-    "companionNeedsPaid": "Ajoutez d’abord un billet payant (2 places gratuites par billet)."
+    "companionNeedsPaid": "Ajoutez d’abord un billet payant (2 places gratuites par billet payant)."
   },
   "portal": {
     "tickets": "Billetterie",
@@ -200,8 +201,8 @@
   },
   "organizer": {
     "title": "Espace organisateur",
-    "hero": "Parlons de votre spectacle",
-    "heroSubtitle": "Les accès organisateur ne s’ouvrent pas tout seuls. Décrivez ce que vous voulez monter : nous vous proposons ensuite un créneau de rendez-vous.",
+    "hero": "Avez-vous un événement ?",
+    "heroSubtitle": "Contactez-nous.",
     "createEvent": "Créer un événement",
     "dashboard": "Tableau de bord",
     "events": "Mes événements",
@@ -267,7 +268,7 @@
     "organizers": "Organisateurs",
     "help": "Centre d'aide",
     "rights": "Tous droits réservés.",
-    "madeIn": "Conçu en Suisse"
+    "madeIn": "Conçu et opéré en Suisse"
   },
   "auth": {
     "signIn": "Se connecter",

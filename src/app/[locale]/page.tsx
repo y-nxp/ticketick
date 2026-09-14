@@ -75,7 +75,7 @@ export default async function HomePage({
             <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2">
                 <ShieldCheck className="size-4 text-[var(--success)]" />
-                Stripe & IBAN
+                {t("payments")}
               </span>
               <span className="inline-flex items-center gap-2">
                 <Mail className="size-4 text-primary" />

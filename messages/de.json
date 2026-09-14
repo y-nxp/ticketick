@@ -23,6 +23,7 @@
     "heroSubtitle": "Konzerte, Theater, Festivals, Comedy und mehr. Buchen Sie Ihre Tickets in Sekunden.",
     "heroCta": "Veranstaltungen entdecken",
     "heroSecondary": "So funktioniert's",
+    "payments": "PostFinance, Stripe, PayPal",
     "sectionAll": "Alle Veranstaltungen",
     "sectionFeatured": "Empfohlen",
     "sectionUpcoming": "Demnächst",
@@ -64,8 +65,8 @@
     "doors": "Einlass",
     "categories": "Kategorien",
     "about": "Über",
-    "map": "Saalplan",
-    "noMap": "Freie Platzwahl — kein Saalplan für diese Veranstaltung.",
+    "map": "Anfahrt",
+    "noMap": "Adresse und Anfahrt noch zu bestätigen.",
     "share": "Teilen",
     "organizer": "Organisiert von",
     "tickets": "Tickets",
@@ -79,7 +80,7 @@
     "datesCount": "{count} Termine",
     "free": "Gratis",
     "companionHint": "Bis zu {n} pro bezahltes Ticket, bis 16 Jahre.",
-    "companionNeedsPaid": "Zuerst ein bezahltes Ticket hinzufügen (2 Freikarten pro Ticket)."
+    "companionNeedsPaid": "Zuerst ein bezahltes Ticket hinzufügen (2 Freikarten pro bezahltes Ticket)."
   },
   "portal": {
     "tickets": "Ticketverkauf",
@@ -200,8 +201,8 @@
   },
   "organizer": {
     "title": "Veranstalterbereich",
-    "hero": "Sprechen wir über Ihre Veranstaltung",
-    "heroSubtitle": "Der Veranstalterzugang ist kein Selbstbedienungsangebot. Beschreiben Sie, was Sie planen: danach schlagen wir Ihnen einen Termin vor.",
+    "hero": "Haben Sie eine Veranstaltung?",
+    "heroSubtitle": "Kontaktieren Sie uns.",
     "createEvent": "Veranstaltung erstellen",
     "dashboard": "Dashboard",
     "events": "Meine Veranstaltungen",
@@ -267,7 +268,7 @@
     "organizers": "Veranstalter",
     "help": "Hilfezentrum",
     "rights": "Alle Rechte vorbehalten.",
-    "madeIn": "Hergestellt in der Schweiz"
+    "madeIn": "Konzipiert und betrieben in der Schweiz"
   },
   "auth": {
     "signIn": "Anmelden",

@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
-import { ContentPage } from "@/components/layout/content-page";
+import { LegalPage } from "@/components/layout/legal-page";
+import { privacyCopy } from "@/lib/legal/copy";
 
 const titles: Record<string, string> = {
   fr: "Confidentialité",
@@ -15,5 +16,10 @@ export default async function PrivacyPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <ContentPage title={titles[locale] ?? titles.fr} />;
+  return (
+    <LegalPage
+      title={titles[locale] ?? titles.fr}
+      doc={privacyCopy(locale)}
+    />
+  );
 }

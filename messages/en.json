@@ -23,6 +23,7 @@
     "heroSubtitle": "Concerts, theatre, festivals, comedy and more. Book your tickets in seconds.",
     "heroCta": "Explore events",
     "heroSecondary": "How it works",
+    "payments": "PostFinance, Stripe, PayPal",
     "sectionAll": "All events",
     "sectionFeatured": "Featured",
     "sectionUpcoming": "Coming up",
@@ -64,8 +65,8 @@
     "doors": "Doors open",
     "categories": "Categories",
     "about": "About",
-    "map": "Seating map",
-    "noMap": "Free seating — no seating map for this event.",
+    "map": "Access",
+    "noMap": "Address and access map to be confirmed.",
     "share": "Share",
     "organizer": "Organized by",
     "tickets": "Tickets",
@@ -79,7 +80,7 @@
     "datesCount": "{count} dates",
     "free": "Free",
     "companionHint": "Up to {n} per paying ticket, 16 and under.",
-    "companionNeedsPaid": "Add a paying ticket first (2 free seats per ticket)."
+    "companionNeedsPaid": "Add a paying ticket first (2 free seats per paying ticket)."
   },
   "portal": {
     "tickets": "Tickets",
@@ -200,8 +201,8 @@
   },
   "organizer": {
     "title": "Organizer space",
-    "hero": "Let’s talk about your show",
-    "heroSubtitle": "Organizer access is not self-service. Tell us what you want to put on: we will then send you a meeting slot.",
+    "hero": "Do you have an event?",
+    "heroSubtitle": "Get in touch.",
     "createEvent": "Create an event",
     "dashboard": "Dashboard",
     "events": "My events",
@@ -267,7 +268,7 @@
     "organizers": "Organizers",
     "help": "Help center",
     "rights": "All rights reserved.",
-    "madeIn": "Made in Switzerland"
+    "madeIn": "Designed and operated in Switzerland"
   },
   "auth": {
     "signIn": "Sign in",

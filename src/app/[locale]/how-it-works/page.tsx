@@ -11,7 +11,7 @@ const content = {
     steps: [
       { t: "Trouvez", d: "Parcourez les spectacles et filtrez par catégorie, ville ou date." },
       { t: "Choisissez", d: "Sélectionnez vos billets et ajoutez-les au panier." },
-      { t: "Payez", d: "Réglez par carte (PostFinance Checkout) ou par virement IBAN." },
+      { t: "Payez", d: "Réglez par PostFinance, Stripe ou PayPal." },
       { t: "Recevez", d: "Vos billets arrivent directement dans votre boîte e-mail." },
     ],
   },
@@ -22,7 +22,7 @@ const content = {
     steps: [
       { t: "Find", d: "Browse events and filter by category, city or date." },
       { t: "Choose", d: "Select your tickets and add them to the cart." },
-      { t: "Pay", d: "Pay by card (PostFinance Checkout) or bank transfer (IBAN)." },
+      { t: "Pay", d: "Pay with PostFinance, Stripe or PayPal." },
       { t: "Receive", d: "Your tickets arrive directly in your inbox." },
     ],
   },
@@ -33,7 +33,7 @@ const content = {
     steps: [
       { t: "Finden", d: "Stöbern Sie und filtern Sie nach Kategorie, Stadt oder Datum." },
       { t: "Wählen", d: "Wählen Sie Ihre Tickets und legen Sie sie in den Warenkorb." },
-      { t: "Bezahlen", d: "Zahlen Sie per Karte (PostFinance Checkout) oder Überweisung (IBAN)." },
+      { t: "Bezahlen", d: "Zahlen Sie mit PostFinance, Stripe oder PayPal." },
       { t: "Erhalten", d: "Ihre Tickets kommen direkt in Ihr Postfach." },
     ],
   },
@@ -44,7 +44,7 @@ const content = {
     steps: [
       { t: "Trova", d: "Esplora e filtra per categoria, città o data." },
       { t: "Scegli", d: "Seleziona i biglietti e aggiungili al carrello." },
-      { t: "Paga", d: "Paga con carta (PostFinance Checkout) o bonifico (IBAN)." },
+      { t: "Paga", d: "Paga con PostFinance, Stripe o PayPal." },
       { t: "Ricevi", d: "I biglietti arrivano direttamente nella tua casella e-mail." },
     ],
   },

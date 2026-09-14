@@ -38,10 +38,6 @@ export function TicketSelector({
     0,
   );
   const totalCount = Object.values(qty).reduce((a, b) => a + b, 0);
-  const paidCount = session.ticketTypes.reduce((sum, tt) => {
-    if (tt.maxPerPaidTicket != null || tt.priceCents <= 0) return sum;
-    return sum + (qty[tt.id] ?? 0);
-  }, 0);
 
   function maxFor(tt: TicketType, current: Record<string, number>) {
     const resteTarif = Math.max(0, tt.quantity - tt.sold);
@@ -128,7 +124,6 @@ export function TicketSelector({
             qty={qty[tt.id] ?? 0}
             onChange={(n) => setQuantity(tt.id, n)}
             max={maxFor(tt, qty)}
-            paidCount={paidCount}
           />
         ))}
       </div>
@@ -176,26 +171,23 @@ function TicketRow({
   qty,
   onChange,
   max,
-  paidCount,
 }: {
   ticket: TicketType;
   locale: string;
   qty: number;
   onChange: (n: number) => void;
   max: number;
-  paidCount: number;
 }) {
   const te = useTranslations("event");
   const remaining = ticket.quantity - ticket.sold;
   const soldOut = remaining <= 0;
-  const hint =
-    ticket.maxPerPaidTicket != null
-      ? paidCount === 0
-        ? te("companionNeedsPaid")
-        : te("companionHint", { n: ticket.maxPerPaidTicket })
-      : ticket.description
-        ? t(ticket.description, locale)
-        : null;
+  const atCompanionMax =
+    ticket.maxPerPaidTicket != null && qty > 0 && qty >= max;
+  const hint = atCompanionMax
+    ? te("companionNeedsPaid")
+    : ticket.maxPerPaidTicket == null && ticket.description
+      ? t(ticket.description, locale)
+      : null;
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
