@@ -1,29 +1,24 @@
 import "server-only";
 
 import { envoyer, echapper, type MailAttachment } from "@/lib/email";
-import { prisma } from "@/lib/prisma";
 import { publicAppOrigin } from "@/lib/app-url";
 import { ticketQrPng } from "@/lib/tickets/qr";
 import { buildTicketsPdf } from "@/lib/tickets/pdf";
-import { ticketPdfPath } from "@/lib/tickets/download";
-
-export interface TicketForMail {
-  code: string;
-  eventTitle: string;
-  ticketName: string;
-  when: string;
-  venue: string;
-  organizerName?: string;
-  holderName?: string;
-}
+import { paidOrderForMail, ticketPdfPath } from "@/lib/tickets/download";
+import {
+  formatTicketPrice,
+  readPublicFile,
+  toTicketCard,
+  type TicketCard,
+} from "@/lib/tickets/payload";
 
 export async function sendTicketCards(input: {
   to: string;
   bcc?: string[];
-  firstName: string;
+  buyerName: string;
   reference: string;
   locale: string;
-  tickets: TicketForMail[];
+  tickets: TicketCard[];
   preview?: boolean;
 }) {
   const attachments: MailAttachment[] = await Promise.all(
@@ -35,61 +30,102 @@ export async function sendTicketCards(input: {
     })),
   );
 
-  const pdfCards = input.tickets.map((ticket) => ({
-    code: ticket.code,
-    eventTitle: ticket.eventTitle,
-    organizerName: ticket.organizerName,
-    ticketName: ticket.ticketName,
-    when: ticket.when,
-    venue: ticket.venue,
-    holderName: ticket.holderName || input.firstName,
-    reference: input.reference,
-  }));
+  const logoUrl = input.tickets[0]?.organizerLogoUrl;
+  const logo = await readPublicFile(logoUrl);
+  if (logo && logoUrl) {
+    attachments.push({
+      filename: "organisateur.png",
+      content: logo,
+      cid: "org-logo",
+      contentType: logoUrl.endsWith(".jpg") ? "image/jpeg" : "image/png",
+    });
+  }
+
   attachments.push({
     filename: `billets-${input.reference}.pdf`,
-    content: await buildTicketsPdf(pdfCards, input.locale),
+    content: await buildTicketsPdf(input.tickets, input.locale),
     contentType: "application/pdf",
   });
 
   const t = textes(input.locale);
-  const titre = input.preview ? t.apercuSujet : t.sujet(input.reference);
+  const titre = input.preview ? t.apercuSujet : t.sujet;
+  const totalCents = input.tickets.reduce((sum, ticket) => sum + ticket.priceCents, 0);
+  const totalLabel = formatTicketPrice(totalCents, input.locale);
+  const downloadHref = `${publicAppOrigin()}${ticketPdfPath(input.reference)}`;
+
+  const recapRows = input.tickets
+    .map(
+      (ticket) => `<tr>
+        <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;vertical-align:top">
+          <p style="margin:0;font-weight:700">${echapper(ticket.eventTitle)}</p>
+          <p style="margin:4px 0 0;font-size:13px;color:#4b5563">${echapper(ticket.when)}<br>${echapper(ticket.venueInline)}</p>
+        </td>
+        <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;vertical-align:top">${echapper(ticket.ticketName)}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #e5e7eb;vertical-align:top;text-align:right;white-space:nowrap;font-weight:600">${echapper(ticket.priceLabel)}</td>
+      </tr>`,
+    )
+    .join("");
 
   const cartes = input.tickets
-    .map((ticket, index) => carteHtml(ticket, `qr-${index}`))
+    .map((ticket, index) => carteHtml(ticket, `qr-${index}`, t, Boolean(logo)))
     .join("");
 
   const html = `<!DOCTYPE html>
 <html lang="${echapper(input.locale)}">
+<head><meta charset="utf-8"/></head>
 <body style="margin:0;padding:24px;background:#F8F9FA;font-family:Inter,system-ui,sans-serif;color:#2A2C30">
-  <div style="max-width:560px;margin:0 auto">
+  <div style="max-width:600px;margin:0 auto">
     <p style="margin:0 0 4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6C5CE7;font-weight:800">ticketick</p>
-    <h1 style="margin:0 0 16px;font-size:22px">${echapper(titre)}</h1>
-    <p style="margin:0 0 24px;line-height:1.5">${echapper(t.bonjour(input.firstName))} ${echapper(input.preview ? t.apercuCorps : t.corps)} ${echapper(t.pdf)}</p>
+    <h1 style="margin:0 0 8px;font-size:22px">${echapper(titre)}</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:#4b5563">${echapper(t.reference)} ${echapper(input.reference)}</p>
+    <p style="margin:0 0 8px;line-height:1.5">${echapper(t.bonjour(input.buyerName))}</p>
+    <p style="margin:0 0 20px;line-height:1.5">${echapper(input.preview ? t.apercuCorps : t.corps)}</p>
     ${
       input.preview
         ? ""
-        : `<p style="margin:0 0 24px"><a href="${echapper(publicAppOrigin() + ticketPdfPath(input.reference))}" style="color:#6C5CE7;font-weight:600">${echapper(t.pdfLien)}</a></p>`
+        : `<p style="margin:0 0 28px"><a href="${echapper(downloadHref)}" style="display:inline-block;background:#6C5CE7;color:#fff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:10px">${echapper(t.pdfLien)}</a></p>`
     }
+    <h2 style="margin:0 0 8px;font-size:16px">${echapper(t.recap)}</h2>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;border-collapse:collapse">
+      <tr>
+        <th align="left" style="padding:0 0 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280">${echapper(t.colPlace)}</th>
+        <th align="left" style="padding:0 8px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280">${echapper(t.colTarif)}</th>
+        <th align="right" style="padding:0 0 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#6b7280">${echapper(t.colPrix)}</th>
+      </tr>
+      ${recapRows}
+      <tr>
+        <td colspan="2" style="padding:12px 0 0;font-weight:800">${echapper(t.total)}</td>
+        <td style="padding:12px 0 0;text-align:right;font-weight:800">${echapper(totalLabel)}</td>
+      </tr>
+    </table>
     ${cartes}
-    <p style="margin:24px 0 0;font-size:12px;color:#6b7280">${echapper(t.pied)}</p>
+    <p style="margin:24px 0 0;font-size:12px;line-height:1.5;color:#6b7280">${echapper(t.disclaimer)}</p>
+    <p style="margin:16px 0 0;font-size:13px;line-height:1.5">${echapper(t.salutations)}<br>${echapper(t.pied)}</p>
   </div>
 </body>
 </html>`;
 
   const text = [
-    t.bonjour(input.firstName),
+    t.bonjour(input.buyerName),
+    "",
+    `${t.reference} ${input.reference}`,
     "",
     input.preview ? t.apercuCorps : t.corps,
     "",
+    t.recap,
     ...input.tickets.flatMap((ticket) => [
-      ticket.eventTitle,
-      ticket.ticketName,
+      `${ticket.eventTitle} — ${ticket.ticketName} — ${ticket.priceLabel}`,
       ticket.when,
-      ticket.venue,
+      ticket.venueInline,
+      ticket.holderName,
       ticket.code,
       "",
     ]),
-    "ticketick.ch",
+    `${t.total} ${totalLabel}`,
+    "",
+    t.disclaimer,
+    "",
+    t.pied,
   ].join("\n");
 
   return envoyer({
@@ -105,113 +141,93 @@ export async function sendTicketCards(input: {
 
 /** Envoie les billets d'une commande payée, avec copie à l'organisateur. */
 export async function sendPaidOrderTickets(orderId: string) {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    select: {
-      email: true,
-      firstName: true,
-      lastName: true,
-      reference: true,
-      locale: true,
-      tickets: {
-        orderBy: { createdAt: "asc" },
-        select: {
-          code: true,
-          ticketType: {
-            select: {
-              name: true,
-              session: {
-                select: {
-                  startsAt: true,
-                  venue: { select: { name: true, city: true } },
-                  event: {
-                    select: {
-                      title: true,
-                      organizer: { select: { name: true, notifyEmails: true } },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!order || order.tickets.length === 0) return;
-
-  const tickets = order.tickets.map((ticket) => {
-    const session = ticket.ticketType.session;
-    return {
-      code: ticket.code,
-      eventTitle: readTitle(session.event.title, order.locale),
-      organizerName: session.event.organizer.name,
-      ticketName: readTitle(ticket.ticketType.name, order.locale),
-      when: formatWhen(session.startsAt, order.locale),
-      venue: [session.venue?.name, session.venue?.city]
-        .filter(Boolean)
-        .join(", "),
-      holderName: `${order.firstName} ${order.lastName}`.trim(),
-    };
-  });
-
-  const copies = [
-    ...new Set(
-      order.tickets.flatMap(
-        (ticket) => ticket.ticketType.session.event.organizer.notifyEmails,
-      ),
-    ),
-  ].filter((adresse) => adresse !== order.email);
-
+  const order = await paidOrderForMail(orderId);
+  if (!order) return;
   await sendTicketCards({
     to: order.email,
-    bcc: copies,
-    firstName: order.firstName,
+    bcc: order.notifyEmails.filter((adresse) => adresse !== order.email),
+    buyerName: order.buyerName,
     reference: order.reference,
     locale: order.locale,
-    tickets,
+    tickets: order.cards,
   });
 }
 
 export async function sendPreviewTicketEmail(to: string) {
+  const locale = "fr";
+  const venue = {
+    name: "Abbaye de Bonmont",
+    address: "Route de Bonmont 31",
+    zip: "1275",
+    city: "Chéserex",
+  };
+  const startsAt = new Date("2026-11-15T16:00:00+01:00");
+  const doorsAt = new Date("2026-11-15T15:30:00+01:00");
   return sendTicketCards({
     to,
-    firstName: "Yann",
+    buyerName: "Yann Durukan",
     reference: "APERCU-DEMO",
-    locale: "fr",
+    locale,
     preview: true,
     tickets: [
-      {
+      toTicketCard({
         code: "APERCU-DEMO-0001",
-        eventTitle: "Beethoven — Messe en ut & Fantaisie chorale",
+        eventTitle: {
+          fr: "Beethoven — Messe en ut & Fantaisie chorale",
+        },
+        ticketName: { fr: "Plein tarif" },
         organizerName: "Chœur Cantabile",
-        ticketName: "Plein tarif",
-        when: "dimanche 15 novembre 2026, 17:00",
-        venue: "Abbaye de Bonmont, Chéserex",
-        holderName: "Yann",
-      },
-      {
+        organizerLogoUrl: "/partners/choeur-cantabile/logo.png",
+        startsAt,
+        doorsAt,
+        venue,
+        holderName: "Yann Durukan",
+        reference: "APERCU-DEMO",
+        priceCents: 3500,
+        locale,
+      }),
+      toTicketCard({
         code: "APERCU-DEMO-0002",
-        eventTitle: "Beethoven — Messe en ut & Fantaisie chorale",
+        eventTitle: {
+          fr: "Beethoven — Messe en ut & Fantaisie chorale",
+        },
+        ticketName: { fr: "Gratuit — jusqu’à 16 ans" },
         organizerName: "Chœur Cantabile",
-        ticketName: "Gratuit — jusqu’à 16 ans",
-        when: "dimanche 15 novembre 2026, 17:00",
-        venue: "Abbaye de Bonmont, Chéserex",
-        holderName: "Yann",
-      },
+        organizerLogoUrl: "/partners/choeur-cantabile/logo.png",
+        startsAt,
+        doorsAt,
+        venue,
+        holderName: "Yann Durukan",
+        reference: "APERCU-DEMO",
+        priceCents: 0,
+        locale,
+      }),
     ],
   });
 }
 
-function carteHtml(ticket: TicketForMail, cid: string): string {
+function carteHtml(
+  ticket: TicketCard,
+  cid: string,
+  t: ReturnType<typeof textes>,
+  hasLogo: boolean,
+): string {
+  const adresse = ticket.venueLines.map((line) => echapper(line)).join("<br>");
   return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 16px;border:1px solid #e5e7eb;border-radius:16px;background:#fff">
   <tr>
     <td style="padding:20px 20px 8px">
-      <p style="margin:0 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6C5CE7;font-weight:700">Billet</p>
+      ${
+        hasLogo
+          ? `<img src="cid:org-logo" alt="${echapper(ticket.organizerName)}" height="48" style="display:block;height:48px;width:auto;border:0;margin:0 0 12px"/>`
+          : ""
+      }
+      <p style="margin:0 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6C5CE7;font-weight:700">${echapper(ticket.organizerName)}</p>
       <p style="margin:0 0 8px;font-size:18px;font-weight:800;line-height:1.3">${echapper(ticket.eventTitle)}</p>
-      <p style="margin:0;font-size:14px">${echapper(ticket.ticketName)}</p>
-      <p style="margin:8px 0 0;font-size:13px;color:#4b5563">${echapper(ticket.when)}<br>${echapper(ticket.venue)}</p>
+      <p style="margin:0;font-size:14px;font-weight:600">${echapper(ticket.ticketName)} · ${echapper(ticket.priceLabel)}</p>
+      <p style="margin:8px 0 0;font-size:13px;color:#4b5563">${echapper(ticket.when)}</p>
+      <p style="margin:8px 0 0;font-size:13px;color:#4b5563">${adresse}</p>
+      <p style="margin:8px 0 0;font-size:13px">${echapper(t.holder)} ${echapper(ticket.holderName)}</p>
+      <p style="margin:4px 0 0;font-size:13px;color:#4b5563">${echapper(ticket.seating)}</p>
     </td>
   </tr>
   <tr>
@@ -226,69 +242,85 @@ function carteHtml(ticket: TicketForMail, cid: string): string {
 function textes(locale: string) {
   const pack = {
     fr: {
-      sujet: (ref: string) => `Vos billets — ${ref}`,
+      sujet: "Votre commande ticketick.ch : vos billets",
       apercuSujet: "Aperçu — billet ticketick",
-      bonjour: (prenom: string) => `Bonjour ${prenom},`,
-      corps: "Présentez le QR à l’entrée. Chaque billet n’est valable qu’une fois.",
-      pdf: "Un PDF imprimable est joint (un billet par page, numéroté).",
-      pdfLien: "Télécharger / imprimer le PDF",
+      bonjour: (nom: string) => `Bonjour ${nom},`,
+      corps: "Merci pour votre commande. Présentez le QR à l’entrée : chaque billet n’est valable qu’une fois.",
+      pdfLien: "Télécharger vos billets",
       apercuCorps:
         "Ceci est un aperçu : le QR n’ouvre aucune porte. Voici le rendu envoyé à l’acheteur.",
-      pied: "ticketick.ch — billetterie suisse",
+      reference: "Votre référence :",
+      recap: "Récapitulatif de votre commande",
+      colPlace: "Place",
+      colTarif: "Tarif",
+      colPrix: "Prix",
+      total: "Total",
+      holder: "Titulaire :",
+      disclaimer:
+        "Ce billet ne peut être ni annulé, ni repris, ni échangé, ni remboursé. Il est interdit de présenter plusieurs exemplaires d’un même billet à l’entrée d’une manifestation, de modifier le billet ou de l’imiter. Conditions générales : ticketick.ch/terms",
+      salutations: "Avec nos remerciements et nos meilleures salutations,",
+      pied: "L’équipe ticketick.ch",
     },
     en: {
-      sujet: (ref: string) => `Your tickets — ${ref}`,
+      sujet: "Your ticketick.ch order: your tickets",
       apercuSujet: "Preview — ticketick ticket",
-      bonjour: (prenom: string) => `Hello ${prenom},`,
-      corps: "Show the QR code at the entrance. Each ticket is valid once.",
-      pdf: "A printable PDF is attached (one numbered ticket per page).",
-      pdfLien: "Download / print the PDF",
+      bonjour: (nom: string) => `Hello ${nom},`,
+      corps: "Thank you for your order. Show the QR at the entrance: each ticket is valid once.",
+      pdfLien: "Download your tickets",
       apercuCorps:
         "This is a preview: the QR code will not admit anyone. This is what the buyer receives.",
-      pied: "ticketick.ch — Swiss ticketing",
+      reference: "Your reference:",
+      recap: "Order summary",
+      colPlace: "Seat",
+      colTarif: "Tariff",
+      colPrix: "Price",
+      total: "Total",
+      holder: "Holder:",
+      disclaimer:
+        "This ticket cannot be cancelled, taken back, exchanged or refunded. Presenting several copies of the same ticket, altering or counterfeiting it is forbidden. Terms: ticketick.ch/terms",
+      salutations: "With our thanks and best regards,",
+      pied: "The ticketick.ch team",
     },
     de: {
-      sujet: (ref: string) => `Ihre Tickets — ${ref}`,
+      sujet: "Ihre Bestellung auf ticketick.ch: Ihre Tickets",
       apercuSujet: "Vorschau — ticketick-Ticket",
-      bonjour: (prenom: string) => `Guten Tag ${prenom},`,
-      corps: "Zeigen Sie den QR-Code am Eingang. Jedes Ticket gilt nur einmal.",
-      pdf: "Ein druckbares PDF ist angehängt (ein nummeriertes Ticket pro Seite).",
-      pdfLien: "PDF herunterladen / drucken",
+      bonjour: (nom: string) => `Guten Tag ${nom},`,
+      corps: "Danke für Ihre Bestellung. Zeigen Sie den QR-Code am Eingang: jedes Ticket gilt nur einmal.",
+      pdfLien: "Tickets herunterladen",
       apercuCorps:
         "Dies ist eine Vorschau: Der QR-Code öffnet keine Tür. So sieht die Nachricht an die Käuferin oder den Käufer aus.",
-      pied: "ticketick.ch — Schweizer Ticketing",
+      reference: "Ihre Referenz:",
+      recap: "Bestellübersicht",
+      colPlace: "Platz",
+      colTarif: "Tarif",
+      colPrix: "Preis",
+      total: "Total",
+      holder: "Inhaber:",
+      disclaimer:
+        "Dieses Ticket kann weder storniert, zurückgenommen, umgetauscht noch erstattet werden. Mehrere Exemplare desselben Tickets vorzuzeigen, es zu ändern oder nachzumachen ist verboten. AGB: ticketick.ch/terms",
+      salutations: "Mit bestem Dank und freundlichen Grüssen,",
+      pied: "Das Team von ticketick.ch",
     },
     it: {
-      sujet: (ref: string) => `I tuoi biglietti — ${ref}`,
+      sujet: "Il vostro ordine ticketick.ch: i biglietti",
       apercuSujet: "Anteprima — biglietto ticketick",
-      bonjour: (prenom: string) => `Buongiorno ${prenom},`,
-      corps: "Mostra il QR all’ingresso. Ogni biglietto è valido una sola volta.",
-      pdf: "In allegato un PDF da stampare (un biglietto numerato per pagina).",
-      pdfLien: "Scarica / stampa il PDF",
+      bonjour: (nom: string) => `Buongiorno ${nom},`,
+      corps: "Grazie per l’ordine. Mostrate il QR all’ingresso: ogni biglietto è valido una sola volta.",
+      pdfLien: "Scaricare i biglietti",
       apercuCorps:
         "Questa è un’anteprima: il QR non apre nessun ingresso. Ecco cosa riceve chi acquista.",
-      pied: "ticketick.ch — biglietteria svizzera",
+      reference: "Il vostro riferimento:",
+      recap: "Riepilogo dell’ordine",
+      colPlace: "Posto",
+      colTarif: "Tariffa",
+      colPrix: "Prezzo",
+      total: "Totale",
+      holder: "Intestatario:",
+      disclaimer:
+        "Questo biglietto non può essere annullato, ripreso, cambiato o rimborsato. È vietato presentare più copie dello stesso biglietto, modificarlo o imitarlo. Condizioni: ticketick.ch/terms",
+      salutations: "Con i nostri ringraziamenti e i migliori saluti,",
+      pied: "Il team ticketick.ch",
     },
   } as const;
   return pack[locale as keyof typeof pack] ?? pack.fr;
-}
-
-function formatWhen(date: Date, locale: string): string {
-  return new Intl.DateTimeFormat(`${locale}-CH`, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
-function readTitle(value: unknown, locale: string): string {
-  if (value && typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    const hit = record[locale] ?? record.fr ?? Object.values(record)[0];
-    if (typeof hit === "string") return hit;
-  }
-  return "";
 }

@@ -1,23 +1,17 @@
 import "server-only";
 
-import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { ticketQrPng } from "@/lib/tickets/qr";
+import { pdfSafe, readPublicFile, type TicketCard } from "@/lib/tickets/payload";
+
+export type TicketPdfCard = TicketCard;
 
 const VIOLET = rgb(108 / 255, 92 / 255, 231 / 255);
 const INK = rgb(42 / 255, 44 / 255, 48 / 255);
 const MUTED = rgb(107 / 255, 114 / 255, 128 / 255);
 const RULE = rgb(229 / 255, 231 / 255, 235 / 255);
-
-export interface TicketPdfCard {
-  code: string;
-  eventTitle: string;
-  organizerName?: string;
-  ticketName: string;
-  when: string;
-  venue: string;
-  holderName: string;
-  reference: string;
-}
+const PAPER = rgb(1, 1, 1);
+const WASH = rgb(248 / 255, 249 / 255, 250 / 255);
 
 export async function buildTicketsPdf(
   tickets: TicketPdfCard[],
@@ -32,82 +26,99 @@ export async function buildTicketsPdf(
   for (const [index, ticket] of tickets.entries()) {
     const page = doc.addPage([595.28, 841.89]);
     const { width, height } = page.getSize();
-    const margin = 48;
+    const margin = 42;
+    const contentW = width - margin * 2;
     let y = height - margin;
 
-    page.drawText("ticketick", {
-      x: margin,
+    page.drawRectangle({
+      x: 0,
+      y: 0,
+      width,
+      height,
+      color: PAPER,
+    });
+
+    const logoBytes = await readPublicFile(ticket.organizerLogoUrl);
+    let logoHeight = 36;
+    if (logoBytes) {
+      const logo = await embedImage(doc, logoBytes, ticket.organizerLogoUrl);
+      const logoH = 56;
+      const logoW = Math.min((logo.width / logo.height) * logoH, 220);
+      page.drawImage(logo, {
+        x: margin,
+        y: y - logoH + 10,
+        width: logoW,
+        height: logoH,
+      });
+      logoHeight = logoH;
+    } else if (ticket.organizerName) {
+      page.drawText(pdfSafe(ticket.organizerName), {
+        x: margin,
+        y: y - 8,
+        size: 14,
+        font: bold,
+        color: INK,
+      });
+    }
+
+    const brand = "ticketick";
+    page.drawText(brand, {
+      x: width - margin - bold.widthOfTextAtSize(brand, 13),
       y,
-      size: 16,
+      size: 13,
       font: bold,
       color: VIOLET,
     });
-    page.drawText(copy.nOf(index + 1, total), {
-      x: width - margin - bold.widthOfTextAtSize(copy.nOf(index + 1, total), 12),
-      y: y + 2,
-      size: 12,
-      font: bold,
-      color: INK,
+    const nOf = pdfSafe(copy.nOf(index + 1, total));
+    page.drawText(nOf, {
+      x: width - margin - regular.widthOfTextAtSize(nOf, 10),
+      y: y - 16,
+      size: 10,
+      font: regular,
+      color: MUTED,
     });
 
-    y -= 18;
+    y -= logoHeight + 18;
     page.drawRectangle({
       x: margin,
       y,
-      width: width - margin * 2,
-      height: 3,
+      width: contentW,
+      height: 2.5,
       color: VIOLET,
     });
 
-    y -= 36;
+    y -= 28;
     if (ticket.organizerName) {
-      page.drawText(ticket.organizerName.toUpperCase(), {
+      page.drawText(pdfSafe(ticket.organizerName.toUpperCase()), {
         x: margin,
         y,
-        size: 10,
+        size: 9,
         font: bold,
         color: VIOLET,
       });
-      y -= 22;
+      y -= 18;
     }
 
-    y = drawWrapped(page, ticket.eventTitle, {
+    y = drawWrapped(page, pdfSafe(ticket.eventTitle), {
       x: margin,
       y,
-      maxWidth: width - margin * 2,
-      size: 22,
+      maxWidth: contentW,
+      size: 20,
       font: bold,
       color: INK,
-      lineHeight: 26,
+      lineHeight: 24,
     });
 
-    y -= 18;
-    page.drawText(ticket.ticketName, {
-      x: margin,
-      y,
-      size: 14,
-      font: bold,
-      color: INK,
-    });
-
-    y -= 28;
-    page.drawText(ticket.when, {
+    y -= 8;
+    page.drawText(pdfSafe(ticket.when), {
       x: margin,
       y,
       size: 12,
       font: regular,
-      color: MUTED,
-    });
-    y -= 18;
-    page.drawText(ticket.venue, {
-      x: margin,
-      y,
-      size: 12,
-      font: regular,
-      color: MUTED,
+      color: INK,
     });
 
-    y -= 28;
+    y -= 22;
     page.drawLine({
       start: { x: margin, y },
       end: { x: width - margin, y },
@@ -116,63 +127,175 @@ export async function buildTicketsPdf(
     });
 
     const qr = await doc.embedPng(await ticketQrPng(ticket.code));
-    const qrSize = 200;
-    y -= qrSize + 24;
+    const qrSize = 148;
+    const factsX = margin + qrSize + 24;
+    const factsW = width - margin - factsX;
+    const factsTop = y - 18;
+
     page.drawImage(qr, {
-      x: (width - qrSize) / 2,
-      y,
+      x: margin,
+      y: factsTop - qrSize,
       width: qrSize,
       height: qrSize,
     });
-
-    y -= 22;
-    const codeWidth = bold.widthOfTextAtSize(ticket.code, 13);
+    const codeW = bold.widthOfTextAtSize(ticket.code, 10);
     page.drawText(ticket.code, {
-      x: (width - codeWidth) / 2,
-      y,
-      size: 13,
+      x: margin + (qrSize - codeW) / 2,
+      y: factsTop - qrSize - 16,
+      size: 10,
       font: bold,
       color: INK,
     });
 
-    y -= 36;
-    page.drawText(`${copy.holder}  ${ticket.holderName}`, {
-      x: margin,
-      y,
-      size: 11,
-      font: regular,
-      color: INK,
-    });
-    y -= 16;
-    page.drawText(`${copy.order}  ${ticket.reference}`, {
-      x: margin,
-      y,
-      size: 11,
-      font: regular,
-      color: MUTED,
+    const pairs: [string, string][] = [
+      [copy.start, ticket.startTime],
+      ...(ticket.doorsTime ? [[copy.doors, ticket.doorsTime] as [string, string]] : []),
+      [copy.price, ticket.priceLabel],
+      [copy.tariff, ticket.ticketName],
+      [copy.holder, ticket.holderName],
+      [copy.place, ticket.seating],
+      [copy.order, ticket.reference],
+    ];
+
+    const colGap = 16;
+    const colW = (factsW - colGap) / 2;
+    let fy = factsTop - 2;
+    for (let i = 0; i < pairs.length; i += 2) {
+      const left = pairs[i];
+      const right = pairs[i + 1];
+      const rowH = drawFact(page, left[0], left[1], {
+        x: factsX,
+        y: fy,
+        width: colW,
+        bold,
+      });
+      let rightH = 0;
+      if (right) {
+        rightH = drawFact(page, right[0], right[1], {
+          x: factsX + colW + colGap,
+          y: fy,
+          width: colW,
+          bold,
+        });
+      }
+      fy -= Math.max(rowH, rightH) + 12;
+    }
+
+    y = Math.min(factsTop - qrSize - 28, fy) - 6;
+    page.drawLine({
+      start: { x: margin, y },
+      end: { x: width - margin, y },
+      thickness: 1,
+      color: RULE,
     });
 
-    page.drawText(copy.footer, {
+    y -= 20;
+    page.drawText(pdfSafe(copy.address), {
       x: margin,
-      y: margin,
-      size: 9,
+      y,
+      size: 8,
+      font: bold,
+      color: MUTED,
+    });
+    y -= 14;
+    for (const line of ticket.venueLines) {
+      page.drawText(pdfSafe(line), {
+        x: margin,
+        y,
+        size: 12,
+        font: regular,
+        color: INK,
+      });
+      y -= 16;
+    }
+
+    y -= 6;
+    y = drawWrapped(page, pdfSafe(copy.practical), {
+      x: margin,
+      y,
+      maxWidth: contentW,
+      size: 10,
+      font: regular,
+      color: INK,
+      lineHeight: 13,
+    });
+
+    const footerTop = 78;
+    page.drawRectangle({
+      x: 0,
+      y: 0,
+      width,
+      height: footerTop,
+      color: WASH,
+    });
+    page.drawRectangle({
+      x: 0,
+      y: footerTop,
+      width,
+      height: 2,
+      color: VIOLET,
+    });
+    drawWrapped(page, pdfSafe(copy.disclaimer), {
+      x: margin,
+      y: footerTop - 16,
+      maxWidth: contentW,
+      size: 8,
       font: regular,
       color: MUTED,
+      lineHeight: 11,
     });
   }
 
   return Buffer.from(await doc.save());
 }
 
+function embedImage(doc: PDFDocument, bytes: Buffer, url?: string) {
+  const lower = url?.toLowerCase() ?? "";
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+    return doc.embedJpg(bytes);
+  }
+  return doc.embedPng(bytes);
+}
+
+function drawFact(
+  page: PDFPage,
+  label: string,
+  value: string,
+  opts: {
+    x: number;
+    y: number;
+    width: number;
+    bold: PDFFont;
+  },
+): number {
+  page.drawText(pdfSafe(label), {
+    x: opts.x,
+    y: opts.y,
+    size: 7.5,
+    font: opts.bold,
+    color: MUTED,
+  });
+  const bottom = drawWrapped(page, pdfSafe(value), {
+    x: opts.x,
+    y: opts.y - 13,
+    maxWidth: opts.width,
+    size: 11,
+    font: opts.bold,
+    color: INK,
+    lineHeight: 13,
+  });
+  return opts.y - bottom;
+}
+
 function drawWrapped(
-  page: ReturnType<PDFDocument["addPage"]>,
+  page: PDFPage,
   text: string,
   opts: {
     x: number;
     y: number;
     maxWidth: number;
     size: number;
-    font: Awaited<ReturnType<PDFDocument["embedFont"]>>;
+    font: PDFFont;
     color: ReturnType<typeof rgb>;
     lineHeight: number;
   },
@@ -213,27 +336,62 @@ function labels(locale: string) {
   const pack = {
     fr: {
       nOf: (n: number, total: number) => `Billet ${n} / ${total}`,
-      holder: "Titulaire",
-      order: "Commande",
-      footer: "Présentez ce QR à l’entrée. Chaque billet n’est valable qu’une fois.  ticketick.ch",
+      address: "ADRESSE",
+      start: "DÉBUT",
+      doors: "PORTES",
+      price: "PRIX",
+      tariff: "TARIF",
+      holder: "TITULAIRE",
+      place: "PLACE",
+      order: "COMMANDE",
+      practical:
+        "En cas d'arrivée après le début, l'accès n'est plus garanti.",
+      disclaimer:
+        "Ce billet ne peut être ni annulé, ni repris, ni échangé, ni remboursé. Il est interdit de présenter plusieurs exemplaires d'un même billet à l'entrée d'une manifestation, de modifier le billet ou de l'imiter. Conditions générales : ticketick.ch/terms",
     },
     en: {
       nOf: (n: number, total: number) => `Ticket ${n} / ${total}`,
-      holder: "Holder",
-      order: "Order",
-      footer: "Show this QR at the entrance. Each ticket is valid once.  ticketick.ch",
+      address: "ADDRESS",
+      start: "STARTS",
+      doors: "DOORS",
+      price: "PRICE",
+      tariff: "TARIFF",
+      holder: "HOLDER",
+      place: "SEAT",
+      order: "ORDER",
+      practical: "Admission after the start is no longer guaranteed.",
+      disclaimer:
+        "This ticket cannot be cancelled, taken back, exchanged or refunded. Presenting several copies of the same ticket, altering or counterfeiting it is forbidden. Terms: ticketick.ch/terms",
     },
     de: {
       nOf: (n: number, total: number) => `Ticket ${n} / ${total}`,
-      holder: "Inhaber",
-      order: "Bestellung",
-      footer: "QR-Code am Eingang vorzeigen. Jedes Ticket gilt nur einmal.  ticketick.ch",
+      address: "ADRESSE",
+      start: "BEGINN",
+      doors: "TÜREN",
+      price: "PREIS",
+      tariff: "TARIF",
+      holder: "INHABER",
+      place: "PLATZ",
+      order: "BESTELLUNG",
+      practical:
+        "Bei Ankunft nach Beginn ist der Einlass nicht mehr garantiert.",
+      disclaimer:
+        "Dieses Ticket kann weder storniert, zurückgenommen, umgetauscht noch erstattet werden. Mehrere Exemplare desselben Tickets vorzuzeigen, es zu ändern oder nachzumachen ist verboten. AGB: ticketick.ch/terms",
     },
     it: {
       nOf: (n: number, total: number) => `Biglietto ${n} / ${total}`,
-      holder: "Intestatario",
-      order: "Ordine",
-      footer: "Mostra questo QR all’ingresso. Ogni biglietto è valido una sola volta.  ticketick.ch",
+      address: "INDIRIZZO",
+      start: "INIZIO",
+      doors: "PORTE",
+      price: "PREZZO",
+      tariff: "TARIFFA",
+      holder: "INTESTATARIO",
+      place: "POSTO",
+      order: "ORDINE",
+      practical:
+        "In caso di arrivo dopo l'inizio, l'accesso non è più garantito.",
+      disclaimer:
+        "Questo biglietto non può essere annullato, ripreso, cambiato o rimborsato. È vietato presentare più copie dello stesso biglietto, modificarlo o imitarlo. Condizioni: ticketick.ch/terms",
     },
   } as const;
   return pack[locale as keyof typeof pack] ?? pack.fr;
