@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Cpu, SlidersHorizontal, Handshake } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
+import { InquiryChat } from "@/app/[locale]/organizer/inquiry-chat";
+import { referenceFlyers } from "@/lib/about/references";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata({
@@ -12,7 +15,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "about" });
-  return { title: t("title"), description: t("lead") };
+  return { title: t("title"), description: t("metaDescription") };
 }
 
 export default async function AboutPage({
@@ -48,10 +51,34 @@ export default async function AboutPage({
   ];
   const offerItems = t.raw("offerItems") as string[];
   const fields = t.raw("fields") as string[];
-  const references = t.raw("references") as string[];
+  const faqs = [
+    { q: t("faqSetupQ"), a: t("faqSetupA") },
+    { q: t("faqFeesQ"), a: t("faqFeesA") },
+    { q: t("faqDoorQ"), a: t("faqDoorA") },
+  ];
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "ticketick",
+    url: "https://ticketick.ch",
+    email: "support@ticketick.ch",
+    description: t("metaDescription"),
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Lausanne",
+      addressCountry: "CH",
+    },
+    areaServed: ["CH"],
+  };
 
   return (
     <div className="container-page max-w-4xl py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      />
+
       <h1 className="text-4xl font-bold tracking-tight">{t("title")}</h1>
       <p className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
         {t("lead")}
@@ -59,6 +86,17 @@ export default async function AboutPage({
       <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
         {t("intro")}
       </p>
+      <div className="mt-8 flex flex-wrap gap-3">
+        <a href="#contact-projet" className={cn(buttonVariants({ size: "lg" }))}>
+          {t("ctaDemo")}
+        </a>
+        <a
+          href="#offre"
+          className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
+        >
+          {t("ctaFeatures")}
+        </a>
+      </div>
 
       <dl className="mt-10 grid gap-4 sm:grid-cols-3">
         {stats.map((stat) => (
@@ -103,7 +141,7 @@ export default async function AboutPage({
         </p>
       </section>
 
-      <section className="mt-14">
+      <section id="offre" className="mt-14 scroll-mt-24">
         <h2 className="text-2xl font-semibold tracking-tight">
           {t("offerTitle")}
         </h2>
@@ -140,22 +178,59 @@ export default async function AboutPage({
         <p className="mt-4 leading-relaxed text-muted-foreground">
           {t("referencesIntro")}
         </p>
-        <ul className="mt-4 columns-1 gap-x-8 text-foreground sm:columns-2">
-          {references.map((name) => (
-            <li key={name} className="py-1">
-              {name}
+        <ul className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+          {referenceFlyers.map((flyer) => (
+            <li key={flyer.src}>
+              <figure className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+                <Image
+                  src={flyer.src}
+                  alt={flyer.alt}
+                  width={360}
+                  height={510}
+                  className="aspect-[3/4] w-full object-cover"
+                  sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 140px"
+                />
+              </figure>
             </li>
           ))}
         </ul>
       </section>
 
-      <div className="mt-12 flex flex-wrap gap-3">
-        <Link
-          href="/organizer"
-          className={cn(buttonVariants({ size: "lg" }))}
-        >
-          {t("ctaOrganizer")}
-        </Link>
+      <section className="mt-14">
+        <h2 className="text-2xl font-semibold tracking-tight">
+          {t("faqTitle")}
+        </h2>
+        <dl className="mt-6 space-y-4">
+          {faqs.map((item) => (
+            <div
+              key={item.q}
+              className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+            >
+              <dt className="font-semibold">{item.q}</dt>
+              <dd className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {item.a}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section
+        id="contact-projet"
+        className="mt-14 scroll-mt-24 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8"
+      >
+        <h2 className="text-2xl font-semibold tracking-tight">
+          {t("closeTitle")}
+        </h2>
+        <p className="mt-3 leading-relaxed text-muted-foreground">
+          {t("closeLead")}
+        </p>
+        <div className="mt-6">
+          <InquiryChat />
+        </div>
+      </section>
+
+      <div className="mt-10">
         <Link
           href="/"
           className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
