@@ -147,7 +147,7 @@
     "method_not_allowed": "Questo mezzo di pagamento non è proposto per questi biglietti.",
     "noMethod": "Nessun mezzo di pagamento è aperto per questi biglietti.",
     "canceled": "Pagamento annullato. Il carrello è stato conservato.",
-    "canceledHold": "Pagamento interrotto. I posti restano riservati — il tempo continua a scorrere.",
+    "canceledHold": "Pagamento interrotto. Riprendete prima della fine del tempo indicato.",
     "continueToPayment": "Continuare il pagamento",
     "reserved": "Posti riservati ancora {time}",
     "reservedHint": "Questi posti sono bloccati per voi: nessun altro può prenderli. Dopo 25 minuti tornano in vendita.",

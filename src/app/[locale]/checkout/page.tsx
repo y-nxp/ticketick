@@ -412,8 +412,8 @@ function CheckoutInner() {
               <Loader2 className="size-4 animate-spin" />
               {t("processing")}
             </>
-          ) : holdActive && hold?.checkoutUrl ? (
-            canceled ? t("resumePayment") : t("continueToPayment")
+          ) : holdActive && hold?.checkoutUrl && !canceled ? (
+            t("continueToPayment")
           ) : (
             t("payNow", { amount: formatPrice(total, `${locale}-CH`) })
           )}
@@ -448,7 +448,9 @@ function CheckoutInner() {
               <p className="font-semibold tabular-nums">
                 {t("reserved", { time: formatHoldClock(msLeft) })}
               </p>
-              <p className="text-sm text-muted-foreground">{t("reservedHint")}</p>
+              <p className="text-sm text-muted-foreground">
+                {canceled ? t("canceledHold") : t("reservedHint")}
+              </p>
             </div>
           </div>
           {hold?.checkoutUrl ? (
@@ -462,11 +464,6 @@ function CheckoutInner() {
             </Button>
           ) : null}
         </div>
-      ) : null}
-      {canceled && holdActive ? (
-        <p className="mt-4 rounded-xl bg-warning/15 px-4 py-3 text-sm">
-          {t("canceledHold")}
-        </p>
       ) : null}
       {holdExpired ? (
         <div className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm">
