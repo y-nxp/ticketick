@@ -58,7 +58,7 @@ export const venues: Venue[] = [
 
 const venueById = Object.fromEntries(venues.map((v) => [v.id, v]));
 
-const noBrand = { nav: [] };
+const noBrand = { nav: [], scheme: "light" as const };
 
 export const organizers: Organizer[] = [
   { id: "o-live", slug: "live-nation-ch", name: "Live Nation Suisse", friendsAppEnabled: true, brand: noBrand },
