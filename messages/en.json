@@ -111,6 +111,7 @@
     "checkout": "Proceed to checkout",
     "reserve": "Book",
     "reserveAndPay": "Reserve and pay",
+    "pay": "Pay",
     "viewCart": "View cart",
     "reserveHint": "Seats are only reserved once you start checkout.",
     "continue": "Continue shopping",

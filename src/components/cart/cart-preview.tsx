@@ -127,7 +127,7 @@ export function CartPreview({
           </span>
         </div>
         <Button size="lg" className="w-full" onClick={goCheckout}>
-          {t("reserveAndPay")}
+          {t("pay")}
         </Button>
         <Link
           href="/cart"

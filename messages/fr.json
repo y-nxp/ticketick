@@ -111,6 +111,7 @@
     "checkout": "Passer au paiement",
     "reserve": "Réserver",
     "reserveAndPay": "Réserver et payer",
+    "pay": "Payer",
     "viewCart": "Voir le panier",
     "reserveHint": "Les places ne sont réservées qu’une fois le paiement commencé.",
     "continue": "Continuer mes achats",

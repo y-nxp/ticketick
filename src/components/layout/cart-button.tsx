@@ -16,6 +16,7 @@ export function CartButton({
   const t = useTranslations("nav");
   const { count, addedRevision } = useCart();
   const [open, setOpen] = React.useState(false);
+  const [pinned, setPinned] = React.useState(false);
   const [hoverFine, setHoverFine] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const prevAdded = React.useRef(0);
@@ -30,9 +31,16 @@ export function CartButton({
     return () => mq.removeEventListener("change", sync);
   }, []);
 
+  function close() {
+    window.clearTimeout(leaveTimer.current);
+    setPinned(false);
+    setOpen(false);
+  }
+
   function openPinned() {
     ignoreOutsideUntil.current = Date.now() + 400;
     window.clearTimeout(leaveTimer.current);
+    setPinned(true);
     setOpen(true);
   }
 
@@ -46,11 +54,11 @@ export function CartButton({
   React.useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") close();
     }
     function onPointer(e: PointerEvent) {
       if (Date.now() < ignoreOutsideUntil.current) return;
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+      if (!wrapRef.current?.contains(e.target as Node)) close();
     }
     document.addEventListener("keydown", onKey);
     document.addEventListener("pointerdown", onPointer);
@@ -69,16 +77,17 @@ export function CartButton({
   }
 
   function onMouseLeave() {
-    if (!hoverFine) return;
+    if (!hoverFine || pinned) return;
     if (Date.now() < ignoreOutsideUntil.current) return;
     window.clearTimeout(leaveTimer.current);
     leaveTimer.current = window.setTimeout(() => setOpen(false), 400);
   }
 
   function onTriggerClick(e: React.MouseEvent<HTMLAnchorElement>) {
-    if (hoverFine) return;
+    if (hoverFine && !pinned) return;
     e.preventDefault();
-    setOpen((v) => !v);
+    if (open) close();
+    else openPinned();
   }
 
   return (
@@ -89,11 +98,11 @@ export function CartButton({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        {open && !hoverFine ? (
+        {open && pinned ? (
           <div
-            className="fixed inset-0 z-40 bg-foreground/25"
+            className="fixed inset-0 z-40 bg-foreground/40"
             aria-hidden
-            onClick={() => setOpen(false)}
+            onClick={close}
           />
         ) : null}
         <Link
@@ -119,7 +128,7 @@ export function CartButton({
             className={`fixed inset-x-3 z-50 ${panelOffsetClass} md:absolute md:inset-x-auto md:right-0 md:top-full md:w-[28rem] md:pt-2`}
           >
             <div className="overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
-              <CartPreview onNavigate={() => setOpen(false)} />
+              <CartPreview onNavigate={close} />
             </div>
           </div>
         ) : null}
