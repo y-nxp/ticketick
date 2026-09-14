@@ -119,7 +119,7 @@ export function TicketSelector({
       id="ticket-selector"
       className="scroll-mt-24 rounded-2xl border border-border bg-card p-5 shadow-sm"
     >
-      <h3 className="text-lg font-semibold">{te("selectTickets")}</h3>
+      <h3 className="text-xl font-semibold">{te("selectTickets")}</h3>
       <div className="mt-4 space-y-3">
         {session.ticketTypes.map((tt) => (
           <TicketRow

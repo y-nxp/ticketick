@@ -43,7 +43,7 @@ export function CartPreview({
   }
 
   return (
-    <div className="flex max-h-[min(28rem,70vh)] flex-col">
+    <div className="flex max-h-[min(36rem,80vh)] flex-col">
       <div className="border-b border-border px-4 py-3">
         <p className="font-semibold">{t("title")}</p>
       </div>
@@ -119,7 +119,7 @@ export function CartPreview({
           </li>
         ))}
       </ul>
-      <div className="space-y-2 border-t border-border px-4 py-3">
+      <div className="space-y-2.5 border-t border-border px-4 py-4">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">{t("total")}</span>
           <span className="font-bold">
@@ -132,14 +132,14 @@ export function CartPreview({
         <Link
           href="/cart"
           onClick={onNavigate}
-          className="block text-center text-xs font-medium text-muted-foreground hover:text-foreground"
+          className="block py-1 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           {t("viewCart")}
         </Link>
         <ContinueShopping
           eventSlug={lines[0]?.eventSlug}
           onClick={onNavigate}
-          className="block text-center text-xs font-medium text-muted-foreground hover:text-foreground"
+          className="block py-1 text-center text-sm font-medium text-muted-foreground hover:text-foreground"
         >
           {t("continue")}
         </ContinueShopping>

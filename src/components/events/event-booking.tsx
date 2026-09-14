@@ -15,8 +15,8 @@ import { t, upcomingSessions, type EventItem } from "@/lib/types";
 /**
  * Bloc réservation de la page événement.
  *
- * Le choix de date est en premier (sous l’image) : les lieux diffèrent
- * souvent d’une séance à l’autre. Les tarifs et le plan suivent la séance.
+ * Le titre du spectacle précède le choix de date. Les tarifs et le plan
+ * suivent la séance retenue.
  */
 export function EventBooking({
   event,
@@ -92,8 +92,8 @@ export function EventBooking({
 
   return (
     <div className="space-y-8">
-      {picker}
       {heading ? <div key="event-heading">{heading}</div> : null}
+      {picker}
       <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
         <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
           {tickets}

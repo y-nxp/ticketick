@@ -4,7 +4,6 @@ import * as React from "react";
 import { Lora, Open_Sans } from "next/font/google";
 import { useTranslations } from "next-intl";
 import { Menu, X } from "lucide-react";
-import { Link } from "@/i18n/navigation";
 import { CartButton } from "@/components/layout/cart-button";
 import { organizerThemeStyle } from "@/lib/branding/theme";
 import type { Organizer } from "@/lib/types";
@@ -127,11 +126,7 @@ export function OrganizerShell({
               organizer.name
             )}
           </p>
-          <p>
-            <Link href="/" className="hover:text-[var(--brand-accent)]">
-              {t("poweredBy")}
-            </Link>
-          </p>
+          <p>{t("poweredBy")}</p>
         </div>
       </footer>
     </div>

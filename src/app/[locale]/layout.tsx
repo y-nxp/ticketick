@@ -13,6 +13,8 @@ import {
   AccountNavFallback,
 } from "@/components/layout/account-nav";
 import { themeInitScript } from "@/components/layout/theme";
+import { cookies } from "next/headers";
+import { SHOP_ORIGIN_COOKIE } from "@/lib/shop-origin";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -67,6 +69,9 @@ export default async function LocaleLayout({
             {/* La lecture de session vit sous `Suspense` : le reste de
                 l'en-tête et la page conservent ainsi leur prérendu. */}
             <AppShell
+              shopOrigin={
+                (await cookies()).get(SHOP_ORIGIN_COOKIE)?.value ?? null
+              }
               accountSlot={
                 <Suspense fallback={<AccountNavFallback />}>
                   <AccountNav />

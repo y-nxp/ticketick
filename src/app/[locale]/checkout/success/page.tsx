@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CheckCircle2, FileDown, Printer } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -5,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CartClearer } from "@/components/cart/cart-clearer";
 import { settlePostfinanceOrder } from "@/lib/orders/settle-card";
 import { prisma } from "@/lib/prisma";
+import { parseGoOrigin, SHOP_ORIGIN_COOKIE } from "@/lib/shop-origin";
 import { ticketPdfPath } from "@/lib/tickets/download";
 
 export default async function CheckoutSuccessPage({
@@ -35,6 +37,9 @@ export default async function CheckoutSuccessPage({
     ref && paid?.status === "PAID" && paid._count.tickets > 0
       ? ticketPdfPath(ref)
       : null;
+  const shopHome =
+    parseGoOrigin((await cookies()).get(SHOP_ORIGIN_COOKIE)?.value)?.path ??
+    "/";
 
   return (
     <div className="container-page max-w-2xl py-20 text-center">
@@ -67,7 +72,7 @@ export default async function CheckoutSuccessPage({
           </div>
         </div>
       ) : null}
-      <Link href="/" className="mt-6 inline-block">
+      <Link href={shopHome} className="mt-6 inline-block">
         <Button size="lg" variant={pdfHref ? "outline" : "default"}>
           {t("backHome")}
         </Button>
