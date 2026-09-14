@@ -60,6 +60,7 @@
     "buyTickets": "Prenota",
     "soldOut": "Esaurito",
     "addToCart": "Aggiungi al carrello",
+    "addedToCart": "Aggiunto al carrello",
     "dateAndTime": "Data e ora",
     "location": "Luogo",
     "doors": "Apertura porte",
@@ -107,6 +108,8 @@
     "serviceFee": "Costi di servizio",
     "total": "Totale",
     "checkout": "Vai al pagamento",
+    "reserve": "Prenota",
+    "viewCart": "Vedi il carrello",
     "reserveHint": "I posti sono riservati solo all’inizio del pagamento.",
     "continue": "Continua gli acquisti",
     "session": "Replica"

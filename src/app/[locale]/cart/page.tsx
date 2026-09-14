@@ -42,14 +42,16 @@ export default function CartPage() {
               key={line.ticketTypeId}
               className="flex gap-4 rounded-2xl border border-border bg-card p-4"
             >
-              <div className="relative size-20 shrink-0 overflow-hidden rounded-xl">
-                <Image
-                  src={line.coverImage}
-                  alt={line.eventTitle}
-                  fill
-                  sizes="80px"
-                  className="object-cover"
-                />
+              <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-secondary">
+                {line.coverImage ? (
+                  <Image
+                    src={line.coverImage}
+                    alt={line.eventTitle}
+                    fill
+                    sizes="80px"
+                    className="object-cover"
+                  />
+                ) : null}
               </div>
               <div className="flex min-w-0 flex-1 flex-col">
                 <Link

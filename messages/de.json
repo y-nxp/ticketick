@@ -60,6 +60,7 @@
     "buyTickets": "Jetzt buchen",
     "soldOut": "Ausverkauft",
     "addToCart": "In den Warenkorb",
+    "addedToCart": "In den Warenkorb gelegt",
     "dateAndTime": "Datum & Uhrzeit",
     "location": "Ort",
     "doors": "Einlass",
@@ -107,6 +108,8 @@
     "serviceFee": "Servicegebühr",
     "total": "Gesamt",
     "checkout": "Zur Kasse",
+    "reserve": "Reservieren",
+    "viewCart": "Warenkorb ansehen",
     "reserveHint": "Plätze werden erst an der Kasse reserviert.",
     "continue": "Weiter einkaufen",
     "session": "Vorstellung"

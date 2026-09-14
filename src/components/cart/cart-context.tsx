@@ -27,6 +27,8 @@ interface CartState {
   subtotalCents: number;
   /** `false` tant que localStorage n'a pas été lu : le panier paraît vide. */
   hydrated: boolean;
+  /** Incrémenté à chaque ajout : l'aperçu du panier s'ouvre dessus. */
+  addedRevision: number;
 }
 
 const CartContext = React.createContext<CartState | null>(null);
@@ -37,6 +39,7 @@ const STORAGE_KEY = "ticketick.cart.v2";
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = React.useState<CartLine[]>([]);
   const [hydrated, setHydrated] = React.useState(false);
+  const [addedRevision, setAddedRevision] = React.useState(0);
 
   React.useEffect(() => {
     // Hydratation unique depuis le stockage local (indisponible côté serveur).
@@ -68,6 +71,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, { ...line, quantity }];
     });
+    setAddedRevision((n) => n + 1);
   }, []);
 
   const updateQuantity: CartState["updateQuantity"] = React.useCallback(
@@ -104,6 +108,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     count,
     subtotalCents,
     hydrated,
+    addedRevision,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

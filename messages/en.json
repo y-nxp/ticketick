@@ -60,6 +60,7 @@
     "buyTickets": "Book now",
     "soldOut": "Sold out",
     "addToCart": "Add to cart",
+    "addedToCart": "Added to cart",
     "dateAndTime": "Date & time",
     "location": "Location",
     "doors": "Doors open",
@@ -107,6 +108,8 @@
     "serviceFee": "Service fee",
     "total": "Total",
     "checkout": "Proceed to checkout",
+    "reserve": "Book",
+    "viewCart": "View cart",
     "reserveHint": "Seats are only reserved once you start checkout.",
     "continue": "Continue shopping",
     "session": "Session"

@@ -28,7 +28,7 @@ export function TicketSelector({
   embed?: boolean;
 }) {
   const te = useTranslations("event");
-  const { add } = useCart();
+  const { add, count } = useCart();
   const router = useRouter();
   const [qty, setQty] = React.useState<Record<string, number>>({});
   const [added, setAdded] = React.useState(false);
@@ -76,7 +76,7 @@ export function TicketSelector({
     });
   }
 
-  function addToCart(goToCheckout = false) {
+  function addToCart() {
     session.ticketTypes.forEach((tt) => {
       const n = qty[tt.id] ?? 0;
       if (n > 0) {
@@ -98,18 +98,17 @@ export function TicketSelector({
       }
     });
     setQty({});
-    if (goToCheckout) {
-      // Réserver ouvre le checkout : c'est là que le stock est retenu.
-      const path = locale === "fr" ? "/checkout" : `/${locale}/checkout`;
-      if (embed && window.top && window.top !== window) {
-        window.top.location.assign(`${window.location.origin}${path}`);
-        return;
-      }
-      router.push("/checkout");
-    } else {
-      setAdded(true);
-      setTimeout(() => setAdded(false), 2000);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  }
+
+  function goCheckout() {
+    const path = locale === "fr" ? "/checkout" : `/${locale}/checkout`;
+    if (embed && window.top && window.top !== window) {
+      window.top.location.assign(`${window.location.origin}${path}`);
+      return;
     }
+    router.push("/checkout");
   }
 
   return (
@@ -140,26 +139,30 @@ export function TicketSelector({
           className="w-full"
           size="lg"
           disabled={totalCount === 0}
-          onClick={() => addToCart(true)}
-        >
-          <ShoppingBag className="size-4" />
-          {te("buyTickets")}
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full"
-          disabled={totalCount === 0}
-          onClick={() => addToCart(false)}
+          onClick={addToCart}
         >
           {added ? (
             <>
-              <Check className="size-4 text-[var(--success)]" />
-              {te("addToCart")}
+              <Check className="size-4" />
+              {te("addedToCart")}
             </>
           ) : (
-            te("addToCart")
+            <>
+              <ShoppingBag className="size-4" />
+              {te("addToCart")}
+            </>
           )}
         </Button>
+        {count > 0 ? (
+          <Button
+            variant="outline"
+            className="w-full"
+            size="lg"
+            onClick={goCheckout}
+          >
+            {te("buyTickets")}
+          </Button>
+        ) : null}
       </div>
     </div>
   );
