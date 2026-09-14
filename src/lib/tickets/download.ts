@@ -49,7 +49,12 @@ export const ticketOrderSelect = Prisma.validator<Prisma.TicketSelect>()({
             select: {
               title: true,
               organizer: {
-                select: { name: true, logoUrl: true, notifyEmails: true },
+                select: {
+                  name: true,
+                  slug: true,
+                  logoUrl: true,
+                  notifyEmails: true,
+                },
               },
             },
           },
@@ -143,6 +148,7 @@ function mapTickets(
           title: unknown;
           organizer: {
             name: string;
+            slug: string;
             logoUrl: string | null;
             notifyEmails: string[];
           };
@@ -161,6 +167,7 @@ function mapTickets(
       eventTitle: session.event.title,
       ticketName: ticket.ticketType.name,
       organizerName: session.event.organizer.name,
+      organizerSlug: session.event.organizer.slug,
       organizerLogoUrl: session.event.organizer.logoUrl,
       startsAt: session.startsAt,
       doorsAt: session.doorsAt,

@@ -220,7 +220,27 @@ export async function buildTicketsPdf(
       lineHeight: 13,
     });
 
-    const footerTop = 78;
+    const disclaimer = pdfSafe(ticket.disclaimer ?? copy.disclaimer);
+    const discSize = 7.5;
+    const discLh = 10;
+    const discLines = wrapLines(disclaimer, regular, discSize, contentW);
+
+    const producerBytes = await readPublicFile(ticket.producerLogoUrl);
+    let producerImg: Awaited<ReturnType<typeof embedImage>> | undefined;
+    let prodH = 0;
+    let prodW = 0;
+    if (producerBytes && ticket.producerLogoUrl) {
+      producerImg = await embedImage(doc, producerBytes, ticket.producerLogoUrl);
+      prodH = 72;
+      prodW = Math.min((producerImg.width / producerImg.height) * prodH, 220);
+    }
+
+    const padTop = 14;
+    const padBot = 16;
+    const logoGap = producerImg ? 10 : 0;
+    const footerTop =
+      padTop + prodH + logoGap + discLines.length * discLh + padBot;
+
     page.drawRectangle({
       x: 0,
       y: 0,
@@ -235,25 +255,43 @@ export async function buildTicketsPdf(
       height: 2,
       color: VIOLET,
     });
-    drawWrapped(page, pdfSafe(copy.disclaimer), {
-      x: margin,
-      y: footerTop - 16,
-      maxWidth: contentW,
-      size: 8,
-      font: regular,
-      color: MUTED,
-      lineHeight: 11,
-    });
+
+    let footerY = footerTop - padTop;
+    if (producerImg) {
+      footerY -= prodH;
+      page.drawImage(producerImg, {
+        x: margin,
+        y: footerY,
+        width: prodW,
+        height: prodH,
+      });
+      footerY -= logoGap;
+    }
+
+    for (const line of discLines) {
+      footerY -= discSize;
+      page.drawText(line, {
+        x: margin,
+        y: footerY,
+        size: discSize,
+        font: regular,
+        color: MUTED,
+      });
+      footerY -= discLh - discSize;
+    }
   }
 
   return Buffer.from(await doc.save());
 }
 
 function embedImage(doc: PDFDocument, bytes: Buffer, url?: string) {
-  const lower = url?.toLowerCase() ?? "";
-  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
-    return doc.embedJpg(bytes);
-  }
+  const jpeg =
+    bytes[0] === 0xff && bytes[1] === 0xd8
+      ? true
+      : (url?.toLowerCase().endsWith(".jpg") ||
+          url?.toLowerCase().endsWith(".jpeg")) ??
+        false;
+  if (jpeg) return doc.embedJpg(bytes);
   return doc.embedPng(bytes);
 }
 
@@ -287,6 +325,28 @@ function drawFact(
   return opts.y - bottom;
 }
 
+function wrapLines(
+  text: string,
+  font: PDFFont,
+  size: number,
+  maxWidth: number,
+): string[] {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (font.widthOfTextAtSize(next, size) > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = next;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
 function drawWrapped(
   page: PDFPage,
   text: string,
@@ -300,26 +360,8 @@ function drawWrapped(
     lineHeight: number;
   },
 ): number {
-  const words = text.split(/\s+/);
-  let line = "";
   let y = opts.y;
-  for (const word of words) {
-    const next = line ? `${line} ${word}` : word;
-    if (opts.font.widthOfTextAtSize(next, opts.size) > opts.maxWidth && line) {
-      page.drawText(line, {
-        x: opts.x,
-        y,
-        size: opts.size,
-        font: opts.font,
-        color: opts.color,
-      });
-      y -= opts.lineHeight;
-      line = word;
-    } else {
-      line = next;
-    }
-  }
-  if (line) {
+  for (const line of wrapLines(text, opts.font, opts.size, opts.maxWidth)) {
     page.drawText(line, {
       x: opts.x,
       y,

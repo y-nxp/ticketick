@@ -41,6 +41,17 @@ export async function sendTicketCards(input: {
     });
   }
 
+  const producerLogoUrl = input.tickets[0]?.producerLogoUrl;
+  const producerLogo = await readPublicFile(producerLogoUrl);
+  if (producerLogo && producerLogoUrl) {
+    attachments.push({
+      filename: "responsable.png",
+      content: producerLogo,
+      cid: "producer-logo",
+      contentType: producerLogoUrl.endsWith(".jpg") ? "image/jpeg" : "image/png",
+    });
+  }
+
   attachments.push({
     filename: `billets-${input.reference}.pdf`,
     content: await buildTicketsPdf(input.tickets, input.locale),
@@ -99,7 +110,8 @@ export async function sendTicketCards(input: {
       </tr>
     </table>
     ${cartes}
-    <p style="margin:24px 0 0;font-size:12px;line-height:1.5;color:#6b7280">${echapper(t.disclaimer)}</p>
+    ${producerFooterHtml(input.tickets[0], Boolean(producerLogo))}
+    <p style="margin:24px 0 0;font-size:12px;line-height:1.5;color:#6b7280">${echapper(input.tickets[0]?.disclaimer ?? t.disclaimer)}</p>
     <p style="margin:16px 0 0;font-size:13px;line-height:1.5">${echapper(t.salutations)}<br>${echapper(t.pied)}</p>
   </div>
 </body>
@@ -123,7 +135,7 @@ export async function sendTicketCards(input: {
     ]),
     `${t.total} ${totalLabel}`,
     "",
-    t.disclaimer,
+    input.tickets[0]?.disclaimer ?? t.disclaimer,
     "",
     t.pied,
   ].join("\n");
@@ -177,6 +189,7 @@ export async function sendPreviewTicketEmail(to: string) {
         },
         ticketName: { fr: "Plein tarif" },
         organizerName: "Chœur Cantabile",
+        organizerSlug: "choeur-cantabile",
         organizerLogoUrl: "/partners/choeur-cantabile/logo.png",
         startsAt,
         doorsAt,
@@ -193,6 +206,7 @@ export async function sendPreviewTicketEmail(to: string) {
         },
         ticketName: { fr: "Gratuit — jusqu’à 16 ans" },
         organizerName: "Chœur Cantabile",
+        organizerSlug: "choeur-cantabile",
         organizerLogoUrl: "/partners/choeur-cantabile/logo.png",
         startsAt,
         doorsAt,
@@ -237,6 +251,21 @@ function carteHtml(
     </td>
   </tr>
 </table>`;
+}
+
+function producerFooterHtml(
+  ticket: TicketCard | undefined,
+  hasLogo: boolean,
+): string {
+  if (!ticket?.producerName) return "";
+  const href = ticket.producerUrl ?? "#";
+  const logo = hasLogo
+    ? `<a href="${echapper(href)}" style="text-decoration:none"><img src="cid:producer-logo" alt="${echapper(ticket.producerName)}" height="32" style="display:block;height:32px;width:auto;border:0;margin:0 0 8px"/></a>`
+    : "";
+  return `<div style="margin:28px 0 0">
+    ${logo}
+    <p style="margin:0;font-size:12px;color:#6b7280"><a href="${echapper(href)}" style="color:#6C5CE7;font-weight:600;text-decoration:none">${echapper(ticket.producerName)}</a></p>
+  </div>`;
 }
 
 function textes(locale: string) {

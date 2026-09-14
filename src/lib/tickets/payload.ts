@@ -1,5 +1,9 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import {
+  ticketDisclaimer,
+  ticketResponsible,
+} from "@/lib/tickets/responsible";
 
 export type VenueBits = {
   name: string;
@@ -24,6 +28,10 @@ export interface TicketCard {
   priceLabel: string;
   priceCents: number;
   seating: string;
+  producerName?: string;
+  producerUrl?: string;
+  producerLogoUrl?: string;
+  disclaimer?: string;
 }
 
 export function venueLines(venue?: VenueBits | null): string[] {
@@ -118,12 +126,18 @@ export function toTicketCard(input: {
   currency?: string;
   seatLabel?: string | null;
   locale: string;
+  organizerSlug?: string | null;
 }): TicketCard {
+  const responsible = ticketResponsible(input.organizerSlug);
   return {
     code: input.code,
     eventTitle: readTitle(input.eventTitle, input.locale),
     organizerName: input.organizerName,
     organizerLogoUrl: input.organizerLogoUrl ?? undefined,
+    producerName: responsible?.name,
+    producerUrl: responsible?.url,
+    producerLogoUrl: responsible?.logoUrl,
+    disclaimer: ticketDisclaimer(input.locale, input.organizerSlug),
     ticketName: readTitle(input.ticketName, input.locale),
     when: formatWhen(input.startsAt, input.locale),
     startTime: formatClock(input.startsAt, input.locale),
