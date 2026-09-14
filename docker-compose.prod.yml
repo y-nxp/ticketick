@@ -63,6 +63,8 @@ services:
         set -e
         echo "▶ Prisma migrate deploy…"
         npx prisma migrate deploy
+        echo "▶ Compte organisateur Illyria…"
+        npx tsx prisma/ensure-illyria-account.ts
         echo "✅ Base prête."
 
   app:
@@ -85,6 +87,9 @@ services:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      UPLOAD_DIR: /app/data/uploads
+    volumes:
+      - uploads-data:/app/data/uploads
     networks:
       # `default` pour joindre la base ; `npm` pour que Nginx Proxy Manager,
       # qui tourne en conteneur, atteigne l'application par son nom.
@@ -114,3 +119,4 @@ networks:
 
 volumes:
   db-data:
+  uploads-data:

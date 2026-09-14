@@ -54,6 +54,10 @@ export const ticketOrderSelect = Prisma.validator<Prisma.TicketSelect>()({
                   slug: true,
                   logoUrl: true,
                   notifyEmails: true,
+                  producerName: true,
+                  producerUrl: true,
+                  producerLogoUrl: true,
+                  ticketDisclaimer: true,
                 },
               },
             },
@@ -151,6 +155,10 @@ function mapTickets(
             slug: string;
             logoUrl: string | null;
             notifyEmails: string[];
+            producerName: string | null;
+            producerUrl: string | null;
+            producerLogoUrl: string | null;
+            ticketDisclaimer: unknown;
           };
         };
       };
@@ -169,6 +177,10 @@ function mapTickets(
       organizerName: session.event.organizer.name,
       organizerSlug: session.event.organizer.slug,
       organizerLogoUrl: session.event.organizer.logoUrl,
+      producerName: session.event.organizer.producerName,
+      producerUrl: session.event.organizer.producerUrl,
+      producerLogoUrl: session.event.organizer.producerLogoUrl,
+      ticketDisclaimer: session.event.organizer.ticketDisclaimer,
       startsAt: session.startsAt,
       doorsAt: session.doorsAt,
       venue: session.venue,

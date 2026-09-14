@@ -2,9 +2,10 @@
 
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import { Ban, Check } from "lucide-react";
+import { Ban, Check, LogIn } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
+  impersonateUser,
   setUserActive,
   setUserRole,
   type AdminActionState,
@@ -21,6 +22,7 @@ export interface UserRowData {
   isSelf: boolean;
   lastLogin: string;
   sessions: number;
+  canImpersonate: boolean;
 }
 
 export function UserRow({ user }: { user: UserRowData }) {
@@ -35,8 +37,14 @@ export function UserRow({ user }: { user: UserRowData }) {
     AdminActionState | undefined,
     FormData
   >(setUserActive, undefined);
+  const [impersonateState, impersonateAction, impersonatePending] =
+    useActionState<AdminActionState | undefined, FormData>(
+      impersonateUser,
+      undefined,
+    );
 
-  const error = roleState?.error ?? activeState?.error;
+  const error =
+    roleState?.error ?? activeState?.error ?? impersonateState?.error;
 
   return (
     <tr className="hover:bg-muted/30">
@@ -114,7 +122,22 @@ export function UserRow({ user }: { user: UserRowData }) {
 
       <td className="px-4 py-3 text-muted-foreground">{user.lastLogin}</td>
       <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">
-        {user.sessions}
+        <div className="flex items-center justify-end gap-2">
+          <span>{user.sessions}</span>
+          {user.canImpersonate ? (
+            <form action={impersonateAction}>
+              <input type="hidden" name="userId" value={user.id} />
+              <button
+                type="submit"
+                disabled={impersonatePending}
+                className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10 disabled:opacity-50"
+              >
+                <LogIn className="size-3.5" />
+                {t("users.impersonate")}
+              </button>
+            </form>
+          ) : null}
+        </div>
       </td>
     </tr>
   );

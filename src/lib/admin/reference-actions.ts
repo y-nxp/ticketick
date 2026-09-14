@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth/dal";
+import { catalogActor } from "@/lib/admin/access";
 import { prisma } from "@/lib/prisma";
 import { parseHexColor, parseNavLinksText } from "@/lib/branding/theme";
+import { saveUploadedImage, UploadError } from "@/lib/uploads";
 import {
   failure,
   readOptionalText,
@@ -61,9 +63,12 @@ export async function saveOrganizer(
   _state: FormState,
   data: FormData,
 ): Promise<FormState> {
-  await requireAdmin();
+  const { user, organizerId: scoped } = await catalogActor();
 
   const id = readOptionalText(data, "id");
+  if (scoped && id !== scoped) return failure("forbiddenOrganizer");
+  if (scoped && !id) return failure("forbiddenOrganizer");
+
   const name = readText(data, "name");
   const email = readText(data, "email");
 
@@ -74,6 +79,8 @@ export async function saveOrganizer(
     .split(/[\n,;]+/)
     .map((adresse) => adresse.trim().toLowerCase())
     .filter((adresse) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(adresse));
+
+  const disclaimer = readTranslated(data, "ticketDisclaimer");
 
   const fields = {
     name,
@@ -88,6 +95,12 @@ export async function saveOrganizer(
       data.get("navLinks")?.toString() ?? "",
     ) as unknown as Prisma.InputJsonValue,
     notifyEmails,
+    producerName: readOptionalText(data, "producerName") ?? null,
+    producerUrl: readOptionalText(data, "producerUrl") ?? null,
+    producerLogoUrl: readOptionalText(data, "producerLogoUrl") ?? null,
+    ticketDisclaimer: (disclaimer.fr
+      ? disclaimer
+      : Prisma.DbNull) as Prisma.InputJsonValue,
   };
 
   try {
@@ -96,6 +109,47 @@ export async function saveOrganizer(
       : await prisma.organizer.create({
           data: { ...fields, slug: slugify(name) },
         });
+
+    try {
+      const logo = await saveUploadedImage(data.get("logoFile"), `organizers/${row.id}`);
+      const producerLogo = await saveUploadedImage(
+        data.get("producerLogoFile"),
+        `organizers/${row.id}/producer`,
+      );
+      if (logo || producerLogo) {
+        await prisma.organizer.update({
+          where: { id: row.id },
+          data: {
+            ...(logo ? { logoUrl: logo } : {}),
+            ...(producerLogo ? { producerLogoUrl: producerLogo } : {}),
+          },
+        });
+      }
+    } catch (error) {
+      if (error instanceof UploadError) return failure(error.key);
+      throw error;
+    }
+
+    if (user.role === "ADMIN") {
+      const loginEmail = readOptionalText(data, "loginEmail")?.toLowerCase();
+      if (loginEmail && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(loginEmail)) {
+        const account = await prisma.user.findUnique({
+          where: { email: loginEmail },
+          select: { id: true },
+        });
+        if (account) {
+          await prisma.organizer.update({
+            where: { id: row.id },
+            data: { userId: account.id },
+          });
+          await prisma.user.update({
+            where: { id: account.id },
+            data: { role: "ORGANIZER" },
+          });
+        }
+      }
+    }
+
     refreshCatalog();
     return success(row.id);
   } catch (error) {

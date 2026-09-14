@@ -10,6 +10,8 @@ import {
   ScanLine,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { getCurrentUser } from "@/lib/auth/dal";
+import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
 
 /**
  * Ossature du backoffice.
@@ -24,17 +26,27 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const t = await getTranslations("admin");
+  const user = await getCurrentUser();
+  const organizerView = user?.role === "ORGANIZER";
 
   const sections = [
     { href: "/admin", label: t("nav.overview"), icon: LayoutDashboard },
     { href: "/admin/events", label: t("nav.events"), icon: CalendarDays },
     { href: "/admin/orders", label: t("nav.orders"), icon: Receipt },
-    { href: "/admin/resellers", label: t("nav.resellers"), icon: Store },
-    { href: "/admin/users", label: t("nav.users"), icon: Users },
-    { href: "/admin/inquiries", label: t("nav.inquiries"), icon: MessageSquare },
+    ...(!organizerView
+      ? [
+          { href: "/admin/resellers", label: t("nav.resellers"), icon: Store },
+          { href: "/admin/users", label: t("nav.users"), icon: Users },
+          {
+            href: "/admin/inquiries",
+            label: t("nav.inquiries"),
+            icon: MessageSquare,
+          },
+        ]
+      : []),
     { href: "/door", label: t("nav.door"), icon: ScanLine },
     { href: "/admin/settings", label: t("nav.settings"), icon: Settings },
-  ] as const;
+  ];
 
   return (
     <div className="container-page py-8">
@@ -58,7 +70,15 @@ export default async function AdminLayout({
           </ul>
         </nav>
 
-        <div className="min-w-0 flex-1">{children}</div>
+        <div className="min-w-0 flex-1">
+          {user?.impersonator ? (
+            <ImpersonationBanner
+              name={user.name ?? user.email}
+              email={user.email}
+            />
+          ) : null}
+          {children}
+        </div>
       </div>
     </div>
   );

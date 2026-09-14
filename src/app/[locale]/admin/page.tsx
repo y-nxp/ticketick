@@ -7,6 +7,7 @@ import {
   Users,
   Store,
 } from "lucide-react";
+import { getCurrentUser } from "@/lib/auth/dal";
 import { getAdminOverview } from "@/lib/data/admin";
 import { formatPrice } from "@/lib/utils";
 
@@ -21,8 +22,12 @@ export default async function AdminOverviewPage({
   setRequestLocale(locale);
 
   // `getAdminOverview` exige le rôle administrateur avant toute lecture.
-  const data = await getAdminOverview();
+  const [data, user] = await Promise.all([
+    getAdminOverview(),
+    getCurrentUser(),
+  ]);
   const t = await getTranslations("admin");
+  const organizerView = user?.role === "ORGANIZER";
 
   const cards = [
     {
@@ -60,18 +65,22 @@ export default async function AdminOverviewPage({
       value: String(data.orders.total),
       hint: formatPrice(data.orders.paidCents, locale),
     },
-    {
-      icon: Users,
-      label: t("overview.users"),
-      value: String(data.users.total),
-      hint: t("overview.usersHint", { admins: data.users.admins }),
-    },
-    {
-      icon: Store,
-      label: t("overview.resellers"),
-      value: String(data.resellers.total),
-      hint: formatPrice(data.resellers.balanceCents, locale),
-    },
+    ...(!organizerView
+      ? [
+          {
+            icon: Users,
+            label: t("overview.users"),
+            value: String(data.users.total),
+            hint: t("overview.usersHint", { admins: data.users.admins }),
+          },
+          {
+            icon: Store,
+            label: t("overview.resellers"),
+            value: String(data.resellers.total),
+            hint: formatPrice(data.resellers.balanceCents, locale),
+          },
+        ]
+      : []),
   ];
 
   return (

@@ -456,6 +456,10 @@
       "empty": "No points of sale.",
       "balanceHint": "Balance from the reseller’s point of view: negative means they owe ticketick."
     },
+    "impersonation": {
+      "banner": "You are viewing {name}’s space ({email}).",
+      "back": "Back to my account"
+    },
     "users": {
       "title": "Accounts",
       "subtitle": "{count} account(s).",
@@ -468,7 +472,8 @@
       "suspended": "Suspended",
       "you": "You",
       "changeRole": "Change role of {email}",
-      "hint": "Changing a role or suspending an account immediately closes its open sessions.",
+      "impersonate": "Open their space",
+      "hint": "Changing a role or suspending an account immediately closes its open sessions. “Open their space” puts you in the organizer’s account.",
       "errors": {
         "forbidden": "Insufficient rights.",
         "self": "You cannot modify your own account.",
@@ -539,6 +544,9 @@
         "paymentOverrideInvalid": "That payment-method choice is not valid.",
         "ticketTypeHasSales": "This fare already has sold tickets and cannot be deleted.",
         "organizerHasEvents": "This organizer still has shows attached.",
+        "imageTooLarge": "The image is larger than 4 MB.",
+        "imageType": "Send a PNG, JPEG or WebP.",
+        "forbiddenOrganizer": "This item does not belong to you.",
         "venueHasSessions": "This venue is still used by sessions."
       }
     },
@@ -556,6 +564,17 @@
         "website": "Website",
         "logoUrl": "Logo (URL)",
         "logoUrlHint": "Local path (/partners/…) or URL. Shown on the hosted page.",
+        "logo": "Page logo",
+        "logoHint": "PNG, JPEG or WebP, 4 MB max. Shown on the hosted page and at the top of the ticket. Without a file, ticketick stays the mark.",
+        "producerName": "Legal party (tickets)",
+        "producerUrl": "Legal party website",
+        "producerHint": "Name printed on the ticket. Empty: ticketick logo only.",
+        "producerLogo": "Legal party logo",
+        "producerLogoHint": "Ticket footer, next to ticketick. Without a file: ticketick only.",
+        "disclaimer": "Ticket terms",
+        "disclaimerHint": "If the French text is empty, ticketick.ch/terms apply.",
+        "loginEmail": "Login account",
+        "loginEmailHint": "Email of an existing account, promoted to organizer and linked to this record.",
         "brandPrimary": "Button colour",
         "brandAccent": "Heading colour",
         "brandBg": "Page background",
@@ -611,7 +630,7 @@
         "MEMBERS": "Members only"
       },
       "coverImage": "Cover image",
-      "coverImageHint": "Image URL. Uploads will come later.",
+      "coverImageHint": "PNG, JPEG or WebP, 4 MB max. You can also paste a URL.",
       "categories": "Categories",
       "featured": "Feature on the homepage",
       "payments": "Payment methods",

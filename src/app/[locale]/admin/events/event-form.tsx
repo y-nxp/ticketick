@@ -14,6 +14,7 @@ import {
   TextInput,
   TranslatedField,
 } from "@/components/admin/fields";
+import { ImageField } from "@/components/admin/image-field";
 import { deleteEvent, saveEvent } from "@/lib/admin/event-actions";
 import type { EventForEdit, ReferenceData } from "@/lib/data/admin-catalog";
 
@@ -104,9 +105,13 @@ export function EventForm({
           />
         </Field>
 
-        <Field label={t("coverImage")} hint={t("coverImageHint")}>
-          <TextInput name="coverImage" defaultValue={event?.coverImage} />
-        </Field>
+        <ImageField
+          name="coverImage"
+          fileName="coverImageFile"
+          label={t("coverImage")}
+          hint={t("coverImageHint")}
+          currentUrl={event?.coverImage}
+        />
       </div>
 
       {reference.categories.length > 0 ? (

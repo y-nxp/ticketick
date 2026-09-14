@@ -59,13 +59,17 @@ export async function readSessionId(
 }
 
 /** Ouvre une session et dépose le cookie correspondant. */
-export async function createSession(userId: string): Promise<void> {
+export async function createSession(
+  userId: string,
+  impersonatorId?: string,
+): Promise<void> {
   const expiresAt = new Date(Date.now() + DURATION_MS);
   const headerList = await headers();
 
   const session = await prisma.session.create({
     data: {
       userId,
+      impersonatorId: impersonatorId ?? null,
       expiresAt,
       userAgent: headerList.get("user-agent")?.slice(0, 255) ?? null,
       ipAddress: clientIp(headerList),

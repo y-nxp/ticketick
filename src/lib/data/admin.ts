@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/dal";
+import { catalogActor } from "@/lib/admin/access";
 
 /**
  * Requêtes du backoffice.
@@ -21,7 +22,21 @@ export interface AdminOverview {
 }
 
 export async function getAdminOverview(): Promise<AdminOverview> {
-  await requireAdmin();
+  const { organizerId } = await catalogActor();
+  const eventWhere = organizerId ? { organizerId } : {};
+  const sessionWhere = organizerId
+    ? { event: { organizerId } }
+    : {};
+  const typeWhere = organizerId
+    ? { session: { event: { organizerId } } }
+    : {};
+  const orderWhere = organizerId
+    ? {
+        tickets: {
+          some: { ticketType: { session: { event: { organizerId } } } },
+        },
+      }
+    : {};
 
   const now = new Date();
 
@@ -38,24 +53,27 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     resellersTotal,
     ledger,
   ] = await Promise.all([
-    prisma.event.count(),
-    prisma.event.count({ where: { status: "PUBLISHED" } }),
-    prisma.eventSession.count(),
-    prisma.eventSession.count({ where: { startsAt: { gte: now } } }),
-    // Le chiffre d'affaires ne peut pas se déduire d'une somme simple : il
-    // dépend du produit quantité × prix, calculé plus bas.
+    prisma.event.count({ where: eventWhere }),
+    prisma.event.count({ where: { ...eventWhere, status: "PUBLISHED" } }),
+    prisma.eventSession.count({ where: sessionWhere }),
+    prisma.eventSession.count({
+      where: { ...sessionWhere, startsAt: { gte: now } },
+    }),
     prisma.ticketType.findMany({
+      where: typeWhere,
       select: { quantity: true, sold: true, priceCents: true },
     }),
-    prisma.order.count(),
+    prisma.order.count({ where: orderWhere }),
     prisma.order.aggregate({
-      where: { status: "PAID" },
+      where: { ...orderWhere, status: "PAID" },
       _sum: { totalCents: true },
     }),
-    prisma.user.count(),
-    prisma.user.count({ where: { role: "ADMIN" } }),
-    prisma.reseller.count(),
-    prisma.resellerLedgerEntry.aggregate({ _sum: { amountCents: true } }),
+    organizerId ? Promise.resolve(0) : prisma.user.count(),
+    organizerId ? Promise.resolve(0) : prisma.user.count({ where: { role: "ADMIN" } }),
+    organizerId ? Promise.resolve(0) : prisma.reseller.count(),
+    organizerId
+      ? Promise.resolve({ _sum: { amountCents: 0 } })
+      : prisma.resellerLedgerEntry.aggregate({ _sum: { amountCents: true } }),
   ]);
 
   return {
@@ -83,9 +101,10 @@ export async function getAdminOverview(): Promise<AdminOverview> {
 }
 
 export async function getAdminEvents() {
-  await requireAdmin();
+  const { organizerId } = await catalogActor();
 
   const events = await prisma.event.findMany({
+    where: organizerId ? { organizerId } : undefined,
     orderBy: { createdAt: "desc" },
     select: {
       id: true,
@@ -138,15 +157,23 @@ export async function getAdminUsers() {
       active: true,
       lastLoginAt: true,
       createdAt: true,
+      organizer: { select: { id: true, name: true } },
       _count: { select: { sessions: true, orders: true } },
     },
   });
 }
 
 export async function getAdminOrders() {
-  await requireAdmin();
+  const { organizerId } = await catalogActor();
 
   return prisma.order.findMany({
+    where: organizerId
+      ? {
+          tickets: {
+            some: { ticketType: { session: { event: { organizerId } } } },
+          },
+        }
+      : undefined,
     orderBy: { createdAt: "desc" },
     take: 100,
     select: {

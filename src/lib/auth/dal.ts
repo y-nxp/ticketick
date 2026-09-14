@@ -31,6 +31,8 @@ export interface CurrentUser {
   phone: string | null;
   role: UserRole;
   locale: string;
+  organizerId: string | null;
+  impersonator: { id: string; email: string; name: string | null } | null;
 }
 
 /**
@@ -49,6 +51,10 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       where: { id: sessionId },
       select: {
         expiresAt: true,
+        impersonatorId: true,
+        impersonator: {
+          select: { id: true, email: true, name: true, active: true },
+        },
         user: {
           select: {
             id: true,
@@ -58,6 +64,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
             role: true,
             locale: true,
             active: true,
+            organizer: { select: { id: true } },
           },
         },
       },
@@ -87,6 +94,15 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   // Champs listés un à un : ce qui sort d'ici peut remonter jusqu'à un
   // composant client, et rien ne doit s'y ajouter par inadvertance.
+  const impersonator =
+    session.impersonator && session.impersonator.active
+      ? {
+          id: session.impersonator.id,
+          email: session.impersonator.email,
+          name: session.impersonator.name,
+        }
+      : null;
+
   return {
     id: session.user.id,
     email: session.user.email,
@@ -94,6 +110,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     phone: session.user.phone,
     role: session.user.role,
     locale: session.user.locale,
+    organizerId: session.user.organizer?.id ?? null,
+    impersonator,
   };
 });
 
@@ -129,6 +147,22 @@ export async function requireRole(
 /** Raccourci pour le backoffice, dont l'accès est réservé aux administrateurs. */
 export async function requireAdmin(returnTo?: string): Promise<CurrentUser> {
   return requireRole("ADMIN", returnTo);
+}
+
+/**
+ * Backoffice catalogue : administrateur, ou organisateur sur ses spectacles.
+ *
+ * Un organisateur sans fiche liée n'a rien à y faire — on le renvoie
+ * plutôt que de lui montrer un catalogue vide sans explication.
+ */
+export async function requireCatalog(
+  returnTo?: string,
+): Promise<CurrentUser> {
+  const user = await requireRole(["ADMIN", "ORGANIZER"], returnTo);
+  if (user.role === "ORGANIZER" && !user.organizerId) {
+    return redirect({ href: "/forbidden", locale: await getLocale() });
+  }
+  return user;
 }
 
 /**

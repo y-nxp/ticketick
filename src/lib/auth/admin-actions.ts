@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { UserRole } from "@prisma/client";
 import * as z from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "./dal";
-import { destroyAllSessions } from "./session";
+import { redirect } from "@/i18n/navigation";
+import { getLocale } from "next-intl/server";
+import { requireAdmin, requireAuth } from "./dal";
+import { createSession, destroyAllSessions, destroySession } from "./session";
 
 /**
  * Actions d'administration des comptes.
@@ -101,6 +103,52 @@ export async function setUserActive(
  * Sans ce contrôle, la dernière rétrogradation rendrait le backoffice
  * inaccessible et il faudrait repasser par le serveur pour en ressortir.
  */
+/** Ouvre le backoffice sous l'identité d'un organisateur. */
+export async function impersonateUser(
+  _state: AdminActionState | undefined,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+  const userId = formData.get("userId");
+  if (typeof userId !== "string" || !userId) return { error: "invalid" };
+  if (userId === admin.id) return { error: "self" };
+
+  const target = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      role: true,
+      active: true,
+      organizer: { select: { id: true } },
+    },
+  });
+  if (!target || !target.active) return { error: "notFound" };
+  if (target.role !== "ORGANIZER" || !target.organizer) {
+    return { error: "invalid" };
+  }
+
+  await destroySession();
+  await createSession(target.id, admin.id);
+
+  const locale = await getLocale();
+  redirect({ href: "/admin", locale });
+  return { ok: true };
+}
+
+/** Revient au compte administrateur après une impersonation. */
+export async function stopImpersonation() {
+  const user = await requireAuth();
+  if (!user.impersonator) {
+    return redirect({ href: "/admin", locale: await getLocale() });
+  }
+
+  const adminId = user.impersonator.id;
+  await destroySession();
+  await createSession(adminId);
+
+  redirect({ href: "/admin", locale: await getLocale() });
+}
+
 async function isLastAdmin(): Promise<boolean> {
   const count = await prisma.user.count({
     where: { role: "ADMIN", active: true },

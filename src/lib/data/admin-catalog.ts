@@ -1,6 +1,6 @@
 import "server-only";
 
-import { requireAdmin } from "@/lib/auth/dal";
+import { catalogActor, forbidIfForeignEvent } from "@/lib/admin/access";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -12,10 +12,11 @@ import { prisma } from "@/lib/prisma";
  */
 
 export async function getReferenceData() {
-  await requireAdmin();
+  const { organizerId } = await catalogActor();
 
   const [organizers, venues, categories] = await Promise.all([
     prisma.organizer.findMany({
+      where: organizerId ? { id: organizerId } : undefined,
       orderBy: { name: "asc" },
       select: {
         id: true,
@@ -29,6 +30,11 @@ export async function getReferenceData() {
         brandBg: true,
         navLinks: true,
         notifyEmails: true,
+        producerName: true,
+        producerUrl: true,
+        producerLogoUrl: true,
+        ticketDisclaimer: true,
+        user: { select: { email: true } },
         _count: { select: { events: true } },
       },
     }),
@@ -65,7 +71,8 @@ export type ReferenceData = Awaited<ReturnType<typeof getReferenceData>>;
 
 /** Spectacle complet pour l'écran d'édition, séances et tarifs compris. */
 export async function getEventForEdit(id: string) {
-  await requireAdmin();
+  const { organizerId } = await catalogActor();
+  await forbidIfForeignEvent(id, organizerId);
 
   return prisma.event.findUnique({
     where: { id },

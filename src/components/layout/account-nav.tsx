@@ -42,7 +42,7 @@ export async function AccountNav() {
           <ScanLine className="size-5" />
         </Link>
       ) : null}
-      {user.role === "ADMIN" ? (
+      {user.role === "ADMIN" || user.role === "ORGANIZER" ? (
         <Link
           href="/admin"
           aria-label={ta("adminAccess")}

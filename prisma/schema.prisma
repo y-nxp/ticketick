@@ -42,6 +42,11 @@ model Session {
   userAgent String?
   ipAddress String?
 
+  /// Administrateur qui consulte le compte : la session appartient à
+  /// l'organisateur, le retour se fait via cet identifiant.
+  impersonator   User?   @relation("SessionImpersonator", fields: [impersonatorId], references: [id], onDelete: SetNull)
+  impersonatorId String?
+
   createdAt DateTime @default(now())
 
   @@index([userId])
@@ -193,6 +198,7 @@ model User {
   lastLoginAt DateTime?
 
   sessions       Session[]
+  impersonations Session[] @relation("SessionImpersonator")
   passwordResets PasswordResetToken[]
 
   /// Accès "amis du festival" (session PWA)
@@ -237,6 +243,13 @@ model Organizer {
 
   /// Copies des billets émis, une adresse par ligne dans l'admin.
   notifyEmails String[] @default([])
+
+  /// Responsable légal imprimé sur les billets. Si vide : pied ticketick seul.
+  producerName    String?
+  producerUrl     String?
+  producerLogoUrl String?
+  /// CG du billet { fr, en, de, it }. Si vide : conditions ticketick.ch/terms.
+  ticketDisclaimer Json?
 
   /// Active la PWA "amis du festival" pour cet organisateur
   friendsAppEnabled Boolean @default(false)

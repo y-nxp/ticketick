@@ -11,6 +11,7 @@ import {
   TextInput,
   TranslatedField,
 } from "@/components/admin/fields";
+import { ImageField } from "@/components/admin/image-field";
 import {
   deleteCategory,
   deleteOrganizer,
@@ -127,7 +128,7 @@ function Ligne({
   detail: string;
   compte?: string;
   onEdit: () => void;
-  suppression: React.ReactNode;
+  suppression?: React.ReactNode;
 }) {
   const t = useTranslations("admin.form");
   return (
@@ -148,7 +149,7 @@ function Ligne({
       >
         <Pencil className="size-4" />
       </Button>
-      {suppression}
+      {suppression ?? null}
     </div>
   );
 }
@@ -157,18 +158,26 @@ function Ligne({
 
 export function OrganizersSection({
   organizers,
+  restricted,
 }: {
   organizers: ReferenceData["organizers"];
+  restricted?: boolean;
 }) {
   const t = useTranslations("admin.settings.organizers");
-  const [edite, setEdite] = React.useState<string | null>(null);
+  const [edite, setEdite] = React.useState<string | null>(
+    restricted && organizers.length === 1 ? organizers[0].id : null,
+  );
 
   return (
     <Section title={t("title")} hint={t("hint")}>
       {organizers.map((o) =>
         edite === o.id ? (
           <div key={o.id} className="rounded-xl border border-border p-4">
-            <OrganizerForm organizer={o} onClose={() => setEdite(null)} />
+            <OrganizerForm
+              organizer={o}
+              onClose={() => setEdite(null)}
+              canLinkAccount={!restricted}
+            />
           </div>
         ) : (
           <Ligne
@@ -178,19 +187,23 @@ export function OrganizersSection({
             compte={t("eventCount", { count: o._count.events })}
             onEdit={() => setEdite(o.id)}
             suppression={
-              <BoutonSuppression
-                action={deleteOrganizer}
-                id={o.id}
-                libelle={t("delete")}
-              />
+              restricted ? null : (
+                <BoutonSuppression
+                  action={deleteOrganizer}
+                  id={o.id}
+                  libelle={t("delete")}
+                />
+              )
             }
           />
         ),
       )}
 
-      <Repliable libelle={t("add")} ouvertParDefaut={organizers.length === 0}>
-        {(fermer) => <OrganizerForm onClose={fermer} />}
-      </Repliable>
+      {restricted ? null : (
+        <Repliable libelle={t("add")} ouvertParDefaut={organizers.length === 0}>
+          {(fermer) => <OrganizerForm onClose={fermer} canLinkAccount />}
+        </Repliable>
+      )}
     </Section>
   );
 }
@@ -198,9 +211,11 @@ export function OrganizersSection({
 function OrganizerForm({
   organizer,
   onClose,
+  canLinkAccount,
 }: {
   organizer?: ReferenceData["organizers"][number];
   onClose: () => void;
+  canLinkAccount?: boolean;
 }) {
   const t = useTranslations("admin.settings.organizers");
   const tf = useTranslations("admin.form");
@@ -224,9 +239,49 @@ function OrganizerForm({
       <Field label={t("website")}>
         <TextInput name="website" defaultValue={organizer?.website} />
       </Field>
-      <Field label={t("logoUrl")} hint={t("logoUrlHint")}>
-        <TextInput name="logoUrl" defaultValue={organizer?.logoUrl ?? ""} />
+      <ImageField
+        name="logoUrl"
+        fileName="logoFile"
+        label={t("logo")}
+        hint={t("logoHint")}
+        currentUrl={organizer?.logoUrl}
+      />
+      <Field label={t("producerName")} hint={t("producerHint")}>
+        <TextInput
+          name="producerName"
+          defaultValue={organizer?.producerName ?? ""}
+        />
       </Field>
+      <Field label={t("producerUrl")}>
+        <TextInput
+          name="producerUrl"
+          defaultValue={organizer?.producerUrl ?? ""}
+        />
+      </Field>
+      <ImageField
+        name="producerLogoUrl"
+        fileName="producerLogoFile"
+        label={t("producerLogo")}
+        hint={t("producerLogoHint")}
+        currentUrl={organizer?.producerLogoUrl}
+      />
+      <TranslatedField
+        name="ticketDisclaimer"
+        label={t("disclaimer")}
+        value={organizer?.ticketDisclaimer as Record<string, unknown> | undefined}
+        multiline
+        required={false}
+      />
+      <p className="text-xs text-muted-foreground">{t("disclaimerHint")}</p>
+      {canLinkAccount ? (
+        <Field label={t("loginEmail")} hint={t("loginEmailHint")}>
+          <TextInput
+            name="loginEmail"
+            type="email"
+            defaultValue={organizer?.user?.email ?? ""}
+          />
+        </Field>
+      ) : null}
       <div className="grid gap-3 sm:grid-cols-3">
         <Field label={t("brandPrimary")}>
           <TextInput

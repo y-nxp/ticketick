@@ -456,6 +456,10 @@
       "empty": "Aucun point de vente.",
       "balanceHint": "Solde vu du point de vente : négatif, il doit de l’argent à ticketick."
     },
+    "impersonation": {
+      "banner": "Vous consultez l’espace de {name} ({email}).",
+      "back": "Revenir à mon compte"
+    },
     "users": {
       "title": "Comptes",
       "subtitle": "{count} compte(s).",
@@ -468,7 +472,8 @@
       "suspended": "Suspendu",
       "you": "Vous",
       "changeRole": "Modifier le rôle de {email}",
-      "hint": "Changer un rôle ou suspendre un compte ferme immédiatement les sessions ouvertes.",
+      "impersonate": "Ouvrir son espace",
+      "hint": "Changer un rôle ou suspendre un compte ferme immédiatement les sessions ouvertes. « Ouvrir son espace » vous place dans le compte de l’organisateur.",
       "errors": {
         "forbidden": "Droits insuffisants.",
         "self": "Vous ne pouvez pas modifier votre propre compte.",
@@ -539,6 +544,9 @@
         "paymentOverrideInvalid": "Le choix de moyen de paiement n’est pas valable.",
         "ticketTypeHasSales": "Ce tarif a déjà des billets vendus : il ne peut pas être supprimé.",
         "organizerHasEvents": "Cet organisateur porte encore des spectacles.",
+        "imageTooLarge": "L’image dépasse 4 Mo.",
+        "imageType": "Envoyez un PNG, un JPEG ou un WebP.",
+        "forbiddenOrganizer": "Cet élément ne vous appartient pas.",
         "venueHasSessions": "Ce lieu est encore utilisé par des séances."
       }
     },
@@ -556,6 +564,17 @@
         "website": "Site web",
         "logoUrl": "Logo (URL)",
         "logoUrlHint": "Chemin local (/partners/…) ou URL. Affiché sur la page hébergée.",
+        "logo": "Logo de la page",
+        "logoHint": "PNG, JPEG ou WebP, 4 Mo max. Affiché sur la page hébergée et en haut du billet. Sans fichier, ticketick reste le marqueur.",
+        "producerName": "Responsable légal (billets)",
+        "producerUrl": "Site du responsable",
+        "producerHint": "Nom imprimé sur le billet. Vide : seulement le logo ticketick.",
+        "producerLogo": "Logo du responsable",
+        "producerLogoHint": "Pied de billet, à côté de ticketick. Sans fichier : ticketick seul.",
+        "disclaimer": "Conditions générales du billet",
+        "disclaimerHint": "Si le texte français est vide, les conditions ticketick.ch/terms s’appliquent.",
+        "loginEmail": "Compte de connexion",
+        "loginEmailHint": "E-mail d’un compte existant, promu organisateur et rattaché à cette fiche.",
         "brandPrimary": "Couleur des boutons",
         "brandAccent": "Couleur des titres",
         "brandBg": "Fond de page",
@@ -611,7 +630,7 @@
         "MEMBERS": "Réservé aux membres"
       },
       "coverImage": "Image de couverture",
-      "coverImageHint": "URL d’une image. L’upload arrivera plus tard.",
+      "coverImageHint": "PNG, JPEG ou WebP, 4 Mo max. Vous pouvez aussi coller une URL.",
       "categories": "Catégories",
       "featured": "Mettre en avant sur l’accueil",
       "payments": "Moyens de paiement",

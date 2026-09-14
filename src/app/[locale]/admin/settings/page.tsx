@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getCurrentUser } from "@/lib/auth/dal";
 import { getReferenceData } from "@/lib/data/admin-catalog";
 import {
   CategoriesSection,
@@ -23,7 +24,12 @@ export default async function AdminSettingsPage({
   setRequestLocale(locale);
 
   const t = await getTranslations("admin.settings");
-  const { organizers, venues, categories } = await getReferenceData();
+  const [data, user] = await Promise.all([
+    getReferenceData(),
+    getCurrentUser(),
+  ]);
+  const { organizers, venues, categories } = data;
+  const restricted = user?.role === "ORGANIZER";
 
   return (
     <div className="space-y-6">
@@ -38,9 +44,13 @@ export default async function AdminSettingsPage({
         </p>
       ) : null}
 
-      <OrganizersSection organizers={organizers} />
-      <VenuesSection venues={venues} />
-      <CategoriesSection categories={categories} />
+      <OrganizersSection organizers={organizers} restricted={restricted} />
+      {restricted ? null : (
+        <>
+          <VenuesSection venues={venues} />
+          <CategoriesSection categories={categories} />
+        </>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import {
   ticketDisclaimer,
   ticketResponsible,
 } from "@/lib/tickets/responsible";
+import { readUploadFile } from "@/lib/uploads";
 
 export type VenueBits = {
   name: string;
@@ -127,17 +128,23 @@ export function toTicketCard(input: {
   seatLabel?: string | null;
   locale: string;
   organizerSlug?: string | null;
+  producerName?: string | null;
+  producerUrl?: string | null;
+  producerLogoUrl?: string | null;
+  ticketDisclaimer?: unknown;
 }): TicketCard {
-  const responsible = ticketResponsible(input.organizerSlug);
+  const fallback = ticketResponsible(input.organizerSlug);
+  const fromRow = readTitle(input.ticketDisclaimer, input.locale);
   return {
     code: input.code,
     eventTitle: readTitle(input.eventTitle, input.locale),
     organizerName: input.organizerName,
     organizerLogoUrl: input.organizerLogoUrl ?? undefined,
-    producerName: responsible?.name,
-    producerUrl: responsible?.url,
-    producerLogoUrl: responsible?.logoUrl,
-    disclaimer: ticketDisclaimer(input.locale, input.organizerSlug),
+    producerName: input.producerName ?? fallback?.name,
+    producerUrl: input.producerUrl ?? fallback?.url,
+    producerLogoUrl: input.producerLogoUrl ?? fallback?.logoUrl,
+    disclaimer:
+      fromRow || ticketDisclaimer(input.locale, input.organizerSlug),
     ticketName: readTitle(input.ticketName, input.locale),
     when: formatWhen(input.startsAt, input.locale),
     startTime: formatClock(input.startsAt, input.locale),
@@ -169,6 +176,9 @@ export async function readPublicFile(
   url?: string | null,
 ): Promise<Buffer | null> {
   if (!url?.startsWith("/")) return null;
+  if (url.startsWith("/uploads/")) {
+    return readUploadFile(url);
+  }
   const safe = url.replaceAll("..", "").replace(/^\/+/, "");
   try {
     return await readFile(join(process.cwd(), "public", safe));

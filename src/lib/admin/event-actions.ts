@@ -2,8 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { Prisma, type EventStatus, type EventVisibility } from "@prisma/client";
-import { requireAdmin } from "@/lib/auth/dal";
+import { catalogActor } from "@/lib/admin/access";
 import { prisma } from "@/lib/prisma";
+import { saveUploadedImage, UploadError } from "@/lib/uploads";
 import {
   failure,
   readBoolean,
@@ -68,12 +69,12 @@ export async function saveEvent(
   _state: FormState,
   data: FormData,
 ): Promise<FormState> {
-  await requireAdmin();
+  const { organizerId: scoped } = await catalogActor();
 
   const id = readOptionalText(data, "id");
   const title = readTranslated(data, "title");
   const description = readTranslated(data, "description");
-  const organizerId = readText(data, "organizerId");
+  const organizerId = scoped ?? readText(data, "organizerId");
   const status = readStatus(data, "status");
 
   if (!title.fr) return failure("titleRequired");
@@ -100,6 +101,16 @@ export async function saveEvent(
   const acceptIban = readBoolean(data, "acceptIban");
   if (!acceptCard && !acceptIban) return failure("paymentRequired");
 
+  if (id && scoped) {
+    const current = await prisma.event.findUnique({
+      where: { id },
+      select: { organizerId: true },
+    });
+    if (!current || current.organizerId !== scoped) {
+      return failure("forbiddenOrganizer");
+    }
+  }
+
   const fields = {
     title,
     description,
@@ -125,6 +136,23 @@ export async function saveEvent(
       : await prisma.event.create({
           data: { ...fields, slug, categories: { connect: liens } },
         });
+
+    try {
+      const cover = await saveUploadedImage(
+        data.get("coverImageFile"),
+        `events/${row.id}`,
+      );
+      if (cover) {
+        await prisma.event.update({
+          where: { id: row.id },
+          data: { coverImage: cover },
+        });
+      }
+    } catch (error) {
+      if (error instanceof UploadError) return failure(error.key);
+      throw error;
+    }
+
     refresh(row.id);
     return success(row.id);
   } catch (error) {
@@ -138,9 +166,18 @@ export async function deleteEvent(
   _state: FormState,
   data: FormData,
 ): Promise<FormState> {
-  await requireAdmin();
+  const { organizerId: scoped } = await catalogActor();
   const id = readText(data, "id");
   if (!id) return failure("notFound");
+  if (scoped) {
+    const current = await prisma.event.findUnique({
+      where: { id },
+      select: { organizerId: true },
+    });
+    if (!current || current.organizerId !== scoped) {
+      return failure("forbiddenOrganizer");
+    }
+  }
 
   const vendus = await prisma.ticketType.aggregate({
     where: { session: { eventId: id } },
@@ -162,11 +199,20 @@ export async function deleteEvent(
 
 // ─────────────────────────────── Séance
 
+async function guardEvent(eventId: string, scoped: string | null) {
+  if (!scoped) return true;
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { organizerId: true },
+  });
+  return event?.organizerId === scoped;
+}
+
 export async function saveSession(
   _state: FormState,
   data: FormData,
 ): Promise<FormState> {
-  await requireAdmin();
+  const { organizerId: scoped } = await catalogActor();
 
   const id = readOptionalText(data, "id");
   const eventId = readText(data, "eventId");
@@ -174,6 +220,7 @@ export async function saveSession(
   const status = readStatus(data, "status");
 
   if (!eventId) return failure("notFound");
+  if (!(await guardEvent(eventId, scoped))) return failure("forbiddenOrganizer");
   if (!startsAt) return failure("startsAtRequired");
   if (!status) return failure("statusInvalid");
 
@@ -245,7 +292,7 @@ export async function deleteSession(
   _state: FormState,
   data: FormData,
 ): Promise<FormState> {
-  await requireAdmin();
+  const { organizerId: scoped } = await catalogActor();
   const id = readText(data, "id");
   if (!id) return failure("notFound");
 
@@ -254,6 +301,9 @@ export async function deleteSession(
     select: { eventId: true, ticketTypes: { select: { sold: true } } },
   });
   if (!session) return failure("notFound");
+  if (!(await guardEvent(session.eventId, scoped))) {
+    return failure("forbiddenOrganizer");
+  }
 
   const vendus = session.ticketTypes.reduce((n, t) => n + t.sold, 0);
   if (vendus > 0) return failure("sessionHasSales");
@@ -274,7 +324,7 @@ export async function saveTicketType(
   _state: FormState,
   data: FormData,
 ): Promise<FormState> {
-  await requireAdmin();
+  const { organizerId: scoped } = await catalogActor();
 
   const id = readOptionalText(data, "id");
   const sessionId = readText(data, "sessionId");
@@ -291,6 +341,13 @@ export async function saveTicketType(
   }
 
   if (!sessionId) return failure("notFound");
+  const seance = await prisma.eventSession.findUnique({
+    where: { id: sessionId },
+    select: { eventId: true },
+  });
+  if (!seance || !(await guardEvent(seance.eventId, scoped))) {
+    return failure("forbiddenOrganizer");
+  }
   if (!name.fr) return failure("nameRequired");
   if (priceCents === null) return failure("priceInvalid");
   if (quantity === null || quantity < 1) return failure("quantityInvalid");
@@ -353,7 +410,7 @@ export async function deleteTicketType(
   _state: FormState,
   data: FormData,
 ): Promise<FormState> {
-  await requireAdmin();
+  const { organizerId: scoped } = await catalogActor();
   const id = readText(data, "id");
   if (!id) return failure("notFound");
 
@@ -362,6 +419,9 @@ export async function deleteTicketType(
     select: { sold: true, session: { select: { eventId: true } } },
   });
   if (!tarif) return failure("notFound");
+  if (!(await guardEvent(tarif.session.eventId, scoped))) {
+    return failure("forbiddenOrganizer");
+  }
   if (tarif.sold > 0) return failure("ticketTypeHasSales");
 
   try {
