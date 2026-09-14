@@ -16,6 +16,7 @@ import { markOrderPaid } from "@/lib/orders/mark-paid";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { publicAppOrigin } from "@/lib/app-url";
 import { prisma } from "@/lib/prisma";
+import { reservedUntilFrom } from "@/lib/orders/reservation";
 
 /**
  * Seuls l'identifiant du tarif et la quantité sont acceptés. Le libellé et le
@@ -126,6 +127,7 @@ export async function POST(request: Request) {
         cancelUrl: `${origin}/${data.locale}/checkout?canceled=1`,
         project: order.project,
         organizerName: order.organizerName,
+        customerId: user?.id,
         feeCents: order.feeCents,
         lineItems: order.lines.map((l) => ({
           name: l.label,
@@ -192,6 +194,7 @@ export async function POST(request: Request) {
       mock: session.mock,
       totalCents: order.totalCents,
       currency: order.currency,
+      reservedUntil: reservedUntilFrom(order.createdAt).toISOString(),
     });
   }
 

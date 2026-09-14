@@ -28,6 +28,7 @@ export interface CurrentUser {
   id: string;
   email: string;
   name: string | null;
+  phone: string | null;
   role: UserRole;
   locale: string;
 }
@@ -53,6 +54,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
             id: true,
             email: true,
             name: true,
+            phone: true,
             role: true,
             locale: true,
             active: true,
@@ -89,6 +91,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     id: session.user.id,
     email: session.user.email,
     name: session.user.name,
+    phone: session.user.phone,
     role: session.user.role,
     locale: session.user.locale,
   };

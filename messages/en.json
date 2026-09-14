@@ -116,6 +116,9 @@
     "success": "Thank you! Your order is confirmed.",
     "successHint": "Your tickets have been sent to {email}.",
     "backHome": "Back to home",
+    "downloadPdf": "Download PDF",
+    "printTickets": "Print tickets",
+    "pdfHint": "One page per person: event, fare type and ticket number. Open it to print.",
     "failed": "Something went wrong. Please try again.",
     "unavailable": "Online payment is temporarily unavailable. Your order was not placed and your seats have been released. Please try again later.",
     "companion_limit": "At most 2 free seats (16 and under) per paying ticket.",
@@ -123,7 +126,13 @@
     "sold_out": "Not enough seats left for this selection.",
     "max_per_order": "The quantity exceeds the per-order maximum.",
     "method_not_allowed": "This payment method is not offered for these tickets.",
-    "noMethod": "No payment method is open for these tickets."
+    "noMethod": "No payment method is open for these tickets.",
+    "canceled": "Payment canceled. Your cart has been kept.",
+    "reserved": "Seats reserved for {time}",
+    "reservedHint": "After 10 minutes they go back on sale.",
+    "reservedExpired": "The 10-minute hold has ended. The seats have been released. You can start again.",
+    "resumePayment": "Resume payment",
+    "reserving": "Reserving your seats…"
   },
   "account": {
     "title": "My account",
@@ -164,7 +173,8 @@
       "RESELLER_AGENT": "Point of sale",
       "ADMIN": "Administrator"
     },
-    "ticketCount": "{count} ticket(s)"
+    "ticketCount": "{count} ticket(s)",
+    "downloadPdf": "Download / print PDF"
   },
   "organizer": {
     "title": "Organizer space",
@@ -240,6 +250,21 @@
   "auth": {
     "signIn": "Sign in",
     "signInSubtitle": "Access your ticketick account.",
+    "signUp": "Create an account",
+    "signUpSubtitle": "Keep your tickets and receive offers from organizers you follow.",
+    "signUpSubmit": "Create my account",
+    "signUpPending": "Creating account…",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "confirmPassword": "Confirm password",
+    "passwordHint": "Twelve characters minimum.",
+    "haveAccount": "Already have an account?",
+    "noAccount": "No account yet?",
+    "marketingOptIn": "Receive offers from organizers",
+    "marketingOptInHint": "Unchecked by default. Only from organizers you have already bought tickets from.",
+    "emailTaken": "An account already exists for this address. Please sign in.",
+    "tooShort": "The password must be at least 12 characters.",
+    "mismatch": "The two passwords do not match.",
     "email": "Email",
     "password": "Password",
     "submit": "Sign in",

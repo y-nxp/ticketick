@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Ticket, Receipt, UserRound, LogOut, ShieldCheck } from "lucide-react";
+import { Ticket, Receipt, UserRound, LogOut, ShieldCheck, FileDown } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { getMyOrders } from "@/lib/data/my-orders";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { t as translate, type Translated } from "@/lib/types";
 import { PasswordForm } from "./password-form";
+import { ticketPdfPath } from "@/lib/tickets/download";
 
 // Dépend de la session : jamais mise en cache.
 export const dynamic = "force-dynamic";
@@ -149,16 +150,29 @@ export default async function AccountPage({
                   </div>
 
                   {order.tickets.length > 0 ? (
-                    <ul className="mt-3 flex flex-wrap gap-1.5">
-                      {order.tickets.map((ticket) => (
-                        <li
-                          key={ticket.code}
-                          className="rounded-lg bg-muted px-2 py-1 font-mono text-xs"
+                    <div className="mt-3 space-y-3">
+                      <ul className="flex flex-wrap gap-1.5">
+                        {order.tickets.map((ticket, index) => (
+                          <li
+                            key={ticket.code}
+                            className="rounded-lg bg-muted px-2 py-1 font-mono text-xs"
+                          >
+                            {index + 1}/{order.tickets.length} · {ticket.code}
+                          </li>
+                        ))}
+                      </ul>
+                      {order.status === "PAID" ? (
+                        <a
+                          href={ticketPdfPath(order.reference)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
                         >
-                          {ticket.code}
-                        </li>
-                      ))}
-                    </ul>
+                          <FileDown className="size-3.5" />
+                          {t("downloadPdf")}
+                        </a>
+                      ) : null}
+                    </div>
                   ) : null}
                 </li>
               ))}

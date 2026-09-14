@@ -42,6 +42,8 @@ export interface CreatePostfinanceInput {
   /** Slug du spectacle, visible dans Checkout à côté de la commande. */
   project: string;
   organizerName?: string;
+  /** Identifiant ticketick du spectateur connecté : permet le one-click PF. */
+  customerId?: string;
   feeCents?: number;
 }
 
@@ -152,6 +154,11 @@ export async function createPostfinanceCheckout(
     lineItems,
   };
 
+  if (input.customerId) {
+    transactionCreate.customerId = input.customerId;
+    transactionCreate.tokenizationMode = "ALLOW_ONE_CLICK_PAYMENT";
+  }
+
   // Ne pas forcer LIVE : un espace encore en test refuse alors la création.
   // Sans ce champ, PostFinance prend le mode de l'espace.
 
@@ -188,6 +195,43 @@ export async function fetchPostfinanceTransaction(
   );
 }
 
+export interface SavedCard {
+  id: number;
+  label: string;
+}
+
+export async function listSavedCards(customerId: string): Promise<SavedCard[]> {
+  if (!isPostfinanceConfigured()) return [];
+  const raw = await pfFetch<unknown>("/payment/tokens/search", {
+    method: "GET",
+    query: {
+      query: `customerId:${customerId} AND enabledForOneClickPayment:true`,
+      limit: "20",
+    },
+  });
+  const rows = asList(raw);
+  return rows
+    .filter((row) => row.state === "ACTIVE" || !row.state)
+    .map((row) => ({
+      id: Number(row.id),
+      label: typeof row.name === "string" && row.name.trim() ? row.name : "••••",
+    }))
+    .filter((card) => Number.isInteger(card.id) && card.id > 0);
+}
+
+export async function deleteSavedCard(
+  customerId: string,
+  tokenId: number,
+): Promise<void> {
+  const cards = await listSavedCards(customerId);
+  if (!cards.some((card) => card.id === tokenId)) {
+    throw new Error("Carte inconnue pour ce compte.");
+  }
+  await pfFetch(`/payment/tokens/${encodeURIComponent(String(tokenId))}`, {
+    method: "DELETE",
+  });
+}
+
 async function paymentPageUrl(transactionId: number): Promise<string> {
   const path = `/payment/transactions/${encodeURIComponent(String(transactionId))}/payment-page-url`;
   // Cet endpoint renvoie une URL en texte : Accept: application/json → 406.
@@ -216,7 +260,12 @@ function extractUrl(raw: unknown): string | undefined {
 
 async function pfFetch<T>(
   path: string,
-  init: { method: "GET" | "POST"; body?: unknown; accept?: string },
+  init: {
+    method: "GET" | "POST" | "DELETE";
+    body?: unknown;
+    accept?: string;
+    query?: Record<string, string>;
+  },
 ): Promise<T> {
   const headers: Record<string, string> = {
     Accept: init.accept ?? "application/json",
@@ -226,10 +275,13 @@ async function pfFetch<T>(
     headers["Content-Type"] = "application/json";
   }
 
-  const token = await signRequest(path, init.method);
+  const search = init.query ? new URLSearchParams(init.query).toString() : "";
+  const signedPath = search ? `${path}?${search}` : path;
+
+  const token = await signRequest(signedPath, init.method);
   headers.Authorization = `Bearer ${token}`;
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(`${API_BASE}${signedPath}`, {
     method: init.method,
     headers,
     body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
@@ -287,6 +339,23 @@ function francs(cents: number): number {
 }
 
 /** uniqueId / sku : lettres, chiffres, point, underscore, tiret uniquement. */
+function asList(raw: unknown): Record<string, unknown>[] {
+  if (Array.isArray(raw)) return raw.filter(isRecord);
+  if (raw && typeof raw === "object") {
+    const record = raw as Record<string, unknown>;
+    for (const key of ["data", "result", "items"]) {
+      if (Array.isArray(record[key])) {
+        return (record[key] as unknown[]).filter(isRecord);
+      }
+    }
+  }
+  return [];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object";
+}
+
 function lineToken(project: string, suffix: string): string {
   const raw = `${project}-${suffix}`.replace(/[^a-zA-Z0-9._-]+/g, "-");
   return raw.replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 200);

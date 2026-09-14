@@ -1,9 +1,11 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, FileDown, Printer } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { CartClearer } from "@/components/cart/cart-clearer";
 import { settlePostfinanceOrder } from "@/lib/orders/settle-card";
+import { prisma } from "@/lib/prisma";
+import { ticketPdfPath } from "@/lib/tickets/download";
 
 export default async function CheckoutSuccessPage({
   params,
@@ -23,6 +25,17 @@ export default async function CheckoutSuccessPage({
     });
   }
 
+  const paid = ref
+    ? await prisma.order.findUnique({
+        where: { reference: ref },
+        select: { status: true, _count: { select: { tickets: true } } },
+      })
+    : null;
+  const pdfHref =
+    ref && paid?.status === "PAID" && paid._count.tickets > 0
+      ? ticketPdfPath(ref)
+      : null;
+
   return (
     <div className="container-page max-w-2xl py-20 text-center">
       <CartClearer />
@@ -35,8 +48,29 @@ export default async function CheckoutSuccessPage({
           Réf. {ref}
         </p>
       )}
-      <Link href="/account" className="mt-6 inline-block">
-        <Button size="lg">{t("backHome")}</Button>
+      {pdfHref ? (
+        <div className="mt-8 space-y-3">
+          <p className="text-sm text-muted-foreground">{t("pdfHint")}</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <a href={pdfHref} target="_blank" rel="noreferrer">
+              <Button size="lg">
+                <FileDown className="size-4" />
+                {t("downloadPdf")}
+              </Button>
+            </a>
+            <a href={pdfHref} target="_blank" rel="noreferrer">
+              <Button size="lg" variant="outline">
+                <Printer className="size-4" />
+                {t("printTickets")}
+              </Button>
+            </a>
+          </div>
+        </div>
+      ) : null}
+      <Link href="/" className="mt-6 inline-block">
+        <Button size="lg" variant={pdfHref ? "outline" : "default"}>
+          {t("backHome")}
+        </Button>
       </Link>
     </div>
   );

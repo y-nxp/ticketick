@@ -29,6 +29,7 @@ export interface CreateCardCheckoutInput {
   lineItems: CardCheckoutLineItem[];
   project: string;
   organizerName?: string;
+  customerId?: string;
   feeCents?: number;
   metadata?: Record<string, string>;
 }

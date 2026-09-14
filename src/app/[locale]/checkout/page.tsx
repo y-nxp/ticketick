@@ -3,12 +3,13 @@
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CreditCard, Landmark, CheckCircle2, Loader2, Copy } from "lucide-react";
+import { CreditCard, Landmark, CheckCircle2, Loader2, Copy, Clock } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
 import { formatPrice } from "@/lib/utils";
 import { getCartPaymentMethods } from "@/lib/orders/payment-actions";
+import { formatHoldClock } from "@/lib/orders/reservation";
 
 type Method = "CARD" | "IBAN";
 
@@ -19,6 +20,37 @@ interface OrderResult {
   beneficiary?: string;
   totalCents: number;
   currency: string;
+}
+
+interface SeatHold {
+  reference: string;
+  checkoutUrl: string;
+  reservedUntil: string;
+  cartKey: string;
+}
+
+const HOLD_KEY = "ticketick.hold.v1";
+
+function readHold(): SeatHold | null {
+  try {
+    const raw = sessionStorage.getItem(HOLD_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as SeatHold;
+    if (!parsed.checkoutUrl || !parsed.reservedUntil || !parsed.cartKey) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeHold(hold: SeatHold): void {
+  sessionStorage.setItem(HOLD_KEY, JSON.stringify(hold));
+}
+
+function clearHold(): void {
+  sessionStorage.removeItem(HOLD_KEY);
 }
 
 export default function CheckoutPage() {
@@ -48,6 +80,9 @@ function CheckoutInner() {
   const [submitting, setSubmitting] = React.useState(false);
   const [result, setResult] = React.useState<OrderResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
+  const [hold, setHold] = React.useState<SeatHold | null>(null);
+  const [now, setNow] = React.useState(() => Date.now());
+  const [holdExpired, setHoldExpired] = React.useState(false);
 
   const ticketIds = lines.map((l) => l.ticketTypeId).join(",");
   React.useEffect(() => {
@@ -71,11 +106,50 @@ function CheckoutInner() {
   }, [ticketIds]);
 
   const total = subtotalCents;
+  const cartKey = lines
+    .map((l) => `${l.ticketTypeId}:${l.quantity}`)
+    .sort()
+    .join(",");
+
+  React.useEffect(() => {
+    const stored = readHold();
+    if (!stored) return;
+    if (stored.cartKey !== cartKey || Date.parse(stored.reservedUntil) <= Date.now()) {
+      clearHold();
+      if (canceled) setHoldExpired(true);
+      return;
+    }
+    setHold(stored);
+  }, [cartKey, canceled]);
+
+  React.useEffect(() => {
+    if (!hold) return;
+    const tick = window.setInterval(() => {
+      const left = Date.parse(hold.reservedUntil) - Date.now();
+      setNow(Date.now());
+      if (left <= 0) {
+        clearHold();
+        setHold(null);
+        setHoldExpired(true);
+      }
+    }, 250);
+    return () => window.clearInterval(tick);
+  }, [hold]);
+
+  const msLeft = hold ? Date.parse(hold.reservedUntil) - now : 0;
+  const holdActive = Boolean(hold && msLeft > 0);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+    setHoldExpired(false);
+
+    if (holdActive && hold?.checkoutUrl) {
+      window.location.href = hold.checkoutUrl;
+      return;
+    }
+
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -112,11 +186,21 @@ function CheckoutInner() {
         }
         throw new Error("checkout_failed");
       }
-      const data: OrderResult & { checkoutUrl?: string } = await res.json();
+      const data: OrderResult & {
+        checkoutUrl?: string;
+        reservedUntil?: string;
+      } = await res.json();
 
-      // Paiement carte : redirection vers PostFinance Checkout.
-      // Le panier sera vidé sur la page de succès après confirmation.
-      if (method === "CARD" && data.checkoutUrl) {
+      // Paiement carte : les places sont retenues 10 min, puis redirection.
+      if (method === "CARD" && data.checkoutUrl && data.reservedUntil) {
+        const nextHold = {
+          reference: data.reference,
+          checkoutUrl: data.checkoutUrl,
+          reservedUntil: data.reservedUntil,
+          cartKey,
+        };
+        writeHold(nextHold);
+        setHold(nextHold);
         window.location.href = data.checkoutUrl;
         return;
       }
@@ -180,17 +264,39 @@ function CheckoutInner() {
   return (
     <div className="container-page py-10">
       <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
-      {canceled && (
-        <p className="mt-4 rounded-xl bg-warning/15 px-4 py-3 text-sm">
-          {locale === "de"
-            ? "Zahlung abgebrochen. Ihr Warenkorb wurde beibehalten."
-            : locale === "it"
-              ? "Pagamento annullato. Il carrello è stato conservato."
-              : locale === "en"
-                ? "Payment canceled. Your cart has been kept."
-                : "Paiement annulé. Votre panier a été conservé."}
+      {holdActive ? (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/8 px-4 py-3">
+          <div className="flex items-start gap-3">
+            <Clock className="mt-0.5 size-5 shrink-0 text-primary" />
+            <div>
+              <p className="font-semibold tabular-nums">
+                {t("reserved", { time: formatHoldClock(msLeft) })}
+              </p>
+              <p className="text-sm text-muted-foreground">{t("reservedHint")}</p>
+            </div>
+          </div>
+          {hold?.checkoutUrl ? (
+            <Button
+              type="button"
+              onClick={() => {
+                window.location.href = hold.checkoutUrl;
+              }}
+            >
+              {t("resumePayment")}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+      {holdExpired ? (
+        <p className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {t("reservedExpired")}
         </p>
-      )}
+      ) : null}
+      {canceled && !holdActive && !holdExpired ? (
+        <p className="mt-4 rounded-xl bg-warning/15 px-4 py-3 text-sm">
+          {t("canceled")}
+        </p>
+      ) : null}
       <form
         onSubmit={submit}
         className="mt-8 grid gap-8 lg:grid-cols-[1fr_360px]"
@@ -311,8 +417,10 @@ function CheckoutInner() {
               {submitting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  {t("processing")}
+                  {holdActive ? t("reserving") : t("processing")}
                 </>
+              ) : holdActive ? (
+                t("resumePayment")
               ) : (
                 t("payNow", { amount: formatPrice(total, `${locale}-CH`) })
               )}

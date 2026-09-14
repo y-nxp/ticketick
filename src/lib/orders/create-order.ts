@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { Prisma, type PaymentMethod } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { inheritPayment, intersectOffers } from "./payment-methods";
+import { CARD_HOLD_MS } from "./reservation";
 
 /**
  * Création d'une commande.
@@ -52,6 +53,7 @@ export interface CreatedOrder {
   project: string;
   /** Nom affiché sur la page PostFinance (ex. Chœur Cantabile). */
   organizerName: string;
+  createdAt: Date;
 }
 
 export type OrderError =
@@ -117,7 +119,7 @@ export async function createOrder(
               title: true,
               acceptCard: true,
               acceptIban: true,
-              organizer: { select: { name: true, slug: true } },
+              organizer: { select: { id: true, name: true, slug: true } },
             },
           },
         },
@@ -295,9 +297,16 @@ export async function createOrder(
             })),
           },
         },
-        select: { id: true, reference: true },
+        select: { id: true, reference: true, createdAt: true },
       });
     });
+
+    if (input.userId) {
+      await followIfOptedIn(
+        input.userId,
+        ticketTypes.map((tt) => tt.session.event.organizer.id),
+      );
+    }
 
     return {
       ok: true,
@@ -311,6 +320,7 @@ export async function createOrder(
         lines,
         project,
         organizerName,
+        createdAt: order.createdAt,
       },
     };
   } catch (error) {
@@ -330,32 +340,19 @@ export async function createOrder(
 }
 
 /**
- * Rend le stock d'une commande qui n'aboutira pas.
- *
- * Sans cela, un panier abandonné retiendrait des places jusqu'à la date de la
- * séance.
- */
-/**
  * Rend le stock des paiements carte qui n'ont jamais abouti.
  *
- * - sans ligne Payment : PostFinance n'a pas été joignable — 2 minutes suffisent
- * - Payment encore PENDING : l'acheteur a pu être envoyé chez PF — 60 minutes
+ * Au-delà de 10 minutes, les places sont remises en vente. Sans cela, un
+ * panier abandonné retiendrait des sièges jusqu'à la séance.
  */
 export async function releaseStaleUnpaidCardOrders(): Promise<number> {
-  const sansEncaissement = new Date(Date.now() - 2 * 60 * 1000);
-  const encaissementEnCours = new Date(Date.now() - 60 * 60 * 1000);
+  const limite = new Date(Date.now() - CARD_HOLD_MS);
 
   const stale = await prisma.order.findMany({
     where: {
       status: "AWAITING_PAYMENT",
       paymentMethod: "CARD",
-      OR: [
-        { payment: { is: null }, createdAt: { lt: sansEncaissement } },
-        {
-          payment: { is: { status: "PENDING" } },
-          createdAt: { lt: encaissementEnCours },
-        },
-      ],
+      createdAt: { lt: limite },
     },
     select: { id: true },
     take: 50,
@@ -435,6 +432,21 @@ function generateReference(): string {
     out += alphabet[bytes[i]! % alphabet.length];
   }
   return `TT-${out.slice(0, 4)}-${out.slice(4)}`;
+}
+
+async function followIfOptedIn(userId: string, organizerIds: string[]) {
+  const buyer = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { marketingOptIn: true },
+  });
+  if (!buyer?.marketingOptIn) return;
+  for (const organizerId of [...new Set(organizerIds)]) {
+    await prisma.organizerFollow.upsert({
+      where: { userId_organizerId: { userId, organizerId } },
+      create: { userId, organizerId },
+      update: {},
+    });
+  }
 }
 
 function paymentLineLabel(input: {

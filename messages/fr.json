@@ -116,6 +116,9 @@
     "success": "Merci ! Votre commande est confirmée.",
     "successHint": "Vos billets ont été envoyés à {email}.",
     "backHome": "Retour à l'accueil",
+    "downloadPdf": "Télécharger le PDF",
+    "printTickets": "Imprimer les billets",
+    "pdfHint": "Un PDF par personne : événement, type de tarif et numéro de billet. Ouvrez-le pour l’imprimer.",
     "failed": "Une erreur est survenue. Veuillez réessayer.",
     "unavailable": "Le paiement en ligne est momentanément indisponible. Votre commande n'a pas été enregistrée et vos places ont été remises en vente. Merci de réessayer plus tard.",
     "companion_limit": "Au plus 2 places gratuites (jusqu’à 16 ans) par billet payant.",
@@ -123,7 +126,13 @@
     "sold_out": "Plus assez de places pour cette sélection.",
     "max_per_order": "La quantité dépasse le maximum autorisé par commande.",
     "method_not_allowed": "Ce moyen de paiement n’est pas proposé pour ces billets.",
-    "noMethod": "Aucun moyen de paiement n’est ouvert pour ces billets."
+    "noMethod": "Aucun moyen de paiement n’est ouvert pour ces billets.",
+    "canceled": "Paiement annulé. Votre panier a été conservé.",
+    "reserved": "Places réservées encore {time}",
+    "reservedHint": "Au-delà de 10 minutes, elles sont remises en vente.",
+    "reservedExpired": "Le délai de 10 minutes est écoulé. Les places ont été remises en vente. Vous pouvez recommencer.",
+    "resumePayment": "Reprendre le paiement",
+    "reserving": "Nous réservons vos places…"
   },
   "account": {
     "title": "Mon espace",
@@ -164,7 +173,8 @@
       "RESELLER_AGENT": "Point de vente",
       "ADMIN": "Administrateur"
     },
-    "ticketCount": "{count} billet(s)"
+    "ticketCount": "{count} billet(s)",
+    "downloadPdf": "Télécharger / imprimer le PDF"
   },
   "organizer": {
     "title": "Espace organisateur",
@@ -240,6 +250,21 @@
   "auth": {
     "signIn": "Se connecter",
     "signInSubtitle": "Accédez à votre espace ticketick.",
+    "signUp": "Créer un compte",
+    "signUpSubtitle": "Retrouvez vos billets et recevez les offres des organisateurs que vous suivez.",
+    "signUpSubmit": "Créer mon compte",
+    "signUpPending": "Création du compte…",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "confirmPassword": "Confirmer le mot de passe",
+    "passwordHint": "Douze caractères au minimum.",
+    "haveAccount": "Déjà un compte ?",
+    "noAccount": "Pas encore de compte ?",
+    "marketingOptIn": "Recevoir les offres des organisateurs",
+    "marketingOptInHint": "Case décochée par défaut. Uniquement les spectacles des organisateurs dont vous avez déjà acheté des billets.",
+    "emailTaken": "Un compte existe déjà pour cette adresse. Connectez-vous.",
+    "tooShort": "Le mot de passe doit faire au moins 12 caractères.",
+    "mismatch": "Les deux mots de passe ne correspondent pas.",
     "email": "E-mail",
     "password": "Mot de passe",
     "submit": "Se connecter",

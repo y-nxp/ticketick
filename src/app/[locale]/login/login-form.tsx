@@ -79,6 +79,15 @@ export function LoginForm({ next }: { next?: string }) {
           {t("forgot.link")}
         </Link>
       </p>
+      <p className="text-center text-sm text-muted-foreground">
+        {t("noAccount")}{" "}
+        <Link
+          href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"}
+          className="font-medium text-foreground hover:text-primary hover:underline"
+        >
+          {t("signUp")}
+        </Link>
+      </p>
     </form>
   );
 }

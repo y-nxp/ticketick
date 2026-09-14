@@ -116,6 +116,9 @@
     "success": "Vielen Dank! Ihre Bestellung ist bestätigt.",
     "successHint": "Ihre Tickets wurden an {email} gesendet.",
     "backHome": "Zurück zur Startseite",
+    "downloadPdf": "PDF herunterladen",
+    "printTickets": "Tickets drucken",
+    "pdfHint": "Eine Seite pro Person: Anlass, Tarif und Ticketnummer. Zum Drucken öffnen.",
     "failed": "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
     "unavailable": "Die Online-Zahlung ist vorübergehend nicht verfügbar. Ihre Bestellung wurde nicht aufgegeben und Ihre Plätze wurden wieder freigegeben. Bitte versuchen Sie es später erneut.",
     "companion_limit": "Höchstens 2 Freikarten (bis 16 Jahre) pro bezahltes Ticket.",
@@ -123,7 +126,13 @@
     "sold_out": "Für diese Auswahl sind nicht genug Plätze frei.",
     "max_per_order": "Die Menge übersteigt das Maximum pro Bestellung.",
     "method_not_allowed": "Diese Zahlungsart wird für diese Tickets nicht angeboten.",
-    "noMethod": "Für diese Tickets ist keine Zahlungsart geöffnet."
+    "noMethod": "Für diese Tickets ist keine Zahlungsart geöffnet.",
+    "canceled": "Zahlung abgebrochen. Ihr Warenkorb wurde beibehalten.",
+    "reserved": "Plätze noch {time} reserviert",
+    "reservedHint": "Nach 10 Minuten kommen sie wieder in den Verkauf.",
+    "reservedExpired": "Die 10 Minuten sind abgelaufen. Die Plätze sind wieder frei. Sie können neu beginnen.",
+    "resumePayment": "Zahlung fortsetzen",
+    "reserving": "Wir reservieren Ihre Plätze…"
   },
   "account": {
     "title": "Mein Konto",
@@ -164,7 +173,8 @@
       "RESELLER_AGENT": "Verkaufsstelle",
       "ADMIN": "Administrator"
     },
-    "ticketCount": "{count} Ticket(s)"
+    "ticketCount": "{count} Ticket(s)",
+    "downloadPdf": "PDF herunterladen / drucken"
   },
   "organizer": {
     "title": "Veranstalterbereich",
@@ -240,6 +250,21 @@
   "auth": {
     "signIn": "Anmelden",
     "signInSubtitle": "Zugang zu Ihrem ticketick-Konto.",
+    "signUp": "Konto erstellen",
+    "signUpSubtitle": "Tickets behalten und Angebote der Veranstalter erhalten, denen Sie folgen.",
+    "signUpSubmit": "Konto erstellen",
+    "signUpPending": "Konto wird erstellt…",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "confirmPassword": "Passwort bestätigen",
+    "passwordHint": "Mindestens zwölf Zeichen.",
+    "haveAccount": "Schon ein Konto?",
+    "noAccount": "Noch kein Konto?",
+    "marketingOptIn": "Angebote der Veranstalter erhalten",
+    "marketingOptInHint": "Standardmässig deaktiviert. Nur Veranstalter, bei denen Sie schon Tickets gekauft haben.",
+    "emailTaken": "Für diese Adresse existiert bereits ein Konto. Bitte anmelden.",
+    "tooShort": "Das Passwort muss mindestens 12 Zeichen haben.",
+    "mismatch": "Die beiden Passwörter stimmen nicht überein.",
     "email": "E-Mail",
     "password": "Passwort",
     "submit": "Anmelden",

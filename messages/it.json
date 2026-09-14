@@ -116,6 +116,9 @@
     "success": "Grazie! Il tuo ordine è confermato.",
     "successHint": "I tuoi biglietti sono stati inviati a {email}.",
     "backHome": "Torna alla home",
+    "downloadPdf": "Scarica il PDF",
+    "printTickets": "Stampa i biglietti",
+    "pdfHint": "Una pagina a persona: evento, tipo di tariffa e numero. Aprilo per stampare.",
     "failed": "Si è verificato un errore. Riprova.",
     "unavailable": "Il pagamento online è temporaneamente non disponibile. L'ordine non è stato registrato e i posti sono stati rimessi in vendita. Riprova più tardi.",
     "companion_limit": "Al massimo 2 posti gratuiti (fino a 16 anni) per biglietto a pagamento.",
@@ -123,7 +126,13 @@
     "sold_out": "Non ci sono abbastanza posti per questa selezione.",
     "max_per_order": "La quantità supera il massimo per ordine.",
     "method_not_allowed": "Questo mezzo di pagamento non è proposto per questi biglietti.",
-    "noMethod": "Nessun mezzo di pagamento è aperto per questi biglietti."
+    "noMethod": "Nessun mezzo di pagamento è aperto per questi biglietti.",
+    "canceled": "Pagamento annullato. Il carrello è stato conservato.",
+    "reserved": "Posti riservati ancora {time}",
+    "reservedHint": "Dopo 10 minuti tornano in vendita.",
+    "reservedExpired": "I 10 minuti sono scaduti. I posti sono di nuovo in vendita. Puoi ricominciare.",
+    "resumePayment": "Riprendere il pagamento",
+    "reserving": "Stiamo riservando i posti…"
   },
   "account": {
     "title": "Il mio spazio",
@@ -164,7 +173,8 @@
       "RESELLER_AGENT": "Punto vendita",
       "ADMIN": "Amministratore"
     },
-    "ticketCount": "{count} biglietto/i"
+    "ticketCount": "{count} biglietto/i",
+    "downloadPdf": "Scarica / stampa il PDF"
   },
   "organizer": {
     "title": "Spazio organizzatore",
@@ -240,6 +250,21 @@
   "auth": {
     "signIn": "Accedi",
     "signInSubtitle": "Accedi al tuo spazio ticketick.",
+    "signUp": "Crea un account",
+    "signUpSubtitle": "Conserva i biglietti e ricevi le offerte degli organizzatori che segui.",
+    "signUpSubmit": "Crea il mio account",
+    "signUpPending": "Creazione dell’account…",
+    "firstName": "Nome",
+    "lastName": "Cognome",
+    "confirmPassword": "Conferma la password",
+    "passwordHint": "Almeno dodici caratteri.",
+    "haveAccount": "Hai già un account?",
+    "noAccount": "Non hai ancora un account?",
+    "marketingOptIn": "Ricevere le offerte degli organizzatori",
+    "marketingOptInHint": "Disattivato di default. Solo organizzatori da cui hai già acquistato biglietti.",
+    "emailTaken": "Esiste già un account per questo indirizzo. Accedi.",
+    "tooShort": "La password deve avere almeno 12 caratteri.",
+    "mismatch": "Le due password non coincidono.",
     "email": "E-mail",
     "password": "Password",
     "submit": "Accedi",

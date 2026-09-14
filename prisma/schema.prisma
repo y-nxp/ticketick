@@ -207,6 +207,12 @@ model User {
   orders     Order[]
   soldOrders Order[] @relation("OrderSoldBy")
 
+  /// Offres des organisateurs suivis. Jamais implicite : case décochée
+  /// à l'inscription, révocable depuis le compte.
+  marketingOptIn   Boolean   @default(false)
+  marketingOptInAt DateTime?
+  follows          OrganizerFollow[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -232,9 +238,23 @@ model Organizer {
   userId String? @unique
 
   events Event[]
+  followers OrganizerFollow[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// Un spectateur ne reçoit les offres que des organisateurs qu'il suit.
+model OrganizerFollow {
+  id          String    @id @default(cuid())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  organizer   Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  organizerId String
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, organizerId])
+  @@index([organizerId])
 }
 
 model Category {

@@ -1,8 +1,11 @@
 import "server-only";
 
-import { envoyer, echapper } from "@/lib/email";
+import { envoyer, echapper, type MailAttachment } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { publicAppOrigin } from "@/lib/app-url";
 import { ticketQrPng } from "@/lib/tickets/qr";
+import { buildTicketsPdf } from "@/lib/tickets/pdf";
+import { ticketPdfPath } from "@/lib/tickets/download";
 
 export interface TicketForMail {
   code: string;
@@ -10,6 +13,8 @@ export interface TicketForMail {
   ticketName: string;
   when: string;
   venue: string;
+  organizerName?: string;
+  holderName?: string;
 }
 
 export async function sendTicketCards(input: {
@@ -21,7 +26,7 @@ export async function sendTicketCards(input: {
   tickets: TicketForMail[];
   preview?: boolean;
 }) {
-  const attachments = await Promise.all(
+  const attachments: MailAttachment[] = await Promise.all(
     input.tickets.map(async (ticket, index) => ({
       filename: `billet-${index + 1}.png`,
       content: await ticketQrPng(ticket.code),
@@ -29,6 +34,22 @@ export async function sendTicketCards(input: {
       contentType: "image/png",
     })),
   );
+
+  const pdfCards = input.tickets.map((ticket) => ({
+    code: ticket.code,
+    eventTitle: ticket.eventTitle,
+    organizerName: ticket.organizerName,
+    ticketName: ticket.ticketName,
+    when: ticket.when,
+    venue: ticket.venue,
+    holderName: ticket.holderName || input.firstName,
+    reference: input.reference,
+  }));
+  attachments.push({
+    filename: `billets-${input.reference}.pdf`,
+    content: await buildTicketsPdf(pdfCards, input.locale),
+    contentType: "application/pdf",
+  });
 
   const t = textes(input.locale);
   const titre = input.preview ? t.apercuSujet : t.sujet(input.reference);
@@ -43,7 +64,12 @@ export async function sendTicketCards(input: {
   <div style="max-width:560px;margin:0 auto">
     <p style="margin:0 0 4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6C5CE7;font-weight:800">ticketick</p>
     <h1 style="margin:0 0 16px;font-size:22px">${echapper(titre)}</h1>
-    <p style="margin:0 0 24px;line-height:1.5">${echapper(t.bonjour(input.firstName))} ${echapper(input.preview ? t.apercuCorps : t.corps)}</p>
+    <p style="margin:0 0 24px;line-height:1.5">${echapper(t.bonjour(input.firstName))} ${echapper(input.preview ? t.apercuCorps : t.corps)} ${echapper(t.pdf)}</p>
+    ${
+      input.preview
+        ? ""
+        : `<p style="margin:0 0 24px"><a href="${echapper(publicAppOrigin() + ticketPdfPath(input.reference))}" style="color:#6C5CE7;font-weight:600">${echapper(t.pdfLien)}</a></p>`
+    }
     ${cartes}
     <p style="margin:24px 0 0;font-size:12px;color:#6b7280">${echapper(t.pied)}</p>
   </div>
@@ -84,6 +110,7 @@ export async function sendPaidOrderTickets(orderId: string) {
     select: {
       email: true,
       firstName: true,
+      lastName: true,
       reference: true,
       locale: true,
       tickets: {
@@ -100,7 +127,7 @@ export async function sendPaidOrderTickets(orderId: string) {
                   event: {
                     select: {
                       title: true,
-                      organizer: { select: { notifyEmails: true } },
+                      organizer: { select: { name: true, notifyEmails: true } },
                     },
                   },
                 },
@@ -119,11 +146,13 @@ export async function sendPaidOrderTickets(orderId: string) {
     return {
       code: ticket.code,
       eventTitle: readTitle(session.event.title, order.locale),
+      organizerName: session.event.organizer.name,
       ticketName: readTitle(ticket.ticketType.name, order.locale),
       when: formatWhen(session.startsAt, order.locale),
       venue: [session.venue?.name, session.venue?.city]
         .filter(Boolean)
         .join(", "),
+      holderName: `${order.firstName} ${order.lastName}`.trim(),
     };
   });
 
@@ -190,6 +219,8 @@ function textes(locale: string) {
       apercuSujet: "Aperçu — billet ticketick",
       bonjour: (prenom: string) => `Bonjour ${prenom},`,
       corps: "Présentez le QR à l’entrée. Chaque billet n’est valable qu’une fois.",
+      pdf: "Un PDF imprimable est joint (un billet par page, numéroté).",
+      pdfLien: "Télécharger / imprimer le PDF",
       apercuCorps:
         "Ceci est un aperçu : le QR n’ouvre aucune porte. Voici le rendu envoyé à l’acheteur.",
       pied: "ticketick.ch — billetterie suisse",
@@ -199,6 +230,8 @@ function textes(locale: string) {
       apercuSujet: "Preview — ticketick ticket",
       bonjour: (prenom: string) => `Hello ${prenom},`,
       corps: "Show the QR code at the entrance. Each ticket is valid once.",
+      pdf: "A printable PDF is attached (one numbered ticket per page).",
+      pdfLien: "Download / print the PDF",
       apercuCorps:
         "This is a preview: the QR code will not admit anyone. This is what the buyer receives.",
       pied: "ticketick.ch — Swiss ticketing",
@@ -208,6 +241,8 @@ function textes(locale: string) {
       apercuSujet: "Vorschau — ticketick-Ticket",
       bonjour: (prenom: string) => `Guten Tag ${prenom},`,
       corps: "Zeigen Sie den QR-Code am Eingang. Jedes Ticket gilt nur einmal.",
+      pdf: "Ein druckbares PDF ist angehängt (ein nummeriertes Ticket pro Seite).",
+      pdfLien: "PDF herunterladen / drucken",
       apercuCorps:
         "Dies ist eine Vorschau: Der QR-Code öffnet keine Tür. So sieht die Nachricht an die Käuferin oder den Käufer aus.",
       pied: "ticketick.ch — Schweizer Ticketing",
@@ -217,6 +252,8 @@ function textes(locale: string) {
       apercuSujet: "Anteprima — biglietto ticketick",
       bonjour: (prenom: string) => `Buongiorno ${prenom},`,
       corps: "Mostra il QR all’ingresso. Ogni biglietto è valido una sola volta.",
+      pdf: "In allegato un PDF da stampare (un biglietto numerato per pagina).",
+      pdfLien: "Scarica / stampa il PDF",
       apercuCorps:
         "Questa è un’anteprima: il QR non apre nessun ingresso. Ecco cosa riceve chi acquista.",
       pied: "ticketick.ch — biglietteria svizzera",
