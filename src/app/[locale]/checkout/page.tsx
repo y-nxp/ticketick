@@ -201,7 +201,16 @@ function CheckoutInner() {
       }
       if (stored.cartKey === cartKey) {
         setHoldExpired(false);
-        setHold(stored);
+        // Une session PostFinance annulée renvoie tout de suite à
+        // ?canceled=1 : la réouvrir relancerait la boucle.
+        if (canceled && stored.checkoutUrl) {
+          const next = { ...stored };
+          delete next.checkoutUrl;
+          writeHold(next);
+          setHold(next);
+        } else {
+          setHold(stored);
+        }
         return;
       }
     }
@@ -237,7 +246,7 @@ function CheckoutInner() {
     return () => {
       cancelled = true;
     };
-  }, [hydrated, cartKey, holdExpired, locale, t]);
+  }, [hydrated, cartKey, holdExpired, locale, t, canceled]);
 
   React.useEffect(() => {
     if (!hold) return;
@@ -263,11 +272,6 @@ function CheckoutInner() {
     setError(null);
     setHoldExpired(false);
     setSeatsOk(null);
-
-    if (holdActive && hold?.checkoutUrl) {
-      window.location.href = hold.checkoutUrl;
-      return;
-    }
 
     try {
       const res = await fetch("/api/checkout", {
@@ -311,17 +315,17 @@ function CheckoutInner() {
         reservedUntil?: string;
       } = await res.json();
 
-      // Paiement carte : on reste sur le formulaire. Le compte à rebours
-      // de 25 min commence ici ; l'acheteur part ensuite vers PostFinance.
+      // Paiement carte : on part tout de suite. Rester sur la page avec
+      // l'URL PostFinance ferait alterner « Continuer » et « Reprendre ».
       if (method === "CARD" && data.checkoutUrl && data.reservedUntil) {
         const nextHold = {
           reference: data.reference,
-          checkoutUrl: data.checkoutUrl,
           reservedUntil: data.reservedUntil,
           cartKey,
         };
         writeHold(nextHold);
         setHold(nextHold);
+        window.location.href = data.checkoutUrl;
         return;
       }
 
@@ -412,8 +416,6 @@ function CheckoutInner() {
               <Loader2 className="size-4 animate-spin" />
               {t("processing")}
             </>
-          ) : holdActive && hold?.checkoutUrl && !canceled ? (
-            t("continueToPayment")
           ) : (
             t("payNow", { amount: formatPrice(total, `${locale}-CH`) })
           )}
@@ -441,28 +443,16 @@ function CheckoutInner() {
         </div>
       ) : null}
       {holdActive ? (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/25 bg-primary/8 px-4 py-3">
-          <div className="flex items-start gap-3">
-            <Clock className="mt-0.5 size-5 shrink-0 text-primary" />
-            <div>
-              <p className="font-semibold tabular-nums">
-                {t("reserved", { time: formatHoldClock(msLeft) })}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {canceled ? t("canceledHold") : t("reservedHint")}
-              </p>
-            </div>
+        <div className="mt-4 flex items-start gap-3 rounded-xl border border-primary/25 bg-primary/8 px-4 py-3">
+          <Clock className="mt-0.5 size-5 shrink-0 text-primary" />
+          <div>
+            <p className="font-semibold tabular-nums">
+              {t("reserved", { time: formatHoldClock(msLeft) })}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {canceled ? t("canceledHold") : t("reservedHint")}
+            </p>
           </div>
-          {hold?.checkoutUrl ? (
-            <Button
-              type="button"
-              onClick={() => {
-                window.location.href = hold.checkoutUrl!;
-              }}
-            >
-              {canceled ? t("resumePayment") : t("continueToPayment")}
-            </Button>
-          ) : null}
         </div>
       ) : null}
       {holdExpired ? (
