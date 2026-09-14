@@ -82,7 +82,7 @@
     "datesCount": "{count} dates",
     "free": "Gratuit",
     "companionHint": "Jusqu’à {n} par billet payant, jusqu’à 16 ans révolus.",
-    "companionNeedsPaid": "Ajoutez d’abord un billet payant (2 places gratuites par billet payant)."
+    "companionNeedsPaid": "2 places gratuites par billet payant."
   },
   "portal": {
     "tickets": "Billetterie",

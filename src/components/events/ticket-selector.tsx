@@ -193,13 +193,12 @@ function TicketRow({
   const te = useTranslations("event");
   const remaining = ticket.quantity - ticket.sold;
   const soldOut = remaining <= 0;
-  const atCompanionMax =
-    ticket.maxPerPaidTicket != null && qty > 0 && qty >= max;
-  const hint = atCompanionMax
-    ? te("companionNeedsPaid")
-    : ticket.maxPerPaidTicket == null && ticket.description
-      ? t(ticket.description, locale)
-      : null;
+  const hint =
+    ticket.maxPerPaidTicket != null
+      ? te("companionNeedsPaid")
+      : ticket.description
+        ? t(ticket.description, locale)
+        : null;
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
