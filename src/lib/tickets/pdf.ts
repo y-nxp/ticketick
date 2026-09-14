@@ -225,21 +225,36 @@ export async function buildTicketsPdf(
     const discLh = 10;
     const discLines = wrapLines(disclaimer, regular, discSize, contentW);
 
+    const footerLogos: { img: Awaited<ReturnType<typeof embedImage>>; w: number; h: number }[] =
+      [];
+    const brandBytes = await readPublicFile("/brand/logo_standard.png");
+    if (brandBytes) {
+      const img = await embedImage(doc, brandBytes, "/brand/logo_standard.png");
+      const h = 14;
+      footerLogos.push({ img, h, w: (img.width / img.height) * h });
+    }
     const producerBytes = await readPublicFile(ticket.producerLogoUrl);
-    let producerImg: Awaited<ReturnType<typeof embedImage>> | undefined;
-    let prodH = 0;
-    let prodW = 0;
     if (producerBytes && ticket.producerLogoUrl) {
-      producerImg = await embedImage(doc, producerBytes, ticket.producerLogoUrl);
-      prodH = 72;
-      prodW = Math.min((producerImg.width / producerImg.height) * prodH, 220);
+      const img = await embedImage(doc, producerBytes, ticket.producerLogoUrl);
+      const h = 36;
+      footerLogos.push({
+        img,
+        h,
+        w: Math.min((img.width / img.height) * h, 130),
+      });
     }
 
+    const logoGap = 22;
+    const rowH = footerLogos.reduce((max, logo) => Math.max(max, logo.h), 0);
+    const rowW =
+      footerLogos.reduce((sum, logo) => sum + logo.w, 0) +
+      logoGap * Math.max(0, footerLogos.length - 1);
+
     const padTop = 14;
-    const padBot = 16;
-    const logoGap = producerImg ? 10 : 0;
+    const padBot = 18;
+    const logosBlock = footerLogos.length ? 12 + rowH : 0;
     const footerTop =
-      padTop + prodH + logoGap + discLines.length * discLh + padBot;
+      padTop + discLines.length * discLh + logosBlock + padBot;
 
     page.drawRectangle({
       x: 0,
@@ -257,17 +272,6 @@ export async function buildTicketsPdf(
     });
 
     let footerY = footerTop - padTop;
-    if (producerImg) {
-      footerY -= prodH;
-      page.drawImage(producerImg, {
-        x: margin,
-        y: footerY,
-        width: prodW,
-        height: prodH,
-      });
-      footerY -= logoGap;
-    }
-
     for (const line of discLines) {
       footerY -= discSize;
       page.drawText(line, {
@@ -278,6 +282,20 @@ export async function buildTicketsPdf(
         color: MUTED,
       });
       footerY -= discLh - discSize;
+    }
+
+    if (footerLogos.length) {
+      let x = (width - rowW) / 2;
+      const y = padBot;
+      for (const logo of footerLogos) {
+        page.drawImage(logo.img, {
+          x,
+          y: y + (rowH - logo.h) / 2,
+          width: logo.w,
+          height: logo.h,
+        });
+        x += logo.w + logoGap;
+      }
     }
   }
 

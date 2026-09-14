@@ -41,6 +41,16 @@ export async function sendTicketCards(input: {
     });
   }
 
+  const brandLogo = await readPublicFile("/brand/logo_standard.png");
+  if (brandLogo) {
+    attachments.push({
+      filename: "ticketick.png",
+      content: brandLogo,
+      cid: "ticketick-logo",
+      contentType: "image/png",
+    });
+  }
+
   const producerLogoUrl = input.tickets[0]?.producerLogoUrl;
   const producerLogo = await readPublicFile(producerLogoUrl);
   if (producerLogo && producerLogoUrl) {
@@ -110,8 +120,8 @@ export async function sendTicketCards(input: {
       </tr>
     </table>
     ${cartes}
-    ${producerFooterHtml(input.tickets[0], Boolean(producerLogo))}
     <p style="margin:24px 0 0;font-size:12px;line-height:1.5;color:#6b7280">${echapper(input.tickets[0]?.disclaimer ?? t.disclaimer)}</p>
+    ${footerLogosHtml(input.tickets[0], Boolean(brandLogo), Boolean(producerLogo))}
     <p style="margin:16px 0 0;font-size:13px;line-height:1.5">${echapper(t.salutations)}<br>${echapper(t.pied)}</p>
   </div>
 </body>
@@ -253,19 +263,21 @@ function carteHtml(
 </table>`;
 }
 
-function producerFooterHtml(
+function footerLogosHtml(
   ticket: TicketCard | undefined,
-  hasLogo: boolean,
+  hasBrand: boolean,
+  hasProducer: boolean,
 ): string {
-  if (!ticket?.producerName) return "";
-  const href = ticket.producerUrl ?? "#";
-  const logo = hasLogo
-    ? `<a href="${echapper(href)}" style="text-decoration:none"><img src="cid:producer-logo" alt="${echapper(ticket.producerName)}" height="32" style="display:block;height:32px;width:auto;border:0;margin:0 0 8px"/></a>`
+  const brand = hasBrand
+    ? `<img src="cid:ticketick-logo" alt="ticketick" height="16" style="height:16px;width:auto;border:0;vertical-align:middle;margin:0 12px"/>`
     : "";
-  return `<div style="margin:28px 0 0">
-    ${logo}
-    <p style="margin:0;font-size:12px;color:#6b7280"><a href="${echapper(href)}" style="color:#6C5CE7;font-weight:600;text-decoration:none">${echapper(ticket.producerName)}</a></p>
-  </div>`;
+  const href = ticket?.producerUrl ?? "https://illyria.ch";
+  const producer =
+    hasProducer && ticket?.producerName
+      ? `<a href="${echapper(href)}" style="text-decoration:none"><img src="cid:producer-logo" alt="${echapper(ticket.producerName)}" height="28" style="height:28px;width:auto;border:0;vertical-align:middle;margin:0 12px"/></a>`
+      : "";
+  if (!brand && !producer) return "";
+  return `<div style="margin:20px 0 0;text-align:center">${brand}${producer}</div>`;
 }
 
 function textes(locale: string) {
@@ -280,7 +292,7 @@ function textes(locale: string) {
         "Ceci est un aperçu : le QR n’ouvre aucune porte. Voici le rendu envoyé à l’acheteur.",
       reference: "Votre référence :",
       recap: "Récapitulatif de votre commande",
-      colPlace: "Place",
+      colPlace: "Billet",
       colTarif: "Tarif",
       colPrix: "Prix",
       total: "Total",
@@ -300,7 +312,7 @@ function textes(locale: string) {
         "This is a preview: the QR code will not admit anyone. This is what the buyer receives.",
       reference: "Your reference:",
       recap: "Order summary",
-      colPlace: "Seat",
+      colPlace: "Ticket",
       colTarif: "Tariff",
       colPrix: "Price",
       total: "Total",
@@ -320,7 +332,7 @@ function textes(locale: string) {
         "Dies ist eine Vorschau: Der QR-Code öffnet keine Tür. So sieht die Nachricht an die Käuferin oder den Käufer aus.",
       reference: "Ihre Referenz:",
       recap: "Bestellübersicht",
-      colPlace: "Platz",
+      colPlace: "Ticket",
       colTarif: "Tarif",
       colPrix: "Preis",
       total: "Total",
@@ -340,7 +352,7 @@ function textes(locale: string) {
         "Questa è un’anteprima: il QR non apre nessun ingresso. Ecco cosa riceve chi acquista.",
       reference: "Il vostro riferimento:",
       recap: "Riepilogo dell’ordine",
-      colPlace: "Posto",
+      colPlace: "Biglietto",
       colTarif: "Tariffa",
       colPrix: "Prezzo",
       total: "Totale",
