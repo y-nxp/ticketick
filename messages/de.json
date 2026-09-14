@@ -140,6 +140,8 @@
     "method_not_allowed": "Diese Zahlungsart wird für diese Tickets nicht angeboten.",
     "noMethod": "Für diese Tickets ist keine Zahlungsart geöffnet.",
     "canceled": "Zahlung abgebrochen. Ihr Warenkorb wurde beibehalten.",
+    "canceledHold": "Zahlung unterbrochen. Ihre Plätze bleiben reserviert — die Frist läuft weiter.",
+    "continueToPayment": "Weiter zur Zahlung",
     "reserved": "Plätze noch {time} reserviert",
     "reservedHint": "Nach 10 Minuten kommen sie wieder in den Verkauf.",
     "reservedExpired": "Die 10 Minuten sind abgelaufen. Die Plätze sind wieder frei. Sie können neu beginnen.",

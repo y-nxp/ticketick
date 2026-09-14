@@ -68,7 +68,7 @@ function CheckoutInner() {
   const t = useTranslations("checkout");
   const tc = useTranslations("cart");
   const locale = useLocale();
-  const { lines, subtotalCents, clear } = useCart();
+  const { lines, subtotalCents, clear, hydrated } = useCart();
   const searchParams = useSearchParams();
   const canceled = searchParams.get("canceled") === "1";
 
@@ -117,15 +117,22 @@ function CheckoutInner() {
     .join(",");
 
   React.useEffect(() => {
+    // Attendre le panier : au premier rendu `cartKey` est vide et ferait
+    // croire à tort que la réservation de 10 min est périmée (retour PF).
+    if (!hydrated) return;
     const stored = readHold();
     if (!stored) return;
-    if (stored.cartKey !== cartKey || Date.parse(stored.reservedUntil) <= Date.now()) {
+    const until = Date.parse(stored.reservedUntil);
+    if (!Number.isFinite(until) || until <= Date.now()) {
       clearHold();
-      if (canceled) setHoldExpired(true);
+      setHold(null);
+      setHoldExpired(true);
       return;
     }
+    if (stored.cartKey !== cartKey) return;
+    setHoldExpired(false);
     setHold(stored);
-  }, [cartKey, canceled]);
+  }, [hydrated, cartKey, canceled]);
 
   React.useEffect(() => {
     if (!hold) return;
@@ -197,7 +204,8 @@ function CheckoutInner() {
         reservedUntil?: string;
       } = await res.json();
 
-      // Paiement carte : les places sont retenues 10 min, puis redirection.
+      // Paiement carte : on reste sur le formulaire. Le compte à rebours
+      // de 10 min commence ici ; l'acheteur part ensuite vers PostFinance.
       if (method === "CARD" && data.checkoutUrl && data.reservedUntil) {
         const nextHold = {
           reference: data.reference,
@@ -207,7 +215,6 @@ function CheckoutInner() {
         };
         writeHold(nextHold);
         setHold(nextHold);
-        window.location.href = data.checkoutUrl;
         return;
       }
 
@@ -256,6 +263,10 @@ function CheckoutInner() {
     );
   }
 
+  if (!hydrated) {
+    return null;
+  }
+
   if (lines.length === 0) {
     return (
       <div className="container-page py-20 text-center">
@@ -288,10 +299,15 @@ function CheckoutInner() {
                 window.location.href = hold.checkoutUrl;
               }}
             >
-              {t("resumePayment")}
+              {canceled ? t("resumePayment") : t("continueToPayment")}
             </Button>
           ) : null}
         </div>
+      ) : null}
+      {canceled && holdActive ? (
+        <p className="mt-4 rounded-xl bg-warning/15 px-4 py-3 text-sm">
+          {t("canceledHold")}
+        </p>
       ) : null}
       {holdExpired ? (
         <div className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm">
@@ -483,7 +499,7 @@ function CheckoutInner() {
                   {holdActive ? t("reserving") : t("processing")}
                 </>
               ) : holdActive ? (
-                t("resumePayment")
+                canceled ? t("resumePayment") : t("continueToPayment")
               ) : (
                 t("payNow", { amount: formatPrice(total, `${locale}-CH`) })
               )}

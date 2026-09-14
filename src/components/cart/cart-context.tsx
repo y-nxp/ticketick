@@ -25,6 +25,8 @@ interface CartState {
   clear: () => void;
   count: number;
   subtotalCents: number;
+  /** `false` tant que localStorage n'a pas été lu : le panier paraît vide. */
+  hydrated: boolean;
 }
 
 const CartContext = React.createContext<CartState | null>(null);
@@ -101,6 +103,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     clear,
     count,
     subtotalCents,
+    hydrated,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

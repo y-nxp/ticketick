@@ -185,9 +185,20 @@ export async function sendPreviewTicketEmail(to: string) {
       {
         code: "APERCU-DEMO-0001",
         eventTitle: "Beethoven — Messe en ut & Fantaisie chorale",
+        organizerName: "Chœur Cantabile",
         ticketName: "Plein tarif",
         when: "dimanche 15 novembre 2026, 17:00",
         venue: "Abbaye de Bonmont, Chéserex",
+        holderName: "Yann",
+      },
+      {
+        code: "APERCU-DEMO-0002",
+        eventTitle: "Beethoven — Messe en ut & Fantaisie chorale",
+        organizerName: "Chœur Cantabile",
+        ticketName: "Gratuit — jusqu’à 16 ans",
+        when: "dimanche 15 novembre 2026, 17:00",
+        venue: "Abbaye de Bonmont, Chéserex",
+        holderName: "Yann",
       },
     ],
   });

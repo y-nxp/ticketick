@@ -140,6 +140,8 @@
     "method_not_allowed": "This payment method is not offered for these tickets.",
     "noMethod": "No payment method is open for these tickets.",
     "canceled": "Payment canceled. Your cart has been kept.",
+    "canceledHold": "Payment interrupted. Your seats are still reserved — the timer keeps running.",
+    "continueToPayment": "Continue to payment",
     "reserved": "Seats reserved for {time}",
     "reservedHint": "After 10 minutes they go back on sale.",
     "reservedExpired": "The 10-minute hold has ended. The seats have been released. You can start again.",
