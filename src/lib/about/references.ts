@@ -6,10 +6,6 @@ export const referenceFlyers = [
     alt: "Les Virtuoses du piano — Next Gen, Genève",
   },
   {
-    src: "/about/references/mutter-2025.jpg",
-    alt: "Anne-Sophie Mutter — Victoria Hall, Genève",
-  },
-  {
     src: "/about/references/tannay-2025.jpg",
     alt: "Variations musicales de Tannay 2025",
   },
