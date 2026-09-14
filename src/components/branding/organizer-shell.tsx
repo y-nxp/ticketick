@@ -5,6 +5,7 @@ import { Lora, Open_Sans } from "next/font/google";
 import { useTranslations } from "next-intl";
 import { Menu, X } from "lucide-react";
 import { CartButton } from "@/components/layout/cart-button";
+import { THEME_STORAGE_KEY } from "@/components/layout/theme";
 import { organizerThemeStyle } from "@/lib/branding/theme";
 import type { Organizer } from "@/lib/types";
 
@@ -37,13 +38,34 @@ export function OrganizerShell({
   const [open, setOpen] = React.useState(false);
   const nav = organizer.brand.nav;
   const site = organizer.website;
+  const scheme = organizer.brand.scheme;
+
+  React.useEffect(() => {
+    const root = document.documentElement;
+    const wantDark = scheme === "dark";
+    root.classList.toggle("dark", wantDark);
+    root.style.colorScheme = wantDark ? "dark" : "light";
+    return () => {
+      try {
+        const stored = localStorage.getItem(THEME_STORAGE_KEY);
+        const dark = stored
+          ? stored === "dark"
+          : window.matchMedia("(prefers-color-scheme: dark)").matches;
+        root.classList.toggle("dark", dark);
+        root.style.colorScheme = dark ? "dark" : "light";
+      } catch {
+        root.classList.remove("dark");
+        root.style.colorScheme = "light";
+      }
+    };
+  }, [scheme]);
 
   return (
     <div
       className={`organizer-theme ${lora.variable} ${openSans.variable} flex min-h-full flex-col`}
       style={organizerThemeStyle(organizer.brand)}
     >
-      <header className="sticky top-0 z-40 border-b border-black/5 bg-white">
+      <header className="sticky top-0 z-40 border-b border-border bg-background">
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4 sm:px-6">
           <a
             href={site ?? undefined}
@@ -115,7 +137,7 @@ export function OrganizerShell({
         {children}
       </div>
 
-      <footer className="mt-auto border-t border-black/5 bg-white">
+      <footer className="mt-auto border-t border-border bg-background">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-6 text-xs text-neutral-500 sm:px-6">
           <p>
             {site ? (

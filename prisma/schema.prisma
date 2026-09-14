@@ -238,6 +238,8 @@ model Organizer {
   brandPrimary String?
   brandAccent  String?
   brandBg      String?
+  /// Jour ou nuit de la page `/go/…`, indépendant du thème ticketick du visiteur.
+  brandScheme  String  @default("light")
   /// Menu vers le site de l'organisateur : [{ "label": "Accueil", "href": "https://…" }]
   navLinks     Json?
 

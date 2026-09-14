@@ -305,6 +305,16 @@ function OrganizerForm({
           />
         </Field>
       </div>
+      <Field label={t("brandScheme")} hint={t("brandSchemeHint")}>
+        <select
+          name="brandScheme"
+          defaultValue={organizer?.brandScheme === "dark" ? "dark" : "light"}
+          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+        >
+          <option value="light">{t("brandSchemeLight")}</option>
+          <option value="dark">{t("brandSchemeDark")}</option>
+        </select>
+      </Field>
       <Field label={t("navLinks")} hint={t("navLinksHint")}>
         <textarea
           name="navLinks"

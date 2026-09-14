@@ -61,11 +61,14 @@ export interface OrganizerNavLink {
   href: string;
 }
 
+export type OrganizerScheme = "light" | "dark";
+
 /** Charte de la page hébergée et du widget. Absente : couleurs ticketick. */
 export interface OrganizerBrand {
   primary?: string;
   accent?: string;
   background?: string;
+  scheme: OrganizerScheme;
   nav: OrganizerNavLink[];
 }
 

@@ -28,6 +28,7 @@ export async function getReferenceData() {
         brandPrimary: true,
         brandAccent: true,
         brandBg: true,
+        brandScheme: true,
         navLinks: true,
         notifyEmails: true,
         producerName: true,

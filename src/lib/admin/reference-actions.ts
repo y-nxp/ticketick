@@ -5,7 +5,11 @@ import { Prisma } from "@prisma/client";
 import { requireAdmin } from "@/lib/auth/dal";
 import { catalogActor } from "@/lib/admin/access";
 import { prisma } from "@/lib/prisma";
-import { parseHexColor, parseNavLinksText } from "@/lib/branding/theme";
+import {
+  parseHexColor,
+  parseNavLinksText,
+  parseOrganizerScheme,
+} from "@/lib/branding/theme";
 import { saveUploadedImage, UploadError } from "@/lib/uploads";
 import {
   failure,
@@ -91,6 +95,7 @@ export async function saveOrganizer(
     brandPrimary: parseHexColor(readOptionalText(data, "brandPrimary")) ?? null,
     brandAccent: parseHexColor(readOptionalText(data, "brandAccent")) ?? null,
     brandBg: parseHexColor(readOptionalText(data, "brandBg")) ?? null,
+    brandScheme: parseOrganizerScheme(data.get("brandScheme")?.toString()),
     navLinks: parseNavLinksText(
       data.get("navLinks")?.toString() ?? "",
     ) as unknown as Prisma.InputJsonValue,

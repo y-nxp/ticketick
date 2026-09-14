@@ -1,5 +1,9 @@
 import type { CSSProperties } from "react";
-import type { OrganizerBrand, OrganizerNavLink } from "@/lib/types";
+import type {
+  OrganizerBrand,
+  OrganizerNavLink,
+  OrganizerScheme,
+} from "@/lib/types";
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
@@ -40,16 +44,24 @@ export function serializeNavLinks(links: OrganizerNavLink[]): string {
   return links.map((link) => `${link.label} | ${link.href}`).join("\n");
 }
 
+export function parseOrganizerScheme(
+  value: string | null | undefined,
+): OrganizerScheme {
+  return value === "dark" ? "dark" : "light";
+}
+
 export function organizerBrandFromRow(row: {
   brandPrimary?: string | null;
   brandAccent?: string | null;
   brandBg?: string | null;
+  brandScheme?: string | null;
   navLinks?: unknown;
 }): OrganizerBrand {
   return {
     primary: parseHexColor(row.brandPrimary ?? undefined),
     accent: parseHexColor(row.brandAccent ?? undefined),
     background: parseHexColor(row.brandBg ?? undefined),
+    scheme: parseOrganizerScheme(row.brandScheme),
     nav: parseNavLinks(row.navLinks),
   };
 }
@@ -64,21 +76,36 @@ export function hasCustomBrand(brand: OrganizerBrand): boolean {
  */
 export function organizerThemeStyle(brand: OrganizerBrand): CSSProperties {
   const primary = brand.primary ?? "#6C5CE7";
-  const background = brand.background ?? "#FFFFFF";
   const accent = brand.accent ?? primary;
+  const dark = brand.scheme === "dark";
+  const background = brand.background ?? (dark ? "#1E1F23" : "#FFFFFF");
+  const ink = dark ? "#FFFFFF" : "#2A2C30";
+  const surface = dark ? "#2A2C30" : "#FFFFFF";
+  const muted = dark ? "#32353B" : "#F8F9FA";
+  const line = dark ? "#3A3D44" : "#E6E8EB";
   return {
     ["--primary" as string]: primary,
     ["--primary-foreground" as string]: "#FFFFFF",
     ["--primary-hover" as string]: primary,
     ["--ring" as string]: primary,
     ["--background" as string]: background,
-    ["--foreground" as string]: "#2A2C30",
-    ["--card" as string]: "#FFFFFF",
-    ["--card-foreground" as string]: "#2A2C30",
+    ["--foreground" as string]: ink,
+    ["--card" as string]: surface,
+    ["--card-foreground" as string]: ink,
+    ["--popover" as string]: surface,
+    ["--popover-foreground" as string]: ink,
+    ["--secondary" as string]: muted,
+    ["--secondary-foreground" as string]: ink,
+    ["--muted" as string]: muted,
+    ["--muted-foreground" as string]: dark ? "#A7ABB4" : "#6B6E76",
+    ["--accent" as string]: dark ? "#332F5C" : "#EEECFD",
+    ["--accent-foreground" as string]: dark ? "#CFC9FB" : "#4B3FC4",
+    ["--border" as string]: line,
+    ["--input" as string]: line,
     ["--brand-accent" as string]: accent,
-    colorScheme: "light",
+    colorScheme: dark ? "dark" : "light",
     backgroundColor: background,
-    color: "#2A2C30",
+    color: ink,
   };
 }
 
