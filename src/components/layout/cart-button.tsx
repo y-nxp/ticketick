@@ -12,7 +12,12 @@ function canHoverFine() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 
-export function CartButton() {
+export function CartButton({
+  panelOffsetClass = "top-[4.25rem]",
+}: {
+  /** Décalage du panneau mobile sous un en-tête plus haut (page /go). */
+  panelOffsetClass?: string;
+}) {
   const t = useTranslations("nav");
   const { count, addedRevision } = useCart();
   const [open, setOpen] = React.useState(false);
@@ -106,7 +111,7 @@ export function CartButton() {
           <div
             role="dialog"
             aria-label={t("cart")}
-            className="fixed inset-x-3 top-[4.25rem] z-50 md:absolute md:inset-x-auto md:right-0 md:top-full md:w-[22rem] md:pt-2"
+            className={`fixed inset-x-3 z-50 ${panelOffsetClass} md:absolute md:inset-x-auto md:right-0 md:top-full md:w-[22rem] md:pt-2`}
           >
             <div className="overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
               <CartPreview onNavigate={() => setOpen(false)} />

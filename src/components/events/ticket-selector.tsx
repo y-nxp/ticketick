@@ -29,7 +29,8 @@ export function TicketSelector({
   embed?: boolean;
 }) {
   const te = useTranslations("event");
-  const { add, count } = useCart();
+  const tc = useTranslations("cart");
+  const { add, count, lines, subtotalCents } = useCart();
   const router = useRouter();
   const pathname = usePathname();
   const [qty, setQty] = React.useState<Record<string, number>>({});
@@ -132,10 +133,37 @@ export function TicketSelector({
         ))}
       </div>
 
+      {count > 0 ? (
+        <div className="mt-5 rounded-xl border border-border bg-secondary/50 p-3">
+          <p className="text-sm font-semibold">{tc("title")}</p>
+          <ul className="mt-2 space-y-1.5 text-sm">
+            {lines.map((line) => (
+              <li
+                key={line.ticketTypeId}
+                className="flex justify-between gap-3"
+              >
+                <span className="min-w-0 truncate">
+                  {line.quantity} × {line.ticketName}
+                </span>
+                <span className="shrink-0 font-medium">
+                  {formatPrice(
+                    line.unitPriceCents * line.quantity,
+                    `${locale}-CH`,
+                  )}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
         <span className="text-sm text-muted-foreground">{te("tickets")}</span>
         <span className="text-xl font-bold">
-          {formatPrice(totalCents, `${locale}-CH`)}
+          {formatPrice(
+            pending ? totalCents : count > 0 ? subtotalCents : 0,
+            `${locale}-CH`,
+          )}
         </span>
       </div>
 

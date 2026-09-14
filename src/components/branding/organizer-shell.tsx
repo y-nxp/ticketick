@@ -5,6 +5,7 @@ import { Lora, Open_Sans } from "next/font/google";
 import { useTranslations } from "next-intl";
 import { Menu, X } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { CartButton } from "@/components/layout/cart-button";
 import { organizerThemeStyle } from "@/lib/branding/theme";
 import type { Organizer } from "@/lib/types";
 
@@ -43,8 +44,8 @@ export function OrganizerShell({
       className={`organizer-theme ${lora.variable} ${openSans.variable} flex min-h-full flex-col`}
       style={organizerThemeStyle(organizer.brand)}
     >
-      <header className="border-b border-black/5 bg-white">
-        <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-4 sm:px-6">
+      <header className="sticky top-0 z-40 border-b border-black/5 bg-white">
+        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4 sm:px-6">
           <a
             href={site ?? undefined}
             className="flex min-w-0 items-center gap-3"
@@ -65,29 +66,31 @@ export function OrganizerShell({
             </span>
           </a>
 
-          <nav className="ml-auto hidden items-center gap-1 lg:flex">
-            {nav.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="rounded-full px-3 py-2 text-xs font-medium uppercase tracking-[0.14em] text-neutral-600 hover:text-[var(--brand-accent)]"
+          <div className="ml-auto flex items-center gap-1">
+            <nav className="hidden items-center gap-1 lg:flex">
+              {nav.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="rounded-full px-3 py-2 text-xs font-medium uppercase tracking-[0.14em] text-neutral-600 hover:text-[var(--brand-accent)]"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+            <CartButton panelOffsetClass="top-[5.75rem]" />
+            {nav.length > 0 ? (
+              <button
+                type="button"
+                className="grid size-10 place-items-center rounded-full border border-black/10 lg:hidden"
+                aria-expanded={open}
+                aria-label={open ? t("closeMenu") : t("openMenu")}
+                onClick={() => setOpen((v) => !v)}
               >
-                {link.label}
-              </a>
-            ))}
-          </nav>
-
-          {nav.length > 0 ? (
-            <button
-              type="button"
-              className="ml-auto grid size-10 place-items-center rounded-full border border-black/10 lg:hidden"
-              aria-expanded={open}
-              aria-label={open ? t("closeMenu") : t("openMenu")}
-              onClick={() => setOpen((v) => !v)}
-            >
-              {open ? <X className="size-5" /> : <Menu className="size-5" />}
-            </button>
-          ) : null}
+                {open ? <X className="size-5" /> : <Menu className="size-5" />}
+              </button>
+            ) : null}
+          </div>
         </div>
 
         {open && nav.length > 0 ? (

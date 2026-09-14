@@ -153,7 +153,7 @@ function CheckoutInner() {
 
   React.useEffect(() => {
     if (!hydrated || lines.length === 0) return;
-    scrollToIdIfStacked("checkout-form");
+    if (isStackedLayout()) window.scrollTo({ top: 0, behavior: "smooth" });
   }, [hydrated, lines.length]);
 
   React.useEffect(() => {
@@ -390,6 +390,47 @@ function CheckoutInner() {
     );
   }
 
+  const payDisabled =
+    submitting ||
+    creatingHold ||
+    checkingSeats ||
+    seatsOk === false ||
+    (!offer.card && !offer.iban);
+
+  function payActions(id: string) {
+    return (
+      <>
+        <Button
+          id={id}
+          type="submit"
+          size="lg"
+          className="mt-5 w-full scroll-mt-24"
+          disabled={payDisabled}
+        >
+          {submitting ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              {t("processing")}
+            </>
+          ) : holdActive && hold?.checkoutUrl ? (
+            canceled ? t("resumePayment") : t("continueToPayment")
+          ) : (
+            t("payNow", { amount: formatPrice(total, `${locale}-CH`) })
+          )}
+        </Button>
+        <ContinueShopping
+          eventSlug={lines[0]?.eventSlug}
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "lg" }),
+            "mt-2 w-full",
+          )}
+        >
+          {tc("continue")}
+        </ContinueShopping>
+      </>
+    );
+  }
+
   return (
     <div className="container-page py-10">
       <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
@@ -498,7 +539,7 @@ function CheckoutInner() {
         onSubmit={submit}
         className="mt-8 grid scroll-mt-24 gap-8 lg:grid-cols-[1fr_360px]"
       >
-        <div className="space-y-8">
+        <div className="order-2 space-y-8 lg:order-1">
           {/* Coordonnées */}
           <section className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">{t("contact")}</h2>
@@ -543,7 +584,7 @@ function CheckoutInner() {
                   active={method === "CARD"}
                   onClick={() => {
                     setMethod("CARD");
-                    scrollToIdIfStacked("checkout-pay");
+                    scrollToIdIfStacked("checkout-pay-mobile");
                   }}
                   icon={<CreditCard className="size-5" />}
                   title={t("card")}
@@ -555,7 +596,7 @@ function CheckoutInner() {
                   active={method === "IBAN"}
                   onClick={() => {
                     setMethod("IBAN");
-                    scrollToIdIfStacked("checkout-pay");
+                    scrollToIdIfStacked("checkout-pay-mobile");
                   }}
                   icon={<Landmark className="size-5" />}
                   title={t("iban")}
@@ -575,10 +616,14 @@ function CheckoutInner() {
               {error}
             </p>
           )}
+
+          <div className="lg:hidden">
+            {payActions("checkout-pay-mobile")}
+          </div>
         </div>
 
-        {/* Récapitulatif */}
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        {/* Récapitulatif : en premier sur mobile, à droite sur bureau. */}
+        <aside className="order-1 lg:sticky lg:top-24 lg:order-2 lg:self-start">
           <div className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">{t("orderSummary")}</h2>
             <ul className="mt-4 space-y-3">
@@ -611,39 +656,7 @@ function CheckoutInner() {
                 <dd>{formatPrice(total, `${locale}-CH`)}</dd>
               </div>
             </dl>
-            <Button
-              id="checkout-pay"
-              type="submit"
-              size="lg"
-              className="mt-5 w-full scroll-mt-24"
-              disabled={
-                submitting ||
-                creatingHold ||
-                checkingSeats ||
-                seatsOk === false ||
-                (!offer.card && !offer.iban)
-              }
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  {t("processing")}
-                </>
-              ) : holdActive && hold?.checkoutUrl ? (
-                canceled ? t("resumePayment") : t("continueToPayment")
-              ) : (
-                t("payNow", { amount: formatPrice(total, `${locale}-CH`) })
-              )}
-            </Button>
-            <ContinueShopping
-              eventSlug={lines[0]?.eventSlug}
-              className={cn(
-                buttonVariants({ variant: "ghost", size: "lg" }),
-                "mt-2 w-full",
-              )}
-            >
-              {tc("continue")}
-            </ContinueShopping>
+            <div className="hidden lg:block">{payActions("checkout-pay")}</div>
           </div>
         </aside>
       </form>
