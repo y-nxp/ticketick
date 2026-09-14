@@ -5,10 +5,11 @@ import { useLocale, useTranslations } from "next-intl";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
+import { ContinueShopping } from "@/components/cart/continue-shopping";
 import { useCart } from "@/components/cart/cart-context";
 import { formatDate, formatPrice } from "@/lib/utils";
 
-/** Contenu de l'aperçu : lignes, total et bouton Réserver. */
+/** Contenu de l'aperçu : lignes, total, paiement, panier et poursuite d'achat. */
 export function CartPreview({
   onNavigate,
   reserveInParent,
@@ -126,7 +127,7 @@ export function CartPreview({
           </span>
         </div>
         <Button size="lg" className="w-full" onClick={goCheckout}>
-          {t("reserve")}
+          {t("reserveAndPay")}
         </Button>
         <Link
           href="/cart"
@@ -135,6 +136,13 @@ export function CartPreview({
         >
           {t("viewCart")}
         </Link>
+        <ContinueShopping
+          eventSlug={lines[0]?.eventSlug}
+          onClick={onNavigate}
+          className="block text-center text-xs font-medium text-muted-foreground hover:text-foreground"
+        >
+          {t("continue")}
+        </ContinueShopping>
       </div>
     </div>
   );

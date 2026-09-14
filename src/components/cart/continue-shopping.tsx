@@ -9,10 +9,12 @@ export function ContinueShopping({
   eventSlug,
   children,
   className,
+  onClick,
 }: {
   eventSlug?: string;
   children: React.ReactNode;
   className?: string;
+  onClick?: () => void;
 }) {
   const [href, setHref] = React.useState(
     eventSlug ? `/events/${eventSlug}` : "/",
@@ -23,7 +25,7 @@ export function ContinueShopping({
   }, [eventSlug]);
 
   return (
-    <Link href={href} className={className}>
+    <Link href={href} className={className} onClick={onClick}>
       {children}
     </Link>
   );
