@@ -89,7 +89,7 @@ export async function login(
   try {
     user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, passwordHash: true, active: true },
+      select: { id: true, passwordHash: true, active: true, role: true },
     });
   } catch (error) {
     // Journalisé sans détour : la panne se voit côté visiteur comme un
@@ -107,7 +107,16 @@ export async function login(
 
   // La comparaison est faite dans tous les cas, y compris compte absent,
   // inactif ou sans mot de passe, avant d'en tirer la moindre conclusion.
-  if (!user || !user.passwordHash || !user.active || !passwordMatches) {
+  // Les organisateurs n'ont pas d'accès direct : un administrateur ouvre
+  // leur espace pour eux. Même message qu'un mot de passe faux, pour ne
+  // pas révéler qu'un compte existe à cette adresse.
+  if (
+    !user ||
+    !user.passwordHash ||
+    !user.active ||
+    user.role === "ORGANIZER" ||
+    !passwordMatches
+  ) {
     recordAttempt(keys);
     return { error: "invalid" };
   }

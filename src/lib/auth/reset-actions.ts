@@ -88,12 +88,14 @@ export async function requestPasswordReset(
   try {
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, active: true, name: true, locale: true },
+      select: { id: true, active: true, name: true, locale: true, role: true },
     });
 
     // Un compte désactivé ne reçoit pas de lien : le réactiver relève de
     // l'administration, pas d'une demande venue de l'extérieur.
-    if (user && user.active) {
+    // Un organisateur non plus : son espace s'ouvre seulement par
+    // impersonation administrateur.
+    if (user && user.active && user.role !== "ORGANIZER") {
       const token = randomBytes(32).toString("base64url");
 
       await prisma.passwordResetToken.create({
