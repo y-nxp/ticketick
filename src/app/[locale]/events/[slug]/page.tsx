@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { Link, redirect } from "@/i18n/navigation";
 import { EventBooking } from "@/components/events/event-booking";
 import { getEventBySlug } from "@/lib/data/events";
 import { t } from "@/lib/types";
@@ -20,6 +20,9 @@ export async function generateMetadata({
   const { locale, slug } = await params;
   const event = await getEventBySlug(slug);
   if (!event) return {};
+  if (event.visibility !== "PUBLIC") {
+    return { robots: { index: false, follow: false } };
+  }
   return {
     title: t(event.title, locale),
     description: t(event.description, locale),
@@ -37,6 +40,12 @@ export default async function EventPage({
 
   const event = await getEventBySlug(slug);
   if (!event) notFound();
+  if (event.visibility !== "PUBLIC") {
+    redirect({
+      href: `/go/${event.organizer.slug}/${event.slug}`,
+      locale,
+    });
+  }
 
   const te = await getTranslations("event");
 
