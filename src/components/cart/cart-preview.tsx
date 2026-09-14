@@ -62,10 +62,10 @@ export function CartPreview({
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{line.eventTitle}</p>
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="truncate text-sm font-semibold">
                 {line.ticketName}
               </p>
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="truncate text-sm font-medium">
                 {formatDate(line.sessionStartsAt, `${locale}-CH`, {
                   weekday: undefined,
                   year: undefined,
