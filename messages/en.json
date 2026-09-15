@@ -288,6 +288,17 @@
     "proximityBody": "Based in French-speaking Switzerland, we also work in German-speaking Switzerland. You have a real contact, in French, German, English or Italian. We stay with you for the whole partnership.",
     "teamTitle": "A complete team",
     "teamBody": "In-house we cover engineering (telecom and IT), digital security, communication and journalism, marketing, graphic design and the web. Local, national and international partners complete the picture. The platform is designed and operated in Switzerland.",
+    "teamMembers": [
+      {
+        "name": "Yavuz Durukan",
+        "role": "Founder, application developer, Swiss engineer"
+      },
+      {
+        "name": "Illyria Pfyffer",
+        "org": "Illyria Communication",
+        "role": "Event and communications lead"
+      }
+    ],
     "offerTitle": "A made-to-measure offer",
     "offerIntro": "Online ticketing, communication or full production: you decide how far we go.",
     "offerItems": [

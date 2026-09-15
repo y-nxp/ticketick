@@ -49,6 +49,11 @@ export default async function AboutPage({
       body: t("proximityBody"),
     },
   ];
+  const teamMembers = t.raw("teamMembers") as {
+    name: string;
+    org?: string;
+    role: string;
+  }[];
   const offerItems = t.raw("offerItems") as string[];
   const fields = t.raw("fields") as string[];
   const faqs = [
@@ -139,6 +144,24 @@ export default async function AboutPage({
         <p className="mt-4 leading-relaxed text-muted-foreground">
           {t("teamBody")}
         </p>
+        <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+          {teamMembers.map((member) => (
+            <li
+              key={member.name}
+              className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+            >
+              <p className="font-semibold">{member.name}</p>
+              {member.org ? (
+                <p className="mt-0.5 text-sm font-medium text-primary">
+                  {member.org}
+                </p>
+              ) : null}
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {member.role}
+              </p>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section id="offre" className="mt-14 scroll-mt-24">

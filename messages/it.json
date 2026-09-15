@@ -288,6 +288,17 @@
     "proximityBody": "Con sede nella Svizzera romanda, operiamo anche nella Svizzera tedesca. Avete un interlocutore reale, in francese, tedesco, inglese o italiano. Vi assistiamo per tutta la collaborazione.",
     "teamTitle": "Una squadra completa",
     "teamBody": "Il team riunisce internamente l’ingegneria (telecomunicazioni e informatica), la sicurezza digitale, la comunicazione e il giornalismo, il marketing, la grafica e il web. Partner locali, nazionali e internazionali completano il dispositivo. La piattaforma è concepita e gestita in Svizzera.",
+    "teamMembers": [
+      {
+        "name": "Yavuz Durukan",
+        "role": "Fondatore, sviluppatore di applicazioni, ingegnere svizzero"
+      },
+      {
+        "name": "Illyria Pfyffer",
+        "org": "Illyria Communication",
+        "role": "Responsabile eventi e comunicazione"
+      }
+    ],
     "offerTitle": "Un’offerta su misura",
     "offerIntro": "Biglietteria online, comunicazione o presa in carico globale: scegliete fino a dove arrivare.",
     "offerItems": [

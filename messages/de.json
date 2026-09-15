@@ -288,6 +288,17 @@
     "proximityBody": "In der Romandie ansässig, sind wir auch in der Deutschschweiz tätig. Sie haben einen echten Ansprechpartner, auf Französisch, Deutsch, Englisch oder Italienisch. Wir begleiten Sie während der ganzen Zusammenarbeit.",
     "teamTitle": "Ein vollständiges Team",
     "teamBody": "Intern vereinen wir Ingenieurwesen (Telecom und Informatik), digitale Sicherheit, Kommunikation und Journalismus, Marketing, Grafik und Web. Lokale, nationale und internationale Partner ergänzen das Angebot. Die Plattform wird in der Schweiz konzipiert und betrieben.",
+    "teamMembers": [
+      {
+        "name": "Yavuz Durukan",
+        "role": "Gründer, Anwendungsentwickler, Schweizer Ingenieur"
+      },
+      {
+        "name": "Illyria Pfyffer",
+        "org": "Illyria Communication",
+        "role": "Verantwortlich für Events und Kommunikation"
+      }
+    ],
     "offerTitle": "Ein Angebot nach Mass",
     "offerIntro": "Online-Ticketing, Kommunikation oder Gesamtbetreuung: Sie entscheiden, wie weit wir gehen.",
     "offerItems": [
