@@ -196,6 +196,7 @@
     "adminAccess": "Amministrazione",
     "doorAccess": "Controllo biglietti",
     "adminAccessHint": "Gestire spettacoli, date, ordini e rivenditori.",
+    "adminAccessHintOrganizer": "Gestire i tuoi spettacoli, le date e gli ordini.",
     "roles": {
       "CUSTOMER": "Cliente",
       "ORGANIZER": "Organizzatore",
@@ -407,6 +408,7 @@
   },
   "admin": {
     "title": "Amministrazione",
+    "titleOrganizer": "Spazio organizzatore",
     "nav": {
       "overview": "Panoramica",
       "events": "Spettacoli",
@@ -419,7 +421,8 @@
     },
     "overview": {
       "title": "Panoramica",
-      "subtitle": "Stato della biglietteria in tempo reale.",
+      "subtitle": "Stato di tutta la biglietteria, ogni organizzatore compreso.",
+      "subtitleOrganizer": "I tuoi spettacoli, i tuoi ordini e le tue statistiche.",
       "events": "Spettacoli",
       "eventsHint": "{published} pubblicati · {draft} in bozza",
       "sessions": "Date",
@@ -566,6 +569,7 @@
     "settings": {
       "title": "Impostazioni",
       "subtitle": "Organizzatori, luoghi e categorie: il catalogo si basa su di essi.",
+      "subtitleOrganizer": "La tua scheda organizzatore e l’aspetto delle tue pagine.",
       "startHere": "Crea prima un organizzatore: uno spettacolo non può esistere senza.",
       "organizers": {
         "title": "Organizzatori",

@@ -52,14 +52,18 @@ export default async function AccountPage({
         </form>
       </div>
 
-      {user.role === "ADMIN" ? (
+      {user.role === "ADMIN" || user.role === "ORGANIZER" ? (
         <Link href="/admin" className="mt-8 block">
           <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10">
             <ShieldCheck className="size-5 text-primary" />
             <div>
               <p className="font-medium">{t("adminAccess")}</p>
               <p className="text-sm text-muted-foreground">
-                {t("adminAccessHint")}
+                {t(
+                  user.role === "ORGANIZER"
+                    ? "adminAccessHintOrganizer"
+                    : "adminAccessHint",
+                )}
               </p>
             </div>
           </div>

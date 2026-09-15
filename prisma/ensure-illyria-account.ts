@@ -2,8 +2,7 @@
  * Crée le compte organisateur Illyria et le rattache à Cantabile.
  *
  * Idempotent : relancé à chaque déploiement, il ne touche pas un mot de
- * passe déjà posé. Le premier accès se fait par « mot de passe oublié »
- * ou par impersonation administrateur.
+ * passe déjà posé. Le premier accès se fait par « mot de passe oublié ».
  */
 
 import { PrismaClient } from "@prisma/client";
@@ -65,7 +64,7 @@ async function main() {
   console.log(`✅ Compte organisateur : ${user.email} → ${ORG_SLUG}`);
   if (!existing) {
     console.log(
-      "   Premier accès : impersonation admin, ou « mot de passe oublié » sur /login.",
+      "   Premier accès : « mot de passe oublié » sur /login.",
     );
   }
 }

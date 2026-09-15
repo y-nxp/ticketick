@@ -93,9 +93,7 @@ export async function requestPasswordReset(
 
     // Un compte désactivé ne reçoit pas de lien : le réactiver relève de
     // l'administration, pas d'une demande venue de l'extérieur.
-    // Un organisateur non plus : son espace s'ouvre seulement par
-    // impersonation administrateur.
-    if (user && user.active && user.role !== "ORGANIZER") {
+    if (user && user.active) {
       const token = randomBytes(32).toString("base64url");
 
       await prisma.passwordResetToken.create({
@@ -167,10 +165,18 @@ export async function resetPassword(
   if (trop(cle, 10)) return { error: "throttled" };
   compter(cle, 15 * 60 * 1000);
 
+  let role = "CUSTOMER";
+
   try {
     const ligne = await prisma.passwordResetToken.findUnique({
       where: { tokenHash: empreinte(token) },
-      select: { id: true, userId: true, expiresAt: true, usedAt: true },
+      select: {
+        id: true,
+        userId: true,
+        expiresAt: true,
+        usedAt: true,
+        user: { select: { role: true } },
+      },
     });
 
     if (!ligne || ligne.usedAt || ligne.expiresAt.getTime() <= Date.now()) {
@@ -198,6 +204,8 @@ export async function resetPassword(
 
     if (!consomme) return { error: "tokenInvalid" };
 
+    role = ligne.user.role;
+
     // Les autres liens en attente tombent : une demande plus ancienne restée
     // dans une boîte ne doit pas rouvrir l'accès après coup.
     await prisma.passwordResetToken.updateMany({
@@ -219,5 +227,8 @@ export async function resetPassword(
   // exception, qui serait sinon prise pour une panne. Rendre la main au
   // formulaire ferait réafficher la page, dont le jeton vient d'être consommé,
   // sous son visage « lien expiré » — un échec annoncé après une réussite.
-  redirect({ href: "/account", locale });
+  redirect({
+    href: role === "ADMIN" || role === "ORGANIZER" ? "/admin" : "/account",
+    locale,
+  });
 }

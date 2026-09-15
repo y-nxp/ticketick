@@ -196,6 +196,7 @@
     "adminAccess": "Verwaltung",
     "doorAccess": "Ticketkontrolle",
     "adminAccessHint": "Veranstaltungen, Termine, Bestellungen und Wiederverkäufer verwalten.",
+    "adminAccessHintOrganizer": "Ihre Veranstaltungen, Termine und Bestellungen verwalten.",
     "roles": {
       "CUSTOMER": "Kunde",
       "ORGANIZER": "Veranstalter",
@@ -407,6 +408,7 @@
   },
   "admin": {
     "title": "Verwaltung",
+    "titleOrganizer": "Veranstalterbereich",
     "nav": {
       "overview": "Übersicht",
       "events": "Veranstaltungen",
@@ -419,7 +421,8 @@
     },
     "overview": {
       "title": "Übersicht",
-      "subtitle": "Aktueller Stand des Ticketverkaufs.",
+      "subtitle": "Aktueller Stand des gesamten Ticketverkaufs, alle Veranstalter.",
+      "subtitleOrganizer": "Ihre Veranstaltungen, Bestellungen und Statistiken.",
       "events": "Veranstaltungen",
       "eventsHint": "{published} veröffentlicht · {draft} Entwurf",
       "sessions": "Termine",
@@ -566,6 +569,7 @@
     "settings": {
       "title": "Einstellungen",
       "subtitle": "Veranstalter, Orte und Kategorien: der Katalog stützt sich darauf.",
+      "subtitleOrganizer": "Ihr Veranstalterprofil und das Erscheinungsbild Ihrer Seiten.",
       "startHere": "Legen Sie zuerst einen Veranstalter an: eine Veranstaltung braucht einen.",
       "organizers": {
         "title": "Veranstalter",

@@ -7,9 +7,9 @@ import { catalogActor } from "@/lib/admin/access";
 /**
  * Requêtes du backoffice.
  *
- * Chaque fonction appelle `requireAdmin` avant de toucher la base. Le contrôle
- * est ainsi porté par l'accès à la donnée lui-même : une page ajoutée plus
- * tard ne peut pas lire ces chiffres en oubliant de se protéger.
+ * Les lectures catalogue passent par `catalogActor` : un organisateur ne voit
+ * que sa fiche. Les écrans plateforme (comptes, revendeurs, demandes)
+ * restent derrière `requireAdmin`.
  */
 
 export interface AdminOverview {

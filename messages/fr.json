@@ -196,6 +196,7 @@
     "adminAccess": "Administration",
     "doorAccess": "Contrôle des billets",
     "adminAccessHint": "Gérer les spectacles, les séances, les commandes et les revendeurs.",
+    "adminAccessHintOrganizer": "Gérer vos spectacles, vos séances et vos commandes.",
     "roles": {
       "CUSTOMER": "Client",
       "ORGANIZER": "Organisateur",
@@ -407,6 +408,7 @@
   },
   "admin": {
     "title": "Administration",
+    "titleOrganizer": "Espace organisateur",
     "nav": {
       "overview": "Vue d’ensemble",
       "events": "Spectacles",
@@ -419,7 +421,8 @@
     },
     "overview": {
       "title": "Vue d’ensemble",
-      "subtitle": "État de la billetterie en temps réel.",
+      "subtitle": "État de toute la billetterie, tous organisateurs confondus.",
+      "subtitleOrganizer": "Vos spectacles, vos commandes et vos statistiques.",
       "events": "Spectacles",
       "eventsHint": "{published} publiés · {draft} en brouillon",
       "sessions": "Séances",
@@ -566,6 +569,7 @@
     "settings": {
       "title": "Paramètres",
       "subtitle": "Organisateurs, lieux et catégories : le catalogue s’appuie dessus.",
+      "subtitleOrganizer": "Votre fiche organisateur et l’apparence de vos pages.",
       "startHere": "Créez d’abord un organisateur : un spectacle ne peut pas exister sans.",
       "organizers": {
         "title": "Organisateurs",

@@ -107,16 +107,9 @@ export async function login(
 
   // La comparaison est faite dans tous les cas, y compris compte absent,
   // inactif ou sans mot de passe, avant d'en tirer la moindre conclusion.
-  // Les organisateurs n'ont pas d'accès direct : un administrateur ouvre
-  // leur espace pour eux. Même message qu'un mot de passe faux, pour ne
-  // pas révéler qu'un compte existe à cette adresse.
-  if (
-    !user ||
-    !user.passwordHash ||
-    !user.active ||
-    user.role === "ORGANIZER" ||
-    !passwordMatches
-  ) {
+  // Même message qu'un mot de passe faux, pour ne pas révéler qu'un compte
+  // existe à cette adresse.
+  if (!user || !user.passwordHash || !user.active || !passwordMatches) {
     recordAttempt(keys);
     return { error: "invalid" };
   }
@@ -132,7 +125,7 @@ export async function login(
   // `return` nécessaire pour que l'analyse de flot voie l'interruption : le
   // type `never` de `redirect` n'est pas exploité sur un identifiant issu
   // d'une déstructuration.
-  return redirect({ href: safeNext(formData.get("next")), locale });
+  return redirect({ href: afterLoginHref(user.role, formData.get("next")), locale });
 }
 
 export async function logout(): Promise<void> {
@@ -153,6 +146,17 @@ function safeNext(value: FormDataEntryValue | null): string {
   // « // » et « /\ » sont interprétés comme des adresses absolues.
   if (!value.startsWith("/") || /^\/[/\\]/.test(value)) return "/";
   return value;
+}
+
+/** Sans destination, le backoffice est la page d'accueil du personnel. */
+function afterLoginHref(
+  role: string,
+  next: FormDataEntryValue | null,
+): string {
+  const dest = safeNext(next);
+  if (dest !== "/") return dest;
+  if (role === "ADMIN" || role === "ORGANIZER") return "/admin";
+  return "/";
 }
 
 async function clientIp(): Promise<string> {

@@ -10,7 +10,7 @@ import {
 /**
  * Données de référence du catalogue.
  *
- * `getReferenceData` appelle `requireAdmin` : le contrôle des droits est porté
+ * `getReferenceData` appelle `catalogActor` : le contrôle des droits est porté
  * par la lecture elle-même, pas par cette page.
  */
 export const dynamic = "force-dynamic";
@@ -35,7 +35,9 @@ export default async function AdminSettingsPage({
     <div className="space-y-6">
       <header>
         <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t(restricted ? "subtitleOrganizer" : "subtitle")}
+        </p>
       </header>
 
       {organizers.length === 0 ? (

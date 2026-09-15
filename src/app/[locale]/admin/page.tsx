@@ -21,7 +21,6 @@ export default async function AdminOverviewPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  // `getAdminOverview` exige le rôle administrateur avant toute lecture.
   const [data, user] = await Promise.all([
     getAdminOverview(),
     getCurrentUser(),
@@ -89,7 +88,7 @@ export default async function AdminOverviewPage({
         {t("overview.title")}
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        {t("overview.subtitle")}
+        {t(organizerView ? "overview.subtitleOrganizer" : "overview.subtitle")}
       </p>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

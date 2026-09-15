@@ -17,8 +17,8 @@ import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
  * Ossature du backoffice.
  *
  * Ce layout ne protège rien : il n'empêche pas les segments qu'il englobe de
- * s'exécuter. Chaque page appelle `requireAdmin` de son côté, par
- * l'intermédiaire des fonctions de `lib/data/admin`.
+ * s'exécuter. Chaque page appelle `requireCatalog` ou `requireAdmin` de son
+ * côté, par l'intermédiaire des fonctions de `lib/data/admin`.
  */
 export default async function AdminLayout({
   children,
@@ -53,7 +53,7 @@ export default async function AdminLayout({
       <div className="flex flex-col gap-8 lg:flex-row">
         <nav aria-label={t("title")} className="lg:w-56 lg:shrink-0">
           <p className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {t("title")}
+            {organizerView ? t("titleOrganizer") : t("title")}
           </p>
           <ul className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
             {sections.map(({ href, label, icon: Icon }) => (
