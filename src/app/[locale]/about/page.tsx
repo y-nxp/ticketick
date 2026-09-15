@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { InquiryChat } from "@/app/[locale]/organizer/inquiry-chat";
 import { referenceFlyers } from "@/lib/about/references";
+import { teamPhotos } from "@/lib/about/team";
 import { cn } from "@/lib/utils";
 
 export async function generateMetadata({
@@ -145,22 +146,36 @@ export default async function AboutPage({
           {t("teamBody")}
         </p>
         <ul className="mt-6 grid gap-4 sm:grid-cols-2">
-          {teamMembers.map((member) => (
-            <li
-              key={member.name}
-              className="rounded-2xl border border-border bg-card p-5 shadow-sm"
-            >
-              <p className="font-semibold">{member.name}</p>
-              {member.org ? (
-                <p className="mt-0.5 text-sm font-medium text-primary">
-                  {member.org}
-                </p>
-              ) : null}
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {member.role}
-              </p>
-            </li>
-          ))}
+          {teamMembers.map((member) => {
+            const photo = teamPhotos[member.name];
+            return (
+              <li
+                key={member.name}
+                className="flex gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm"
+              >
+                {photo ? (
+                  <Image
+                    src={photo}
+                    alt={member.name}
+                    width={96}
+                    height={96}
+                    className="size-24 shrink-0 rounded-full object-cover"
+                  />
+                ) : null}
+                <div className="min-w-0">
+                  <p className="font-semibold">{member.name}</p>
+                  {member.org ? (
+                    <p className="mt-0.5 text-sm font-medium text-primary">
+                      {member.org}
+                    </p>
+                  ) : null}
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {member.role}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
