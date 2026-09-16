@@ -82,7 +82,7 @@
     "datesCount": "{count} date",
     "free": "Gratuito",
     "companionHint": "Fino a {n} per biglietto a pagamento, fino a 16 anni.",
-    "companionNeedsPaid": "2 posti gratuiti per biglietto a pagamento."
+    "companionNeedsPaid": "2 posti gratuiti max per biglietto a pagamento."
   },
   "portal": {
     "tickets": "Biglietteria",

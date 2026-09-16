@@ -82,7 +82,7 @@
     "datesCount": "{count} dates",
     "free": "Free",
     "companionHint": "Up to {n} per paying ticket, 16 and under.",
-    "companionNeedsPaid": "2 free seats per paying ticket."
+    "companionNeedsPaid": "2 free seats max per paying ticket."
   },
   "portal": {
     "tickets": "Tickets",
