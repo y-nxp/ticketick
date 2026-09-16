@@ -165,9 +165,13 @@ function TicketRow({
   const te = useTranslations("event");
   const remaining = ticket.quantity - ticket.sold;
   const soldOut = remaining <= 0;
+  // La règle n'apparaît qu'une fois le plafond atteint : avant ça, le
+  // bouton « + » suffit à découvrir qu'on peut encore en ajouter.
   const hint =
     ticket.maxPerPaidTicket != null
-      ? te("companionNeedsPaid")
+      ? !soldOut && qty > 0 && qty >= max
+        ? te("companionNeedsPaid")
+        : null
       : ticket.description
         ? t(ticket.description, locale)
         : null;
