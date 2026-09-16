@@ -74,6 +74,8 @@ export function OrganizerShell({
             onClick={site ? undefined : (e) => e.preventDefault()}
           >
             {organizer.logoUrl ? (
+              // Logo organisateur : fichier local ou téléversé, hors loader next/image.
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={organizer.logoUrl}
                 alt=""

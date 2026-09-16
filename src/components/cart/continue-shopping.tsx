@@ -4,6 +4,11 @@ import * as React from "react";
 import { Link } from "@/i18n/navigation";
 import { continueShoppingHref } from "@/lib/shop-origin";
 
+function subscribeShopOrigin(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  return () => window.removeEventListener("storage", onStoreChange);
+}
+
 /** Lien vers le spectacle d’origine (/go/… si on vient du portail). */
 export function ContinueShopping({
   eventSlug,
@@ -16,13 +21,11 @@ export function ContinueShopping({
   className?: string;
   onClick?: () => void;
 }) {
-  const [href, setHref] = React.useState(
-    eventSlug ? `/events/${eventSlug}` : "/",
+  const href = React.useSyncExternalStore(
+    subscribeShopOrigin,
+    () => continueShoppingHref(eventSlug),
+    () => (eventSlug ? `/events/${eventSlug}` : "/"),
   );
-
-  React.useEffect(() => {
-    setHref(continueShoppingHref(eventSlug));
-  }, [eventSlug]);
 
   return (
     <Link href={href} className={className} onClick={onClick}>

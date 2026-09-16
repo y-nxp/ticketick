@@ -57,8 +57,6 @@ export function CartButton({
   React.useEffect(() => {
     if (onCartPage) {
       prevAdded.current = addedRevision;
-      setPinned(false);
-      setOpen(false);
       return;
     }
     if (prevAdded.current === null) {

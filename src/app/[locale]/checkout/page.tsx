@@ -4,7 +4,6 @@ import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { CreditCard, Landmark, CheckCircle2, Loader2, Copy, Clock } from "lucide-react";
-import { Link } from "@/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ContinueShopping } from "@/components/cart/continue-shopping";
 import { useCart } from "@/components/cart/cart-context";
@@ -68,6 +67,24 @@ function writeHold(hold: SeatHold): void {
 function clearHold(): void {
   localStorage.removeItem(HOLD_KEY);
   sessionStorage.removeItem(HOLD_KEY);
+}
+
+function readHoldSafe(): SeatHold | null {
+  if (typeof window === "undefined") return null;
+  return readHold();
+}
+
+function linesFromCartKey(
+  cartKey: string,
+): { ticketTypeId: string; quantity: number }[] {
+  if (!cartKey) return [];
+  return cartKey.split(",").map((part) => {
+    const sep = part.lastIndexOf(":");
+    return {
+      ticketTypeId: part.slice(0, sep),
+      quantity: Number(part.slice(sep + 1)),
+    };
+  });
 }
 
 function requestHold(args: {
@@ -139,15 +156,12 @@ function CheckoutInner() {
   const [submitting, setSubmitting] = React.useState(false);
   const [result, setResult] = React.useState<OrderResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const [hold, setHold] = React.useState<SeatHold | null>(null);
+  const [createdHold, setCreatedHold] = React.useState<SeatHold | null>(null);
   const [now, setNow] = React.useState(() => Date.now());
   const [holdExpired, setHoldExpired] = React.useState(false);
-  const [creatingHold, setCreatingHold] = React.useState(false);
+  const [failedFor, setFailedFor] = React.useState<string | null>(null);
   const [checkingSeats, setCheckingSeats] = React.useState(false);
   const [seatsOk, setSeatsOk] = React.useState<boolean | null>(null);
-
-  const linesRef = React.useRef(lines);
-  linesRef.current = lines;
 
   const ticketIds = lines.map((l) => l.ticketTypeId).join(",");
 
@@ -182,60 +196,86 @@ function CheckoutInner() {
     .sort()
     .join(",");
 
+  const stored = hydrated ? readHoldSafe() : null;
+  const storedUntil = stored ? Date.parse(stored.reservedUntil) : NaN;
+  const storedDead =
+    Boolean(stored) &&
+    (!Number.isFinite(storedUntil) || storedUntil <= now);
+  const storedMatches = Boolean(
+    stored && stored.cartKey === cartKey && !storedDead,
+  );
+  const createdAlive =
+    createdHold &&
+    createdHold.cartKey === cartKey &&
+    Date.parse(createdHold.reservedUntil) > now;
+
+  let hold: SeatHold | null = null;
+  if (storedMatches && stored) {
+    if (canceled && stored.checkoutUrl) {
+      const next = { ...stored };
+      delete next.checkoutUrl;
+      hold = next;
+    } else {
+      hold = stored;
+    }
+  } else if (createdAlive) {
+    hold = createdHold;
+  }
+
+  const msLeft = hold ? Date.parse(hold.reservedUntil) - now : 0;
+  const holdActive = Boolean(hold && msLeft > 0);
+  const createdExpired =
+    Boolean(createdHold && createdHold.cartKey === cartKey) && !createdAlive;
+  const showExpired = holdExpired || storedDead || createdExpired;
+
+  const needsCreate =
+    hydrated &&
+    Boolean(cartKey) &&
+    !holdExpired &&
+    !storedMatches &&
+    !storedDead &&
+    failedFor !== cartKey;
+
+  const creatingHold = needsCreate && !createdAlive && !error;
+  const replaceReference =
+    stored && stored.cartKey !== cartKey ? stored.reference : undefined;
+
+  React.useEffect(() => {
+    if (!storedDead || !stored?.cartKey) return;
+    inflightHolds.delete(stored.cartKey);
+    clearHold();
+  }, [storedDead, stored?.cartKey]);
+
+  React.useEffect(() => {
+    if (!storedMatches || !canceled || !stored?.checkoutUrl) return;
+    const next = { ...stored };
+    delete next.checkoutUrl;
+    writeHold(next);
+  }, [storedMatches, canceled, stored]);
+
   React.useEffect(() => {
     // Le chrono démarre à l'arrivée sur /checkout, pas à l'ajout au panier.
     // Attendre le panier : un `cartKey` vide au premier rendu ferait
     // croire à tort que la rétention est périmée (retour PostFinance).
-    if (!hydrated || !cartKey) return;
-    if (holdExpired) return;
-
-    const stored = readHold();
-    if (stored) {
-      const until = Date.parse(stored.reservedUntil);
-      if (!Number.isFinite(until) || until <= Date.now()) {
-        inflightHolds.delete(stored.cartKey);
-        clearHold();
-        setHold(null);
-        setHoldExpired(true);
-        return;
-      }
-      if (stored.cartKey === cartKey) {
-        setHoldExpired(false);
-        // Une session PostFinance annulée renvoie tout de suite à
-        // ?canceled=1 : la réouvrir relancerait la boucle.
-        if (canceled && stored.checkoutUrl) {
-          const next = { ...stored };
-          delete next.checkoutUrl;
-          writeHold(next);
-          setHold(next);
-        } else {
-          setHold(stored);
-        }
-        return;
-      }
-    }
+    if (!needsCreate) return;
 
     let cancelled = false;
-    setCreatingHold(true);
     requestHold({
       cartKey,
       locale,
-      lines: linesRef.current.map((l) => ({
-        ticketTypeId: l.ticketTypeId,
-        quantity: l.quantity,
-      })),
-      replaceReference:
-        stored && stored.cartKey !== cartKey ? stored.reference : undefined,
+      lines: linesFromCartKey(cartKey),
+      replaceReference,
     }).then((outcome) => {
       if (cancelled) return;
-      setCreatingHold(false);
       if (outcome.ok) {
-        setHold(outcome.hold);
+        setCreatedHold(outcome.hold);
         setHoldExpired(false);
+        setFailedFor(null);
         setError(null);
         return;
       }
-      setHold(null);
+      setCreatedHold(null);
+      setFailedFor(cartKey);
       if (t.has(outcome.error)) {
         setError(t(outcome.error));
         return;
@@ -246,25 +286,19 @@ function CheckoutInner() {
     return () => {
       cancelled = true;
     };
-  }, [hydrated, cartKey, holdExpired, locale, t, canceled]);
+  }, [needsCreate, cartKey, locale, t, replaceReference]);
 
   React.useEffect(() => {
     if (!hold) return;
-    const tick = window.setInterval(() => {
-      const left = Date.parse(hold.reservedUntil) - Date.now();
-      setNow(Date.now());
-      if (left <= 0) {
-        inflightHolds.delete(hold.cartKey);
-        clearHold();
-        setHold(null);
-        setHoldExpired(true);
-      }
-    }, 250);
+    const tick = window.setInterval(() => setNow(Date.now()), 250);
     return () => window.clearInterval(tick);
   }, [hold]);
 
-  const msLeft = hold ? Date.parse(hold.reservedUntil) - now : 0;
-  const holdActive = Boolean(hold && msLeft > 0);
+  React.useEffect(() => {
+    if (!hold || msLeft > 0) return;
+    inflightHolds.delete(hold.cartKey);
+    clearHold();
+  }, [hold, msLeft]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -324,7 +358,7 @@ function CheckoutInner() {
           cartKey,
         };
         writeHold(nextHold);
-        setHold(nextHold);
+        setCreatedHold(nextHold);
         window.location.href = data.checkoutUrl;
         return;
       }
@@ -455,7 +489,7 @@ function CheckoutInner() {
           </div>
         </div>
       ) : null}
-      {holdExpired ? (
+      {showExpired ? (
         <div className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm">
           <p className="text-destructive">{t("reservedExpired")}</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -477,6 +511,8 @@ function CheckoutInner() {
                   setSeatsOk(result.available);
                   if (result.available) {
                     inflightHolds.delete(cartKey);
+                    setCreatedHold(null);
+                    setFailedFor(null);
                     setHoldExpired(false);
                   }
                 } catch {
@@ -516,7 +552,7 @@ function CheckoutInner() {
           ) : null}
         </div>
       ) : null}
-      {canceled && !holdActive && !holdExpired ? (
+      {canceled && !holdActive && !showExpired ? (
         <p className="mt-4 rounded-xl bg-warning/15 px-4 py-3 text-sm">
           {t("canceled")}
         </p>

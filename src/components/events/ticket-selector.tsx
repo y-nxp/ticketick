@@ -19,7 +19,6 @@ export function TicketSelector({
   event,
   session,
   locale,
-  embed = false,
 }: {
   event: EventItem;
   /** Séance retenue : c'est elle qui porte les tarifs et le stock. */
