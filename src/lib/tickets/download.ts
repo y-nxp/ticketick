@@ -3,8 +3,32 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { optionBlocksForTicket } from "@/lib/tickets/option-block";
 import { buildTicketsPdf, type TicketPdfCard } from "@/lib/tickets/pdf";
 import { toTicketCard } from "@/lib/tickets/payload";
+
+const orderOptionSelect = {
+  title: true,
+  summary: true,
+  amountCents: true,
+  option: {
+    select: {
+      sessionId: true,
+      title: true,
+      hint: true,
+      groups: {
+        orderBy: { sortOrder: "asc" as const },
+        select: {
+          title: true,
+          choices: {
+            orderBy: { sortOrder: "asc" as const },
+            select: { label: true },
+          },
+        },
+      },
+    },
+  },
+} as const;
 
 function secret(): string {
   return process.env.AUTH_SECRET ?? "";
@@ -40,6 +64,7 @@ export const ticketOrderSelect = Prisma.validator<Prisma.TicketSelect>()({
       currency: true,
       session: {
         select: {
+          id: true,
           startsAt: true,
           doorsAt: true,
           venue: {
@@ -86,6 +111,7 @@ export async function ticketsForPdf(
       lastName: true,
       locale: true,
       reference: true,
+      options: { select: orderOptionSelect },
       tickets: {
         orderBy: { createdAt: "asc" },
         select: { ...ticketOrderSelect, status: true },
@@ -105,6 +131,7 @@ export async function ticketsForPdf(
       order.reference,
       order.locale,
       order.status,
+      order.options,
     ),
   };
 }
@@ -118,6 +145,7 @@ export async function paidOrderForMail(orderId: string) {
       lastName: true,
       locale: true,
       reference: true,
+      options: { select: orderOptionSelect },
       tickets: {
         orderBy: { createdAt: "asc" },
         select: ticketOrderSelect,
@@ -144,6 +172,7 @@ export async function paidOrderForMail(orderId: string) {
       order.reference,
       order.locale,
       "PAID",
+      order.options,
     ),
   };
 }
@@ -159,6 +188,7 @@ function mapTickets(
       priceCents: number;
       currency: string;
       session: {
+        id: string;
         startsAt: Date;
         doorsAt: Date | null;
         venue: {
@@ -187,6 +217,7 @@ function mapTickets(
   reference: string,
   locale: string,
   orderStatus?: string,
+  orderOptions: Parameters<typeof optionBlocksForTicket>[0] = [],
 ) {
   return tickets.map((ticket) => {
     const session = ticket.ticketType.session;
@@ -213,6 +244,12 @@ function mapTickets(
       seatLabel: ticket.seatLabel,
       locale,
       valid: paid && usable,
+      optionBlocks: optionBlocksForTicket(
+        orderOptions,
+        ticket.ticketType.session.id,
+        session.startsAt,
+        locale,
+      ),
     });
   });
 }

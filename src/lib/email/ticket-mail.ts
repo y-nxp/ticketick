@@ -208,6 +208,17 @@ export async function sendPreviewTicketEmail(to: string) {
         reference: "APERCU-DEMO",
         priceCents: 3500,
         locale,
+        optionBlocks: [
+          {
+            heading: "Y compris service de navette par minibus",
+            date: "Dimanche 15 novembre 2026",
+            trips: [
+              "1 Aller : 15h30 Gare de Nyon -> Abbaye de Bonmont",
+              "1 Retour : 19h30 Abbaye de Bonmont -> gare de Nyon",
+            ],
+            total: "Total : 10 CHF à payer directement au chauffeur",
+          },
+        ],
       }),
       toTicketCard({
         code: "APERCU-DEMO-0002",
@@ -252,6 +263,7 @@ function carteHtml(
       <p style="margin:8px 0 0;font-size:13px;color:#4b5563">${adresse}</p>
       <p style="margin:8px 0 0;font-size:13px">${echapper(t.holder)} ${echapper(ticket.holderName)}</p>
       <p style="margin:4px 0 0;font-size:13px;color:#4b5563">${echapper(ticket.seating)}</p>
+      ${optionBlocksHtml(ticket)}
     </td>
   </tr>
   <tr>
@@ -261,6 +273,27 @@ function carteHtml(
     </td>
   </tr>
 </table>`;
+}
+
+function optionBlocksHtml(ticket: TicketCard): string {
+  if (!ticket.optionBlocks?.length) return "";
+  return ticket.optionBlocks
+    .map((block) => {
+      const trips = block.trips
+        .map((trip) => `<p style="margin:2px 0 0">${echapper(`• ${trip}`)}</p>`)
+        .join("");
+      return `<div style="margin:12px 0 0;padding:10px 12px;background:#F8F9FA;border-left:3px solid #6C5CE7;border-radius:0 8px 8px 0">
+        <p style="margin:0;font-weight:700">${echapper(block.heading)}</p>
+        <p style="margin:4px 0 0">${echapper(block.date)}</p>
+        ${trips}
+        ${
+          block.total
+            ? `<p style="margin:6px 0 0;font-weight:700">${echapper(block.total)}</p>`
+            : ""
+        }
+      </div>`;
+    })
+    .join("");
 }
 
 function footerLogosHtml(

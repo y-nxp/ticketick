@@ -4,7 +4,10 @@ import {
   ticketDisclaimer,
   ticketResponsible,
 } from "@/lib/tickets/responsible";
+import type { TicketOptionBlock } from "@/lib/tickets/option-block";
 import { readUploadFile } from "@/lib/uploads";
+
+export type { TicketOptionBlock };
 
 export type VenueBits = {
   name: string;
@@ -35,6 +38,7 @@ export interface TicketCard {
   disclaimer?: string;
   /** Faux tant que la commande n'est pas payée, ou si le billet est annulé. */
   valid: boolean;
+  optionBlocks?: TicketOptionBlock[];
 }
 
 export function venueLines(venue?: VenueBits | null): string[] {
@@ -135,6 +139,7 @@ export function toTicketCard(input: {
   producerLogoUrl?: string | null;
   ticketDisclaimer?: unknown;
   valid?: boolean;
+  optionBlocks?: TicketOptionBlock[];
 }): TicketCard {
   const fallback = ticketResponsible(input.organizerSlug);
   const fromRow = readTitle(input.ticketDisclaimer, input.locale);
@@ -166,6 +171,7 @@ export function toTicketCard(input: {
     ),
     seating: input.seatLabel?.trim() || seatingLabel(input.locale),
     valid: input.valid !== false,
+    optionBlocks: input.optionBlocks?.length ? input.optionBlocks : undefined,
   };
 }
 

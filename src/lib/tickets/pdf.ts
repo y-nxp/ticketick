@@ -2,7 +2,12 @@ import "server-only";
 
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { ticketQrPng } from "@/lib/tickets/qr";
-import { pdfSafe, readPublicFile, type TicketCard } from "@/lib/tickets/payload";
+import {
+  pdfSafe,
+  readPublicFile,
+  type TicketCard,
+  type TicketOptionBlock,
+} from "@/lib/tickets/payload";
 
 export type TicketPdfCard = TicketCard;
 
@@ -250,6 +255,20 @@ export async function buildTicketsPdf(
       lineHeight: 13,
     });
 
+    if (ticket.optionBlocks?.length) {
+      y -= 14;
+      for (const block of ticket.optionBlocks) {
+        y = drawOptionBlock(page, block, {
+          x: margin,
+          y,
+          width: contentW,
+          bold,
+          regular,
+        });
+        y -= 10;
+      }
+    }
+
     const disclaimer = pdfSafe(ticket.disclaimer ?? copy.disclaimer);
     const discSize = 7.5;
     const discLh = 10;
@@ -330,6 +349,57 @@ export async function buildTicketsPdf(
   }
 
   return Buffer.from(await doc.save());
+}
+
+function drawOptionBlock(
+  page: PDFPage,
+  block: TicketOptionBlock,
+  opts: {
+    x: number;
+    y: number;
+    width: number;
+    bold: PDFFont;
+    regular: PDFFont;
+  },
+): number {
+  const lines = [
+    block.heading,
+    block.date,
+    ...block.trips.map((trip) => `• ${trip}`),
+    ...(block.total ? [block.total] : []),
+  ].filter(Boolean);
+  const lineH = 13;
+  const pad = 10;
+  const height = pad * 2 + lines.length * lineH;
+  let y = opts.y;
+
+  page.drawRectangle({
+    x: opts.x,
+    y: y - height + 8,
+    width: opts.width,
+    height,
+    color: WASH,
+  });
+  page.drawRectangle({
+    x: opts.x,
+    y: y - height + 8,
+    width: 3,
+    height,
+    color: VIOLET,
+  });
+
+  y -= 4;
+  for (const [index, line] of lines.entries()) {
+    page.drawText(pdfSafe(line), {
+      x: opts.x + 12,
+      y: y - 8,
+      size: index === 0 ? 10 : 9,
+      font: index === 0 || index === lines.length - 1 ? opts.bold : opts.regular,
+      color: INK,
+    });
+    y -= lineH;
+  }
+  return y - 4;
 }
 
 function embedImage(doc: PDFDocument, bytes: Buffer, url?: string) {
