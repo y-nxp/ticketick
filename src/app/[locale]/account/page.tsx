@@ -137,6 +137,17 @@ export default async function AccountPage({
                         </span>
                       </li>
                     ))}
+                    {order.options.map((option) => (
+                      <li key={option.title + option.summary}>
+                        {option.title}
+                        {option.summary ? (
+                          <span className="text-muted-foreground">
+                            {" — "}
+                            {option.summary}
+                          </span>
+                        ) : null}
+                      </li>
+                    ))}
                   </ul>
 
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 text-sm">

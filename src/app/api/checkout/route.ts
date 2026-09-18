@@ -39,6 +39,15 @@ const checkoutSchema = z.object({
   paymentMethod: z.enum(["CARD", "IBAN"]),
   lines: z.array(lineSchema).min(1).max(50),
   holdReference: z.string().min(3).max(32).optional(),
+  options: z
+    .array(
+      z.object({
+        optionId: z.string().min(1),
+        choiceIds: z.array(z.string().min(1)).max(20),
+      }),
+    )
+    .max(20)
+    .optional(),
 });
 
 // IBAN d'exemple, réservé aux environnements d'essai. Envoyé à un acheteur
@@ -102,6 +111,7 @@ export async function POST(request: Request) {
     locale: data.locale,
     paymentMethod: data.paymentMethod,
     userId: user?.id,
+    options: data.options,
   };
 
   // La rétention a déjà prélevé le stock à l'arrivée sur /checkout.

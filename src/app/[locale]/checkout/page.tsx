@@ -6,6 +6,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { CreditCard, Landmark, CheckCircle2, Loader2, Copy, Clock } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ContinueShopping } from "@/components/cart/continue-shopping";
+import {
+  EventOptions,
+  type OptionDraft,
+} from "@/components/checkout/event-options";
 import { useCart } from "@/components/cart/cart-context";
 import {
   isStackedLayout,
@@ -162,6 +166,10 @@ function CheckoutInner() {
   const [failedFor, setFailedFor] = React.useState<string | null>(null);
   const [checkingSeats, setCheckingSeats] = React.useState(false);
   const [seatsOk, setSeatsOk] = React.useState<boolean | null>(null);
+  const [optionDraft, setOptionDraft] = React.useState<OptionDraft>({
+    payload: [],
+    amountCents: 0,
+  });
 
   const ticketIds = lines.map((l) => l.ticketTypeId).join(",");
 
@@ -190,7 +198,8 @@ function CheckoutInner() {
     };
   }, [ticketIds]);
 
-  const total = subtotalCents;
+  const sessionIds = [...new Set(lines.map((l) => l.sessionId))];
+  const total = subtotalCents + optionDraft.amountCents;
   const cartKey = lines
     .map((l) => `${l.ticketTypeId}:${l.quantity}`)
     .sort()
@@ -316,6 +325,7 @@ function CheckoutInner() {
           locale,
           paymentMethod: method,
           holdReference: hold?.reference,
+          options: optionDraft.payload,
           lines: lines.map((l) => ({
             ticketTypeId: l.ticketTypeId,
             ticketName: l.ticketName,
@@ -598,6 +608,12 @@ function CheckoutInner() {
             </div>
           </section>
 
+          <EventOptions
+            sessionIds={sessionIds}
+            locale={locale}
+            onChange={setOptionDraft}
+          />
+
           {/* Paiement */}
           <section className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">{t("paymentMethod")}</h2>
@@ -669,6 +685,14 @@ function CheckoutInner() {
                 </li>
               ))}
             </ul>
+            {optionDraft.payload.length > 0 && optionDraft.amountCents > 0 ? (
+              <p className="mt-3 flex justify-between gap-3 text-sm">
+                <span className="text-muted-foreground">{t("options")}</span>
+                <span className="font-medium tabular-nums">
+                  {formatPrice(optionDraft.amountCents, `${locale}-CH`)}
+                </span>
+              </p>
+            ) : null}
             <dl className="mt-4 space-y-2 border-t border-border pt-4 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{tc("subtotal")}</dt>

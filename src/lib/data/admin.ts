@@ -186,6 +186,7 @@ export async function getAdminOrders() {
       email: true,
       createdAt: true,
       reseller: { select: { name: true } },
+      options: { select: { title: true, summary: true, amountCents: true } },
       _count: { select: { items: true } },
     },
   });

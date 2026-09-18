@@ -5,6 +5,7 @@ import { ShareEmbed } from "@/components/admin/share-embed";
 import { publicAppOrigin } from "@/lib/app-url";
 import { getEventForEdit, getReferenceData } from "@/lib/data/admin-catalog";
 import { EventForm } from "../event-form";
+import { OptionsEditor } from "../options-editor";
 import { SessionsEditor } from "../sessions-editor";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +49,7 @@ export default async function EditEventPage({
       />
 
       <SessionsEditor event={event} reference={reference} />
+      <OptionsEditor event={event} />
     </div>
   );
 }

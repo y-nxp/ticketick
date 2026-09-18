@@ -62,7 +62,18 @@ export default async function AdminOrdersPage({
                   <td className="px-4 py-3 font-mono text-xs">
                     {order.reference}
                   </td>
-                  <td className="px-4 py-3">{order.email}</td>
+                  <td className="px-4 py-3">
+                    <p>{order.email}</p>
+                    {order.options.length > 0 ? (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {order.options
+                          .map((o) =>
+                            o.summary ? `${o.title} — ${o.summary}` : o.title,
+                          )
+                          .join(" · ")}
+                      </p>
+                    ) : null}
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">
                     {order.reseller?.name ?? t(`channel.${order.channel}`)}
                   </td>

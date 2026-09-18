@@ -21,6 +21,14 @@ export async function getMyOrders(userId: string) {
       totalCents: true,
       currency: true,
       createdAt: true,
+      options: {
+        select: {
+          title: true,
+          summary: true,
+          amountCents: true,
+          quantity: true,
+        },
+      },
       items: {
         select: {
           quantity: true,

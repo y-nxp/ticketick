@@ -4,6 +4,11 @@ import { randomBytes } from "node:crypto";
 import { Prisma, type PaymentMethod } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { inheritPayment, intersectOffers } from "./payment-methods";
+import {
+  resolveOrderOptions,
+  type OptionSelectionInput,
+  type ResolvedOption,
+} from "./options";
 import { CARD_HOLD_MS } from "./reservation";
 
 /**
@@ -30,6 +35,7 @@ export interface CreateOrderInput {
   userId?: string;
   resellerId?: string;
   soldByUserId?: string;
+  options?: OptionSelectionInput[];
 }
 
 export type CreateOrderResult =
@@ -68,7 +74,10 @@ export type OrderError =
   | "method_not_allowed"
   | "reference_collision"
   | "hold_expired"
-  | "hold_mismatch";
+  | "hold_mismatch"
+  | "option_unavailable"
+  | "option_incomplete"
+  | "option_invalid";
 
 /**
  * L'encaissement carte va sur le compte PostFinance de l'organisateur.
@@ -222,12 +231,26 @@ export async function createOrder(
     };
   });
 
-  const subtotalCents = lines.reduce(
+  const sessionIds = [...new Set(ticketTypes.map((tt) => tt.session.id))];
+  const options = await resolveOrderOptions({
+    sessionIds,
+    selections: input.options ?? [],
+    locale: input.locale,
+  });
+  if (!options.ok) return options;
+
+  const ticketSubtotal = lines.reduce(
     (sum, l) => sum + l.unitPriceCents * l.quantity,
     0,
   );
+  const optionAmount = options.rows.reduce((sum, r) => sum + r.amountCents, 0);
+  const subtotalCents = ticketSubtotal + optionAmount;
   const feeCents = Math.round((subtotalCents * PLATFORM_FEE_BPS) / 10_000);
   const totalCents = subtotalCents + feeCents;
+  const paymentLines = [
+    ...lines,
+    ...options.rows.map(optionPaymentLine),
+  ];
   const currency = byId.get(lines[0]!.ticketTypeId)!.currency;
   const project = [
     ...new Set(ticketTypes.map((tt) => tt.session.event.slug)),
@@ -298,6 +321,16 @@ export async function createOrder(
               unitPriceCents: l.unitPriceCents,
             })),
           },
+          options: {
+            create: options.rows.map((r) => ({
+              optionId: r.optionId,
+              title: r.title,
+              summary: r.summary,
+              quantity: r.quantity,
+              unitPriceCents: r.unitPriceCents,
+              amountCents: r.amountCents,
+            })),
+          },
         },
         select: { id: true, reference: true, createdAt: true },
       });
@@ -319,7 +352,7 @@ export async function createOrder(
         feeCents,
         totalCents,
         currency,
-        lines,
+        lines: paymentLines,
         project,
         organizerName,
         createdAt: order.createdAt,
@@ -448,7 +481,7 @@ export async function createCheckoutHold(input: {
  */
 export async function fulfillCheckoutHold(
   reference: string,
-  input: Omit<CreateOrderInput, "lines"> & { lines: OrderLineInput[] },
+  input: CreateOrderInput,
 ): Promise<CreateOrderResult> {
   const limite = new Date(Date.now() - CARD_HOLD_MS);
   const order = await prisma.order.findFirst({
@@ -488,19 +521,6 @@ export async function fulfillCheckoutHold(
     }
   }
 
-  await prisma.order.update({
-    where: { id: order.id },
-    data: {
-      email: input.email,
-      firstName: input.firstName,
-      lastName: input.lastName,
-      phone: input.phone,
-      locale: input.locale,
-      paymentMethod: input.paymentMethod,
-      userId: input.userId,
-    },
-  });
-
   const ticketTypes = await prisma.ticketType.findMany({
     where: { id: { in: order.items.map((item) => item.ticketTypeId) } },
     select: {
@@ -508,6 +528,7 @@ export async function fulfillCheckoutHold(
       name: true,
       session: {
         select: {
+          id: true,
           startsAt: true,
           event: {
             select: {
@@ -520,33 +541,82 @@ export async function fulfillCheckoutHold(
       },
     },
   });
-  const byId = new Map(ticketTypes.map((tt) => [tt.id, tt]));
-  const lines = order.items.map((item) => {
-    const tt = byId.get(item.ticketTypeId);
-    return {
-      ticketTypeId: item.ticketTypeId,
-      quantity: item.quantity,
-      unitPriceCents: item.unitPriceCents,
-      label: tt
-        ? paymentLineLabel({
-            organizer: tt.session.event.organizer.name,
-            eventTitle: readTitle(tt.session.event.title, input.locale),
-            sessionStartsAt: tt.session.startsAt,
-            ticketName: readTitle(tt.name, input.locale),
-            locale: input.locale,
-          })
-        : item.ticketTypeId,
-    };
+
+  const options = await resolveOrderOptions({
+    sessionIds: [...new Set(ticketTypes.map((tt) => tt.session.id))],
+    selections: input.options ?? [],
+    locale: input.locale,
   });
+  if (!options.ok) return options;
+
+  const ticketSubtotal = order.items.reduce(
+    (sum, item) => sum + item.unitPriceCents * item.quantity,
+    0,
+  );
+  const optionAmount = options.rows.reduce((sum, r) => sum + r.amountCents, 0);
+  const subtotalCents = ticketSubtotal + optionAmount;
+  const feeCents = Math.round((subtotalCents * PLATFORM_FEE_BPS) / 10_000);
+  const totalCents = subtotalCents + feeCents;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.orderOption.deleteMany({ where: { orderId: order.id } });
+    await tx.order.update({
+      where: { id: order.id },
+      data: {
+        email: input.email,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        phone: input.phone,
+        locale: input.locale,
+        paymentMethod: input.paymentMethod,
+        userId: input.userId,
+        subtotalCents,
+        feeCents,
+        totalCents,
+        options: {
+          create: options.rows.map((r) => ({
+            optionId: r.optionId,
+            title: r.title,
+            summary: r.summary,
+            quantity: r.quantity,
+            unitPriceCents: r.unitPriceCents,
+            amountCents: r.amountCents,
+          })),
+        },
+      },
+    });
+  });
+
+  const byId = new Map(ticketTypes.map((tt) => [tt.id, tt]));
+  const lines = [
+    ...order.items.map((item) => {
+      const tt = byId.get(item.ticketTypeId);
+      return {
+        ticketTypeId: item.ticketTypeId,
+        quantity: item.quantity,
+        unitPriceCents: item.unitPriceCents,
+        label: tt
+          ? paymentLineLabel({
+              organizer: tt.session.event.organizer.name,
+              eventTitle: readTitle(tt.session.event.title, input.locale),
+              sessionStartsAt: tt.session.startsAt,
+              ticketName: readTitle(tt.name, input.locale),
+              locale: input.locale,
+            })
+          : item.ticketTypeId,
+      };
+    }),
+    ...options.rows.map(optionPaymentLine),
+  ];
 
   return {
     ok: true,
     order: {
       id: order.id,
       reference: order.reference,
-      subtotalCents: order.subtotalCents,
-      feeCents: order.feeCents,
-      totalCents: order.totalCents,
+      subtotalCents,
+      feeCents,
+      totalCents,
       currency: order.currency,
       lines,
       project: [
@@ -593,6 +663,15 @@ async function followIfOptedIn(userId: string, organizerIds: string[]) {
       update: {},
     });
   }
+}
+
+function optionPaymentLine(row: ResolvedOption) {
+  return {
+    ticketTypeId: row.optionId,
+    quantity: row.quantity,
+    unitPriceCents: row.unitPriceCents,
+    label: row.paymentLabel,
+  };
 }
 
 function paymentLineLabel(input: {

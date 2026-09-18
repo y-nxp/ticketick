@@ -116,6 +116,12 @@ enum EventVisibility {
   MEMBERS
 }
 
+/// Prix d'une option de commande : montant unique, ou par choix coché.
+enum EventOptionPriceMode {
+  FLAT
+  PER_CHOICE
+}
+
 enum OrderStatus {
   PENDING
   AWAITING_PAYMENT
@@ -330,6 +336,7 @@ model Event {
 
   sessions  EventSession[]
   discounts Discount[]
+  options   EventOption[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -372,6 +379,7 @@ model EventSession {
 
   ticketTypes TicketType[]
   discounts   Discount[]
+  options     EventOption[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -571,6 +579,7 @@ model Order {
 
   items     OrderItem[]
   discounts OrderDiscount[]
+  options   OrderOption[]
   tickets   Ticket[]
   payment   Payment?
   ledger    ResellerLedgerEntry[]
@@ -591,6 +600,79 @@ model OrderItem {
   ticketTypeId   String
   quantity       Int
   unitPriceCents Int
+
+  @@index([orderId])
+}
+
+/// Option proposée sur le formulaire d'achat (navette, repas, don…).
+///
+/// Activable par spectacle, éventuellement limitée à une séance. Un prix à
+/// zéro reste une option gratuite : le montant n'est appliqué que s'il est
+/// strictement positif.
+model EventOption {
+  id      String @id @default(cuid())
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId String
+
+  /// Absente : l'option s'affiche pour toutes les séances du spectacle.
+  session   EventSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId String?
+
+  enabled   Boolean              @default(false)
+  title     Json
+  hint      Json?
+  priceCents Int                 @default(0)
+  priceMode EventOptionPriceMode @default(FLAT)
+  sortOrder Int                  @default(0)
+
+  groups  EventOptionGroup[]
+  orders  OrderOption[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId, enabled])
+  @@index([sessionId])
+}
+
+model EventOptionGroup {
+  id       String      @id @default(cuid())
+  option   EventOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  optionId String
+
+  title     Json
+  required  Boolean @default(false)
+  sortOrder Int     @default(0)
+  choices   EventOptionChoice[]
+
+  @@index([optionId])
+}
+
+model EventOptionChoice {
+  id      String           @id @default(cuid())
+  group   EventOptionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId String
+
+  label     Json
+  sortOrder Int @default(0)
+
+  @@index([groupId])
+}
+
+/// Choix figé au moment de la commande : le catalogue peut encore changer.
+model OrderOption {
+  id      String @id @default(cuid())
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String
+
+  option   EventOption @relation(fields: [optionId], references: [id])
+  optionId String
+
+  title          String
+  summary        String
+  quantity       Int
+  unitPriceCents Int
+  amountCents    Int
 
   @@index([orderId])
 }

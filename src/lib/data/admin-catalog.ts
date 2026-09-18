@@ -91,6 +91,32 @@ export async function getEventForEdit(id: string) {
       organizerId: true,
       organizer: { select: { slug: true, name: true } },
       categories: { select: { id: true } },
+      options: {
+        orderBy: { sortOrder: "asc" },
+        select: {
+          id: true,
+          sessionId: true,
+          enabled: true,
+          title: true,
+          hint: true,
+          priceCents: true,
+          priceMode: true,
+          sortOrder: true,
+          groups: {
+            orderBy: { sortOrder: "asc" },
+            select: {
+              id: true,
+              title: true,
+              required: true,
+              sortOrder: true,
+              choices: {
+                orderBy: { sortOrder: "asc" },
+                select: { id: true, label: true, sortOrder: true },
+              },
+            },
+          },
+        },
+      },
       sessions: {
         orderBy: { startsAt: "asc" },
         select: {
