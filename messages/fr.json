@@ -165,8 +165,7 @@
     "hold_mismatch": "Votre panier a changé. Nous reprenons la réservation.",
     "option_unavailable": "Cette option n’est plus proposée pour votre sélection.",
     "option_incomplete": "Choisissez un horaire de navette, ou décochez l’option.",
-    "option_invalid": "Le choix d’option n’est pas valable.",
-    "optionUntoggle": "Cliquez une seconde fois sur le même horaire pour l’annuler."
+    "option_invalid": "Le choix d’option n’est pas valable."
   },
   "account": {
     "title": "Mon espace",

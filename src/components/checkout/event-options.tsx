@@ -82,11 +82,6 @@ export function EventOptions({
                   {option.hint ? (
                     <p className="text-sm text-muted-foreground">{option.hint}</p>
                   ) : null}
-                  {option.groups.length > 0 ? (
-                    <p className="text-xs text-muted-foreground">
-                      {t("optionUntoggle")}
-                    </p>
-                  ) : null}
                   {option.groups.map((group) => (
                     <fieldset key={group.id} className="space-y-2">
                       <legend className="text-sm font-medium">{group.title}</legend>

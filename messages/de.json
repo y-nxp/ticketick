@@ -165,8 +165,7 @@
     "hold_mismatch": "Ihr Warenkorb hat sich geändert. Wir reservieren die neue Auswahl.",
     "option_unavailable": "Diese Option ist für Ihre Auswahl nicht mehr verfügbar.",
     "option_incomplete": "Wählen Sie eine Shuttle-Zeit oder entfernen Sie die Option.",
-    "option_invalid": "Diese Optionswahl ist ungültig.",
-    "optionUntoggle": "Ein zweiter Klick auf dieselbe Zeit hebt die Wahl auf."
+    "option_invalid": "Diese Optionswahl ist ungültig."
   },
   "account": {
     "title": "Mein Konto",

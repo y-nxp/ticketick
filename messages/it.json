@@ -165,8 +165,7 @@
     "hold_mismatch": "Il carrello è cambiato. Stiamo riservando la nuova selezione.",
     "option_unavailable": "Questa opzione non è più disponibile per la tua selezione.",
     "option_incomplete": "Scegli un orario della navetta oppure togli l’opzione.",
-    "option_invalid": "La scelta dell’opzione non è valida.",
-    "optionUntoggle": "Clicca di nuovo sullo stesso orario per annullarlo."
+    "option_invalid": "La scelta dell’opzione non è valida."
   },
   "account": {
     "title": "Il mio spazio",
