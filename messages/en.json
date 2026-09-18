@@ -165,7 +165,8 @@
     "hold_mismatch": "Your cart has changed. We are reserving the new selection.",
     "option_unavailable": "This option is no longer available for your selection.",
     "option_incomplete": "Pick a shuttle time, or uncheck the option.",
-    "option_invalid": "That option choice is not valid."
+    "option_invalid": "That option choice is not valid.",
+    "optionUntoggle": "Click the same time again to clear it."
   },
   "account": {
     "title": "My account",

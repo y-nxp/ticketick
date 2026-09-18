@@ -82,10 +82,18 @@ export function EventOptions({
                   {option.hint ? (
                     <p className="text-sm text-muted-foreground">{option.hint}</p>
                   ) : null}
+                  {option.groups.length > 0 ? (
+                    <p className="text-xs text-muted-foreground">
+                      {t("optionUntoggle")}
+                    </p>
+                  ) : null}
                   {option.groups.map((group) => (
                     <fieldset key={group.id} className="space-y-2">
                       <legend className="text-sm font-medium">{group.title}</legend>
-                      {group.choices.map((choice) => (
+                      {group.choices.map((choice) => {
+                        const selected =
+                          picks[option.id]?.[group.id] === choice.id;
+                        return (
                         <label
                           key={choice.id}
                           className="flex items-center gap-2.5 text-sm"
@@ -94,23 +102,25 @@ export function EventOptions({
                             type="radio"
                             name={`option-${option.id}-${group.id}`}
                             value={choice.id}
-                            checked={picks[option.id]?.[group.id] === choice.id}
-                            onChange={() => {
-                              const next = {
-                                ...picks,
-                                [option.id]: {
-                                  ...(picks[option.id] ?? {}),
-                                  [group.id]: choice.id,
-                                },
-                              };
+                            checked={selected}
+                            onClick={() => {
+                              const current = { ...(picks[option.id] ?? {}) };
+                              if (selected) delete current[group.id];
+                              else current[group.id] = choice.id;
+                              const next = { ...picks, [option.id]: current };
                               setPicks(next);
                               emit(wanted, next);
+                            }}
+                            onChange={() => {
+                              // Le clic gère aussi l’annulation du choix déjà
+                              // coché : `onChange` ne se déclenche pas alors.
                             }}
                             className="size-4 border-border accent-[var(--primary)]"
                           />
                           {choice.label}
                         </label>
-                      ))}
+                        );
+                      })}
                     </fieldset>
                   ))}
                   {option.priceCents > 0 ? (
