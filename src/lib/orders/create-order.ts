@@ -3,6 +3,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { Prisma, type PaymentMethod } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { cancelOrderTickets, issueMissingTickets } from "@/lib/tickets/issue";
 import { inheritPayment, intersectOffers } from "./payment-methods";
 import {
   resolveOrderOptions,
@@ -296,7 +297,7 @@ export async function createOrder(
         }
       }
 
-      return tx.order.create({
+      const order = await tx.order.create({
         data: {
           reference: generateReference(),
           email: input.email,
@@ -334,6 +335,20 @@ export async function createOrder(
         },
         select: { id: true, reference: true, createdAt: true },
       });
+
+      await issueMissingTickets(
+        tx,
+        {
+          id: order.id,
+          items: lines.map((line) => ({
+            ticketTypeId: line.ticketTypeId,
+            quantity: line.quantity,
+          })),
+        },
+        "PENDING",
+      );
+
+      return order;
     });
 
     if (input.userId) {
@@ -454,10 +469,15 @@ export async function releaseOrder(orderId: string): Promise<void> {
       where: { id: orderId },
       data: { status: "CANCELLED" },
     });
+    await cancelOrderTickets(tx, orderId);
   });
 }
 
-const HOLD_PLACEHOLDER_DOMAIN = "hold.ticketick.invalid";
+export const HOLD_PLACEHOLDER_DOMAIN = "hold.ticketick.invalid";
+
+export function isCheckoutHoldEmail(email: string): boolean {
+  return email.endsWith(`@${HOLD_PLACEHOLDER_DOMAIN}`);
+}
 
 /** Retient le stock dès l'arrivée sur le checkout, avant les coordonnées. */
 export async function createCheckoutHold(input: {
@@ -585,6 +605,7 @@ export async function fulfillCheckoutHold(
         },
       },
     });
+    await issueMissingTickets(tx, order, "PENDING");
   });
 
   const byId = new Map(ticketTypes.map((tt) => [tt.id, tt]));

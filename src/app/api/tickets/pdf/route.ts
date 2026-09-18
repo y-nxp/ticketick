@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { prisma } from "@/lib/prisma";
+import { ensureTicketsForReference } from "@/lib/tickets/issue";
 import {
   ticketPdfTokenOk,
   ticketsPdfBuffer,
@@ -17,12 +18,18 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "missing_ref" }, { status: 400 });
   }
 
-  const allowed = ticketPdfTokenOk(reference, token) || (await ownsOrder(reference));
+  const staff = await staffCanDownload(reference);
+  const allowed =
+    staff || ticketPdfTokenOk(reference, token) || (await ownsOrder(reference));
   if (!allowed) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const pdf = await ticketsPdfBuffer(reference);
+  if (staff) {
+    await ensureTicketsForReference(reference);
+  }
+
+  const pdf = await ticketsPdfBuffer(reference, { requirePaid: !staff });
   if (!pdf) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
@@ -46,4 +53,31 @@ async function ownsOrder(reference: string): Promise<boolean> {
   });
   if (!order || order.status !== "PAID") return false;
   return order.userId === user.id || order.email === user.email;
+}
+
+async function staffCanDownload(reference: string): Promise<boolean> {
+  const user = await getCurrentUser();
+  if (!user || (user.role !== "ADMIN" && user.role !== "ORGANIZER")) {
+    return false;
+  }
+  const order = await prisma.order.findUnique({
+    where: { reference },
+    select: {
+      items: {
+        select: {
+          ticketType: {
+            select: {
+              session: { select: { event: { select: { organizerId: true } } } },
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!order || order.items.length === 0) return false;
+  if (user.role === "ADMIN") return true;
+  return order.items.some(
+    (item) =>
+      item.ticketType.session.event.organizerId === user.organizerId,
+  );
 }

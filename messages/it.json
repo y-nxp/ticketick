@@ -269,6 +269,7 @@
     "refused": "Rifiutato",
     "unknown": "Biglietto introvabile.",
     "cancelled": "Biglietto annullato.",
+    "unpaid": "Biglietto non pagato — non valido.",
     "forbidden": "Questo biglietto non è sui tuoi spettacoli."
   },
   "about": {
@@ -455,14 +456,34 @@
     },
     "orders": {
       "title": "Ordini",
-      "subtitle": "Gli ultimi 100 ordini.",
+      "subtitle": "Gli ultimi 100 ordini e tentativi d’acquisto.",
       "reference": "Riferimento",
       "customer": "Cliente",
       "channel": "Canale",
       "status": "Stato",
       "date": "Data",
       "total": "Totale",
-      "notWiredYet": "Nessun ordine per il momento. Le vendite compaiono qui non appena un acquisto è pagato."
+      "empty": "Nessun ordine né tentativo per il momento.",
+      "attempt": "Tentativo (dati non inseriti)",
+      "back": "Tutti gli ordini",
+      "detailTitle": "Ordine {reference}",
+      "detailSubtitle": "Tentativo, pagamento e biglietti.",
+      "items": "Biglietti",
+      "tickets": "Codici",
+      "payment": "Pagamento",
+      "noPayment": "Nessun incasso registrato.",
+      "download": "Scarica i biglietti",
+      "downloadHint": "Il PDF è contrassegnato come non valido finché il pagamento non è registrato. All’ingresso il QR è rifiutato.",
+      "markCash": "Segna pagato in contanti",
+      "markCashPending": "Salvataggio…",
+      "markCashHint": "Il biglietto diventa valido e la vendita entra nelle statistiche.",
+      "cashDone": "Pagamento in contanti registrato.",
+      "errors": {
+        "notFound": "Ordine introvabile.",
+        "alreadyPaid": "Questo ordine è già pagato.",
+        "notPayable": "Questo ordine non può più essere incassato.",
+        "amount": "L’importo non corrisponde."
+      }
     },
     "resellers": {
       "title": "Punti vendita",
@@ -515,6 +536,17 @@
       "PAID": "Pagato",
       "CANCELLED": "Annullato",
       "REFUNDED": "Rimborsato"
+    },
+    "ticketStatus": {
+      "PENDING": "Non valido",
+      "VALID": "Valido",
+      "USED": "Utilizzato",
+      "CANCELLED": "Annullato"
+    },
+    "paymentMethod": {
+      "CARD": "Carta",
+      "IBAN": "Bonifico",
+      "CASH": "Contanti"
     },
     "channel": {
       "ONLINE": "Online",

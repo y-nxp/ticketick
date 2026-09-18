@@ -33,6 +33,8 @@ export interface TicketCard {
   producerUrl?: string;
   producerLogoUrl?: string;
   disclaimer?: string;
+  /** Faux tant que la commande n'est pas payée, ou si le billet est annulé. */
+  valid: boolean;
 }
 
 export function venueLines(venue?: VenueBits | null): string[] {
@@ -132,6 +134,7 @@ export function toTicketCard(input: {
   producerUrl?: string | null;
   producerLogoUrl?: string | null;
   ticketDisclaimer?: unknown;
+  valid?: boolean;
 }): TicketCard {
   const fallback = ticketResponsible(input.organizerSlug);
   const fromRow = readTitle(input.ticketDisclaimer, input.locale);
@@ -162,6 +165,7 @@ export function toTicketCard(input: {
       input.currency ?? "CHF",
     ),
     seating: input.seatLabel?.trim() || seatingLabel(input.locale),
+    valid: input.valid !== false,
   };
 }
 

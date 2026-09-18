@@ -1,8 +1,20 @@
 import "server-only";
 
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/dal";
 import { catalogActor } from "@/lib/admin/access";
+
+function catalogOrderWhere(
+  organizerId: string | null,
+): Prisma.OrderWhereInput | undefined {
+  if (!organizerId) return undefined;
+  return {
+    items: {
+      some: { ticketType: { session: { event: { organizerId } } } },
+    },
+  };
+}
 
 /**
  * Requêtes du backoffice.
@@ -30,13 +42,7 @@ export async function getAdminOverview(): Promise<AdminOverview> {
   const typeWhere = organizerId
     ? { session: { event: { organizerId } } }
     : {};
-  const orderWhere = organizerId
-    ? {
-        tickets: {
-          some: { ticketType: { session: { event: { organizerId } } } },
-        },
-      }
-    : {};
+  const orderWhere = catalogOrderWhere(organizerId) ?? {};
 
   const now = new Date();
 
@@ -163,33 +169,71 @@ export async function getAdminUsers() {
   });
 }
 
+const adminOrderSelect = {
+  id: true,
+  reference: true,
+  status: true,
+  channel: true,
+  paymentMethod: true,
+  totalCents: true,
+  currency: true,
+  email: true,
+  firstName: true,
+  lastName: true,
+  phone: true,
+  createdAt: true,
+  reseller: { select: { name: true } },
+  payment: {
+    select: {
+      provider: true,
+      method: true,
+      status: true,
+      amountCents: true,
+    },
+  },
+  options: { select: { title: true, summary: true, amountCents: true } },
+  items: {
+    select: {
+      quantity: true,
+      unitPriceCents: true,
+      ticketType: {
+        select: {
+          name: true,
+          session: {
+            select: {
+              startsAt: true,
+              event: { select: { title: true } },
+            },
+          },
+        },
+      },
+    },
+  },
+  tickets: {
+    orderBy: { createdAt: "asc" as const },
+    select: { id: true, code: true, status: true },
+  },
+} satisfies Prisma.OrderSelect;
+
 export async function getAdminOrders() {
   const { organizerId } = await catalogActor();
 
   return prisma.order.findMany({
-    where: organizerId
-      ? {
-          tickets: {
-            some: { ticketType: { session: { event: { organizerId } } } },
-          },
-        }
-      : undefined,
+    where: catalogOrderWhere(organizerId),
     orderBy: { createdAt: "desc" },
     take: 100,
-    select: {
-      id: true,
-      reference: true,
-      status: true,
-      channel: true,
-      totalCents: true,
-      currency: true,
-      email: true,
-      createdAt: true,
-      reseller: { select: { name: true } },
-      options: { select: { title: true, summary: true, amountCents: true } },
-      _count: { select: { items: true } },
-    },
+    select: adminOrderSelect,
   });
+}
+
+export async function getAdminOrder(id: string) {
+  const { organizerId } = await catalogActor();
+
+  const order = await prisma.order.findFirst({
+    where: { id, ...catalogOrderWhere(organizerId) },
+    select: adminOrderSelect,
+  });
+  return order;
 }
 
 export async function getAdminResellers() {

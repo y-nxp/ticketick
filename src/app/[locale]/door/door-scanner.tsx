@@ -155,9 +155,11 @@ function Resultat({ lookup }: { lookup: DoorLookup }) {
     const motif =
       lookup.reason === "cancelled"
         ? t("cancelled")
-        : lookup.reason === "forbidden"
-          ? t("forbidden")
-          : t("unknown");
+        : lookup.reason === "unpaid"
+          ? t("unpaid")
+          : lookup.reason === "forbidden"
+            ? t("forbidden")
+            : t("unknown");
     return (
       <div className="rounded-2xl bg-destructive px-4 py-5 text-center text-white">
         <p className="text-xl font-extrabold uppercase">{t("refused")}</p>

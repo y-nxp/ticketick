@@ -148,6 +148,7 @@ enum TicketStatus {
   VALID
   USED
   CANCELLED
+  PENDING
 }
 
 /// Canal par lequel la commande a été passée.

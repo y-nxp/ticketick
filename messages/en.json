@@ -269,6 +269,7 @@
     "refused": "Refused",
     "unknown": "Ticket not found.",
     "cancelled": "Ticket cancelled.",
+    "unpaid": "Ticket not paid — not valid.",
     "forbidden": "This ticket is not on your events."
   },
   "about": {
@@ -455,14 +456,34 @@
     },
     "orders": {
       "title": "Orders",
-      "subtitle": "The 100 most recent orders.",
+      "subtitle": "The 100 most recent orders and purchase attempts.",
       "reference": "Reference",
       "customer": "Customer",
       "channel": "Channel",
       "status": "Status",
       "date": "Date",
       "total": "Total",
-      "notWiredYet": "No orders yet. Sales appear here as soon as a purchase is paid for."
+      "empty": "No orders or attempts yet.",
+      "attempt": "Attempt (details not entered)",
+      "back": "All orders",
+      "detailTitle": "Order {reference}",
+      "detailSubtitle": "Attempt, payment and tickets.",
+      "items": "Tickets",
+      "tickets": "Codes",
+      "payment": "Payment",
+      "noPayment": "No payment recorded.",
+      "download": "Download tickets",
+      "downloadHint": "The PDF is marked not valid until payment is recorded. At the door, the QR is refused.",
+      "markCash": "Mark as paid cash",
+      "markCashPending": "Saving…",
+      "markCashHint": "The ticket becomes valid and the sale is included in the stats.",
+      "cashDone": "Cash payment recorded.",
+      "errors": {
+        "notFound": "Order not found.",
+        "alreadyPaid": "This order is already paid.",
+        "notPayable": "This order can no longer be collected.",
+        "amount": "The amount does not match."
+      }
     },
     "resellers": {
       "title": "Points of sale",
@@ -515,6 +536,17 @@
       "PAID": "Paid",
       "CANCELLED": "Cancelled",
       "REFUNDED": "Refunded"
+    },
+    "ticketStatus": {
+      "PENDING": "Not valid",
+      "VALID": "Valid",
+      "USED": "Used",
+      "CANCELLED": "Cancelled"
+    },
+    "paymentMethod": {
+      "CARD": "Card",
+      "IBAN": "Bank transfer",
+      "CASH": "Cash"
     },
     "channel": {
       "ONLINE": "Online",

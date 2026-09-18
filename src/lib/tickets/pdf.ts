@@ -78,6 +78,25 @@ export async function buildTicketsPdf(
       color: MUTED,
     });
 
+    if (!ticket.valid) {
+      const banner = pdfSafe(copy.unpaid);
+      const bannerW = Math.min(contentW, bold.widthOfTextAtSize(banner, 11) + 24);
+      page.drawRectangle({
+        x: width - margin - bannerW,
+        y: y - 42,
+        width: bannerW,
+        height: 18,
+        color: rgb(0.75, 0.16, 0.18),
+      });
+      page.drawText(banner, {
+        x: width - margin - bannerW + 12,
+        y: y - 37,
+        size: 8,
+        font: bold,
+        color: PAPER,
+      });
+    }
+
     y -= logoHeight + 18;
     page.drawRectangle({
       x: margin,
@@ -146,6 +165,17 @@ export async function buildTicketsPdf(
       font: bold,
       color: INK,
     });
+    if (!ticket.valid) {
+      const stamp = pdfSafe(copy.unpaidShort);
+      const stampW = bold.widthOfTextAtSize(stamp, 8);
+      page.drawText(stamp, {
+        x: margin + (qrSize - stampW) / 2,
+        y: factsTop - qrSize - 28,
+        size: 8,
+        font: bold,
+        color: rgb(0.75, 0.16, 0.18),
+      });
+    }
 
     const pairs: [string, string][] = [
       [copy.start, ticket.startTime],
@@ -408,6 +438,8 @@ function labels(locale: string) {
         "En cas d'arrivée après le début, l'accès n'est plus garanti.",
       disclaimer:
         "Ce billet ne peut être ni annulé, ni repris, ni échangé, ni remboursé. Il est interdit de présenter plusieurs exemplaires d'un même billet à l'entrée d'une manifestation, de modifier le billet ou de l'imiter. Conditions générales : ticketick.ch/terms",
+      unpaid: "NON VALABLE — paiement en attente",
+      unpaidShort: "NON VALABLE",
     },
     en: {
       nOf: (n: number, total: number) => `Ticket ${n} / ${total}`,
@@ -422,6 +454,8 @@ function labels(locale: string) {
       practical: "Admission after the start is no longer guaranteed.",
       disclaimer:
         "This ticket cannot be cancelled, taken back, exchanged or refunded. Presenting several copies of the same ticket, altering or counterfeiting it is forbidden. Terms: ticketick.ch/terms",
+      unpaid: "NOT VALID — payment pending",
+      unpaidShort: "NOT VALID",
     },
     de: {
       nOf: (n: number, total: number) => `Ticket ${n} / ${total}`,
@@ -437,6 +471,8 @@ function labels(locale: string) {
         "Bei Ankunft nach Beginn ist der Einlass nicht mehr garantiert.",
       disclaimer:
         "Dieses Ticket kann weder storniert, zurückgenommen, umgetauscht noch erstattet werden. Mehrere Exemplare desselben Tickets vorzuzeigen, es zu ändern oder nachzumachen ist verboten. AGB: ticketick.ch/terms",
+      unpaid: "UNGULTIG — Zahlung ausstehend",
+      unpaidShort: "UNGULTIG",
     },
     it: {
       nOf: (n: number, total: number) => `Biglietto ${n} / ${total}`,
@@ -452,6 +488,8 @@ function labels(locale: string) {
         "In caso di arrivo dopo l'inizio, l'accesso non è più garantito.",
       disclaimer:
         "Questo biglietto non può essere annullato, ripreso, cambiato o rimborsato. È vietato presentare più copie dello stesso biglietto, modificarlo o imitarlo. Condizioni: ticketick.ch/terms",
+      unpaid: "NON VALIDO — pagamento in attesa",
+      unpaidShort: "NON VALIDO",
     },
   } as const;
   return pack[locale as keyof typeof pack] ?? pack.fr;

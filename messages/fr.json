@@ -269,6 +269,7 @@
     "refused": "Refusé",
     "unknown": "Billet introuvable.",
     "cancelled": "Billet annulé.",
+    "unpaid": "Billet non payé — non valable.",
     "forbidden": "Ce billet n’est pas sur vos spectacles."
   },
   "about": {
@@ -455,14 +456,34 @@
     },
     "orders": {
       "title": "Commandes",
-      "subtitle": "Les 100 dernières commandes.",
+      "subtitle": "Les 100 dernières commandes et tentatives d’achat.",
       "reference": "Référence",
       "customer": "Client",
       "channel": "Canal",
       "status": "Statut",
       "date": "Date",
       "total": "Total",
-      "notWiredYet": "Aucune commande pour le moment. Les ventes s’inscrivent ici dès qu’un achat est réglé."
+      "empty": "Aucune commande ni tentative pour le moment.",
+      "attempt": "Tentative (coordonnées non saisies)",
+      "back": "Toutes les commandes",
+      "detailTitle": "Commande {reference}",
+      "detailSubtitle": "Tentative, paiement et billets.",
+      "items": "Billets",
+      "tickets": "Codes",
+      "payment": "Paiement",
+      "noPayment": "Aucun encaissement enregistré.",
+      "download": "Télécharger les billets",
+      "downloadHint": "Le PDF est marqué non valable tant que le paiement n’est pas enregistré. À l’entrée, le QR est refusé.",
+      "markCash": "Marquer payé cash",
+      "markCashPending": "Enregistrement…",
+      "markCashHint": "Le billet devient valable et la vente entre dans les statistiques.",
+      "cashDone": "Paiement cash enregistré.",
+      "errors": {
+        "notFound": "Commande introuvable.",
+        "alreadyPaid": "Cette commande est déjà payée.",
+        "notPayable": "Cette commande ne peut plus être encaissée.",
+        "amount": "Le montant ne correspond pas."
+      }
     },
     "resellers": {
       "title": "Points de vente",
@@ -515,6 +536,17 @@
       "PAID": "Payée",
       "CANCELLED": "Annulée",
       "REFUNDED": "Remboursée"
+    },
+    "ticketStatus": {
+      "PENDING": "Non valable",
+      "VALID": "Valable",
+      "USED": "Utilisé",
+      "CANCELLED": "Annulé"
+    },
+    "paymentMethod": {
+      "CARD": "Carte",
+      "IBAN": "Virement",
+      "CASH": "Cash"
     },
     "channel": {
       "ONLINE": "En ligne",

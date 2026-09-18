@@ -5,7 +5,7 @@ import { requireRole } from "@/lib/auth/dal";
 import { prisma } from "@/lib/prisma";
 
 export type DoorLookup =
-  | { ok: false; reason: "unknown" | "cancelled" | "forbidden" }
+  | { ok: false; reason: "unknown" | "cancelled" | "forbidden" | "unpaid" }
   | {
       ok: true;
       code: string;
@@ -60,6 +60,7 @@ export async function lookupTicket(code: string): Promise<DoorLookup> {
   }
 
   if (ticket.status === "CANCELLED") return { ok: false, reason: "cancelled" };
+  if (ticket.status === "PENDING") return { ok: false, reason: "unpaid" };
 
   return {
     ok: true,

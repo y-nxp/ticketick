@@ -269,6 +269,7 @@
     "refused": "Abgelehnt",
     "unknown": "Ticket nicht gefunden.",
     "cancelled": "Ticket storniert.",
+    "unpaid": "Ticket nicht bezahlt — ungültig.",
     "forbidden": "Dieses Ticket gehört nicht zu Ihren Veranstaltungen."
   },
   "about": {
@@ -455,14 +456,34 @@
     },
     "orders": {
       "title": "Bestellungen",
-      "subtitle": "Die 100 neuesten Bestellungen.",
+      "subtitle": "Die 100 neuesten Bestellungen und Kaufversuche.",
       "reference": "Referenz",
       "customer": "Kunde",
       "channel": "Kanal",
       "status": "Status",
       "date": "Datum",
       "total": "Total",
-      "notWiredYet": "Noch keine Bestellungen. Verkäufe erscheinen hier, sobald ein Kauf bezahlt ist."
+      "empty": "Noch keine Bestellungen oder Versuche.",
+      "attempt": "Versuch (Angaben nicht erfasst)",
+      "back": "Alle Bestellungen",
+      "detailTitle": "Bestellung {reference}",
+      "detailSubtitle": "Versuch, Zahlung und Tickets.",
+      "items": "Tickets",
+      "tickets": "Codes",
+      "payment": "Zahlung",
+      "noPayment": "Keine Zahlung erfasst.",
+      "download": "Tickets herunterladen",
+      "downloadHint": "Das PDF ist als ungültig markiert, bis die Zahlung erfasst ist. Am Eingang wird der QR abgelehnt.",
+      "markCash": "Als bar bezahlt markieren",
+      "markCashPending": "Speichern…",
+      "markCashHint": "Das Ticket wird gültig und der Verkauf fliesst in die Statistiken.",
+      "cashDone": "Barzahlung erfasst.",
+      "errors": {
+        "notFound": "Bestellung nicht gefunden.",
+        "alreadyPaid": "Diese Bestellung ist bereits bezahlt.",
+        "notPayable": "Diese Bestellung kann nicht mehr kassiert werden.",
+        "amount": "Der Betrag stimmt nicht."
+      }
     },
     "resellers": {
       "title": "Verkaufsstellen",
@@ -515,6 +536,17 @@
       "PAID": "Bezahlt",
       "CANCELLED": "Storniert",
       "REFUNDED": "Erstattet"
+    },
+    "ticketStatus": {
+      "PENDING": "Ungültig",
+      "VALID": "Gültig",
+      "USED": "Verwendet",
+      "CANCELLED": "Storniert"
+    },
+    "paymentMethod": {
+      "CARD": "Karte",
+      "IBAN": "Überweisung",
+      "CASH": "Bar"
     },
     "channel": {
       "ONLINE": "Online",

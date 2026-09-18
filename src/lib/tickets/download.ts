@@ -71,6 +71,13 @@ export const ticketOrderSelect = Prisma.validator<Prisma.TicketSelect>()({
 export async function paidTicketsForPdf(
   reference: string,
 ): Promise<{ locale: string; cards: TicketPdfCard[] } | null> {
+  return ticketsForPdf(reference, { requirePaid: true });
+}
+
+export async function ticketsForPdf(
+  reference: string,
+  options: { requirePaid?: boolean } = {},
+): Promise<{ locale: string; cards: TicketPdfCard[] } | null> {
   const order = await prisma.order.findUnique({
     where: { reference },
     select: {
@@ -81,19 +88,24 @@ export async function paidTicketsForPdf(
       reference: true,
       tickets: {
         orderBy: { createdAt: "asc" },
-        select: ticketOrderSelect,
+        select: { ...ticketOrderSelect, status: true },
       },
     },
   });
 
-  if (!order || order.status !== "PAID" || order.tickets.length === 0) {
-    return null;
-  }
+  if (!order || order.tickets.length === 0) return null;
+  if (options.requirePaid && order.status !== "PAID") return null;
 
   const holder = `${order.firstName} ${order.lastName}`.trim();
   return {
     locale: order.locale,
-    cards: mapTickets(order.tickets, holder, order.reference, order.locale),
+    cards: mapTickets(
+      order.tickets,
+      holder,
+      order.reference,
+      order.locale,
+      order.status,
+    ),
   };
 }
 
@@ -126,13 +138,20 @@ export async function paidOrderForMail(orderId: string) {
         ),
       ),
     ],
-    cards: mapTickets(order.tickets, holder, order.reference, order.locale),
+    cards: mapTickets(
+      order.tickets,
+      holder,
+      order.reference,
+      order.locale,
+      "PAID",
+    ),
   };
 }
 
 function mapTickets(
   tickets: {
     code: string;
+    status?: string;
     attendeeName: string | null;
     seatLabel: string | null;
     ticketType: {
@@ -167,9 +186,12 @@ function mapTickets(
   holder: string,
   reference: string,
   locale: string,
+  orderStatus?: string,
 ) {
   return tickets.map((ticket) => {
     const session = ticket.ticketType.session;
+    const paid = orderStatus === "PAID";
+    const usable = ticket.status !== "CANCELLED" && ticket.status !== "PENDING";
     return toTicketCard({
       code: ticket.code,
       eventTitle: session.event.title,
@@ -190,12 +212,18 @@ function mapTickets(
       currency: ticket.ticketType.currency,
       seatLabel: ticket.seatLabel,
       locale,
+      valid: paid && usable,
     });
   });
 }
 
-export async function ticketsPdfBuffer(reference: string): Promise<Buffer | null> {
-  const data = await paidTicketsForPdf(reference);
+export async function ticketsPdfBuffer(
+  reference: string,
+  options: { requirePaid?: boolean } = {},
+): Promise<Buffer | null> {
+  const data = options.requirePaid
+    ? await paidTicketsForPdf(reference)
+    : await ticketsForPdf(reference);
   if (!data) return null;
   return buildTicketsPdf(data.cards, data.locale);
 }

@@ -1,8 +1,8 @@
 import "server-only";
 
-import { randomBytes } from "node:crypto";
 import type { PaymentMethod } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { activateOrderTickets, issueMissingTickets } from "@/lib/tickets/issue";
 
 /**
  * Confirmation du paiement d'une commande.
@@ -59,23 +59,11 @@ export async function markOrderPaid(
       return { ok: false as const, error: "amount_mismatch" as const };
     }
 
-    // Le stock a déjà été réservé à la création de la commande : il ne faut
-    // surtout pas l'incrémenter une seconde fois ici.
-    const ticketCodes: string[] = [];
-    for (const item of order.items) {
-      for (let i = 0; i < item.quantity; i++) {
-        const code = generateTicketCode();
-        ticketCodes.push(code);
-        await tx.ticket.create({
-          data: {
-            code,
-            orderId: order.id,
-            ticketTypeId: item.ticketTypeId,
-            status: "VALID",
-          },
-        });
-      }
-    }
+    // Le stock a déjà été réservé à la création de la commande. Les billets
+    // peuvent déjà exister en PENDING (tentative) : on les active, on ne les
+    // recrée pas.
+    await issueMissingTickets(tx, order, "VALID");
+    const ticketCodes = await activateOrderTickets(tx, order.id);
 
     await tx.payment.upsert({
       where: { orderId: order.id },
@@ -91,12 +79,14 @@ export async function markOrderPaid(
       update: {
         status: "COMPLETED",
         providerRef: input.providerRef,
+        method: input.method,
+        provider: input.provider,
       },
     });
 
     await tx.order.update({
       where: { id: order.id },
-      data: { status: "PAID" },
+      data: { status: "PAID", paymentMethod: input.method },
     });
 
     // Vente par un point de vente : la commission lui est due, donc portée au
@@ -121,18 +111,4 @@ export async function markOrderPaid(
       ticketCodes,
     };
   });
-}
-
-/**
- * Code de billet imprévisible.
- *
- * Sert de preuve à l'entrée : une numérotation devinable permettrait de
- * fabriquer un billet valable sans l'avoir acheté.
- */
-function generateTicketCode(): string {
-  const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
-  const bytes = randomBytes(12);
-  let out = "";
-  for (let i = 0; i < 12; i++) out += alphabet[bytes[i]! % alphabet.length];
-  return `${out.slice(0, 4)}-${out.slice(4, 8)}-${out.slice(8)}`;
 }
