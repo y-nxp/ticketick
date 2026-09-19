@@ -11,11 +11,14 @@ const orderOptionSelect = {
   title: true,
   summary: true,
   amountCents: true,
+  unitPriceCents: true,
   option: {
     select: {
       sessionId: true,
       title: true,
       hint: true,
+      ticketTitle: true,
+      priceCents: true,
       groups: {
         orderBy: { sortOrder: "asc" as const },
         select: {

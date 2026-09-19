@@ -170,6 +170,14 @@ function OptionForm({
         required={false}
         multiline
       />
+      <TranslatedField
+        name="ticketTitle"
+        label={t("ticketTitle")}
+        hint={t("ticketTitleHint")}
+        value={option?.ticketTitle as Record<string, unknown> | undefined}
+        required={false}
+        multiline
+      />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label={t("session")}>

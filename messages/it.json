@@ -754,6 +754,8 @@
       "allSessions": "Tutte le date",
       "optionTitle": "Etichetta (casella)",
       "optionHint": "Testo informativo",
+      "ticketTitle": "Etichetta sul biglietto",
+      "ticketTitleHint": "Stampata solo se l’opzione è scelta. Es.: Compreso il servizio navetta in minibus (da pagare direttamente all’autista).",
       "session": "Data",
       "price": "Prezzo (CHF)",
       "priceHint": "0 = gratuito. In «per scelta», il prezzo è moltiplicato per il numero di selezioni.",

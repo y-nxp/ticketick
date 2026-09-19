@@ -154,12 +154,14 @@ function texte(value: Traduit, locale: string): string {
 export function TranslatedField({
   name,
   label,
+  hint,
   value,
   multiline,
   required = true,
 }: {
   name: string;
   label: string;
+  hint?: string;
   value?: Traduit;
   multiline?: boolean;
   required?: boolean;
@@ -195,6 +197,9 @@ export function TranslatedField({
           className={inputClass}
         />
       )}
+      {hint ? (
+        <span className="text-xs text-muted-foreground">{hint}</span>
+      ) : null}
 
       {ouvert ? (
         <div className="mt-1 grid gap-2 rounded-xl border border-dashed border-border p-3">

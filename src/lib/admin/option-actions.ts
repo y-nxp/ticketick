@@ -34,6 +34,7 @@ export async function saveEventOption(
   if (!title.fr) return failure("titleRequired");
 
   const hint = readTranslated(data, "hint");
+  const ticketTitle = readTranslated(data, "ticketTitle");
   const sessionId = readOptionalText(data, "sessionId") ?? null;
   const enabled = readBoolean(data, "enabled");
   const priceMode = readText(data, "priceMode");
@@ -64,6 +65,7 @@ export async function saveEventOption(
     enabled,
     title,
     hint: hint.fr ? hint : Prisma.JsonNull,
+    ticketTitle: ticketTitle.fr ? ticketTitle : Prisma.JsonNull,
     priceCents,
     priceMode: priceMode as EventOptionPriceMode,
     sortOrder,

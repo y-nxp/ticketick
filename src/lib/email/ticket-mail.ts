@@ -210,13 +210,14 @@ export async function sendPreviewTicketEmail(to: string) {
         locale,
         optionBlocks: [
           {
-            heading: "Y compris service de navette par minibus",
+            heading:
+              "Y compris service de navette par minibus (à payer directement au chauffeur)",
             date: "Dimanche 15 novembre 2026",
             trips: [
-              "1 Aller : 15h30 Gare de Nyon -> Abbaye de Bonmont",
-              "1 Retour : 19h30 Abbaye de Bonmont -> gare de Nyon",
+              "1 Aller : 15h30 Gare de Nyon -> Abbaye de Bonmont (5 CHF)",
+              "1 Retour : 19h30 Abbaye de Bonmont -> gare de Nyon (5 CHF)",
             ],
-            total: "Total : 10 CHF à payer directement au chauffeur",
+            total: "",
           },
         ],
       }),

@@ -18,10 +18,13 @@ type OptionSource = {
   title: string;
   summary: string;
   amountCents: number;
+  unitPriceCents: number;
   option: {
     sessionId: string | null;
     title: unknown;
     hint: unknown;
+    ticketTitle: unknown;
+    priceCents: number;
     groups: {
       title: unknown;
       choices: { label: unknown }[];
@@ -57,6 +60,7 @@ function isShuttleOption(row: OptionSource, locale: string): boolean {
   const blob = [
     row.title,
     readTitle(row.option.title, locale),
+    readTitle(row.option.ticketTitle, locale),
     row.option.hint ? readTitle(row.option.hint, locale) : "",
     ...row.option.groups.map((g) => readTitle(g.title, locale)),
   ]
@@ -74,10 +78,10 @@ function shuttleBlock(
   const trips = tripsFromRow(row, locale);
   if (trips.length === 0 && !row.summary.trim()) return null;
   return {
-    heading: copy(locale).shuttleHeading,
+    heading: headingFor(row, locale) || copy(locale).shuttleHeading,
     date: formatOptionDate(startsAt, locale),
     trips: trips.length > 0 ? trips : splitSummary(row.summary),
-    total: copy(locale).payDriver(formatFrancs(row.amountCents)),
+    total: "",
   };
 }
 
@@ -86,7 +90,7 @@ function genericBlock(
   startsAt: Date,
   locale: string,
 ): TicketOptionBlock | null {
-  const heading = row.title.trim();
+  const heading = headingFor(row, locale) || row.title.trim();
   const trips = splitSummary(row.summary);
   if (!heading && trips.length === 0) return null;
   return {
@@ -100,23 +104,28 @@ function genericBlock(
   };
 }
 
+function headingFor(row: OptionSource, locale: string): string {
+  return readTitle(row.option.ticketTitle, locale).trim();
+}
+
 function tripsFromRow(row: OptionSource, locale: string): string[] {
   const picked = splitSummary(row.summary);
+  const unit = row.unitPriceCents || row.option.priceCents;
+  const price = unit > 0 ? ` (${formatFrancs(unit)})` : "";
   const trips: string[] = [];
   for (const label of picked) {
     const hit = findChoice(row, label, locale);
     if (!hit) {
-      trips.push(label);
+      trips.push(`${label}${price}`);
       continue;
     }
     const groupTitle = readTitle(hit.groupTitle, locale);
     const dir = directionOf(groupTitle) ?? copy(locale).trip;
     const route = stripDirection(groupTitle);
     const time =
-      extractTime(readTitle(hit.choiceLabel, locale)) ||
-      extractTime(label);
+      extractTime(readTitle(hit.choiceLabel, locale)) || extractTime(label);
     const body = [time, route].filter(Boolean).join(" ");
-    trips.push(body ? `1 ${dir} : ${body}` : `1 ${dir}`);
+    trips.push((body ? `1 ${dir} : ${body}` : `1 ${dir}`) + price);
   }
   return trips;
 }
@@ -205,36 +214,31 @@ function normalize(value: string): string {
 function copy(locale: string) {
   const pack = {
     fr: {
-      shuttleHeading: "Y compris service de navette par minibus",
+      shuttleHeading:
+        "Y compris service de navette par minibus (à payer directement au chauffeur)",
       optionHeading: "Option",
       trip: "Course",
       totalLabel: "Total :",
-      payDriver: (amount: string) =>
-        `Total : ${amount} à payer directement au chauffeur`,
     },
     en: {
-      shuttleHeading: "Including minibus shuttle service",
+      shuttleHeading:
+        "Including minibus shuttle service (to be paid directly to the driver)",
       optionHeading: "Option",
       trip: "Trip",
       totalLabel: "Total:",
-      payDriver: (amount: string) =>
-        `Total: ${amount} to pay directly to the driver`,
     },
     de: {
-      shuttleHeading: "Inklusive Minibus-Shuttle",
+      shuttleHeading: "Inklusive Minibus-Shuttle (direkt beim Fahrer zu zahlen)",
       optionHeading: "Option",
       trip: "Fahrt",
       totalLabel: "Total:",
-      payDriver: (amount: string) =>
-        `Total: ${amount} direkt beim Fahrer zu zahlen`,
     },
     it: {
-      shuttleHeading: "Compreso il servizio navetta in minibus",
+      shuttleHeading:
+        "Compreso il servizio navetta in minibus (da pagare direttamente all'autista)",
       optionHeading: "Opzione",
       trip: "Corsa",
       totalLabel: "Totale:",
-      payDriver: (amount: string) =>
-        `Totale: ${amount} da pagare direttamente all'autista`,
     },
   } as const;
   return pack[locale as keyof typeof pack] ?? pack.fr;

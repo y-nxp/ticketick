@@ -754,6 +754,8 @@
       "allSessions": "Toutes les séances",
       "optionTitle": "Libellé (case à cocher)",
       "optionHint": "Texte informatif",
+      "ticketTitle": "Libellé sur le billet",
+      "ticketTitleHint": "Imprimé uniquement si l’option est choisie. Ex. : Y compris service de navette par minibus (à payer directement au chauffeur).",
       "session": "Séance",
       "price": "Prix (CHF)",
       "priceHint": "0 = gratuit. En « par choix », le prix est multiplié par le nombre de sélections.",

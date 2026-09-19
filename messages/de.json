@@ -754,6 +754,8 @@
       "allSessions": "Alle Termine",
       "optionTitle": "Bezeichnung (Checkbox)",
       "optionHint": "Hinweistext",
+      "ticketTitle": "Bezeichnung auf dem Ticket",
+      "ticketTitleHint": "Wird nur gedruckt, wenn die Option gewählt wurde. Z. B. Inklusive Minibus-Shuttle (direkt beim Fahrer zu zahlen).",
       "session": "Termin",
       "price": "Preis (CHF)",
       "priceHint": "0 = gratis. Bei «pro Auswahl» wird der Preis mit der Anzahl Wahlen multipliziert.",

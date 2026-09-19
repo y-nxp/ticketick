@@ -622,6 +622,8 @@ model EventOption {
   enabled   Boolean              @default(false)
   title     Json
   hint      Json?
+  /// Libellé imprimé sur le billet. Absent : on reprend le titre d'achat.
+  ticketTitle Json?
   priceCents Int                 @default(0)
   priceMode EventOptionPriceMode @default(FLAT)
   sortOrder Int                  @default(0)

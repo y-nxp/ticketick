@@ -99,6 +99,7 @@ export async function getEventForEdit(id: string) {
           enabled: true,
           title: true,
           hint: true,
+          ticketTitle: true,
           priceCents: true,
           priceMode: true,
           sortOrder: true,

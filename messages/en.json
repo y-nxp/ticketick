@@ -754,6 +754,8 @@
       "allSessions": "All sessions",
       "optionTitle": "Label (checkbox)",
       "optionHint": "Informational text",
+      "ticketTitle": "Label on the ticket",
+      "ticketTitleHint": "Printed only when the option is chosen. E.g. Including minibus shuttle service (to be paid directly to the driver).",
       "session": "Session",
       "price": "Price (CHF)",
       "priceHint": "0 = free. In “per choice” mode, the price is multiplied by the number of selections.",
