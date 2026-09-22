@@ -82,7 +82,8 @@
     "datesCount": "{count} date",
     "free": "Gratuito",
     "companionHint": "Fino a {n} per biglietto a pagamento, fino a 16 anni.",
-    "companionNeedsPaid": "2 posti gratuiti max per biglietto a pagamento."
+    "companionRule": "{n, plural, =1 {Un posto gratuito max} other {# posti gratuiti max}} per biglietto a pagamento.",
+    "companionRuleNamed": "{n, plural, =1 {Un posto gratuito max} other {# posti gratuiti max}} per biglietto « {ticket} »."
   },
   "portal": {
     "tickets": "Biglietteria",
@@ -593,6 +594,8 @@
         "capacityInvalid": "La capienza deve essere un intero di almeno 1, oppure restare vuota.",
         "capacityBelowSold": "La capienza non può scendere sotto i posti già trattenuti.",
         "maxPerPaidInvalid": "Il tetto per biglietto a pagamento deve essere un intero di almeno 1.",
+        "companionNeedsRatio": "Indica quanti posti gratuiti per biglietto a pagamento.",
+        "companionOfInvalid": "La tariffa scelta deve essere una tariffa a pagamento della stessa replica.",
         "paymentRequired": "Scegli almeno un mezzo di pagamento.",
         "paymentOverrideInvalid": "La scelta del mezzo di pagamento non è valida.",
         "ticketTypeHasSales": "Questa tariffa ha già biglietti venduti: non può essere eliminata.",
@@ -782,6 +785,9 @@
       "maxPerOrder": "Max. per ordine",
       "maxPerPaidTicket": "Max. per biglietto a pagamento",
       "maxPerPaidHint": "Per una tariffa gratuita: 2 = due posti offerti per biglietto a pagamento. Vuoto: nessun legame.",
+      "companionOf": "Sbloccato dalla tariffa",
+      "companionOfAny": "Tutte le tariffe a pagamento",
+      "companionOfHint": "La zona che dà diritto alla gratuità, es. due posti per biglietto « Zona 1 ». Senza scelta, vale qualsiasi biglietto a pagamento.",
       "salesStartAt": "Apertura vendite",
       "salesEndAt": "Chiusura vendite",
       "optional": "Facoltativo"

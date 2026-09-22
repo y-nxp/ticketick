@@ -38,6 +38,15 @@ export function TicketSelector({
   );
   const totalCount = Object.values(qty).reduce((a, b) => a + b, 0);
 
+  /** Billets qui débloquent un tarif gratuit : la zone désignée, sinon tous. */
+  function payantsPour(tt: TicketType, current: Record<string, number>) {
+    if (tt.companionOfId) return current[tt.companionOfId] ?? 0;
+    return session.ticketTypes.reduce((sum, x) => {
+      if (x.maxPerPaidTicket != null || x.priceCents <= 0) return sum;
+      return sum + (current[x.id] ?? 0);
+    }, 0);
+  }
+
   function maxFor(tt: TicketType, current: Record<string, number>) {
     const resteTarif = Math.max(0, tt.quantity - tt.sold);
     const autres = session.ticketTypes.reduce(
@@ -50,11 +59,7 @@ export function TicketSelector({
         : Math.max(0, session.capacity - session.sold - autres);
     let max = Math.min(tt.maxPerOrder, resteTarif, resteJauge);
     if (tt.maxPerPaidTicket != null) {
-      const payants = session.ticketTypes.reduce((sum, x) => {
-        if (x.maxPerPaidTicket != null || x.priceCents <= 0) return sum;
-        return sum + (current[x.id] ?? 0);
-      }, 0);
-      max = Math.min(max, payants * tt.maxPerPaidTicket);
+      max = Math.min(max, payantsPour(tt, current) * tt.maxPerPaidTicket);
     }
     return max;
   }
@@ -114,16 +119,22 @@ export function TicketSelector({
         {session.label ? ` · ${t(session.label, locale)}` : null}
       </p>
       <div className="mt-4 space-y-3">
-        {session.ticketTypes.map((tt) => (
-          <TicketRow
-            key={tt.id}
-            ticket={tt}
-            locale={locale}
-            qty={qty[tt.id] ?? 0}
-            onChange={(n) => setQuantity(tt.id, n)}
-            max={maxFor(tt, qty)}
-          />
-        ))}
+        {session.ticketTypes.map((tt) => {
+          const source = session.ticketTypes.find(
+            (x) => x.id === tt.companionOfId,
+          );
+          return (
+            <TicketRow
+              key={tt.id}
+              ticket={tt}
+              locale={locale}
+              qty={qty[tt.id] ?? 0}
+              onChange={(n) => setQuantity(tt.id, n)}
+              max={maxFor(tt, qty)}
+              sourceName={source ? t(source.name, locale) : undefined}
+            />
+          );
+        })}
       </div>
 
       <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
@@ -154,22 +165,29 @@ function TicketRow({
   qty,
   onChange,
   max,
+  sourceName,
 }: {
   ticket: TicketType;
   locale: string;
   qty: number;
   onChange: (n: number) => void;
   max: number;
+  /** Nom du tarif payant qui débloque ce tarif gratuit, s'il est désigné. */
+  sourceName?: string;
 }) {
   const te = useTranslations("event");
   const remaining = ticket.quantity - ticket.sold;
   const soldOut = remaining <= 0;
-  // La règle n'apparaît qu'une fois le plafond atteint : avant ça, le
-  // bouton « + » suffit à découvrir qu'on peut encore en ajouter.
+  // La règle n'apparaît qu'une fois le plafond atteint : avant ça, le bouton
+  // « + » suffit à découvrir qu'on peut encore en ajouter. Plafond à zéro
+  // compris, sinon un « + » éteint resterait sans explication.
+  const ratio = ticket.maxPerPaidTicket;
   const hint =
-    ticket.maxPerPaidTicket != null
-      ? !soldOut && qty > 0 && qty >= max
-        ? te("companionNeedsPaid")
+    ratio != null
+      ? !soldOut && qty >= max
+        ? sourceName
+          ? te("companionRuleNamed", { n: ratio, ticket: sourceName })
+          : te("companionRule", { n: ratio })
         : null
       : ticket.description
         ? t(ticket.description, locale)

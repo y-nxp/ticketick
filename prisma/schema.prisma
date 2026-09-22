@@ -412,6 +412,11 @@ model TicketType {
   /// Si renseigné, ce tarif n'est vendu qu'avec des billets payants de la
   /// même séance : au plus N de ces places par billet payant.
   maxPerPaidTicket Int?
+  /// Tarif payant qui débloque ces places. Absent : tous les payants de la
+  /// séance comptent. Renseigné : seule la zone visée compte.
+  companionOfId String?
+  companionOf   TicketType?  @relation("Companion", fields: [companionOfId], references: [id], onDelete: SetNull)
+  companions    TicketType[] @relation("Companion")
 
   salesStartAt DateTime?
   salesEndAt   DateTime?
@@ -421,6 +426,7 @@ model TicketType {
   discounts  Discount[]
 
   @@index([sessionId])
+  @@index([companionOfId])
 }
 
 /// Point de vente tiers : office du tourisme, boutique partenaire, guichet.

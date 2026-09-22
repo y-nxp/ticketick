@@ -143,6 +143,7 @@ export async function getEventForEdit(id: string) {
               sold: true,
               maxPerOrder: true,
               maxPerPaidTicket: true,
+              companionOfId: true,
               salesStartAt: true,
               salesEndAt: true,
             },

@@ -339,6 +339,7 @@ export async function saveTicketType(
     if (n === null || n < 1) return failure("maxPerPaidInvalid");
     maxPerPaidTicket = n;
   }
+  const companionOfId = readOptionalText(data, "companionOfId") ?? null;
 
   if (!sessionId) return failure("notFound");
   const seance = await prisma.eventSession.findUnique({
@@ -362,6 +363,26 @@ export async function saveTicketType(
     return failure("salesWindowInvalid");
   }
 
+  // Le tarif source doit rester vendable et de la même séance, sinon la
+  // gratuité ne se débloquerait jamais : la vente ne compte que les places
+  // du tarif désigné dans le même panier.
+  if (companionOfId) {
+    if (maxPerPaidTicket === null) return failure("companionNeedsRatio");
+    if (companionOfId === id) return failure("companionOfInvalid");
+    const source = await prisma.ticketType.findUnique({
+      where: { id: companionOfId },
+      select: { sessionId: true, priceCents: true, maxPerPaidTicket: true },
+    });
+    if (
+      !source ||
+      source.sessionId !== sessionId ||
+      source.priceCents <= 0 ||
+      source.maxPerPaidTicket !== null
+    ) {
+      return failure("companionOfInvalid");
+    }
+  }
+
   // Le contingent ne peut pas descendre sous ce qui est déjà vendu : la
   // réservation compare `sold + n <= quantity`, et un contingent plus bas
   // fermerait la vente sans annuler les billets déjà émis.
@@ -380,6 +401,7 @@ export async function saveTicketType(
     quantity,
     maxPerOrder,
     maxPerPaidTicket,
+    companionOfId,
     salesStartAt: salesStartAt ?? null,
     salesEndAt: salesEndAt ?? null,
   };

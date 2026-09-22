@@ -82,7 +82,8 @@
     "datesCount": "{count} dates",
     "free": "Free",
     "companionHint": "Up to {n} per paying ticket, 16 and under.",
-    "companionNeedsPaid": "2 free seats max per paying ticket."
+    "companionRule": "{n, plural, =1 {One free seat max} other {# free seats max}} per paying ticket.",
+    "companionRuleNamed": "{n, plural, =1 {One free seat max} other {# free seats max}} per “{ticket}” ticket."
   },
   "portal": {
     "tickets": "Tickets",
@@ -593,6 +594,8 @@
         "capacityInvalid": "Capacity must be an integer of at least 1, or left empty.",
         "capacityBelowSold": "Capacity cannot fall below seats already held.",
         "maxPerPaidInvalid": "The per-paying-ticket cap must be an integer of at least 1.",
+        "companionNeedsRatio": "State how many free seats per paying ticket.",
+        "companionOfInvalid": "The chosen fare must be a paying fare of the same session.",
         "paymentRequired": "Choose at least one payment method.",
         "paymentOverrideInvalid": "That payment-method choice is not valid.",
         "ticketTypeHasSales": "This fare already has sold tickets and cannot be deleted.",
@@ -782,6 +785,9 @@
       "maxPerOrder": "Max. per order",
       "maxPerPaidTicket": "Max. per paying ticket",
       "maxPerPaidHint": "For a free fare: 2 = two free seats per paying ticket. Empty: no link.",
+      "companionOf": "Unlocked by fare",
+      "companionOfAny": "Any paying fare",
+      "companionOfHint": "The zone that grants the free seats, e.g. two seats per “Zone 1” ticket. Left empty, any paying ticket counts.",
       "salesStartAt": "Sales open",
       "salesEndAt": "Sales close",
       "optional": "Optional"

@@ -115,6 +115,7 @@ export async function createOrder(
       sold: true,
       maxPerOrder: true,
       maxPerPaidTicket: true,
+      companionOfId: true,
       salesStartAt: true,
       salesEndAt: true,
       session: {
@@ -177,7 +178,15 @@ export async function createOrder(
   // sans cela on pourrait emporter uniquement des places à 0 fr.
   const parSeance = new Map<
     string,
-    { payants: number; accompagnants: { id: string; n: number; ratio: number }[] }
+    {
+      payants: number;
+      accompagnants: {
+        id: string;
+        n: number;
+        ratio: number;
+        sourceId: string | null;
+      }[];
+    }
   >();
   const siegesParSeance = new Map<string, number>();
   for (const [ticketTypeId, quantity] of merged) {
@@ -190,6 +199,7 @@ export async function createOrder(
         id: ticketTypeId,
         n: quantity,
         ratio: tt.maxPerPaidTicket,
+        sourceId: tt.companionOfId,
       });
     } else if (tt.priceCents > 0) {
       groupe.payants += quantity;
@@ -198,10 +208,16 @@ export async function createOrder(
   }
   for (const groupe of parSeance.values()) {
     for (const acc of groupe.accompagnants) {
-      if (groupe.payants === 0) {
+      // Tarif source désigné : seules ses places comptent, pas les autres
+      // zones. Sans source : tous les payants de la séance comptent.
+      const payants =
+        acc.sourceId == null
+          ? groupe.payants
+          : (merged.get(acc.sourceId) ?? 0);
+      if (payants === 0) {
         return { ok: false, error: "companion_requires_paid", ticketTypeId: acc.id };
       }
-      if (acc.n > groupe.payants * acc.ratio) {
+      if (acc.n > payants * acc.ratio) {
         return { ok: false, error: "companion_limit", ticketTypeId: acc.id };
       }
     }

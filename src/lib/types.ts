@@ -53,6 +53,8 @@ export interface TicketType {
   maxPerOrder: number;
   /** Si renseigné : au plus N de ces places par billet payant de la séance. */
   maxPerPaidTicket?: number;
+  /** Tarif payant qui débloque ces places. Absent : tous les payants comptent. */
+  companionOfId?: string;
   salesEndAt?: string;
 }
 

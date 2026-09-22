@@ -76,6 +76,7 @@ function mapTicketType(
     sold: tt.sold,
     maxPerOrder: tt.maxPerOrder,
     maxPerPaidTicket: tt.maxPerPaidTicket ?? undefined,
+    companionOfId: tt.companionOfId ?? undefined,
     salesEndAt: tt.salesEndAt?.toISOString(),
   };
 }

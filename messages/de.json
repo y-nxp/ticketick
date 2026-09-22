@@ -82,7 +82,8 @@
     "datesCount": "{count} Termine",
     "free": "Gratis",
     "companionHint": "Bis zu {n} pro bezahltes Ticket, bis 16 Jahre.",
-    "companionNeedsPaid": "Max. 2 Freikarten pro bezahltes Ticket."
+    "companionRule": "{n, plural, =1 {Max. eine Freikarte} other {Max. # Freikarten}} pro bezahltes Ticket.",
+    "companionRuleNamed": "{n, plural, =1 {Max. eine Freikarte} other {Max. # Freikarten}} pro Ticket „{ticket}“."
   },
   "portal": {
     "tickets": "Ticketverkauf",
@@ -593,6 +594,8 @@
         "capacityInvalid": "Die Kapazität muss eine ganze Zahl von mindestens 1 sein oder leer bleiben.",
         "capacityBelowSold": "Die Kapazität darf nicht unter die bereits gehaltenen Plätze fallen.",
         "maxPerPaidInvalid": "Die Obergrenze pro bezahltes Ticket muss eine ganze Zahl von mindestens 1 sein.",
+        "companionNeedsRatio": "Geben Sie an, wie viele Freikarten pro bezahltes Ticket gelten.",
+        "companionOfInvalid": "Der gewählte Tarif muss ein bezahlter Tarif derselben Vorstellung sein.",
         "paymentRequired": "Wählen Sie mindestens eine Zahlungsart.",
         "paymentOverrideInvalid": "Diese Zahlungsart-Auswahl ist ungültig.",
         "ticketTypeHasSales": "Für diesen Tarif wurden bereits Tickets verkauft: er kann nicht gelöscht werden.",
@@ -782,6 +785,9 @@
       "maxPerOrder": "Max. pro Bestellung",
       "maxPerPaidTicket": "Max. pro bezahltes Ticket",
       "maxPerPaidHint": "Für einen Gratistarif: 2 = zwei Freikarten pro bezahltes Ticket. Leer: keine Bindung.",
+      "companionOf": "Freigeschaltet durch Tarif",
+      "companionOfAny": "Alle bezahlten Tarife",
+      "companionOfHint": "Die Zone, die den Anspruch eröffnet, z. B. zwei Plätze pro Ticket „Zone 1“. Ohne Auswahl zählt jedes bezahlte Ticket.",
       "salesStartAt": "Verkaufsstart",
       "salesEndAt": "Verkaufsende",
       "optional": "Optional"

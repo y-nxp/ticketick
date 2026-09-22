@@ -82,7 +82,8 @@
     "datesCount": "{count} dates",
     "free": "Gratuit",
     "companionHint": "Jusqu’à {n} par billet payant, jusqu’à 16 ans révolus.",
-    "companionNeedsPaid": "2 places gratuites max par billet payant."
+    "companionRule": "{n, plural, =1 {Une place gratuite max} other {# places gratuites max}} par billet payant.",
+    "companionRuleNamed": "{n, plural, =1 {Une place gratuite max} other {# places gratuites max}} par billet « {ticket} »."
   },
   "portal": {
     "tickets": "Billetterie",
@@ -593,6 +594,8 @@
         "capacityInvalid": "La jauge doit être un entier d’au moins 1, ou rester vide.",
         "capacityBelowSold": "La jauge ne peut pas descendre sous les places déjà retenues.",
         "maxPerPaidInvalid": "Le plafond par billet payant doit être un entier d’au moins 1.",
+        "companionNeedsRatio": "Indiquez combien de places gratuites par billet payant.",
+        "companionOfInvalid": "Le tarif indiqué doit être un tarif payant de la même séance.",
         "paymentRequired": "Choisissez au moins un moyen de paiement.",
         "paymentOverrideInvalid": "Le choix de moyen de paiement n’est pas valable.",
         "ticketTypeHasSales": "Ce tarif a déjà des billets vendus : il ne peut pas être supprimé.",
@@ -782,6 +785,9 @@
       "maxPerOrder": "Max. par commande",
       "maxPerPaidTicket": "Max. par billet payant",
       "maxPerPaidHint": "Pour un tarif gratuit : 2 = deux places offertes par billet payant. Vide : pas de lien.",
+      "companionOf": "Débloqué par le tarif",
+      "companionOfAny": "Tous les tarifs payants",
+      "companionOfHint": "Zone qui ouvre droit à la gratuité, ex. deux places par billet « Zone 1 ». Sans choix, n’importe quel billet payant compte.",
       "salesStartAt": "Ouverture des ventes",
       "salesEndAt": "Clôture des ventes",
       "optional": "Facultatif"

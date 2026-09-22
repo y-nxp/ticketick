@@ -338,6 +338,7 @@ function TicketTypesEditor({ session }: { session: Session }) {
               <TicketTypeForm
                 sessionId={session.id}
                 ticket={tt}
+                sources={paidTickets(session, tt.id)}
                 onClose={() => setEdite(null)}
               />
             </div>
@@ -354,6 +355,7 @@ function TicketTypesEditor({ session }: { session: Session }) {
           <div className="rounded-lg bg-muted/40 p-3">
             <TicketTypeForm
               sessionId={session.id}
+              sources={paidTickets(session)}
               onClose={() => setAjout(false)}
             />
           </div>
@@ -368,6 +370,23 @@ function TicketTypesEditor({ session }: { session: Session }) {
   );
 }
 
+function ticketName(ticket: TicketType): string {
+  return (ticket.name as Record<string, string>)?.fr ?? "";
+}
+
+/**
+ * Tarifs payants d'une séance, candidats à débloquer une gratuité.
+ * Un tarif gratuit ou accompagnant ne peut pas en débloquer un autre.
+ */
+function paidTickets(session: Session, exclude?: string): TicketType[] {
+  return session.ticketTypes.filter(
+    (tt) =>
+      tt.id !== exclude &&
+      tt.priceCents > 0 &&
+      tt.maxPerPaidTicket == null,
+  );
+}
+
 function TicketTypeRow({
   ticket,
   onEdit,
@@ -376,7 +395,7 @@ function TicketTypeRow({
   onEdit: () => void;
 }) {
   const t = useTranslations("admin.tickets");
-  const nom = (ticket.name as Record<string, string>)?.fr ?? "";
+  const nom = ticketName(ticket);
 
   return (
     <div className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2">
@@ -402,10 +421,13 @@ function TicketTypeRow({
 function TicketTypeForm({
   sessionId,
   ticket,
+  sources,
   onClose,
 }: {
   sessionId: string;
   ticket?: TicketType;
+  /** Tarifs payants de la séance, pour rattacher une gratuité à l'un d'eux. */
+  sources: TicketType[];
   onClose: () => void;
 }) {
   const t = useTranslations("admin.tickets");
@@ -460,6 +482,17 @@ function TicketTypeForm({
             type="number"
             min="1"
             defaultValue={ticket?.maxPerPaidTicket ?? ""}
+          />
+        </Field>
+        <Field label={t("companionOf")} hint={t("companionOfHint")}>
+          <Select
+            name="companionOfId"
+            defaultValue={ticket?.companionOfId ?? undefined}
+            emptyLabel={t("companionOfAny")}
+            options={sources.map((s) => ({
+              value: s.id,
+              label: ticketName(s),
+            }))}
           />
         </Field>
         <Field label={t("salesStartAt")} hint={t("optional")}>
