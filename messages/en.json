@@ -465,6 +465,7 @@
       "total": "Total",
       "empty": "No orders or attempts yet.",
       "attempt": "Attempt (details not entered)",
+      "abandoned": "Abandoned",
       "back": "All orders",
       "detailTitle": "Order {reference}",
       "detailSubtitle": "Attempt, payment and tickets.",

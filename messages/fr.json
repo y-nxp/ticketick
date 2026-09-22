@@ -465,6 +465,7 @@
       "total": "Total",
       "empty": "Aucune commande ni tentative pour le moment.",
       "attempt": "Tentative (coordonnées non saisies)",
+      "abandoned": "Abandonnée",
       "back": "Toutes les commandes",
       "detailTitle": "Commande {reference}",
       "detailSubtitle": "Tentative, paiement et billets.",

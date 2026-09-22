@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { getAdminOrder } from "@/lib/data/admin";
 import { isCheckoutHoldEmail } from "@/lib/orders/create-order";
+import { isAbandonedCardHold } from "@/lib/orders/reservation";
 import { t as translate, type Translated } from "@/lib/types";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { OrderActions } from "../order-actions";
@@ -24,6 +25,7 @@ export default async function AdminOrderDetailPage({
 
   const t = await getTranslations("admin");
   const hold = isCheckoutHoldEmail(order.email);
+  const abandoned = isAbandonedCardHold(order);
   const canMarkCash =
     order.status === "AWAITING_PAYMENT" || order.status === "PENDING";
   const canDownload =
@@ -51,9 +53,15 @@ export default async function AdminOrderDetailPage({
             {t("orders.detailSubtitle")}
           </p>
         </div>
-        <Badge variant={order.status === "PAID" ? "default" : "secondary"}>
-          {t(`orderStatus.${order.status}`)}
-        </Badge>
+        {abandoned ? (
+          <Badge variant="outline" className="text-muted-foreground">
+            {t("orders.abandoned")}
+          </Badge>
+        ) : (
+          <Badge variant={order.status === "PAID" ? "default" : "secondary"}>
+            {t(`orderStatus.${order.status}`)}
+          </Badge>
+        )}
       </div>
 
       <dl className="mt-6 grid gap-4 rounded-2xl border border-border p-5 sm:grid-cols-2">

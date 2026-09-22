@@ -465,6 +465,7 @@
       "total": "Totale",
       "empty": "Nessun ordine né tentativo per il momento.",
       "attempt": "Tentativo (dati non inseriti)",
+      "abandoned": "Abbandonato",
       "back": "Tutti gli ordini",
       "detailTitle": "Ordine {reference}",
       "detailSubtitle": "Tentativo, pagamento e biglietti.",

@@ -465,6 +465,7 @@
       "total": "Total",
       "empty": "Noch keine Bestellungen oder Versuche.",
       "attempt": "Versuch (Angaben nicht erfasst)",
+      "abandoned": "Abgebrochen",
       "back": "Alle Bestellungen",
       "detailTitle": "Bestellung {reference}",
       "detailSubtitle": "Versuch, Zahlung und Tickets.",

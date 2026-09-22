@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { getAdminOrders } from "@/lib/data/admin";
 import { isCheckoutHoldEmail } from "@/lib/orders/create-order";
+import { isAbandonedCardHold } from "@/lib/orders/reservation";
 import { t as translate, type Translated } from "@/lib/types";
 import { formatDate, formatPrice } from "@/lib/utils";
 
@@ -105,13 +106,22 @@ export default async function AdminOrdersPage({
                       {order.reseller?.name ?? t(`channel.${order.channel}`)}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge
-                        variant={
-                          order.status === "PAID" ? "default" : "secondary"
-                        }
-                      >
-                        {t(`orderStatus.${order.status}`)}
-                      </Badge>
+                      {isAbandonedCardHold(order) ? (
+                        <Badge
+                          variant="outline"
+                          className="text-muted-foreground"
+                        >
+                          {t("orders.abandoned")}
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant={
+                            order.status === "PAID" ? "default" : "secondary"
+                          }
+                        >
+                          {t(`orderStatus.${order.status}`)}
+                        </Badge>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {formatDate(order.createdAt, `${locale}-CH`, {

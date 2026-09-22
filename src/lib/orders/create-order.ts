@@ -389,6 +389,9 @@ export async function createOrder(
   }
 }
 
+/** Nombre de rétentions périmées traitées par appel. */
+export const STALE_RELEASE_BATCH = 50;
+
 /**
  * Rend le stock des paiements carte qui n'ont jamais abouti.
  *
@@ -405,7 +408,7 @@ export async function releaseStaleUnpaidCardOrders(): Promise<number> {
       createdAt: { lt: limite },
     },
     select: { id: true },
-    take: 50,
+    take: STALE_RELEASE_BATCH,
   });
 
   for (const order of stale) {
@@ -428,10 +431,19 @@ export async function releaseOrderByReference(
 
 export async function releaseOrder(orderId: string): Promise<void> {
   await prisma.$transaction(async (tx) => {
-    const order = await tx.order.findUnique({
+    // On bascule le statut d'abord : sous READ COMMITTED, une libération
+    // concurrente (balayage + requête visiteur) attend ce verrou puis voit
+    // CANCELLED et n'a plus rien à rendre. Sans ce garde-fou, le stock
+    // serait décrémenté deux fois et créerait des places inexistantes.
+    const claimed = await tx.order.updateMany({
+      where: { id: orderId, status: { notIn: ["PAID", "CANCELLED"] } },
+      data: { status: "CANCELLED" },
+    });
+    if (claimed.count === 0) return;
+
+    const order = await tx.order.findUniqueOrThrow({
       where: { id: orderId },
       select: {
-        status: true,
         items: {
           select: {
             quantity: true,
@@ -440,12 +452,6 @@ export async function releaseOrder(orderId: string): Promise<void> {
         },
       },
     });
-
-    // Une commande déjà payée ou déjà annulée ne doit pas voir son stock
-    // rendu : le faire deux fois recréerait des places inexistantes.
-    if (!order || order.status === "PAID" || order.status === "CANCELLED") {
-      return;
-    }
 
     const sieges = new Map<string, number>();
     for (const item of order.items) {
@@ -465,10 +471,6 @@ export async function releaseOrder(orderId: string): Promise<void> {
       `;
     }
 
-    await tx.order.update({
-      where: { id: orderId },
-      data: { status: "CANCELLED" },
-    });
     await cancelOrderTickets(tx, orderId);
   });
 }
