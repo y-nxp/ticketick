@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth/dal";
 import { catalogActor } from "@/lib/admin/access";
+import { sumInventory } from "@/lib/inventory";
 
 function catalogOrderWhere(
   organizerId: string | null,
@@ -39,9 +40,6 @@ export async function getAdminOverview(): Promise<AdminOverview> {
   const sessionWhere = organizerId
     ? { event: { organizerId } }
     : {};
-  const typeWhere = organizerId
-    ? { session: { event: { organizerId } } }
-    : {};
   const orderWhere = catalogOrderWhere(organizerId) ?? {};
 
   const now = new Date();
@@ -65,9 +63,15 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     prisma.eventSession.count({
       where: { ...sessionWhere, startsAt: { gte: now } },
     }),
-    prisma.ticketType.findMany({
-      where: typeWhere,
-      select: { quantity: true, sold: true, priceCents: true },
+    prisma.eventSession.findMany({
+      where: sessionWhere,
+      select: {
+        capacity: true,
+        sold: true,
+        ticketTypes: {
+          select: { quantity: true, sold: true, priceCents: true },
+        },
+      },
     }),
     prisma.order.count({ where: orderWhere }),
     prisma.order.aggregate({
@@ -89,14 +93,7 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       draft: eventsTotal - eventsPublished,
     },
     sessions: { total: sessionsTotal, upcoming: sessionsUpcoming },
-    inventory: {
-      capacity: inventory.reduce((sum, tt) => sum + tt.quantity, 0),
-      sold: inventory.reduce((sum, tt) => sum + tt.sold, 0),
-      revenueCents: inventory.reduce(
-        (sum, tt) => sum + tt.sold * tt.priceCents,
-        0,
-      ),
-    },
+    inventory: sumInventory(inventory),
     orders: { total: ordersTotal, paidCents: paidOrders._sum.totalCents ?? 0 },
     users: { total: usersTotal, admins },
     resellers: {
@@ -125,6 +122,8 @@ export async function getAdminEvents() {
         select: {
           id: true,
           startsAt: true,
+          capacity: true,
+          sold: true,
           venue: { select: { city: true } },
           ticketTypes: {
             select: { quantity: true, sold: true, priceCents: true },
@@ -134,20 +133,12 @@ export async function getAdminEvents() {
     },
   });
 
-  return events.map((event) => {
-    const ticketTypes = event.sessions.flatMap((s) => s.ticketTypes);
-    return {
-      ...event,
-      capacity: ticketTypes.reduce((sum, tt) => sum + tt.quantity, 0),
-      sold: ticketTypes.reduce((sum, tt) => sum + tt.sold, 0),
-      revenueCents: ticketTypes.reduce(
-        (sum, tt) => sum + tt.sold * tt.priceCents,
-        0,
-      ),
-      nextSessionAt:
-        event.sessions.find((s) => s.startsAt >= new Date())?.startsAt ?? null,
-    };
-  });
+  return events.map((event) => ({
+    ...event,
+    ...sumInventory(event.sessions),
+    nextSessionAt:
+      event.sessions.find((s) => s.startsAt >= new Date())?.startsAt ?? null,
+  }));
 }
 
 export async function getAdminUsers() {

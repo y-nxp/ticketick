@@ -6,6 +6,7 @@ import {
 } from "@/lib/tickets/responsible";
 import type { TicketOptionBlock } from "@/lib/tickets/option-block";
 import { readUploadFile } from "@/lib/uploads";
+import { EVENT_TIME_ZONE } from "@/lib/utils";
 
 export type { TicketOptionBlock };
 
@@ -63,6 +64,7 @@ export function formatWhen(date: Date, locale: string): string {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: EVENT_TIME_ZONE,
     }).format(date),
   );
 }
@@ -72,6 +74,7 @@ export function formatClock(date: Date, locale: string): string {
     new Intl.DateTimeFormat(`${locale}-CH`, {
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: EVENT_TIME_ZONE,
     }).format(date),
   );
 }

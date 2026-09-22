@@ -1,6 +1,7 @@
 import "server-only";
 
 import * as z from "zod";
+import { EVENT_TIME_ZONE } from "@/lib/utils";
 import type { FormState } from "./types";
 
 export type { FormState } from "./types";
@@ -142,7 +143,7 @@ function zurichToUtc(local: string): Date {
 
 function zurichOffsetMs(instant: Date): number {
   const zurich = new Date(
-    instant.toLocaleString("en-US", { timeZone: "Europe/Zurich" }),
+    instant.toLocaleString("en-US", { timeZone: EVENT_TIME_ZONE }),
   );
   const utc = new Date(instant.toLocaleString("en-US", { timeZone: "UTC" }));
   return zurich.getTime() - utc.getTime();

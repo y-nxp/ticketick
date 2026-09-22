@@ -19,7 +19,7 @@ import {
   saveTicketType,
 } from "@/lib/admin/event-actions";
 import { toZurichInput } from "@/lib/admin/datetime";
-import { formatPrice } from "@/lib/utils";
+import { EVENT_TIME_ZONE, formatPrice } from "@/lib/utils";
 import type { FormState } from "@/lib/admin/types";
 import type { EventForEdit, ReferenceData } from "@/lib/data/admin-catalog";
 
@@ -125,7 +125,7 @@ function SessionRow({
             {format.dateTime(session.startsAt, {
               dateStyle: "full",
               timeStyle: "short",
-              timeZone: "Europe/Zurich",
+              timeZone: EVENT_TIME_ZONE,
             })}
           </p>
           <p className="text-xs text-muted-foreground">

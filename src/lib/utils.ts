@@ -16,6 +16,12 @@ export function formatPrice(
   }).format(amountCents / 100);
 }
 
+/**
+ * Fuseau des séances. Sans lui, le rendu serveur suit l'horloge de la machine :
+ * en production le conteneur est en UTC et un concert à 17:00 s'affichait 16:00.
+ */
+export const EVENT_TIME_ZONE = "Europe/Zurich";
+
 export function formatDate(
   date: Date | string,
   locale: string = "fr-CH",
@@ -29,6 +35,7 @@ export function formatDate(
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: EVENT_TIME_ZONE,
     ...options,
   }).format(d);
 }

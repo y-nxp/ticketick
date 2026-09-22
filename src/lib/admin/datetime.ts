@@ -1,3 +1,5 @@
+import { EVENT_TIME_ZONE } from "@/lib/utils";
+
 /**
  * Conversion d'un instant absolu vers un champ `datetime-local` en heure suisse.
  *
@@ -12,7 +14,7 @@ export function toZurichInput(date: Date | string | null | undefined): string {
   const instant = typeof date === "string" ? new Date(date) : date;
   if (Number.isNaN(instant.getTime())) return "";
   const parts = new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Europe/Zurich",
+    timeZone: EVENT_TIME_ZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",

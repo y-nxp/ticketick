@@ -4,6 +4,7 @@ import { randomBytes } from "node:crypto";
 import { Prisma, type PaymentMethod } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { cancelOrderTickets, issueMissingTickets } from "@/lib/tickets/issue";
+import { EVENT_TIME_ZONE } from "@/lib/utils";
 import { inheritPayment, intersectOffers } from "./payment-methods";
 import {
   resolveOrderOptions,
@@ -708,7 +709,7 @@ function paymentLineLabel(input: {
     day: "numeric",
     month: "short",
     year: "numeric",
-    timeZone: "Europe/Zurich",
+    timeZone: EVENT_TIME_ZONE,
   }).format(input.sessionStartsAt);
   return [input.organizer, input.eventTitle, date, input.ticketName]
     .map((part) => part.trim())

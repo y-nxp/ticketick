@@ -1,3 +1,5 @@
+import { EVENT_TIME_ZONE } from "@/lib/utils";
+
 function readTitle(value: unknown, locale: string): string {
   if (value && typeof value === "object") {
     const record = value as Record<string, unknown>;
@@ -196,7 +198,7 @@ function formatOptionDate(date: Date, locale: string): string {
     day: "numeric",
     month: "long",
     year: "numeric",
-    timeZone: "Europe/Zurich",
+    timeZone: EVENT_TIME_ZONE,
   }).format(date);
   const plain = raw.replace(/[\u00a0\u202f]/g, " ").replace(/^([^,]+),\s+/, "$1 ");
   return plain ? plain.charAt(0).toUpperCase() + plain.slice(1) : plain;

@@ -3,6 +3,7 @@
 import { TicketStatus } from "@prisma/client";
 import { requireRole } from "@/lib/auth/dal";
 import { prisma } from "@/lib/prisma";
+import { EVENT_TIME_ZONE } from "@/lib/utils";
 
 export type DoorLookup =
   | { ok: false; reason: "unknown" | "cancelled" | "forbidden" | "unpaid" }
@@ -107,6 +108,7 @@ function formatWhen(date: Date): string {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: EVENT_TIME_ZONE,
   }).format(date);
 }
 

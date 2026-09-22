@@ -86,6 +86,9 @@ services:
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
+      # Le rendu serveur épingle déjà Europe/Zurich ; l'horloge du conteneur
+      # évite qu'une date oubliée s'affiche en UTC (17:00 rendu 16:00).
+      TZ: Europe/Zurich
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
       UPLOAD_DIR: /app/data/uploads
     volumes:

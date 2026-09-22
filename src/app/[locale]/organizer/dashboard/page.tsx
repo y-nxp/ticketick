@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { getPublishedEvents } from "@/lib/data/events";
 import { requireRole } from "@/lib/auth/dal";
 import { formatDate, formatPrice } from "@/lib/utils";
+import { sumInventory } from "@/lib/inventory";
 import { minPriceCents, nextSession, t } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -76,9 +77,7 @@ export default async function OrganizerDashboardPage({
         </div>
         <div className="divide-y divide-border">
           {events.map((e) => {
-            const tickets = e.sessions.flatMap((s) => s.ticketTypes);
-            const sold = tickets.reduce((s, tt) => s + tt.sold, 0);
-            const capacity = tickets.reduce((s, tt) => s + tt.quantity, 0);
+            const { capacity, sold } = sumInventory(e.sessions);
             const pct = capacity ? Math.round((sold / capacity) * 100) : 0;
             const session = nextSession(e);
             return (

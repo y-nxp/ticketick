@@ -14,7 +14,7 @@ import {
   TranslatedField,
 } from "@/components/admin/fields";
 import { deleteEventOption, saveEventOption } from "@/lib/admin/option-actions";
-import { formatPrice } from "@/lib/utils";
+import { EVENT_TIME_ZONE, formatPrice } from "@/lib/utils";
 import type { EventForEdit } from "@/lib/data/admin-catalog";
 
 type Option = EventForEdit["options"][number];
@@ -106,7 +106,7 @@ function OptionRow({
             ? format.dateTime(session.startsAt, {
                 dateStyle: "medium",
                 timeStyle: "short",
-                timeZone: "Europe/Zurich",
+                timeZone: EVENT_TIME_ZONE,
               })
             : t("allSessions")}
         </p>
@@ -190,7 +190,7 @@ function OptionForm({
               label: new Date(s.startsAt).toLocaleString("fr-CH", {
                 dateStyle: "medium",
                 timeStyle: "short",
-                timeZone: "Europe/Zurich",
+                timeZone: EVENT_TIME_ZONE,
               }),
             }))}
           />

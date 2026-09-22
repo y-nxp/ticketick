@@ -1,6 +1,7 @@
 import "server-only";
 
 import { SignJWT } from "jose";
+import { EVENT_TIME_ZONE } from "@/lib/utils";
 
 /**
  * PostFinance Checkout de l'organisateur (API v2).
@@ -138,7 +139,7 @@ export async function createPostfinanceCheckout(
     autoConfirmationEnabled: true,
     chargeRetryEnabled: true,
     customersPresence: "VIRTUAL_PRESENT",
-    timeZone: "Europe/Zurich",
+    timeZone: EVENT_TIME_ZONE,
     billingAddress: {
       givenName: input.firstName,
       familyName: input.lastName,
