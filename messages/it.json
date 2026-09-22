@@ -729,7 +729,7 @@
       "label": "Etichetta (prima, mattinata…)",
       "optional": "Facoltativo",
       "capacity": "Capienza (posti)",
-      "capacityHint": "Tutte le tariffe insieme. Vuoto: valgono solo i contingenti.",
+      "capacityHint": "Compilata: tutte le tariffe condividono questi posti. Vuota: ogni tariffa ha il proprio contingente.",
       "soldOfCapacity": "{sold} / {total} posti",
       "moreOptions": "Altre opzioni",
       "paymentsOverrideHint": "Lascia « come lo spettacolo » salvo eccezione su questa replica.",

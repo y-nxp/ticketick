@@ -729,7 +729,7 @@
       "label": "Bezeichnung (Premiere, Matinee…)",
       "optional": "Optional",
       "capacity": "Kapazität (Plätze)",
-      "capacityHint": "Alle Tarife zusammen. Leer: nur die Kontingente gelten.",
+      "capacityHint": "Gesetzt: alle Tarife teilen sich diese Plätze. Leer: jeder Tarif behält sein eigenes Kontingent.",
       "soldOfCapacity": "{sold} / {total} Plätze",
       "moreOptions": "Weitere Optionen",
       "paymentsOverrideHint": "« Wie die Veranstaltung » belassen, ausser diese Vorstellung ist eine Ausnahme.",

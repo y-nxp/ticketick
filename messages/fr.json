@@ -729,7 +729,7 @@
       "label": "Libellé (première, matinée…)",
       "optional": "Facultatif",
       "capacity": "Jauge (places)",
-      "capacityHint": "Tous tarifs confondus. Vide : seuls les contingents limitent.",
+      "capacityHint": "Renseignée : tous les tarifs se partagent ces places. Vide : chaque tarif garde son propre contingent.",
       "soldOfCapacity": "{sold} / {total} places",
       "moreOptions": "Plus d’options",
       "paymentsOverrideHint": "Laisser « comme le spectacle » sauf pour une séance particulière.",

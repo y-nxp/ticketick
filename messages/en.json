@@ -729,7 +729,7 @@
       "label": "Label (premiere, matinee…)",
       "optional": "Optional",
       "capacity": "Capacity (seats)",
-      "capacityHint": "All fares combined. Empty: only each fare’s allocation applies.",
+      "capacityHint": "Set: all fares share these seats. Empty: each fare keeps its own allocation.",
       "soldOfCapacity": "{sold} / {total} seats",
       "moreOptions": "More options",
       "paymentsOverrideHint": "Leave “same as the show” unless this session is an exception.",
