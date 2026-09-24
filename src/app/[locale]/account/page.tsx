@@ -9,6 +9,7 @@ import { getMyOrders } from "@/lib/data/my-orders";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { t as translate, type Translated } from "@/lib/types";
 import { PasswordForm } from "./password-form";
+import { VerifyBanner } from "./verify-banner";
 import { ticketPdfPath } from "@/lib/tickets/download";
 
 // Dépend de la session : jamais mise en cache.
@@ -69,6 +70,8 @@ export default async function AccountPage({
           </div>
         </Link>
       ) : null}
+
+      {!user.emailVerified ? <VerifyBanner email={user.email} /> : null}
 
       {user.role === "DOOR_STAFF" ? (
         <Link href="/door" className="mt-8 block">

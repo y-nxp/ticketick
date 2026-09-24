@@ -8,6 +8,7 @@ import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { clientIpFrom } from "@/lib/rate-limit";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { markEmailVerified } from "./email-verification";
 import { createSession, destroyAllSessions } from "./session";
 
 /**
@@ -171,7 +172,7 @@ export async function resetPassword(
         userId: true,
         expiresAt: true,
         usedAt: true,
-        user: { select: { role: true } },
+        user: { select: { role: true, emailVerifiedAt: true } },
       },
     });
 
@@ -201,6 +202,10 @@ export async function resetPassword(
     if (!consomme) return { error: "tokenInvalid" };
 
     role = ligne.user.role;
+
+    // Le lien est arrivé dans la boîte : l'adresse est prouvée. C'est aussi le
+    // recours du vrai titulaire si quelqu'un s'est inscrit avant lui.
+    if (!ligne.user.emailVerifiedAt) await markEmailVerified(ligne.userId);
 
     // Les autres liens en attente tombent : une demande plus ancienne restée
     // dans une boîte ne doit pas rouvrir l'accès après coup.

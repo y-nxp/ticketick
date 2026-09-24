@@ -260,6 +260,19 @@
     "subtitle": "Gestisci i tuoi biglietti, i prossimi acquisti e i vantaggi.",
     "install": "Installa l'app"
   },
+  "verifyEmail": {
+    "bannerTitle": "Conferma il tuo indirizzo e-mail",
+    "bannerBody": "Abbiamo inviato un link a {email}. I biglietti acquistati con questo indirizzo senza accesso compariranno qui dopo la conferma.",
+    "resend": "Invia di nuovo il link",
+    "sent": "Link inviato. Controlla anche la posta indesiderata.",
+    "throttled": "Troppe richieste. Riprova tra qualche minuto.",
+    "unavailable": "Invio al momento impossibile. Riprova più tardi.",
+    "okTitle": "Indirizzo confermato",
+    "okBody": "I biglietti acquistati con questo indirizzo sono ora nel tuo account.",
+    "failTitle": "Link non valido o scaduto",
+    "failBody": "Accedi al tuo account per ricevere un nuovo link.",
+    "toAccount": "Vai al mio account"
+  },
   "door": {
     "title": "Controllo",
     "subtitle": "Scansiona il QR o inserisci il codice del biglietto.",

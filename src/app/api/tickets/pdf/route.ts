@@ -52,7 +52,12 @@ async function ownsOrder(reference: string): Promise<boolean> {
     select: { userId: true, email: true, status: true },
   });
   if (!order || order.status !== "PAID") return false;
-  return order.userId === user.id || order.email === user.email;
+  // L'adresse ne vaut preuve qu'une fois confirmée : sinon, s'inscrire avec
+  // l'e-mail d'un acheteur ouvrirait ses billets.
+  return (
+    order.userId === user.id ||
+    (user.emailVerified && order.email === user.email)
+  );
 }
 
 async function staffCanDownload(reference: string): Promise<boolean> {

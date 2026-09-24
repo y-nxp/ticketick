@@ -260,6 +260,19 @@
     "subtitle": "Gérez vos billets, vos prochains achats et vos avantages.",
     "install": "Installer l'application"
   },
+  "verifyEmail": {
+    "bannerTitle": "Confirmez votre adresse e-mail",
+    "bannerBody": "Nous avons envoyé un lien à {email}. Les billets achetés avec cette adresse sans être connecté apparaîtront ici une fois l’adresse confirmée.",
+    "resend": "Renvoyer le lien",
+    "sent": "Lien envoyé. Pensez à regarder dans les indésirables.",
+    "throttled": "Trop de demandes. Réessayez dans quelques minutes.",
+    "unavailable": "Envoi impossible pour le moment. Réessayez plus tard.",
+    "okTitle": "Adresse confirmée",
+    "okBody": "Vos billets achetés avec cette adresse sont désormais dans votre compte.",
+    "failTitle": "Lien invalide ou expiré",
+    "failBody": "Connectez-vous à votre compte pour recevoir un nouveau lien.",
+    "toAccount": "Aller à mon compte"
+  },
   "door": {
     "title": "Contrôle",
     "subtitle": "Scannez le QR ou saisissez le code du billet.",

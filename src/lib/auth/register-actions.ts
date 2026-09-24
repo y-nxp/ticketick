@@ -5,12 +5,9 @@ import { headers } from "next/headers";
 import { getLocale } from "next-intl/server";
 import * as z from "zod";
 import { redirect } from "@/i18n/navigation";
-import {
-  attachOrdersToUser,
-  followOrganizersFromOrders,
-} from "@/lib/account/guest-orders";
 import { prisma } from "@/lib/prisma";
 import { clientIpFrom } from "@/lib/rate-limit";
+import { sendVerificationLink } from "./email-verification";
 import { createSession } from "./session";
 
 const RegisterSchema = z
@@ -99,10 +96,12 @@ export async function register(
       select: { id: true },
     });
 
-    await attachOrdersToUser(user.id, email);
-    if (marketingOptIn) {
-      await followOrganizersFromOrders(user.id);
-    }
+    // Les achats faits sans compte sous cette adresse ne sont rattachés qu'une
+    // fois l'adresse confirmée : sans cela, s'inscrire avec l'e-mail d'un
+    // acheteur suffirait à récupérer ses billets.
+    await sendVerificationLink(user.id).catch((error) => {
+      console.error("[auth] envoi du lien de confirmation", error);
+    });
 
     await createSession(user.id);
   } catch (error) {

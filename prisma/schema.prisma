@@ -60,6 +60,22 @@ model Session {
 /// Seule l'empreinte du jeton est conservée : la valeur en clair ne vit que
 /// dans le lien envoyé par courriel. Une fuite de la base ne permettrait donc
 /// pas de prendre la main sur les comptes dont une demande est en cours.
+/// Lien de confirmation d'adresse, même principe que la réinitialisation :
+/// seule l'empreinte du jeton est conservée.
+model EmailVerificationToken {
+  id     String @id @default(cuid())
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 model PasswordResetToken {
   id     String @id @default(cuid())
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -206,9 +222,15 @@ model User {
   active      Boolean   @default(true)
   lastLoginAt DateTime?
 
-  sessions       Session[]
-  impersonations Session[] @relation("SessionImpersonator")
-  passwordResets PasswordResetToken[]
+  /// Adresse prouvée par un lien reçu. Tant qu'elle ne l'est pas, les achats
+  /// faits sans compte sous cette adresse restent inaccessibles : n'importe
+  /// qui peut s'inscrire avec l'e-mail d'un autre.
+  emailVerifiedAt DateTime?
+
+  sessions           Session[]
+  impersonations     Session[] @relation("SessionImpersonator")
+  passwordResets     PasswordResetToken[]
+  emailVerifications EmailVerificationToken[]
 
   /// Accès "amis du festival" (session PWA)
   isFestivalFriend Boolean @default(false)

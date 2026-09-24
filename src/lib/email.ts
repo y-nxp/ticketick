@@ -319,6 +319,88 @@ export async function sendPasswordResetEmail(payload: PasswordResetPayload) {
   });
 }
 
+const CONFIRMATION_TEXTES: Record<
+  string,
+  { sujet: string; bonjour: string; corps: string; ignorer: string; expire: (h: number) => string }
+> = {
+  fr: {
+    sujet: "Confirmez votre adresse ticketick",
+    bonjour: "Bonjour",
+    corps:
+      "Pour confirmer votre adresse et retrouver dans votre compte les billets achetés avec elle, ouvrez ce lien :",
+    ignorer:
+      "Si vous n'avez pas créé de compte ticketick, ignorez ce message : rien ne sera rattaché à cette adresse.",
+    expire: (h) => `Ce lien est valable ${h} heures.`,
+  },
+  en: {
+    sujet: "Confirm your ticketick address",
+    bonjour: "Hello",
+    corps:
+      "To confirm your address and find the tickets bought with it in your account, open this link:",
+    ignorer:
+      "If you did not create a ticketick account, ignore this message: nothing will be linked to this address.",
+    expire: (h) => `This link is valid for ${h} hours.`,
+  },
+  de: {
+    sujet: "Bestätigen Sie Ihre ticketick-Adresse",
+    bonjour: "Guten Tag",
+    corps:
+      "Um Ihre Adresse zu bestätigen und die damit gekauften Tickets in Ihrem Konto zu finden, öffnen Sie diesen Link:",
+    ignorer:
+      "Falls Sie kein ticketick-Konto erstellt haben, ignorieren Sie diese Nachricht: Mit dieser Adresse wird nichts verknüpft.",
+    expire: (h) => `Dieser Link ist ${h} Stunden gültig.`,
+  },
+  it: {
+    sujet: "Conferma il tuo indirizzo ticketick",
+    bonjour: "Buongiorno",
+    corps:
+      "Per confermare l'indirizzo e ritrovare nel tuo account i biglietti acquistati con esso, apri questo link:",
+    ignorer:
+      "Se non hai creato un account ticketick, ignora il messaggio: nulla verrà collegato a questo indirizzo.",
+    expire: (h) => `Il link è valido ${h} ore.`,
+  },
+};
+
+export async function sendEmailConfirmation(payload: {
+  to: string;
+  name: string | null;
+  locale: string;
+  url: string;
+  expiresInHours: number;
+}) {
+  const l = CONFIRMATION_TEXTES[payload.locale] ?? CONFIRMATION_TEXTES.fr;
+  const salutation = payload.name ? `${l.bonjour} ${payload.name},` : `${l.bonjour},`;
+
+  const text = [
+    salutation,
+    "",
+    l.corps,
+    payload.url,
+    "",
+    l.expire(payload.expiresInHours),
+    "",
+    l.ignorer,
+    "",
+    "ticketick.ch",
+  ].join("\n");
+
+  const html = [
+    `<p>${echapper(salutation)}</p>`,
+    `<p>${echapper(l.corps)}</p>`,
+    `<p><a href="${payload.url}" style="display:inline-block;padding:12px 20px;border-radius:12px;background:#6C5CE7;color:#fff;text-decoration:none;font-weight:600">${echapper(l.sujet)}</a></p>`,
+    `<p style="color:#6b7280;font-size:13px">${echapper(l.expire(payload.expiresInHours))}</p>`,
+    `<p style="color:#6b7280;font-size:13px">${echapper(l.ignorer)}</p>`,
+  ].join("");
+
+  return envoyer({
+    to: payload.to,
+    subject: l.sujet,
+    text,
+    html: `<div style="font:14px/1.6 system-ui,sans-serif;color:#2A2C30">${html}</div>`,
+    etiquette: "confirmation d'adresse",
+  });
+}
+
 /** Les valeurs insérées dans le HTML viennent en partie de la base. */
 function echapper(value: string): string {
   return value

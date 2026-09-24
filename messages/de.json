@@ -260,6 +260,19 @@
     "subtitle": "Verwalten Sie Ihre Tickets, kommenden Käufe und Vorteile.",
     "install": "App installieren"
   },
+  "verifyEmail": {
+    "bannerTitle": "Bestätigen Sie Ihre E-Mail-Adresse",
+    "bannerBody": "Wir haben einen Link an {email} gesendet. Tickets, die ohne Anmeldung mit dieser Adresse gekauft wurden, erscheinen hier, sobald sie bestätigt ist.",
+    "resend": "Link erneut senden",
+    "sent": "Link gesendet. Sehen Sie auch im Spam-Ordner nach.",
+    "throttled": "Zu viele Anfragen. Versuchen Sie es in einigen Minuten erneut.",
+    "unavailable": "Versand derzeit nicht möglich. Versuchen Sie es später erneut.",
+    "okTitle": "Adresse bestätigt",
+    "okBody": "Die mit dieser Adresse gekauften Tickets befinden sich jetzt in Ihrem Konto.",
+    "failTitle": "Ungültiger oder abgelaufener Link",
+    "failBody": "Melden Sie sich an, um einen neuen Link zu erhalten.",
+    "toAccount": "Zu meinem Konto"
+  },
   "door": {
     "title": "Kontrolle",
     "subtitle": "QR-Code scannen oder Ticketcode eingeben.",

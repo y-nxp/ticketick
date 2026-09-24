@@ -260,6 +260,19 @@
     "subtitle": "Manage your tickets, upcoming purchases and perks.",
     "install": "Install the app"
   },
+  "verifyEmail": {
+    "bannerTitle": "Confirm your email address",
+    "bannerBody": "We sent a link to {email}. Tickets bought with this address while signed out will appear here once it is confirmed.",
+    "resend": "Resend the link",
+    "sent": "Link sent. Check your spam folder too.",
+    "throttled": "Too many requests. Try again in a few minutes.",
+    "unavailable": "Sending is not possible right now. Try again later.",
+    "okTitle": "Address confirmed",
+    "okBody": "Tickets bought with this address are now in your account.",
+    "failTitle": "Invalid or expired link",
+    "failBody": "Sign in to your account to get a new link.",
+    "toAccount": "Go to my account"
+  },
   "door": {
     "title": "Door check",
     "subtitle": "Scan the QR code or type the ticket code.",
