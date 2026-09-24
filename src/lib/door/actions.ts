@@ -1,28 +1,50 @@
 "use server";
 
-import { TicketStatus } from "@prisma/client";
 import { requireRole } from "@/lib/auth/dal";
+import {
+  canControlSession,
+  DOOR_ROLES,
+  getDoorCounts,
+  type DoorCounts,
+} from "@/lib/door/scope";
 import { prisma } from "@/lib/prisma";
-import { EVENT_TIME_ZONE } from "@/lib/utils";
+import { t, type Translated } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
+
+export interface DoorTicket {
+  code: string;
+  eventTitle: string;
+  ticketName: string;
+  when: string;
+  venue: string;
+  buyer: string;
+}
 
 export type DoorLookup =
   | { ok: false; reason: "unknown" | "cancelled" | "forbidden" | "unpaid" }
+  | { ok: false; reason: "otherSession"; ticket: DoorTicket }
   | {
       ok: true;
-      code: string;
-      status: TicketStatus;
+      /** `already` : billet déjà passé, à l'heure indiquée par `usedAt`. */
+      outcome: "admitted" | "already";
       usedAt: string | null;
-      eventTitle: string;
-      ticketName: string;
-      when: string;
-      venue: string;
-      buyer: string;
+      ticket: DoorTicket;
     };
 
-export async function lookupTicket(code: string): Promise<DoorLookup> {
-  const user = await requireRole(["ADMIN", "ORGANIZER"], "/door");
+/**
+ * Valide un billet pour la séance contrôlée et le marque comme utilisé.
+ *
+ * Un billet d'une autre séance est refusé sans être consommé : il reste
+ * valable le bon jour.
+ */
+export async function admitTicket(
+  code: string,
+  sessionId: string,
+  locale: string,
+): Promise<DoorLookup> {
+  const user = await requireRole(DOOR_ROLES, "/door");
   const normalized = code.trim().toUpperCase();
-  if (!normalized) return { ok: false, reason: "unknown" };
+  if (!normalized || !sessionId) return { ok: false, reason: "unknown" };
 
   const ticket = await prisma.ticket.findUnique({
     where: { code: normalized },
@@ -36,14 +58,10 @@ export async function lookupTicket(code: string): Promise<DoorLookup> {
           name: true,
           session: {
             select: {
+              id: true,
               startsAt: true,
               venue: { select: { name: true, city: true } },
-              event: {
-                select: {
-                  title: true,
-                  organizer: { select: { userId: true } },
-                },
-              },
+              event: { select: { title: true } },
             },
           },
         },
@@ -53,70 +71,53 @@ export async function lookupTicket(code: string): Promise<DoorLookup> {
 
   if (!ticket) return { ok: false, reason: "unknown" };
 
-  if (
-    user.role !== "ADMIN" &&
-    ticket.ticketType.session.event.organizer.userId !== user.id
-  ) {
+  const session = ticket.ticketType.session;
+  if (!(await canControlSession(user, session.id))) {
     return { ok: false, reason: "forbidden" };
   }
 
   if (ticket.status === "CANCELLED") return { ok: false, reason: "cancelled" };
   if (ticket.status === "PENDING") return { ok: false, reason: "unpaid" };
 
-  return {
-    ok: true,
+  const info: DoorTicket = {
     code: ticket.code,
-    status: ticket.status,
-    usedAt: ticket.usedAt?.toISOString() ?? null,
-    eventTitle: readTitle(ticket.ticketType.session.event.title, "fr"),
-    ticketName: readTitle(ticket.ticketType.name, "fr"),
-    when: formatWhen(ticket.ticketType.session.startsAt),
-    venue: [
-      ticket.ticketType.session.venue?.name,
-      ticket.ticketType.session.venue?.city,
-    ]
-      .filter(Boolean)
-      .join(", "),
+    eventTitle: t(session.event.title as Translated, locale),
+    ticketName: t(ticket.ticketType.name as Translated, locale),
+    when: formatDate(session.startsAt, `${locale}-CH`),
+    venue: [session.venue?.name, session.venue?.city].filter(Boolean).join(", "),
     buyer: `${ticket.order.firstName} ${ticket.order.lastName}`.trim(),
   };
-}
 
-export async function admitTicket(code: string): Promise<DoorLookup> {
-  const lookup = await lookupTicket(code);
-  if (!lookup.ok) return lookup;
-  if (lookup.status === "USED") return lookup;
+  if (session.id !== sessionId) {
+    return { ok: false, reason: "otherSession", ticket: info };
+  }
 
+  const now = new Date();
   const updated = await prisma.ticket.updateMany({
-    where: { code: lookup.code, status: "VALID" },
-    data: { status: "USED", usedAt: new Date() },
+    where: { code: ticket.code, status: "VALID" },
+    data: { status: "USED", usedAt: now },
   });
 
-  if (updated.count !== 1) return lookupTicket(lookup.code);
+  if (updated.count === 1) {
+    return { ok: true, outcome: "admitted", usedAt: now.toISOString(), ticket: info };
+  }
 
+  // Déjà USED, ou passé à l'instant sur un autre appareil : on relit l'heure.
+  const current = await prisma.ticket.findUnique({
+    where: { code: ticket.code },
+    select: { usedAt: true },
+  });
   return {
-    ...lookup,
-    status: "USED",
-    usedAt: new Date().toISOString(),
+    ok: true,
+    outcome: "already",
+    usedAt: current?.usedAt?.toISOString() ?? null,
+    ticket: info,
   };
 }
 
-function formatWhen(date: Date): string {
-  return new Intl.DateTimeFormat("fr-CH", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: EVENT_TIME_ZONE,
-  }).format(date);
-}
-
-function readTitle(value: unknown, locale: string): string {
-  if (value && typeof value === "object") {
-    const record = value as Record<string, unknown>;
-    const hit = record[locale] ?? record.fr ?? Object.values(record)[0];
-    if (typeof hit === "string") return hit;
-  }
-  return "";
+/** Compteur partagé par tous les appareils qui contrôlent la même séance. */
+export async function doorCounts(sessionId: string): Promise<DoorCounts | null> {
+  const user = await requireRole(DOOR_ROLES, "/door");
+  if (!sessionId || !(await canControlSession(user, sessionId))) return null;
+  return getDoorCounts(sessionId);
 }

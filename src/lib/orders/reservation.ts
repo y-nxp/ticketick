@@ -21,6 +21,17 @@ export function isAbandonedCardHold(
   return reservedUntilFrom(order.createdAt) <= now;
 }
 
+/**
+ * Commande annulée dont le paiement est pourtant arrivé : retour tardif de
+ * l'acheteur alors que les places avaient été revendues.
+ */
+export function isRefundDue(order: {
+  status: string;
+  payment: { status: string } | null;
+}): boolean {
+  return order.status === "CANCELLED" && order.payment?.status === "COMPLETED";
+}
+
 export function formatHoldClock(msLeft: number): string {
   const total = Math.max(0, Math.ceil(msLeft / 1000));
   const minutes = Math.floor(total / 60);

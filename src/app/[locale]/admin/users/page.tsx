@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { getAdminUsers } from "@/lib/data/admin";
+import { getAdminUsers, getOrganizerChoices } from "@/lib/data/admin";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { formatDate } from "@/lib/utils";
 import { UserRow } from "./user-row";
@@ -14,7 +14,11 @@ export default async function AdminUsersPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const [users, me] = await Promise.all([getAdminUsers(), getCurrentUser()]);
+  const [users, me, organizers] = await Promise.all([
+    getAdminUsers(),
+    getCurrentUser(),
+    getOrganizerChoices(),
+  ]);
   const t = await getTranslations("admin");
 
   return (
@@ -43,11 +47,13 @@ export default async function AdminUsersPage({
             {users.map((user) => (
               <UserRow
                 key={user.id}
+                organizers={organizers}
                 user={{
                   id: user.id,
                   email: user.email,
                   name: user.name,
                   role: user.role,
+                  doorOrganizerId: user.doorOrganizerId,
                   active: user.active,
                   isSelf: user.id === me?.id,
                   lastLogin: user.lastLoginAt

@@ -35,6 +35,8 @@ interface OrderResult {
 
 interface SeatHold {
   reference: string;
+  /** Preuve que ce navigateur a ouvert la rétention ; la référence seule ne suffit pas. */
+  token?: string;
   checkoutUrl?: string;
   reservedUntil: string;
   cartKey: string;
@@ -96,6 +98,7 @@ function requestHold(args: {
   lines: { ticketTypeId: string; quantity: number }[];
   locale: string;
   replaceReference?: string;
+  replaceToken?: string;
 }): Promise<HoldOutcome> {
   const existing = inflightHolds.get(args.cartKey);
   if (existing) return existing;
@@ -107,10 +110,12 @@ function requestHold(args: {
         locale: args.locale,
         lines: args.lines,
         replaceReference: args.replaceReference,
+        replaceToken: args.replaceToken,
       }),
     });
     const body = (await res.json().catch(() => null)) as {
       reference?: string;
+      holdToken?: string;
       reservedUntil?: string;
       error?: string;
     } | null;
@@ -120,6 +125,7 @@ function requestHold(args: {
     }
     const hold: SeatHold = {
       reference: body.reference,
+      token: body.holdToken,
       reservedUntil: body.reservedUntil,
       cartKey: args.cartKey,
     };
@@ -246,8 +252,9 @@ function CheckoutInner() {
     failedFor !== cartKey;
 
   const creatingHold = needsCreate && !createdAlive && !error;
-  const replaceReference =
-    stored && stored.cartKey !== cartKey ? stored.reference : undefined;
+  const replacing = stored && stored.cartKey !== cartKey ? stored : null;
+  const replaceReference = replacing?.reference;
+  const replaceToken = replacing?.token;
 
   React.useEffect(() => {
     if (!storedDead || !stored?.cartKey) return;
@@ -274,6 +281,7 @@ function CheckoutInner() {
       locale,
       lines: linesFromCartKey(cartKey),
       replaceReference,
+      replaceToken,
     }).then((outcome) => {
       if (cancelled) return;
       if (outcome.ok) {
@@ -295,7 +303,7 @@ function CheckoutInner() {
     return () => {
       cancelled = true;
     };
-  }, [needsCreate, cartKey, locale, t, replaceReference]);
+  }, [needsCreate, cartKey, locale, t, replaceReference, replaceToken]);
 
   React.useEffect(() => {
     if (!hold) return;
@@ -325,6 +333,7 @@ function CheckoutInner() {
           locale,
           paymentMethod: method,
           holdReference: hold?.reference,
+          holdToken: hold?.token,
           options: optionDraft.payload,
           lines: lines.map((l) => ({
             ticketTypeId: l.ticketTypeId,
@@ -357,6 +366,7 @@ function CheckoutInner() {
       const data: OrderResult & {
         checkoutUrl?: string;
         reservedUntil?: string;
+        holdToken?: string;
       } = await res.json();
 
       // Paiement carte : on part tout de suite. Rester sur la page avec
@@ -364,6 +374,7 @@ function CheckoutInner() {
       if (method === "CARD" && data.checkoutUrl && data.reservedUntil) {
         const nextHold = {
           reference: data.reference,
+          token: data.holdToken,
           reservedUntil: data.reservedUntil,
           cartKey,
         };
@@ -373,9 +384,11 @@ function CheckoutInner() {
         return;
       }
 
-      // Virement IBAN : confirmation immédiate avec instructions.
+      // Virement IBAN : confirmation immédiate avec instructions. La rétention
+      // est devenue une commande due : un prochain panier ne doit pas la viser.
       setResult(data);
       clear();
+      clearHold();
     } catch {
       setError(t("failed"));
     } finally {

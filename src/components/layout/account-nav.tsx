@@ -32,7 +32,9 @@ export async function AccountNav() {
 
   return (
     <div className="flex items-center gap-1">
-      {user.role === "ADMIN" || user.role === "ORGANIZER" ? (
+      {user.role === "ADMIN" ||
+      user.role === "ORGANIZER" ||
+      user.role === "DOOR_STAFF" ? (
         <Link
           href="/door"
           aria-label={ta("doorAccess")}

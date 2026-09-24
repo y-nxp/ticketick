@@ -6,18 +6,26 @@ import { Ban, Check, LogIn } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   impersonateUser,
+  setDoorOrganizer,
   setUserActive,
   setUserRole,
   type AdminActionState,
 } from "@/lib/auth/admin-actions";
 
-const ROLES = ["CUSTOMER", "ORGANIZER", "RESELLER_AGENT", "ADMIN"] as const;
+const ROLES = [
+  "CUSTOMER",
+  "ORGANIZER",
+  "RESELLER_AGENT",
+  "DOOR_STAFF",
+  "ADMIN",
+] as const;
 
 export interface UserRowData {
   id: string;
   email: string;
   name: string | null;
   role: string;
+  doorOrganizerId: string | null;
   active: boolean;
   isSelf: boolean;
   lastLogin: string;
@@ -25,7 +33,13 @@ export interface UserRowData {
   canImpersonate: boolean;
 }
 
-export function UserRow({ user }: { user: UserRowData }) {
+export function UserRow({
+  user,
+  organizers,
+}: {
+  user: UserRowData;
+  organizers: { id: string; name: string }[];
+}) {
   const t = useTranslations("admin");
   const ta = useTranslations("account");
 
@@ -33,6 +47,10 @@ export function UserRow({ user }: { user: UserRowData }) {
     AdminActionState | undefined,
     FormData
   >(setUserRole, undefined);
+  const [doorState, doorAction, doorPending] = useActionState<
+    AdminActionState | undefined,
+    FormData
+  >(setDoorOrganizer, undefined);
   const [activeState, activeAction, activePending] = useActionState<
     AdminActionState | undefined,
     FormData
@@ -44,7 +62,10 @@ export function UserRow({ user }: { user: UserRowData }) {
     );
 
   const error =
-    roleState?.error ?? activeState?.error ?? impersonateState?.error;
+    roleState?.error ??
+    doorState?.error ??
+    activeState?.error ??
+    impersonateState?.error;
 
   return (
     <tr className="hover:bg-muted/30">
@@ -82,6 +103,26 @@ export function UserRow({ user }: { user: UserRowData }) {
             </select>
           </form>
         )}
+        {!user.isSelf && user.role === "DOOR_STAFF" ? (
+          <form action={doorAction} className="mt-2">
+            <input type="hidden" name="userId" value={user.id} />
+            <select
+              name="organizerId"
+              defaultValue={user.doorOrganizerId ?? ""}
+              disabled={doorPending}
+              onChange={(e) => e.currentTarget.form?.requestSubmit()}
+              aria-label={t("users.doorOrganizer", { email: user.email })}
+              className="h-9 max-w-56 rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-ring disabled:opacity-50"
+            >
+              <option value="">{t("users.doorAllOrganizers")}</option>
+              {organizers.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </form>
+        ) : null}
       </td>
 
       <td className="px-4 py-3">

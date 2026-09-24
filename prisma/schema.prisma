@@ -22,6 +22,8 @@ enum UserRole {
   CUSTOMER
   ORGANIZER
   RESELLER_AGENT
+  /// Contrôleur à l'entrée : scanner uniquement, aucun accès au backoffice.
+  DOOR_STAFF
   ADMIN
 }
 
@@ -213,6 +215,11 @@ model User {
 
   organizer Organizer?
 
+  /// Contrôleur : organisateur dont il scanne les billets. Vide, il contrôle
+  /// les spectacles de tous les organisateurs.
+  doorOrganizer   Organizer? @relation("DoorStaff", fields: [doorOrganizerId], references: [id], onDelete: SetNull)
+  doorOrganizerId String?
+
   /// Renseigné pour les agents d'un point de vente revendeur.
   reseller   Reseller? @relation(fields: [resellerId], references: [id])
   resellerId String?
@@ -230,6 +237,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   @@index([resellerId])
+  @@index([doorOrganizerId])
 }
 
 model Organizer {
@@ -268,6 +276,7 @@ model Organizer {
 
   events Event[]
   followers OrganizerFollow[]
+  doorStaff User[] @relation("DoorStaff")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -567,6 +576,10 @@ model Order {
 
   status        OrderStatus   @default(PENDING)
   paymentMethod PaymentMethod
+  /// Empreinte SHA-256 du jeton remis au seul navigateur qui a ouvert la
+  /// rétention. La référence circule (communication du virement) : elle ne
+  /// suffit pas à reprendre ni à annuler une commande.
+  holdTokenHash String?
 
   /// Attribution de la vente
   channel         SalesChannel @default(ONLINE)

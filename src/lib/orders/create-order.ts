@@ -1,6 +1,6 @@
 import "server-only";
 
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { Prisma, type PaymentMethod } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { cancelOrderTickets, issueMissingTickets } from "@/lib/tickets/issue";
@@ -38,6 +38,7 @@ export interface CreateOrderInput {
   resellerId?: string;
   soldByUserId?: string;
   options?: OptionSelectionInput[];
+  holdTokenHash?: string;
 }
 
 export type CreateOrderResult =
@@ -328,6 +329,7 @@ export async function createOrder(
           resellerId: input.resellerId,
           soldByUserId: input.soldByUserId,
           userId: input.userId,
+          holdTokenHash: input.holdTokenHash,
           subtotalCents,
           feeCents,
           totalCents,
@@ -436,11 +438,31 @@ export async function releaseStaleUnpaidCardOrders(): Promise<number> {
   return stale.length;
 }
 
-export async function releaseOrderByReference(
+export function hashHoldToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+/**
+ * Libère une rétention à la demande du navigateur qui l'a ouverte.
+ *
+ * La référence seule ne suffit pas : c'est aussi la communication du virement
+ * IBAN, lisible sur n'importe quel relevé, et elle permettait d'annuler la
+ * commande d'un autre acheteur.
+ */
+export async function releaseHeldOrder(
   reference: string,
+  token: string,
 ): Promise<void> {
+  if (!token) return;
   const order = await prisma.order.findFirst({
-    where: { reference, status: "AWAITING_PAYMENT" },
+    where: {
+      reference,
+      status: "AWAITING_PAYMENT",
+      // Un virement attendu reste dû : aucun navigateur ne l'annule, pas
+      // même celui de l'acheteur qui recommence un panier.
+      paymentMethod: "CARD",
+      holdTokenHash: hashHoldToken(token),
+    },
     select: { id: true },
   });
   if (order) await releaseOrder(order.id);
@@ -498,36 +520,54 @@ export function isCheckoutHoldEmail(email: string): boolean {
   return email.endsWith(`@${HOLD_PLACEHOLDER_DOMAIN}`);
 }
 
-/** Retient le stock dès l'arrivée sur le checkout, avant les coordonnées. */
+export type CreateHoldResult =
+  | { ok: true; order: CreatedOrder; holdToken: string }
+  | { ok: false; error: OrderError; ticketTypeId?: string };
+
+/**
+ * Retient le stock dès l'arrivée sur le checkout, avant les coordonnées.
+ * Le jeton renvoyé n'existe qu'une fois, chez l'appelant : la base n'en garde
+ * que l'empreinte.
+ */
 export async function createCheckoutHold(input: {
   lines: OrderLineInput[];
   locale: string;
-}): Promise<CreateOrderResult> {
-  const token = randomBytes(8).toString("hex");
-  return createOrder({
+}): Promise<CreateHoldResult> {
+  const placeholder = randomBytes(8).toString("hex");
+  const holdToken = randomBytes(24).toString("base64url");
+  const created = await createOrder({
     lines: input.lines,
-    email: `hold+${token}@${HOLD_PLACEHOLDER_DOMAIN}`,
+    email: `hold+${placeholder}@${HOLD_PLACEHOLDER_DOMAIN}`,
     firstName: "—",
     lastName: "—",
     locale: input.locale,
     paymentMethod: "CARD",
+    holdTokenHash: hashHoldToken(holdToken),
   });
+  return created.ok ? { ...created, holdToken } : created;
 }
 
 /**
  * Relie une rétention encore valable aux coordonnées de l'acheteur,
  * sans re-prélever le stock.
+ *
+ * Exige le jeton de la rétention : sinon, avec la seule référence d'un
+ * paiement carte en cours, on pouvait remplacer l'adresse de l'acheteur et
+ * recevoir ses billets.
  */
 export async function fulfillCheckoutHold(
   reference: string,
+  token: string,
   input: CreateOrderInput,
 ): Promise<CreateOrderResult> {
+  if (!token) return { ok: false, error: "hold_expired" };
   const limite = new Date(Date.now() - CARD_HOLD_MS);
   const order = await prisma.order.findFirst({
     where: {
       reference,
       status: "AWAITING_PAYMENT",
       createdAt: { gt: limite },
+      holdTokenHash: hashHoldToken(token),
     },
     select: {
       id: true,
@@ -609,6 +649,7 @@ export async function fulfillCheckoutHold(
         locale: input.locale,
         paymentMethod: input.paymentMethod,
         userId: input.userId,
+        holdTokenHash: input.paymentMethod === "IBAN" ? null : undefined,
         subtotalCents,
         feeCents,
         totalCents,

@@ -155,8 +155,18 @@ export async function getAdminUsers() {
       lastLoginAt: true,
       createdAt: true,
       organizer: { select: { id: true, name: true } },
+      doorOrganizerId: true,
       _count: { select: { sessions: true, orders: true } },
     },
+  });
+}
+
+export async function getOrganizerChoices() {
+  await requireAdmin();
+
+  return prisma.organizer.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
   });
 }
 

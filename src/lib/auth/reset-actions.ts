@@ -6,6 +6,7 @@ import { getLocale } from "next-intl/server";
 import bcrypt from "bcryptjs";
 import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { clientIpFrom } from "@/lib/rate-limit";
 import { sendPasswordResetEmail } from "@/lib/email";
 import { createSession, destroyAllSessions } from "./session";
 
@@ -30,12 +31,7 @@ function empreinte(token: string): string {
 }
 
 async function clientIp(): Promise<string> {
-  const h = await headers();
-  return (
-    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    h.get("x-real-ip") ??
-    "inconnue"
-  );
+  return clientIpFrom(await headers());
 }
 
 // Limitation en mémoire, comme pour la connexion : suffisant pour une seule
@@ -228,7 +224,12 @@ export async function resetPassword(
   // formulaire ferait réafficher la page, dont le jeton vient d'être consommé,
   // sous son visage « lien expiré » — un échec annoncé après une réussite.
   redirect({
-    href: role === "ADMIN" || role === "ORGANIZER" ? "/admin" : "/account",
+    href:
+      role === "ADMIN" || role === "ORGANIZER"
+        ? "/admin"
+        : role === "DOOR_STAFF"
+          ? "/door"
+          : "/account",
     locale,
   });
 }

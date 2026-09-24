@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { headers } from "next/headers";
 import * as z from "zod";
 import { prisma } from "@/lib/prisma";
+import { clientIpFrom } from "@/lib/rate-limit";
 import { requireAuth } from "./dal";
 import { createSession, destroyAllSessions } from "./session";
 
@@ -104,8 +105,5 @@ export async function changePassword(
 }
 
 async function clientIp(): Promise<string> {
-  const headerList = await headers();
-  const forwarded = headerList.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() ?? "inconnue";
-  return headerList.get("x-real-ip") ?? "inconnue";
+  return clientIpFrom(await headers());
 }

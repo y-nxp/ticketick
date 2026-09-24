@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Ticket, Receipt, UserRound, LogOut, ShieldCheck, FileDown } from "lucide-react";
+import { Ticket, Receipt, UserRound, LogOut, ShieldCheck, FileDown, ScanLine } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -64,6 +64,20 @@ export default async function AccountPage({
                     ? "adminAccessHintOrganizer"
                     : "adminAccessHint",
                 )}
+              </p>
+            </div>
+          </div>
+        </Link>
+      ) : null}
+
+      {user.role === "DOOR_STAFF" ? (
+        <Link href="/door" className="mt-8 block">
+          <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10">
+            <ScanLine className="size-5 text-primary" />
+            <div>
+              <p className="font-medium">{t("doorAccess")}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("doorAccessHint")}
               </p>
             </div>
           </div>

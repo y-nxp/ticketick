@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { getLocale } from "next-intl/server";
 import type { InquiryFormat } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { clientIpFrom } from "@/lib/rate-limit";
 import { sendOrganizerInquiryEmail } from "@/lib/email";
 
 /**
@@ -68,11 +69,7 @@ export async function submitOrganizerInquiry(
     : null;
   if (!format) return { error: "invalidFormat" };
 
-  const h = await headers();
-  const ip =
-    h.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    h.get("x-real-ip") ??
-    "inconnue";
+  const ip = clientIpFrom(await headers());
   const fenetre = 15 * 60 * 1000;
   const cles = [`inq-ip:${ip}`, `inq-mail:${email}`];
   if (cles.some((c) => trop(c, 5))) return { error: "throttled" };

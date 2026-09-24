@@ -3,6 +3,7 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 import { prisma } from "@/lib/prisma";
+import { clientIpFrom } from "@/lib/rate-limit";
 
 /**
  * Gestion des sessions.
@@ -118,7 +119,6 @@ export async function currentSessionToken(): Promise<string | undefined> {
 export const sessionCookieName = COOKIE_NAME;
 
 function clientIp(headerList: Headers): string | null {
-  const forwarded = headerList.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() ?? null;
-  return headerList.get("x-real-ip");
+  const ip = clientIpFrom(headerList);
+  return ip === "inconnue" ? null : ip;
 }

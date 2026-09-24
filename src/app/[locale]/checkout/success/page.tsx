@@ -1,9 +1,10 @@
 import { cookies } from "next/headers";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CheckCircle2, FileDown, Printer } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileDown, Printer } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { CartClearer } from "@/components/cart/cart-clearer";
+import { isRefundDue } from "@/lib/orders/reservation";
 import { settlePostfinanceOrder } from "@/lib/orders/settle-card";
 import { prisma } from "@/lib/prisma";
 import { parseGoOrigin, SHOP_ORIGIN_COOKIE } from "@/lib/shop-origin";
@@ -30,9 +31,14 @@ export default async function CheckoutSuccessPage({
   const paid = ref
     ? await prisma.order.findUnique({
         where: { reference: ref },
-        select: { status: true, _count: { select: { tickets: true } } },
+        select: {
+          status: true,
+          payment: { select: { status: true } },
+          _count: { select: { tickets: true } },
+        },
       })
     : null;
+  const refundDue = paid ? isRefundDue(paid) : false;
   const pdfHref =
     ref && paid?.status === "PAID" && paid._count.tickets > 0
       ? ticketPdfPath(ref)
@@ -44,10 +50,22 @@ export default async function CheckoutSuccessPage({
   return (
     <div className="container-page max-w-2xl py-20 text-center">
       <CartClearer />
-      <div className="mx-auto grid size-16 place-items-center rounded-full bg-[var(--success)]/12">
-        <CheckCircle2 className="size-8 text-[var(--success)]" />
-      </div>
-      <h1 className="mt-6 text-3xl font-bold">{t("success")}</h1>
+      {refundDue ? (
+        <>
+          <div className="mx-auto grid size-16 place-items-center rounded-full bg-[var(--warning)]/12">
+            <AlertTriangle className="size-8 text-[var(--warning)]" />
+          </div>
+          <h1 className="mt-6 text-3xl font-bold">{t("paidTooLateTitle")}</h1>
+          <p className="mt-4 text-muted-foreground">{t("paidTooLate")}</p>
+        </>
+      ) : (
+        <>
+          <div className="mx-auto grid size-16 place-items-center rounded-full bg-[var(--success)]/12">
+            <CheckCircle2 className="size-8 text-[var(--success)]" />
+          </div>
+          <h1 className="mt-6 text-3xl font-bold">{t("success")}</h1>
+        </>
+      )}
       {ref && (
         <p className="mt-4 font-mono text-sm text-muted-foreground">
           Réf. {ref}

@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import * as z from "zod";
 import {
   createCheckoutHold,
-  releaseOrderByReference,
+  releaseHeldOrder,
   releaseStaleUnpaidCardOrders,
 } from "@/lib/orders/create-order";
 import { reservedUntilFrom } from "@/lib/orders/reservation";
+import { clientIpFrom, consume } from "@/lib/rate-limit";
 
 const lineSchema = z.object({
   ticketTypeId: z.string().min(1),
@@ -16,6 +17,7 @@ const holdSchema = z.object({
   locale: z.string().max(5).default("fr"),
   lines: z.array(lineSchema).min(1).max(50),
   replaceReference: z.string().min(3).max(32).optional(),
+  replaceToken: z.string().min(16).max(64).optional(),
 });
 
 /**
@@ -35,14 +37,23 @@ export async function POST(request: Request) {
 
   const data = parsed.data;
 
+  // Chaque rétention bloque des places 25 min : sans plafond, un script
+  // viderait une salle sans payer. Un acheteur qui modifie son panier reste
+  // loin de cette limite, l'ancienne rétention étant rendue à chaque fois.
+  if (!consume(`hold:${clientIpFrom(request.headers)}`, 20, 10 * 60_000)) {
+    return NextResponse.json({ error: "throttled" }, { status: 429 });
+  }
+
   await releaseStaleUnpaidCardOrders().catch((error) => {
     console.error("[hold] nettoyage des commandes périmées", error);
   });
 
-  if (data.replaceReference) {
-    await releaseOrderByReference(data.replaceReference).catch((error) => {
-      console.error("[hold] libération de l'ancienne rétention", error);
-    });
+  if (data.replaceReference && data.replaceToken) {
+    await releaseHeldOrder(data.replaceReference, data.replaceToken).catch(
+      (error) => {
+        console.error("[hold] libération de l'ancienne rétention", error);
+      },
+    );
   }
 
   const created = await createCheckoutHold({
@@ -59,6 +70,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     reference: created.order.reference,
+    holdToken: created.holdToken,
     reservedUntil: reservedUntilFrom(created.order.createdAt).toISOString(),
   });
 }

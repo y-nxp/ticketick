@@ -256,6 +256,35 @@ export async function sendOrganizerInquiryEmail(
   });
 }
 
+/** Un paiement est arrivé sur une commande dont les places sont reparties. */
+export async function sendRefundAlertEmail(payload: {
+  reference: string;
+  amountCents: number;
+  currency: string;
+  provider: string;
+  providerRef?: string;
+}) {
+  const text = [
+    "Paiement à rembourser",
+    "",
+    `Commande : ${payload.reference}`,
+    `Montant  : ${(payload.amountCents / 100).toFixed(2)} ${payload.currency}`,
+    `Moyen    : ${payload.provider}${payload.providerRef ? ` (${payload.providerRef})` : ""}`,
+    "",
+    "Le paiement est arrivé après l'expiration de la réservation et les places",
+    "ont été revendues entre-temps. Aucun billet n'a été émis : rembourser",
+    "l'acheteur depuis le prestataire de paiement.",
+  ].join("\n");
+
+  return envoyer({
+    to: destinataireLeads(),
+    subject: `À rembourser — ${payload.reference}`,
+    text,
+    html: `<pre style="font:14px/1.5 system-ui,sans-serif;color:#2A2C30">${echapper(text)}</pre>`,
+    etiquette: "alerte remboursement",
+  });
+}
+
 export async function sendPasswordResetEmail(payload: PasswordResetPayload) {
   const l = RESET_TEXTES[payload.locale] ?? RESET_TEXTES.fr;
   const salutation = payload.name ? `${l.bonjour} ${payload.name},` : `${l.bonjour},`;

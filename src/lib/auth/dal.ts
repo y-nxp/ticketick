@@ -32,6 +32,8 @@ export interface CurrentUser {
   role: UserRole;
   locale: string;
   organizerId: string | null;
+  /** Contrôleur rattaché à un organisateur ; `null` pour tous. */
+  doorOrganizerId: string | null;
   impersonator: { id: string; email: string; name: string | null } | null;
 }
 
@@ -64,6 +66,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
             role: true,
             locale: true,
             active: true,
+            doorOrganizerId: true,
             organizer: { select: { id: true } },
           },
         },
@@ -111,6 +114,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     role: session.user.role,
     locale: session.user.locale,
     organizerId: session.user.organizer?.id ?? null,
+    doorOrganizerId: session.user.doorOrganizerId,
     impersonator,
   };
 });

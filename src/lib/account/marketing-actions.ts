@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth/dal";
-import { followOrganizersFromOrders } from "@/lib/auth/register-actions";
+import { followOrganizersFromOrders } from "@/lib/account/guest-orders";
 
 export interface MarketingState {
   error?: "unavailable";
@@ -35,21 +35,4 @@ export async function updateMarketingOptIn(
   }
 
   return { ok: true };
-}
-
-export async function getMarketingSettings(userId: string) {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: {
-      marketingOptIn: true,
-      follows: {
-        select: { organizer: { select: { id: true, name: true } } },
-        orderBy: { createdAt: "asc" },
-      },
-    },
-  });
-  return {
-    optIn: user?.marketingOptIn ?? false,
-    organizers: user?.follows.map((f) => f.organizer) ?? [],
-  };
 }

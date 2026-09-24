@@ -6,6 +6,7 @@ import { getLocale } from "next-intl/server";
 import * as z from "zod";
 import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { clientIpFrom } from "@/lib/rate-limit";
 import { createSession, destroySession } from "./session";
 
 /**
@@ -156,12 +157,10 @@ function afterLoginHref(
   const dest = safeNext(next);
   if (dest !== "/") return dest;
   if (role === "ADMIN" || role === "ORGANIZER") return "/admin";
+  if (role === "DOOR_STAFF") return "/door";
   return "/";
 }
 
 async function clientIp(): Promise<string> {
-  const headerList = await headers();
-  const forwarded = headerList.get("x-forwarded-for");
-  if (forwarded) return forwarded.split(",")[0]?.trim() ?? "inconnue";
-  return headerList.get("x-real-ip") ?? "inconnue";
+  return clientIpFrom(await headers());
 }

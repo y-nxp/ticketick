@@ -55,11 +55,48 @@ export async function setUserRole(
     return { error: "lastAdmin" };
   }
 
-  await prisma.user.update({ where: { id: userId }, data: { role } });
+  await prisma.user.update({
+    where: { id: userId },
+    // Le rattachement n'a de sens que pour un contrôleur ; le garder après
+    // un changement de rôle le réactiverait en silence au retour.
+    data: { role, ...(role === "DOOR_STAFF" ? {} : { doorOrganizerId: null }) },
+  });
 
   // Le rôle est relu à chaque requête, mais fermer les sessions rend le
   // changement immédiat et vérifiable plutôt qu'implicite.
   await destroyAllSessions(userId);
+
+  revalidatePath("/admin/users");
+  return { ok: true };
+}
+
+/** Rattache un contrôleur à un organisateur, ou à tous (valeur vide). */
+export async function setDoorOrganizer(
+  _state: AdminActionState | undefined,
+  formData: FormData,
+): Promise<AdminActionState> {
+  await requireAdmin();
+
+  const userId = formData.get("userId");
+  const organizerId = String(formData.get("organizerId") ?? "").trim() || null;
+  if (typeof userId !== "string" || !userId) return { error: "invalid" };
+
+  const target = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  });
+  if (!target) return { error: "notFound" };
+  if (target.role !== "DOOR_STAFF") return { error: "invalid" };
+
+  if (organizerId) {
+    const exists = await prisma.organizer.count({ where: { id: organizerId } });
+    if (!exists) return { error: "invalid" };
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { doorOrganizerId: organizerId },
+  });
 
   revalidatePath("/admin/users");
   return { ok: true };

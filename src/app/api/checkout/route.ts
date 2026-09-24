@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import * as z from "zod";
 import {
@@ -10,8 +11,9 @@ import { sendPaidOrderTickets } from "@/lib/email/ticket-mail";
 import {
   createOrder,
   fulfillCheckoutHold,
+  hashHoldToken,
+  releaseHeldOrder,
   releaseOrder,
-  releaseOrderByReference,
   releaseStaleUnpaidCardOrders,
 } from "@/lib/orders/create-order";
 import { markOrderPaid } from "@/lib/orders/mark-paid";
@@ -19,6 +21,7 @@ import { getCurrentUser } from "@/lib/auth/dal";
 import { publicAppOrigin } from "@/lib/app-url";
 import { prisma } from "@/lib/prisma";
 import { reservedUntilFrom } from "@/lib/orders/reservation";
+import { clientIpFrom, consume } from "@/lib/rate-limit";
 
 /**
  * Seuls l'identifiant du tarif et la quantité sont acceptés. Le libellé et le
@@ -39,6 +42,7 @@ const checkoutSchema = z.object({
   paymentMethod: z.enum(["CARD", "IBAN"]),
   lines: z.array(lineSchema).min(1).max(50),
   holdReference: z.string().min(3).max(32).optional(),
+  holdToken: z.string().min(16).max(64).optional(),
   options: z
     .array(
       z.object({
@@ -92,6 +96,12 @@ export async function POST(request: Request) {
 
   const data = parsed.data;
 
+  // Une commande par virement garde ses places jusqu'à annulation manuelle :
+  // c'est la voie la plus chère à laisser ouverte sans limite.
+  if (!consume(`checkout:${clientIpFrom(request.headers)}`, 10, 10 * 60_000)) {
+    return NextResponse.json({ error: "throttled" }, { status: 429 });
+  }
+
   // Les tentatives carte échouées retenaient le stock (500 après createOrder).
   // On rend d'abord les places des commandes qui n'ont jamais atteint PF.
   await releaseStaleUnpaidCardOrders().catch((error) => {
@@ -102,6 +112,10 @@ export async function POST(request: Request) {
   // l'achat reste possible sans création de compte.
   const user = await getCurrentUser();
 
+  // Une commande créée ici, sans rétention préalable, reçoit son propre jeton :
+  // au retour de PostFinance, le navigateur peut encore la reprendre ou la
+  // libérer, et personne d'autre.
+  const freshToken = randomBytes(24).toString("base64url");
   const payload = {
     lines: data.lines,
     email: data.email,
@@ -112,21 +126,26 @@ export async function POST(request: Request) {
     paymentMethod: data.paymentMethod,
     userId: user?.id,
     options: data.options,
+    holdTokenHash:
+      data.paymentMethod === "CARD" ? hashHoldToken(freshToken) : undefined,
   };
 
   // La rétention a déjà prélevé le stock à l'arrivée sur /checkout.
   // On la relie aux coordonnées plutôt que de créer une seconde commande.
+  const holdToken = data.holdToken ?? "";
   let created = data.holdReference
-    ? await fulfillCheckoutHold(data.holdReference, payload)
+    ? await fulfillCheckoutHold(data.holdReference, holdToken, payload)
     : await createOrder(payload);
+  let token = data.holdReference && created.ok ? holdToken : freshToken;
 
   if (!created.ok && data.holdReference) {
     if (created.error === "hold_mismatch") {
-      await releaseOrderByReference(data.holdReference).catch((error) => {
+      await releaseHeldOrder(data.holdReference, holdToken).catch((error) => {
         console.error("[checkout] libération rétention incompatible", error);
       });
     }
     created = await createOrder(payload);
+    token = freshToken;
   }
 
   if (!created.ok) {
@@ -217,6 +236,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       reference: order.reference,
+      holdToken: token,
       status: session.mock ? "PAID" : "AWAITING_PAYMENT",
       checkoutUrl: session.checkoutUrl,
       mock: session.mock,
