@@ -148,6 +148,12 @@ npm run db:migrate      # applique les migrations
 npm run start           # sert .next/standalone
 ```
 
+Lecture de la légende des plans de salle par l'IA : hors du GB10, l'application
+joint aimanager par son adresse publique. Les valeurs sont dans GitHub
+(`y-nxp/ticketick`) : secret `LITELLM_API_KEY` (clé « jelastic » du projet
+ticketick, révocable seule) et variables `LITELLM_API_URL`
+(`https://api-ai.nextalp.com/v1/chat/completions`) et `PLAN_AI_MODEL`.
+
 ---
 
 Conçu en Suisse 🇨🇭
