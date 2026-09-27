@@ -123,6 +123,10 @@ jobs:
             # d'émettre des billets gratuits.
             echo "🔐 Génération de .env.prod..."
             umask 077
+            # Clé du projet ticketick sur aimanager, déposée sur le GB10 et
+            # jamais transmise par GitHub. Absente : l'import de plan reste
+            # utilisable, sans lecture de la légende par l'IA.
+            LITELLM_API_KEY=$(cat "$HOME/.secrets/ticketick_ai_key" 2>/dev/null || true)
             cat > "$APP_DIR/.env.prod" <<EOF
             NODE_ENV=production
             NEXT_PUBLIC_APP_URL=https://ticketick.ch
@@ -145,6 +149,8 @@ jobs:
             SMTP_PASS=${SMTP_PASS:-}
             MAIL_FROM=ticketick <ticket@ticketick.ch>
             MAIL_TO=${MAIL_TO:-info@ticketick.ch}
+            LITELLM_API_URL=http://172.17.0.1:4010/v1/chat/completions
+            LITELLM_API_KEY=${LITELLM_API_KEY}
             EOF
             cp "$APP_DIR/.env.prod" "$APP_DIR/.env"
             echo "   ✅ .env.prod créé"
