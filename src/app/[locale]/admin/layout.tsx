@@ -10,6 +10,7 @@ import {
   ScanLine,
   UserPlus,
   Wallet,
+  BadgePercent,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/dal";
@@ -52,6 +53,7 @@ export default async function AdminLayout({
     ...(viewer
       ? []
       : [
+          { href: "/admin/discounts", label: t("nav.discounts"), icon: BadgePercent },
           { href: "/admin/team", label: t("nav.team"), icon: UserPlus },
           { href: "/door", label: t("nav.door"), icon: ScanLine },
           { href: "/admin/settings", label: t("nav.settings"), icon: Settings },

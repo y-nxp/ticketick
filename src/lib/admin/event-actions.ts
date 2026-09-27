@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { Prisma, type EventStatus, type EventVisibility } from "@prisma/client";
 import { catalogActor } from "@/lib/admin/access";
 import { prisma } from "@/lib/prisma";
+import { readLayout } from "@/lib/seating/layout";
+import { syncSessionSeats } from "@/lib/seating/seats";
 import { saveUploadedImage, UploadError } from "@/lib/uploads";
 import {
   failure,
@@ -99,7 +101,10 @@ export async function saveEvent(
 
   const acceptCard = readBoolean(data, "acceptCard");
   const acceptIban = readBoolean(data, "acceptIban");
-  if (!acceptCard && !acceptIban) return failure("paymentRequired");
+  const acceptPaypal = readBoolean(data, "acceptPaypal");
+  if (!acceptCard && !acceptIban && !acceptPaypal) {
+    return failure("paymentRequired");
+  }
 
   if (id && scoped) {
     const current = await prisma.event.findUnique({
@@ -121,6 +126,7 @@ export async function saveEvent(
     coverImage: readOptionalText(data, "coverImage") ?? null,
     acceptCard,
     acceptIban,
+    acceptPaypal,
   };
 
   const liens = categoryIds.map((cid) => ({ id: cid }));
@@ -241,12 +247,35 @@ export async function saveSession(
     if (n === null || n < 1) return failure("capacityInvalid");
     capacity = n;
   }
-  if (id && capacity !== null) {
-    const actuel = await prisma.eventSession.findUnique({
-      where: { id },
-      select: { sold: true },
+  const actuel = id
+    ? await prisma.eventSession.findFirst({
+        where: { id, eventId },
+        select: { sold: true, seatPlanId: true },
+      })
+    : null;
+  if (id && !actuel) return failure("notFound");
+  if (actuel && capacity !== null && capacity < actuel.sold) {
+    return failure("capacityBelowSold");
+  }
+
+  const venueId = readOptionalText(data, "venueId") ?? null;
+  const seatPlanId = readOptionalText(data, "seatPlanId") ?? null;
+  const planChanged = (actuel?.seatPlanId ?? null) !== seatPlanId;
+  // Les billets déjà vendus portent (ou non) une place : changer de plan les
+  // rendrait incohérents avec la salle.
+  if (planChanged && actuel && actuel.sold > 0) {
+    return failure("seatPlanHasSales");
+  }
+  if (seatPlanId) {
+    const plan = await prisma.seatPlan.findUnique({
+      where: { id: seatPlanId },
+      select: { venueId: true, layout: true },
     });
-    if (actuel && capacity < actuel.sold) return failure("capacityBelowSold");
+    const layout = readLayout(plan?.layout);
+    if (!plan || !layout) return failure("seatPlanInvalid");
+    if (plan.venueId !== venueId) return failure("seatPlanVenueMismatch");
+    if (capacity === null) capacity = layout.seats.length;
+    if (capacity > layout.seats.length) return failure("capacityAbovePlan");
   }
 
   const acceptCard = readOverride(data, "acceptCard");
@@ -257,12 +286,14 @@ export async function saveSession(
 
   const spectacle = await prisma.event.findUnique({
     where: { id: eventId },
-    select: { acceptCard: true, acceptIban: true },
+    select: { acceptCard: true, acceptIban: true, acceptPaypal: true },
   });
   if (!spectacle) return failure("notFound");
   const carte = acceptCard ?? spectacle.acceptCard;
   const virement = acceptIban ?? spectacle.acceptIban;
-  if (!carte && !virement) return failure("paymentRequired");
+  if (!carte && !virement && !spectacle.acceptPaypal) {
+    return failure("paymentRequired");
+  }
 
   const fields = {
     startsAt,
@@ -270,16 +301,30 @@ export async function saveSession(
     doorsAt: doorsAt ?? null,
     status,
     label: Object.keys(label).length > 0 ? label : Prisma.DbNull,
-    venueId: readOptionalText(data, "venueId") ?? null,
+    venueId,
+    seatPlanId,
     capacity,
     acceptCard,
     acceptIban,
   };
 
   try {
-    const row = id
-      ? await prisma.eventSession.update({ where: { id }, data: fields })
-      : await prisma.eventSession.create({ data: { ...fields, eventId } });
+    const row = await prisma.$transaction(async (tx) => {
+      const saved = id
+        ? await tx.eventSession.update({ where: { id }, data: fields })
+        : await tx.eventSession.create({ data: { ...fields, eventId } });
+      if (planChanged && id) {
+        // Rien n'est vendu : les sièges et les zones de l'ancien plan
+        // (blocages invités compris) n'ont plus de sens.
+        await tx.sessionSeat.deleteMany({ where: { sessionId: id } });
+        await tx.ticketType.updateMany({
+          where: { sessionId: id },
+          data: { seatZones: [] },
+        });
+      }
+      if (seatPlanId) await syncSessionSeats(saved.id, tx);
+      return saved;
+    });
     refresh(eventId);
     return success(row.id);
   } catch (error) {
@@ -344,10 +389,36 @@ export async function saveTicketType(
   if (!sessionId) return failure("notFound");
   const seance = await prisma.eventSession.findUnique({
     where: { id: sessionId },
-    select: { eventId: true },
+    select: { eventId: true, seatPlan: { select: { layout: true } } },
   });
   if (!seance || !(await guardEvent(seance.eventId, scoped))) {
     return failure("forbiddenOrganizer");
+  }
+
+  // Toutes les zones cochées revient à n'en restreindre aucune : on stocke
+  // alors une liste vide, qui reste valable si le plan gagne une zone.
+  const layout = readLayout(seance.seatPlan?.layout);
+  let seatZones: string[] = [];
+  if (layout) {
+    const known = new Set(layout.zones.map((z) => z.key));
+    const picked = new Set(
+      data.getAll("seatZones").filter((v): v is string => typeof v === "string" && known.has(v)),
+    );
+    if (picked.size === 0) return failure("seatZonesRequired");
+    if (picked.size < known.size) seatZones = [...picked];
+  }
+
+  const requiresAttendee = readBoolean(data, "requiresAttendee");
+  const maxAgeRaw = readText(data, "maxAgeYears");
+  let maxAgeYears: number | null = null;
+  if (maxAgeRaw !== "") {
+    const n = readInteger(data, "maxAgeYears");
+    if (n === null || n < 1 || n > 120) return failure("ageInvalid");
+    maxAgeYears = n;
+  }
+  // L'âge se contrôle sur la date de naissance saisie pour chaque billet.
+  if (maxAgeYears !== null && !requiresAttendee) {
+    return failure("ageNeedsAttendee");
   }
   if (!name.fr) return failure("nameRequired");
   if (priceCents === null) return failure("priceInvalid");
@@ -402,6 +473,9 @@ export async function saveTicketType(
     maxPerOrder,
     maxPerPaidTicket,
     companionOfId,
+    seatZones,
+    requiresAttendee,
+    maxAgeYears,
     salesStartAt: salesStartAt ?? null,
     salesEndAt: salesEndAt ?? null,
   };

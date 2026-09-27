@@ -16,7 +16,7 @@ import { syncSessionSeats } from "@/lib/seating/seats";
 export async function getReferenceData() {
   const { organizerId } = await catalogActor();
 
-  const [organizers, venues, categories] = await Promise.all([
+  const [organizers, venues, categories, plans] = await Promise.all([
     prisma.organizer.findMany({
       where: organizerId ? { id: organizerId } : undefined,
       orderBy: { name: "asc" },
@@ -65,9 +65,29 @@ export async function getReferenceData() {
         _count: { select: { events: true } },
       },
     }),
+    prisma.seatPlan.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, venueId: true, layout: true },
+    }),
   ]);
 
-  return { organizers, venues, categories };
+  // Le plan complet pèse plusieurs centaines de sièges : les formulaires n'ont
+  // besoin que des zones et du nombre de places.
+  const seatPlans = plans.flatMap((p) => {
+    const layout = readLayout(p.layout);
+    if (!layout) return [];
+    return [
+      {
+        id: p.id,
+        name: p.name,
+        venueId: p.venueId,
+        seatCount: layout.seats.length,
+        zones: layout.zones.map((z) => ({ key: z.key, name: z.name, color: z.color })),
+      },
+    ];
+  });
+
+  return { organizers, venues, categories, seatPlans };
 }
 
 export type ReferenceData = Awaited<ReturnType<typeof getReferenceData>>;
@@ -90,6 +110,7 @@ export async function getEventForEdit(id: string) {
       coverImage: true,
       acceptCard: true,
       acceptIban: true,
+      acceptPaypal: true,
       organizerId: true,
       organizer: { select: { slug: true, name: true } },
       categories: { select: { id: true } },
@@ -147,6 +168,9 @@ export async function getEventForEdit(id: string) {
               maxPerOrder: true,
               maxPerPaidTicket: true,
               companionOfId: true,
+              seatZones: true,
+              requiresAttendee: true,
+              maxAgeYears: true,
               salesStartAt: true,
               salesEndAt: true,
             },
@@ -190,3 +214,38 @@ export async function getSessionSeats(eventId: string, sessionId: string) {
   });
   return { session, layout, seats };
 }
+
+/**
+ * Rabais automatiques (sans code), ceux que la commande sait appliquer :
+ * N séances payantes distinctes chez un organisateur, éventuellement dans un
+ * même lieu.
+ */
+export async function getAutoDiscounts() {
+  const { organizerId } = await catalogActor();
+  return prisma.discount.findMany({
+    where: {
+      code: null,
+      minDistinctSessions: { not: null },
+      organizerId: organizerId ?? { not: null },
+    },
+    orderBy: [{ active: "desc" }, { createdAt: "asc" }],
+    select: {
+      id: true,
+      label: true,
+      type: true,
+      value: true,
+      organizerId: true,
+      venueId: true,
+      minDistinctSessions: true,
+      minAmountCents: true,
+      validFrom: true,
+      validUntil: true,
+      active: true,
+      organizer: { select: { name: true } },
+      venue: { select: { name: true, city: true } },
+      _count: { select: { orders: true } },
+    },
+  });
+}
+
+export type AutoDiscount = Awaited<ReturnType<typeof getAutoDiscounts>>[number];

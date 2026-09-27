@@ -488,7 +488,8 @@
       "inquiries": "Demandes",
       "door": "Contrôle",
       "team": "Équipe",
-      "paypal": "PayPal"
+      "paypal": "PayPal",
+      "discounts": "Rabais"
     },
     "overview": {
       "title": "Vue d’ensemble",
@@ -685,7 +686,18 @@
         "imageTooLarge": "L’image dépasse 4 Mo.",
         "imageType": "Envoyez un PNG, un JPEG ou un WebP.",
         "forbiddenOrganizer": "Cet élément ne vous appartient pas.",
-        "venueHasSessions": "Ce lieu est encore utilisé par des séances."
+        "venueHasSessions": "Ce lieu est encore utilisé par des séances.",
+        "seatPlanInvalid": "Ce plan de salle n’existe pas ou est illisible.",
+        "seatPlanVenueMismatch": "Le plan de salle doit appartenir au lieu de la séance.",
+        "seatPlanHasSales": "Des billets sont déjà vendus : le plan de salle ne peut plus changer.",
+        "capacityAbovePlan": "La jauge dépasse le nombre de sièges du plan.",
+        "seatZonesRequired": "Cochez au moins une zone du plan.",
+        "ageInvalid": "L’âge maximum doit être un entier entre 1 et 120.",
+        "ageNeedsAttendee": "Un âge maximum exige les nom et date de naissance obligatoires.",
+        "discountValueInvalid": "Indiquez un pourcentage entre 0 et 100, ou un montant supérieur à zéro.",
+        "discountMinSessionsInvalid": "Le nombre de séances doit être un entier d’au moins 1.",
+        "validityInvalid": "Période de validité invalide : la fin doit suivre le début.",
+        "discountHasOrders": "Ce rabais a déjà été accordé sur des commandes : désactivez-le plutôt."
       }
     },
     "settings": {
@@ -777,10 +789,11 @@
       "categories": "Catégories",
       "featured": "Mettre en avant sur l’accueil",
       "payments": "Moyens de paiement",
-      "paymentsHint": "Au moins un doit rester actif. Une séance peut encore restreindre.",
+      "paymentsHint": "Au moins un doit rester actif. PayPal n’est proposé que si le compte PayPal de l’organisateur est configuré. Une séance peut encore restreindre la carte et le virement.",
       "acceptCard": "Carte",
       "acceptIban": "Virement IBAN",
-      "delete": "Supprimer le spectacle"
+      "delete": "Supprimer le spectacle",
+      "acceptPaypal": "PayPal"
     },
     "embed": {
       "title": "Intégrer la billetterie",
@@ -820,7 +833,11 @@
       "inheritPayment": "Comme le spectacle ({state})",
       "paymentOn": "oui",
       "paymentOff": "non",
-      "seats": "Places"
+      "seats": "Places",
+      "seatPlan": "Plan de salle",
+      "seatPlanNone": "Aucun (placement libre)",
+      "seatPlanHint": "Places numérotées : le plan doit appartenir au lieu choisi. Jauge vide = nombre de sièges du plan. Non modifiable une fois des billets vendus.",
+      "seatPlanOption": "{name} — {venue} ({seats} places)"
     },
     "options": {
       "title": "Options de commande",
@@ -870,7 +887,15 @@
       "companionOfHint": "Zone qui ouvre droit à la gratuité, ex. deux places par billet « Zone 1 ». Sans choix, n’importe quel billet payant compte.",
       "salesStartAt": "Ouverture des ventes",
       "salesEndAt": "Clôture des ventes",
-      "optional": "Facultatif"
+      "optional": "Facultatif",
+      "maxAgeYears": "Âge maximum",
+      "maxAgeHint": "Âge exclu le jour de la séance : 25 = moins de 25 ans. Exige les nom et date de naissance.",
+      "requiresAttendee": "Nom et date de naissance obligatoires pour chaque billet",
+      "requiresAttendeeHint": "Demandés au paiement, imprimés sur le billet et affichés au contrôle, pour vérifier une pièce d’identité.",
+      "seatZones": "Zones du plan où ce tarif se vend",
+      "seatZonesHint": "Décochez les catégories exclues, par exemple Premium et Cat. 1 pour une gratuité.",
+      "attendeeRequired": "Nominatif",
+      "attendeeUnderAge": "Nominatif, moins de {age} ans"
     },
     "inquiries": {
       "title": "Demandes d’organisateurs",
@@ -942,6 +967,38 @@
         "secretRequired": "Le Secret est obligatoire.",
         "credentials": "PayPal refuse ce Client ID / Secret. Vérifiez la paire et le mode (production ou sandbox)."
       }
+    },
+    "discounts": {
+      "title": "Rabais",
+      "subtitle": "Rabais appliqués automatiquement, sans code, dès qu’une commande réunit assez de séances payantes différentes.",
+      "empty": "Aucun rabais automatique.",
+      "add": "Ajouter un rabais",
+      "edit": "Modifier",
+      "delete": "Supprimer ce rabais",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "summary": "{amount} dès {n, plural, =1 {une séance payante} other {# séances payantes}} · {organizer}",
+      "atVenue": "uniquement à {venue}",
+      "usedOn": "{n, plural, =0 {jamais utilisé} =1 {une commande} other {# commandes}}",
+      "label": "Libellé",
+      "labelHint": "Affiché au panier, sur la commande et au paiement.",
+      "organizer": "Organisateur",
+      "chooseOrganizer": "Choisir…",
+      "venue": "Lieu",
+      "venueHint": "Seules les séances de ce lieu comptent et sont réduites.",
+      "anyVenue": "Tous les lieux de l’organisateur",
+      "type": "Type",
+      "typePercentage": "Pourcentage",
+      "typeFixed": "Montant fixe (CHF)",
+      "value": "Valeur",
+      "valueHint": "15 = 15 % ; ou un montant en francs pour un rabais fixe.",
+      "minDistinctSessions": "Séances payantes distinctes",
+      "minDistinctSessionsHint": "Nombre de concerts différents à réunir dans la commande. Les billets gratuits ne comptent pas.",
+      "minAmount": "Montant minimum (CHF)",
+      "optional": "Facultatif",
+      "validFrom": "Valable dès",
+      "validUntil": "Valable jusqu’au",
+      "activeLabel": "Actif"
     },
     "seats": {
       "back": "← Retour au spectacle",

@@ -488,7 +488,8 @@
       "inquiries": "Richieste",
       "door": "Controllo",
       "team": "Team",
-      "paypal": "PayPal"
+      "paypal": "PayPal",
+      "discounts": "Sconti"
     },
     "overview": {
       "title": "Panoramica",
@@ -685,7 +686,18 @@
         "imageTooLarge": "L’immagine supera 4 MB.",
         "imageType": "Invii un PNG, un JPEG o un WebP.",
         "forbiddenOrganizer": "Questo elemento non le appartiene.",
-        "venueHasSessions": "Questo luogo è ancora usato da delle repliche."
+        "venueHasSessions": "Questo luogo è ancora usato da delle repliche.",
+        "seatPlanInvalid": "Questa pianta non esiste o non è leggibile.",
+        "seatPlanVenueMismatch": "La pianta deve appartenere al luogo della data.",
+        "seatPlanHasSales": "Sono già stati venduti biglietti: la pianta non può più cambiare.",
+        "capacityAbovePlan": "La capienza supera il numero di posti della pianta.",
+        "seatZonesRequired": "Selezionare almeno una zona della pianta.",
+        "ageInvalid": "L’età massima deve essere un numero intero tra 1 e 120.",
+        "ageNeedsAttendee": "Un’età massima richiede nome e data di nascita obbligatori.",
+        "discountValueInvalid": "Indicare una percentuale tra 0 e 100 o un importo superiore a zero.",
+        "discountMinSessionsInvalid": "Il numero di date deve essere un intero di almeno 1.",
+        "validityInvalid": "Periodo di validità non valido: la fine deve seguire l’inizio.",
+        "discountHasOrders": "Questo sconto è già stato concesso su ordini: disattivarlo invece."
       }
     },
     "settings": {
@@ -777,10 +789,11 @@
       "categories": "Categorie",
       "featured": "Metti in evidenza in home",
       "payments": "Mezzi di pagamento",
-      "paymentsHint": "Almeno uno deve restare attivo. Una replica può ancora restringerli.",
+      "paymentsHint": "Almeno uno deve restare attivo. PayPal è proposto solo se il conto PayPal dell’organizzatore è configurato. Una data può ancora limitare carta e bonifico.",
       "acceptCard": "Carta",
       "acceptIban": "Bonifico IBAN",
-      "delete": "Elimina lo spettacolo"
+      "delete": "Elimina lo spettacolo",
+      "acceptPaypal": "PayPal"
     },
     "embed": {
       "title": "Integrare la biglietteria",
@@ -820,7 +833,11 @@
       "inheritPayment": "Come lo spettacolo ({state})",
       "paymentOn": "sì",
       "paymentOff": "no",
-      "seats": "Posti"
+      "seats": "Posti",
+      "seatPlan": "Pianta della sala",
+      "seatPlanNone": "Nessuna (posti liberi)",
+      "seatPlanHint": "Posti numerati: la pianta deve appartenere al luogo scelto. Capienza vuota = numero di posti della pianta. Non modificabile dopo la prima vendita.",
+      "seatPlanOption": "{name} — {venue} ({seats} posti)"
     },
     "options": {
       "title": "Opzioni d’ordine",
@@ -870,7 +887,15 @@
       "companionOfHint": "La zona che dà diritto alla gratuità, es. due posti per biglietto « Zona 1 ». Senza scelta, vale qualsiasi biglietto a pagamento.",
       "salesStartAt": "Apertura vendite",
       "salesEndAt": "Chiusura vendite",
-      "optional": "Facoltativo"
+      "optional": "Facoltativo",
+      "maxAgeYears": "Età massima",
+      "maxAgeHint": "Età esclusa il giorno della data: 25 = meno di 25 anni. Richiede nome e data di nascita.",
+      "requiresAttendee": "Nome e data di nascita obbligatori per ogni biglietto",
+      "requiresAttendeeHint": "Richiesti al pagamento, stampati sul biglietto e mostrati al controllo per verificare un documento d’identità.",
+      "seatZones": "Zone della pianta in cui si vende questa tariffa",
+      "seatZonesHint": "Deselezionare le categorie escluse, ad es. Premium e Cat. 1 per una gratuità.",
+      "attendeeRequired": "Nominativo",
+      "attendeeUnderAge": "Nominativo, meno di {age} anni"
     },
     "inquiries": {
       "title": "Richieste organizzatori",
@@ -942,6 +967,38 @@
         "secretRequired": "Il Secret è obbligatorio.",
         "credentials": "PayPal rifiuta questo Client ID / Secret. Verificate la coppia e la modalità (produzione o sandbox)."
       }
+    },
+    "discounts": {
+      "title": "Sconti",
+      "subtitle": "Sconti applicati automaticamente, senza codice, non appena un ordine riunisce abbastanza date a pagamento diverse.",
+      "empty": "Nessuno sconto automatico.",
+      "add": "Aggiungi uno sconto",
+      "edit": "Modifica",
+      "delete": "Elimina questo sconto",
+      "active": "Attivo",
+      "inactive": "Inattivo",
+      "summary": "{amount} da {n, plural, =1 {una data a pagamento} other {# date a pagamento}} · {organizer}",
+      "atVenue": "solo a {venue}",
+      "usedOn": "{n, plural, =0 {mai usato} =1 {un ordine} other {# ordini}}",
+      "label": "Etichetta",
+      "labelHint": "Mostrata nel carrello, sull’ordine e al pagamento.",
+      "organizer": "Organizzatore",
+      "chooseOrganizer": "Scegliere…",
+      "venue": "Luogo",
+      "venueHint": "Contano e sono scontate solo le date in questo luogo.",
+      "anyVenue": "Tutti i luoghi dell’organizzatore",
+      "type": "Tipo",
+      "typePercentage": "Percentuale",
+      "typeFixed": "Importo fisso (CHF)",
+      "value": "Valore",
+      "valueHint": "15 = 15%; oppure un importo in franchi per uno sconto fisso.",
+      "minDistinctSessions": "Date a pagamento distinte",
+      "minDistinctSessionsHint": "Numero di concerti diversi da riunire nell’ordine. I biglietti gratuiti non contano.",
+      "minAmount": "Importo minimo (CHF)",
+      "optional": "Facoltativo",
+      "validFrom": "Valido dal",
+      "validUntil": "Valido fino al",
+      "activeLabel": "Attivo"
     },
     "seats": {
       "back": "← Torna allo spettacolo",

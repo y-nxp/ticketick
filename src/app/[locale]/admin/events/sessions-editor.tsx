@@ -7,6 +7,7 @@ import { Plus, Pencil, Trash2, X, Ticket, Armchair } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
+  Checkbox,
   Field,
   FormFeedback,
   Select,
@@ -28,6 +29,7 @@ const STATUSES = ["PUBLISHED", "DRAFT", "CANCELLED", "SOLD_OUT", "PAST"] as cons
 
 type Session = EventForEdit["sessions"][number];
 type TicketType = Session["ticketTypes"][number];
+type SeatPlanRef = ReferenceData["seatPlans"][number];
 
 /**
  * Séances d'un spectacle et tarifs de chaque séance.
@@ -66,6 +68,7 @@ export function SessionsEditor({
                 eventId={event.id}
                 session={s}
                 venues={reference.venues}
+                seatPlans={reference.seatPlans}
                 eventAcceptCard={event.acceptCard}
                 eventAcceptIban={event.acceptIban}
                 onClose={() => setEdite(null)}
@@ -75,6 +78,7 @@ export function SessionsEditor({
                 eventId={event.id}
                 session={s}
                 venues={reference.venues}
+                plan={reference.seatPlans.find((p) => p.id === s.seatPlanId)}
                 onEdit={() => setEdite(s.id)}
               />
             )}
@@ -86,6 +90,7 @@ export function SessionsEditor({
             <SessionForm
               eventId={event.id}
               venues={reference.venues}
+              seatPlans={reference.seatPlans}
               eventAcceptCard={event.acceptCard}
               eventAcceptIban={event.acceptIban}
               onClose={() => setAjout(false)}
@@ -106,11 +111,13 @@ function SessionRow({
   eventId,
   session,
   venues,
+  plan,
   onEdit,
 }: {
   eventId: string;
   session: Session;
   venues: ReferenceData["venues"];
+  plan?: SeatPlanRef;
   onEdit: () => void;
 }) {
   const t = useTranslations("admin.sessions");
@@ -143,6 +150,7 @@ function SessionRow({
                   total: session.capacity,
                 })
               : t("soldOf", { sold: vendus, total: offre })}
+            {plan ? ` · ${plan.name}` : null}
           </p>
         </div>
         {session.seatPlanId ? (
@@ -165,7 +173,7 @@ function SessionRow({
         />
       </div>
 
-      <TicketTypesEditor session={session} />
+      <TicketTypesEditor session={session} plan={plan} />
     </>
   );
 }
@@ -180,6 +188,7 @@ function SessionForm({
   eventId,
   session,
   venues,
+  seatPlans,
   eventAcceptCard,
   eventAcceptIban,
   onClose,
@@ -187,6 +196,7 @@ function SessionForm({
   eventId: string;
   session?: Session;
   venues: ReferenceData["venues"];
+  seatPlans: SeatPlanRef[];
   eventAcceptCard: boolean;
   eventAcceptIban: boolean;
   onClose: () => void;
@@ -254,6 +264,26 @@ function SessionForm({
             defaultValue={session?.capacity ?? ""}
           />
         </Field>
+        {seatPlans.length > 0 ? (
+          <Field label={t("seatPlan")} hint={t("seatPlanHint")}>
+            <Select
+              name="seatPlanId"
+              defaultValue={session?.seatPlanId}
+              emptyLabel={t("seatPlanNone")}
+              options={seatPlans.map((p) => {
+                const venue = venues.find((v) => v.id === p.venueId);
+                return {
+                  value: p.id,
+                  label: t("seatPlanOption", {
+                    name: p.name,
+                    venue: venue ? `${venue.name}, ${venue.city}` : "—",
+                    seats: p.seatCount,
+                  }),
+                };
+              })}
+            />
+          </Field>
+        ) : null}
       </div>
 
       <TranslatedField
@@ -328,7 +358,13 @@ function SessionForm({
 
 // ─────────────────────────────── Tarifs
 
-function TicketTypesEditor({ session }: { session: Session }) {
+function TicketTypesEditor({
+  session,
+  plan,
+}: {
+  session: Session;
+  plan?: SeatPlanRef;
+}) {
   const t = useTranslations("admin.tickets");
   const [ajout, setAjout] = React.useState(false);
   const [edite, setEdite] = React.useState<string | null>(null);
@@ -352,6 +388,7 @@ function TicketTypesEditor({ session }: { session: Session }) {
                 sessionId={session.id}
                 ticket={tt}
                 sources={paidTickets(session, tt.id)}
+                plan={plan}
                 onClose={() => setEdite(null)}
               />
             </div>
@@ -359,6 +396,7 @@ function TicketTypesEditor({ session }: { session: Session }) {
             <TicketTypeRow
               key={tt.id}
               ticket={tt}
+              plan={plan}
               onEdit={() => setEdite(tt.id)}
             />
           ),
@@ -369,6 +407,7 @@ function TicketTypesEditor({ session }: { session: Session }) {
             <TicketTypeForm
               sessionId={session.id}
               sources={paidTickets(session)}
+              plan={plan}
               onClose={() => setAjout(false)}
             />
           </div>
@@ -402,17 +441,39 @@ function paidTickets(session: Session, exclude?: string): TicketType[] {
 
 function TicketTypeRow({
   ticket,
+  plan,
   onEdit,
 }: {
   ticket: TicketType;
+  plan?: SeatPlanRef;
   onEdit: () => void;
 }) {
   const t = useTranslations("admin.tickets");
   const nom = ticketName(ticket);
+  const details = [
+    plan && ticket.seatZones.length > 0
+      ? plan.zones
+          .filter((z) => ticket.seatZones.includes(z.key))
+          .map((z) => z.name.fr)
+          .join(", ")
+      : null,
+    ticket.requiresAttendee
+      ? ticket.maxAgeYears
+        ? t("attendeeUnderAge", { age: ticket.maxAgeYears })
+        : t("attendeeRequired")
+      : null,
+  ].filter(Boolean);
 
   return (
     <div className="flex items-center gap-3 rounded-lg bg-muted/40 px-3 py-2">
-      <span className="min-w-0 flex-1 truncate text-sm">{nom}</span>
+      <span className="min-w-0 flex-1 text-sm">
+        <span className="block truncate">{nom}</span>
+        {details.length > 0 ? (
+          <span className="block truncate text-xs text-muted-foreground">
+            {details.join(" · ")}
+          </span>
+        ) : null}
+      </span>
       <span className="shrink-0 text-sm font-medium">
         {formatPrice(ticket.priceCents)}
       </span>
@@ -435,12 +496,14 @@ function TicketTypeForm({
   sessionId,
   ticket,
   sources,
+  plan,
   onClose,
 }: {
   sessionId: string;
   ticket?: TicketType;
   /** Tarifs payants de la séance, pour rattacher une gratuité à l'un d'eux. */
   sources: TicketType[];
+  plan?: SeatPlanRef;
   onClose: () => void;
 }) {
   const t = useTranslations("admin.tickets");
@@ -522,7 +585,54 @@ function TicketTypeForm({
             defaultValue={toZurichInput(ticket?.salesEndAt)}
           />
         </Field>
+        <Field label={t("maxAgeYears")} hint={t("maxAgeHint")}>
+          <TextInput
+            name="maxAgeYears"
+            type="number"
+            min="1"
+            defaultValue={ticket?.maxAgeYears ?? ""}
+          />
+        </Field>
       </div>
+
+      <div>
+        <Checkbox
+          name="requiresAttendee"
+          label={t("requiresAttendee")}
+          defaultChecked={ticket?.requiresAttendee ?? false}
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          {t("requiresAttendeeHint")}
+        </p>
+      </div>
+
+      {plan ? (
+        <fieldset>
+          <legend className="text-sm font-medium">{t("seatZones")}</legend>
+          <p className="mt-1 text-xs text-muted-foreground">{t("seatZonesHint")}</p>
+          <div className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+            {plan.zones.map((z) => (
+              <label key={z.key} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  name="seatZones"
+                  value={z.key}
+                  defaultChecked={
+                    !ticket?.seatZones.length || ticket.seatZones.includes(z.key)
+                  }
+                  className="size-4 rounded border-border accent-[var(--primary)]"
+                />
+                <span
+                  aria-hidden
+                  className="size-3 rounded-sm border border-border"
+                  style={{ backgroundColor: z.color }}
+                />
+                {z.name.fr}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
 
       <FormFeedback state={state} />
 

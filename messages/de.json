@@ -488,7 +488,8 @@
       "inquiries": "Anfragen",
       "door": "Kontrolle",
       "team": "Team",
-      "paypal": "PayPal"
+      "paypal": "PayPal",
+      "discounts": "Rabatte"
     },
     "overview": {
       "title": "Übersicht",
@@ -685,7 +686,18 @@
         "imageTooLarge": "Das Bild ist grösser als 4 MB.",
         "imageType": "Senden Sie ein PNG, JPEG oder WebP.",
         "forbiddenOrganizer": "Dieses Element gehört Ihnen nicht.",
-        "venueHasSessions": "Dieser Ort wird noch von Vorstellungen genutzt."
+        "venueHasSessions": "Dieser Ort wird noch von Vorstellungen genutzt.",
+        "seatPlanInvalid": "Dieser Saalplan existiert nicht oder ist nicht lesbar.",
+        "seatPlanVenueMismatch": "Der Saalplan muss zum Ort der Vorstellung gehören.",
+        "seatPlanHasSales": "Es wurden bereits Tickets verkauft: Der Saalplan kann nicht mehr geändert werden.",
+        "capacityAbovePlan": "Die Kapazität übersteigt die Anzahl Sitze im Plan.",
+        "seatZonesRequired": "Mindestens eine Zone des Plans auswählen.",
+        "ageInvalid": "Das Höchstalter muss eine ganze Zahl zwischen 1 und 120 sein.",
+        "ageNeedsAttendee": "Ein Höchstalter setzt voraus, dass Name und Geburtsdatum Pflicht sind.",
+        "discountValueInvalid": "Einen Prozentsatz zwischen 0 und 100 oder einen Betrag über null angeben.",
+        "discountMinSessionsInvalid": "Die Anzahl Vorstellungen muss eine ganze Zahl von mindestens 1 sein.",
+        "validityInvalid": "Ungültiger Gültigkeitszeitraum: Das Ende muss nach dem Beginn liegen.",
+        "discountHasOrders": "Dieser Rabatt wurde bereits auf Bestellungen gewährt: stattdessen deaktivieren."
       }
     },
     "settings": {
@@ -777,10 +789,11 @@
       "categories": "Kategorien",
       "featured": "Auf der Startseite hervorheben",
       "payments": "Zahlungsarten",
-      "paymentsHint": "Mindestens eine muss aktiv bleiben. Eine Vorstellung kann sie weiter einschränken.",
+      "paymentsHint": "Mindestens eine Zahlungsart muss aktiv bleiben. PayPal wird nur angeboten, wenn das PayPal-Konto des Veranstalters eingerichtet ist. Eine Vorstellung kann Karte und Überweisung weiter einschränken.",
       "acceptCard": "Karte",
       "acceptIban": "IBAN-Überweisung",
-      "delete": "Veranstaltung löschen"
+      "delete": "Veranstaltung löschen",
+      "acceptPaypal": "PayPal"
     },
     "embed": {
       "title": "Ticketverkauf einbinden",
@@ -820,7 +833,11 @@
       "inheritPayment": "Wie die Veranstaltung ({state})",
       "paymentOn": "ja",
       "paymentOff": "nein",
-      "seats": "Plätze"
+      "seats": "Plätze",
+      "seatPlan": "Saalplan",
+      "seatPlanNone": "Keiner (freie Platzwahl)",
+      "seatPlanHint": "Nummerierte Plätze: Der Plan muss zum gewählten Ort gehören. Leere Kapazität = Anzahl Sitze im Plan. Nach dem ersten Verkauf nicht mehr änderbar.",
+      "seatPlanOption": "{name} — {venue} ({seats} Plätze)"
     },
     "options": {
       "title": "Bestelloptionen",
@@ -870,7 +887,15 @@
       "companionOfHint": "Die Zone, die den Anspruch eröffnet, z. B. zwei Plätze pro Ticket „Zone 1“. Ohne Auswahl zählt jedes bezahlte Ticket.",
       "salesStartAt": "Verkaufsstart",
       "salesEndAt": "Verkaufsende",
-      "optional": "Optional"
+      "optional": "Optional",
+      "maxAgeYears": "Höchstalter",
+      "maxAgeHint": "Alter am Tag der Vorstellung, ausgeschlossen: 25 = unter 25 Jahren. Erfordert Name und Geburtsdatum.",
+      "requiresAttendee": "Name und Geburtsdatum für jedes Ticket erforderlich",
+      "requiresAttendeeHint": "Beim Bezahlen abgefragt, auf dem Ticket gedruckt und bei der Kontrolle angezeigt, um einen Ausweis zu prüfen.",
+      "seatZones": "Zonen des Plans, in denen dieser Tarif verkauft wird",
+      "seatZonesHint": "Ausgeschlossene Kategorien abwählen, z. B. Premium und Kat. 1 für eine Freikarte.",
+      "attendeeRequired": "Personalisiert",
+      "attendeeUnderAge": "Personalisiert, unter {age} Jahren"
     },
     "inquiries": {
       "title": "Veranstalteranfragen",
@@ -942,6 +967,38 @@
         "secretRequired": "Das Secret ist erforderlich.",
         "credentials": "PayPal lehnt diese Client ID / dieses Secret ab. Prüfen Sie das Paar und den Modus (Produktion oder Sandbox)."
       }
+    },
+    "discounts": {
+      "title": "Rabatte",
+      "subtitle": "Rabatte, die automatisch und ohne Code gelten, sobald eine Bestellung genügend verschiedene bezahlte Vorstellungen umfasst.",
+      "empty": "Kein automatischer Rabatt.",
+      "add": "Rabatt hinzufügen",
+      "edit": "Bearbeiten",
+      "delete": "Diesen Rabatt löschen",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "summary": "{amount} ab {n, plural, =1 {einer bezahlten Vorstellung} other {# bezahlten Vorstellungen}} · {organizer}",
+      "atVenue": "nur in {venue}",
+      "usedOn": "{n, plural, =0 {nie verwendet} =1 {eine Bestellung} other {# Bestellungen}}",
+      "label": "Bezeichnung",
+      "labelHint": "Im Warenkorb, auf der Bestellung und beim Bezahlen angezeigt.",
+      "organizer": "Veranstalter",
+      "chooseOrganizer": "Auswählen…",
+      "venue": "Ort",
+      "venueHint": "Nur Vorstellungen an diesem Ort zählen und werden reduziert.",
+      "anyVenue": "Alle Orte des Veranstalters",
+      "type": "Art",
+      "typePercentage": "Prozentsatz",
+      "typeFixed": "Fester Betrag (CHF)",
+      "value": "Wert",
+      "valueHint": "15 = 15 %; oder ein Betrag in Franken für einen festen Rabatt.",
+      "minDistinctSessions": "Verschiedene bezahlte Vorstellungen",
+      "minDistinctSessionsHint": "Anzahl verschiedener Konzerte, die die Bestellung enthalten muss. Freikarten zählen nicht.",
+      "minAmount": "Mindestbetrag (CHF)",
+      "optional": "Optional",
+      "validFrom": "Gültig ab",
+      "validUntil": "Gültig bis",
+      "activeLabel": "Aktiv"
     },
     "seats": {
       "back": "← Zurück zur Veranstaltung",

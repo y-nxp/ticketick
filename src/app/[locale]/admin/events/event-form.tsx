@@ -157,6 +157,11 @@ export function EventForm({
             label={t("acceptIban")}
             defaultChecked={event?.acceptIban ?? true}
           />
+          <Checkbox
+            name="acceptPaypal"
+            label={t("acceptPaypal")}
+            defaultChecked={event?.acceptPaypal ?? false}
+          />
         </div>
       </fieldset>
 

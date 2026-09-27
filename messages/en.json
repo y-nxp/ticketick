@@ -488,7 +488,8 @@
       "inquiries": "Inquiries",
       "door": "Door",
       "team": "Team",
-      "paypal": "PayPal"
+      "paypal": "PayPal",
+      "discounts": "Discounts"
     },
     "overview": {
       "title": "Overview",
@@ -685,7 +686,18 @@
         "imageTooLarge": "The image is larger than 4 MB.",
         "imageType": "Send a PNG, JPEG or WebP.",
         "forbiddenOrganizer": "This item does not belong to you.",
-        "venueHasSessions": "This venue is still used by sessions."
+        "venueHasSessions": "This venue is still used by sessions.",
+        "seatPlanInvalid": "This seating plan does not exist or cannot be read.",
+        "seatPlanVenueMismatch": "The seating plan must belong to the session’s venue.",
+        "seatPlanHasSales": "Tickets have already been sold: the seating plan can no longer change.",
+        "capacityAbovePlan": "Capacity exceeds the number of seats in the plan.",
+        "seatZonesRequired": "Tick at least one zone of the plan.",
+        "ageInvalid": "Maximum age must be a whole number between 1 and 120.",
+        "ageNeedsAttendee": "A maximum age requires name and date of birth to be mandatory.",
+        "discountValueInvalid": "Enter a percentage between 0 and 100, or an amount above zero.",
+        "discountMinSessionsInvalid": "The number of sessions must be a whole number of at least 1.",
+        "validityInvalid": "Invalid validity period: the end must come after the start.",
+        "discountHasOrders": "This discount has already been granted on orders: deactivate it instead."
       }
     },
     "settings": {
@@ -777,10 +789,11 @@
       "categories": "Categories",
       "featured": "Feature on the homepage",
       "payments": "Payment methods",
-      "paymentsHint": "At least one must stay on. A session can still restrict them.",
+      "paymentsHint": "At least one must stay enabled. PayPal is only offered once the organizer’s PayPal account is configured. A session can still restrict card and bank transfer.",
       "acceptCard": "Card",
       "acceptIban": "IBAN transfer",
-      "delete": "Delete the show"
+      "delete": "Delete the show",
+      "acceptPaypal": "PayPal"
     },
     "embed": {
       "title": "Embed ticketing",
@@ -820,7 +833,11 @@
       "inheritPayment": "Same as the show ({state})",
       "paymentOn": "on",
       "paymentOff": "off",
-      "seats": "Seats"
+      "seats": "Seats",
+      "seatPlan": "Seating plan",
+      "seatPlanNone": "None (free seating)",
+      "seatPlanHint": "Numbered seats: the plan must belong to the selected venue. Empty capacity = number of seats in the plan. Locked once tickets are sold.",
+      "seatPlanOption": "{name} — {venue} ({seats} seats)"
     },
     "options": {
       "title": "Order options",
@@ -870,7 +887,15 @@
       "companionOfHint": "The zone that grants the free seats, e.g. two seats per “Zone 1” ticket. Left empty, any paying ticket counts.",
       "salesStartAt": "Sales open",
       "salesEndAt": "Sales close",
-      "optional": "Optional"
+      "optional": "Optional",
+      "maxAgeYears": "Maximum age",
+      "maxAgeHint": "Age excluded on the day of the session: 25 = under 25. Requires name and date of birth.",
+      "requiresAttendee": "Name and date of birth required for each ticket",
+      "requiresAttendeeHint": "Asked at checkout, printed on the ticket and shown at the door so ID can be checked.",
+      "seatZones": "Plan zones where this rate is sold",
+      "seatZonesHint": "Untick excluded categories, e.g. Premium and Cat. 1 for a free rate.",
+      "attendeeRequired": "Named",
+      "attendeeUnderAge": "Named, under {age}"
     },
     "inquiries": {
       "title": "Organizer inquiries",
@@ -942,6 +967,38 @@
         "secretRequired": "The Secret is required.",
         "credentials": "PayPal rejects this Client ID / Secret. Check the pair and the mode (live or sandbox)."
       }
+    },
+    "discounts": {
+      "title": "Discounts",
+      "subtitle": "Discounts applied automatically, without a code, as soon as an order brings together enough different paid sessions.",
+      "empty": "No automatic discount.",
+      "add": "Add a discount",
+      "edit": "Edit",
+      "delete": "Delete this discount",
+      "active": "Active",
+      "inactive": "Inactive",
+      "summary": "{amount} from {n, plural, =1 {one paid session} other {# paid sessions}} · {organizer}",
+      "atVenue": "only at {venue}",
+      "usedOn": "{n, plural, =0 {never used} =1 {one order} other {# orders}}",
+      "label": "Label",
+      "labelHint": "Shown in the cart, on the order and at checkout.",
+      "organizer": "Organizer",
+      "chooseOrganizer": "Choose…",
+      "venue": "Venue",
+      "venueHint": "Only sessions at this venue count and are discounted.",
+      "anyVenue": "All of the organizer’s venues",
+      "type": "Type",
+      "typePercentage": "Percentage",
+      "typeFixed": "Fixed amount (CHF)",
+      "value": "Value",
+      "valueHint": "15 = 15%; or an amount in francs for a fixed discount.",
+      "minDistinctSessions": "Distinct paid sessions",
+      "minDistinctSessionsHint": "Number of different concerts the order must include. Free tickets do not count.",
+      "minAmount": "Minimum amount (CHF)",
+      "optional": "Optional",
+      "validFrom": "Valid from",
+      "validUntil": "Valid until",
+      "activeLabel": "Active"
     },
     "seats": {
       "back": "← Back to the show",
