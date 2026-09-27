@@ -1,0 +1,316 @@
+name: 🖥️ Deploy Production → serveur (Jelastic ou VPS)
+
+# Production hors du GB10 : un serveur Linux avec Docker, joignable en SSH
+# (nœud Docker Jelastic ou VPS). Les images sont construites ici et publiées
+# sur ghcr.io ; le serveur ne fait que les tirer.
+#
+# Tant que la variable PROD_TARGET ne vaut pas « server », la production
+# reste au GB10 : ce workflow ne part qu'à la main, et « verifier » ne touche
+# à rien. Bascule : voir README, section Production.
+#
+# Secrets : PROD_SERVER_HOST, PROD_SERVER_USER, PROD_SERVER_SSH_KEY et
+# PROD_SERVER_PORT (22 par défaut). JELASTIC_PROD_HOST et JELASTIC_PROD_USER
+# servent à défaut.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "verifier : contrôles seuls · deployer : construit et déploie"
+        type: choice
+        options: [verifier, deployer]
+        default: verifier
+
+concurrency:
+  group: deploy-prod-server
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  MODE: ${{ github.event_name == 'push' && 'deployer' || inputs.mode }}
+  SERVER_HOST: ${{ secrets.PROD_SERVER_HOST || secrets.JELASTIC_PROD_HOST }}
+  SERVER_USER: ${{ secrets.PROD_SERVER_USER || secrets.JELASTIC_PROD_USER }}
+  SERVER_PORT: ${{ secrets.PROD_SERVER_PORT || '22' }}
+  SERVER_SSH_KEY: ${{ secrets.PROD_SERVER_SSH_KEY || secrets.JELASTIC_PROD_SSH_KEY }}
+  IMAGE_APP: ghcr.io/${{ github.repository }}-app:${{ github.sha }}
+  IMAGE_TOOLS: ghcr.io/${{ github.repository }}-tools:${{ github.sha }}
+
+jobs:
+  preflight:
+    name: Contrôles
+    if: github.event_name == 'workflow_dispatch' || vars.PROD_TARGET == 'server'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      arch: ${{ steps.server.outputs.arch }}
+      ready: ${{ steps.server.outputs.ready }}
+    steps:
+      - name: 🔑 Valeurs GitHub
+        env:
+          PF_CHECKOUT_SPACE_ID: ${{ secrets.PF_CHECKOUT_SPACE_ID }}
+          PF_CHECKOUT_USER_ID: ${{ secrets.PF_CHECKOUT_USER_ID }}
+          PF_CHECKOUT_SECRET: ${{ secrets.PF_CHECKOUT_SECRET }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          PROD_BANK_IBAN: ${{ secrets.PROD_BANK_IBAN }}
+          PROD_BANK_BENEFICIARY: ${{ secrets.PROD_BANK_BENEFICIARY }}
+          LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
+          LITELLM_API_URL: ${{ vars.LITELLM_API_URL }}
+          GB10_SSH_PRIVATE_KEY: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+        run: |
+          status() { # nom, niveau (requis|conseillé), rôle
+            if [ -n "${!1:-}" ]; then echo "✅ $1 — $3"
+            elif [ "$2" = requis ]; then echo "❌ $1 — $3"; MISSING=1
+            else echo "⚠️  $1 — $3"; fi
+          }
+          MISSING=0
+          echo "── Serveur"
+          status SERVER_HOST requis "adresse SSH du serveur (PROD_SERVER_HOST ou JELASTIC_PROD_HOST)"
+          status SERVER_USER requis "utilisateur SSH (PROD_SERVER_USER ou JELASTIC_PROD_USER)"
+          status SERVER_SSH_KEY requis "clé privée SSH (PROD_SERVER_SSH_KEY)"
+          echo "── Encaissement et courriel"
+          status PF_CHECKOUT_SPACE_ID requis "PostFinance Checkout"
+          status PF_CHECKOUT_USER_ID requis "PostFinance Checkout"
+          status PF_CHECKOUT_SECRET requis "PostFinance Checkout"
+          status SMTP_HOST requis "envoi des billets et des réinitialisations"
+          status SMTP_USER requis "envoi des billets et des réinitialisations"
+          status SMTP_PASS requis "envoi des billets et des réinitialisations"
+          status PROD_BANK_IBAN conseillé "paiement par virement (refusé sans)"
+          status PROD_BANK_BENEFICIARY conseillé "titulaire affiché avec l'IBAN"
+          echo "── Import de plans de salle"
+          status LITELLM_API_URL conseillé "variable, adresse publique d'aimanager"
+          status LITELLM_API_KEY conseillé "lecture de la légende par l'IA"
+          echo "── Reprise des données"
+          status GB10_SSH_PRIVATE_KEY conseillé "accès au GB10 pour copier la base actuelle"
+          if [ "$MISSING" -ne 0 ]; then
+            echo "::warning::Des valeurs requises manquent dans GitHub (voir ci-dessus)."
+          fi
+
+      - name: 🤖 IA (aimanager, adresse publique)
+        env:
+          LITELLM_API_URL: ${{ vars.LITELLM_API_URL }}
+          LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
+          PLAN_AI_MODEL: ${{ vars.PLAN_AI_MODEL || 'ollama_chat/gemma4:12b' }}
+        run: |
+          if [ -z "$LITELLM_API_URL" ] || [ -z "$LITELLM_API_KEY" ]; then
+            echo "⚠️  Non configurée — l'import de plan marche, catégories à nommer à la main."
+            exit 0
+          fi
+          BODY=$(jq -nc --arg m "$PLAN_AI_MODEL" '{model:$m, temperature:0, reasoning_effort:"none",
+            messages:[{role:"user", content:"Réponds uniquement par le mot OK."}]}')
+          START=$(date +%s)
+          CODE=$(curl -sS -o ai.json -w '%{http_code}' --max-time 120 "$LITELLM_API_URL" \
+            -H "authorization: Bearer $LITELLM_API_KEY" -H 'content-type: application/json' \
+            -d "$BODY" || echo 000)
+          SECS=$(( $(date +%s) - START ))
+          if [ "$CODE" = 200 ]; then
+            echo "✅ Réponse en ${SECS} s ($PLAN_AI_MODEL) : $(jq -r '.choices[0].message.content // ""' ai.json | head -c 40)"
+          else
+            echo "::warning::IA injoignable ou clé refusée (HTTP $CODE, ${SECS} s)."
+            head -c 300 ai.json 2>/dev/null || true
+          fi
+          rm -f ai.json
+
+      - name: 🖥️ Serveur
+        id: server
+        run: |
+          echo "ready=false" >> "$GITHUB_OUTPUT"
+          if [ -z "$SERVER_HOST" ] || [ -z "$SERVER_USER" ] || [ -z "$SERVER_SSH_KEY" ]; then
+            echo "⚠️  Accès SSH non configuré : contrôle du serveur impossible."
+            exit 0
+          fi
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/prod && chmod 600 ~/.ssh/prod
+          printf 'Host prod\n  HostName %s\n  User %s\n  Port %s\n  IdentityFile ~/.ssh/prod\n  StrictHostKeyChecking accept-new\n  ServerAliveInterval 30\n  ConnectTimeout 20\n' \
+            "$SERVER_HOST" "$SERVER_USER" "$SERVER_PORT" > ~/.ssh/config
+          if ! ssh prod true; then
+            echo "::error::Connexion SSH au serveur impossible."
+            exit 1
+          fi
+          ssh prod 'bash -s' > report.txt <<'EOF'
+          fail=0
+          echo "Système   : $( (. /etc/os-release && echo "$PRETTY_NAME") 2>/dev/null || uname -s) · $(uname -m)"
+          echo "Mémoire   : $(free -m 2>/dev/null | awk '/^Mem:/{print $2" Mo, dont "$7" Mo disponibles"}')"
+          echo "Disque    : $(df -h "$HOME" | awk 'NR==2{print $4" libres sur "$2}')"
+          if docker info > /dev/null 2>&1; then
+            echo "Docker    : $(docker version --format '{{.Server.Version}}')"
+          else
+            echo "❌ Docker absent ou inaccessible à cet utilisateur"; fail=1
+          fi
+          if docker compose version > /dev/null 2>&1; then
+            echo "Compose   : $(docker compose version --short)"
+          else
+            echo "❌ docker compose (v2) absent"; fail=1
+          fi
+          command -v openssl > /dev/null || { echo "❌ openssl absent"; fail=1; }
+          for p in 80 443; do
+            if (ss -ltnH 2>/dev/null || netstat -ltn 2>/dev/null) | awk '{print $4}' | grep -qE "[:.]$p\$"; then
+              owner=$(docker ps --filter "publish=$p" --format '{{.Names}}' 2>/dev/null | head -1)
+              if [ "$owner" = ticketick-prod-caddy ]; then echo "Port $p   : ticketick"
+              else echo "⚠️  Port $p déjà occupé${owner:+ par $owner}"; fi
+            else
+              echo "Port $p   : libre"
+            fi
+          done
+          if [ -f "$HOME/ticketick-prod/.env" ]; then
+            echo "Stack     : déjà déployée ($(docker ps --filter name=ticketick-prod- --format '{{.Names}}' | wc -l) conteneurs actifs)"
+          else
+            echo "Stack     : jamais déployée"
+          fi
+          echo "ARCH=$(uname -m)"
+          echo "FAIL=$fail"
+          EOF
+          grep -vE '^(ARCH|FAIL)=' report.txt
+          case "$(sed -n 's/^ARCH=//p' report.txt)" in
+            x86_64 | amd64) echo "arch=amd64" >> "$GITHUB_OUTPUT" ;;
+            aarch64 | arm64) echo "arch=arm64" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::Architecture non prise en charge."; exit 1 ;;
+          esac
+          if grep -q '^FAIL=0' report.txt; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Le serveur n'est pas prêt (voir ci-dessus)."
+            exit 1
+          fi
+
+      - name: 🗄️ GB10 — données à reprendre
+        if: env.MODE == 'verifier'
+        env:
+          GB10_HOST: ${{ secrets.GB10_HOST }}
+          GB10_USER: ${{ secrets.GB10_USER }}
+          GB10_PORT: ${{ secrets.GB10_PORT }}
+          GB10_SSH_PRIVATE_KEY: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+        run: |
+          if [ -z "$GB10_SSH_PRIVATE_KEY" ]; then echo "⚠️  Accès GB10 non configuré."; exit 0; fi
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$GB10_SSH_PRIVATE_KEY" > ~/.ssh/gb10 && chmod 600 ~/.ssh/gb10
+          printf 'Host gb10\n  HostName %s\n  User %s\n  Port %s\n  IdentityFile ~/.ssh/gb10\n  StrictHostKeyChecking accept-new\n  ConnectTimeout 20\n' \
+            "$GB10_HOST" "$GB10_USER" "${GB10_PORT:-22}" >> ~/.ssh/config
+          ssh gb10 'bash -s' <<'EOF'
+          set -e
+          . "$HOME/.ticketick-v2-prod.secrets"
+          [ -n "${AUTH_SECRET:-}" ] && echo "✅ AUTH_SECRET retrouvé (sessions et secrets PayPal conservés)"
+          DUMP=$(docker exec ticketick-v2-prod-db pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc | wc -c)
+          UP=$(docker cp ticketick-v2-prod-app:/app/data/uploads - | wc -c)
+          echo "✅ Base exportable : $(numfmt --to=iec "$DUMP")"
+          echo "✅ Fichiers téléversés : $(numfmt --to=iec "$UP")"
+          EOF
+
+  build:
+    name: Images
+    needs: preflight
+    if: needs.preflight.outputs.ready == 'true' && (github.event_name == 'push' || inputs.mode == 'deployer')
+    runs-on: ${{ needs.preflight.outputs.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: 🧰 Image tools (migrations)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: builder
+          push: true
+          tags: ${{ env.IMAGE_TOOLS }}
+          cache-from: type=gha,scope=prod-${{ needs.preflight.outputs.arch }}
+          cache-to: type=gha,mode=max,scope=prod-${{ needs.preflight.outputs.arch }}
+      - name: 📦 Image app
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runner
+          push: true
+          tags: ${{ env.IMAGE_APP }}
+          cache-from: type=gha,scope=prod-${{ needs.preflight.outputs.arch }}
+
+  deploy:
+    name: Déploiement
+    needs: [preflight, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔐 Accès SSH
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/prod && chmod 600 ~/.ssh/prod
+          printf 'Host prod\n  HostName %s\n  User %s\n  Port %s\n  IdentityFile ~/.ssh/prod\n  StrictHostKeyChecking accept-new\n  ServerAliveInterval 30\n  ConnectTimeout 20\n' \
+            "$SERVER_HOST" "$SERVER_USER" "$SERVER_PORT" > ~/.ssh/config
+
+      - name: 📦 Paquet de la version
+        env:
+          NEXT_PUBLIC_APP_URL: ${{ vars.PROD_APP_URL || 'https://ticketick.ch' }}
+          STRIPE_SECRET_KEY: ${{ secrets.PROD_STRIPE_SECRET_KEY }}
+          STRIPE_PUBLISHABLE_KEY: ${{ secrets.PROD_STRIPE_PUBLISHABLE_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.PROD_STRIPE_WEBHOOK_SECRET }}
+          PF_CHECKOUT_SPACE_ID: ${{ secrets.PF_CHECKOUT_SPACE_ID }}
+          PF_CHECKOUT_USER: ${{ secrets.PF_CHECKOUT_USER_ID }}
+          PF_CHECKOUT_SECRET: ${{ secrets.PF_CHECKOUT_SECRET }}
+          BANK_IBAN: ${{ secrets.PROD_BANK_IBAN }}
+          BANK_BENEFICIARY: ${{ secrets.PROD_BANK_BENEFICIARY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ vars.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ticketick <ticket@ticketick.ch>
+          MAIL_TO: ${{ vars.CONTACT_TO || 'info@ticketick.ch' }}
+          LITELLM_API_URL: ${{ vars.LITELLM_API_URL }}
+          LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
+          PLAN_AI_MODEL: ${{ vars.PLAN_AI_MODEL }}
+          SITE_ADDRESS: ${{ vars.PROD_SITE_ADDRESS || 'ticketick.ch' }}
+          WWW_ADDRESS: ${{ vars.PROD_WWW_ADDRESS || 'www.ticketick.ch' }}
+          REGISTRY_USER: ${{ github.actor }}
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Valeurs entre apostrophes : lues telles quelles par docker compose
+          # et par le shell, y compris avec « $ » ou des espaces.
+          write() {
+            for k in "$@"; do
+              v="${!k:-}"
+              case "$v" in
+                *"'"* | *$'\n'*) echo "::error::$k contient une apostrophe ou un saut de ligne."; exit 1 ;;
+              esac
+              printf "%s='%s'\n" "$k" "$v"
+            done
+          }
+          umask 077
+          mkdir bundle
+          cp docker-compose.server.yml deploy/Caddyfile deploy/server-deploy.sh bundle/
+          write NEXT_PUBLIC_APP_URL STRIPE_SECRET_KEY STRIPE_PUBLISHABLE_KEY STRIPE_WEBHOOK_SECRET \
+            PF_CHECKOUT_SPACE_ID PF_CHECKOUT_USER PF_CHECKOUT_SECRET BANK_IBAN BANK_BENEFICIARY \
+            SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS MAIL_FROM MAIL_TO \
+            LITELLM_API_URL LITELLM_API_KEY PLAN_AI_MODEL > bundle/app.env
+          write IMAGE_APP IMAGE_TOOLS SITE_ADDRESS WWW_ADDRESS REGISTRY_USER > bundle/release.env
+          printf '%s' "$REGISTRY_TOKEN" > bundle/registry-token
+
+      - name: 🚀 Déploiement sur le serveur
+        run: |
+          tar czf - -C bundle . | ssh prod \
+            'mkdir -p ~/ticketick-prod && chmod 700 ~/ticketick-prod && rm -rf ~/ticketick-prod/incoming \
+             && mkdir ~/ticketick-prod/incoming && tar xzf - -C ~/ticketick-prod/incoming'
+          rm -rf bundle
+          ssh prod 'bash ~/ticketick-prod/incoming/server-deploy.sh'
+
+      - name: 🌐 Accès public
+        run: |
+          CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://ticketick.ch/api/health" || echo 000)
+          echo "https://ticketick.ch/api/health → HTTP $CODE"
+          if [ "${{ vars.PROD_TARGET }}" != server ]; then
+            echo "ℹ️  PROD_TARGET ne vaut pas « server » : ticketick.ch est encore servi par le GB10."
+          fi

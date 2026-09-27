@@ -1,0 +1,141 @@
+name: 🚚 Reprise des données — GB10 → serveur de production
+
+# À lancer une seule fois, au moment de la bascule, après un premier
+# « Deploy Production → serveur » réussi. Copie la base, les fichiers
+# téléversés et AUTH_SECRET du GB10 vers le serveur, dont la base est
+# entièrement remplacée.
+#
+# Par défaut, l'application du GB10 est arrêtée avant la copie : aucune
+# commande ne peut plus s'y écrire, donc rien ne se perd entre la copie et la
+# bascule de Cloudflare. Le site est indisponible jusqu'à cette bascule. En
+# cas d'échec, l'application du GB10 est redémarrée.
+#
+# Les données transitent par la machine GitHub le temps du job, sans jamais
+# être publiées comme artefact ni affichées dans les logs.
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Taper MIGRER pour remplacer la base du serveur par celle du GB10"
+        required: true
+      arreter_gb10:
+        description: "Arrêter l'application du GB10 pendant la reprise (recommandé)"
+        type: boolean
+        default: true
+
+concurrency:
+  group: deploy-prod-server
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    name: Reprise des données
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SERVER_HOST: ${{ secrets.PROD_SERVER_HOST || secrets.JELASTIC_PROD_HOST }}
+      SERVER_USER: ${{ secrets.PROD_SERVER_USER || secrets.JELASTIC_PROD_USER }}
+      SERVER_PORT: ${{ secrets.PROD_SERVER_PORT || '22' }}
+      SERVER_SSH_KEY: ${{ secrets.PROD_SERVER_SSH_KEY || secrets.JELASTIC_PROD_SSH_KEY }}
+      GB10_HOST: ${{ secrets.GB10_HOST }}
+      GB10_USER: ${{ secrets.GB10_USER }}
+      GB10_PORT: ${{ secrets.GB10_PORT }}
+      GB10_SSH_PRIVATE_KEY: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+    steps:
+      - name: ✋ Confirmation
+        if: inputs.confirmation != 'MIGRER'
+        run: |
+          echo "::error::Confirmation absente : taper MIGRER."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - name: 🔐 Accès SSH
+        run: |
+          for v in SERVER_HOST SERVER_USER SERVER_SSH_KEY GB10_HOST GB10_USER GB10_SSH_PRIVATE_KEY; do
+            [ -n "${!v:-}" ] || { echo "::error::$v manquant dans GitHub."; exit 1; }
+          done
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SERVER_SSH_KEY" > ~/.ssh/prod
+          printf '%s\n' "$GB10_SSH_PRIVATE_KEY" > ~/.ssh/gb10
+          chmod 600 ~/.ssh/prod ~/.ssh/gb10
+          cat > ~/.ssh/config <<EOF
+          Host prod
+            HostName $SERVER_HOST
+            User $SERVER_USER
+            Port $SERVER_PORT
+            IdentityFile ~/.ssh/prod
+          Host gb10
+            HostName $GB10_HOST
+            User $GB10_USER
+            Port ${GB10_PORT:-22}
+            IdentityFile ~/.ssh/gb10
+          Host *
+            StrictHostKeyChecking accept-new
+            ServerAliveInterval 30
+            ConnectTimeout 20
+          EOF
+          ssh gb10 true
+          ssh prod 'test -f ~/ticketick-prod/.env' || {
+            echo "::error::Serveur jamais déployé : lancer d'abord « Deploy Production → serveur » en mode deployer."
+            exit 1
+          }
+
+      - name: ⏸ Arrêt de l'application du GB10
+        if: inputs.arreter_gb10
+        run: ssh gb10 'docker stop ticketick-v2-prod-app > /dev/null && echo "✅ Application du GB10 arrêtée"'
+
+      - name: 📤 Copie depuis le GB10
+        run: |
+          umask 077
+          mkdir work
+          ssh gb10 '. ~/.ticketick-v2-prod.secrets && docker exec ticketick-v2-prod-db pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc' > work/db.dump
+          # docker cp fonctionne aussi sur un conteneur arrêté ; l'archive a
+          # pour racine le dossier « uploads », retiré ici.
+          mkdir work/uploads-src
+          ssh gb10 'docker cp ticketick-v2-prod-app:/app/data/uploads -' \
+            | tar -xf - -C work/uploads-src --strip-components=1
+          tar -cf work/uploads.tar -C work/uploads-src .
+          rm -rf work/uploads-src
+          ssh gb10 '. ~/.ticketick-v2-prod.secrets && printf %s "$AUTH_SECRET"' > work/auth-secret
+          [ -s work/auth-secret ] || { echo "::error::AUTH_SECRET introuvable sur le GB10."; exit 1; }
+          echo "✅ Base : $(numfmt --to=iec "$(stat -c %s work/db.dump)") · fichiers : $(numfmt --to=iec "$(stat -c %s work/uploads.tar)")"
+          echo "🔎 Base du GB10 :"
+          ssh gb10 'bash -s' <<'EOF' | sed -n 's/^ *\(.\)/   \1/p'
+          . ~/.ticketick-v2-prod.secrets
+          docker exec -i ticketick-v2-prod-db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -qt <<'SQL'
+          SELECT 'spectacles=' || (SELECT count(*) FROM "Event")
+              || ' publiés=' || (SELECT count(*) FROM "Event" WHERE status = 'PUBLISHED')
+              || ' comptes=' || (SELECT count(*) FROM "User")
+              || ' commandes=' || (SELECT count(*) FROM "Order")
+              || ' billets=' || (SELECT count(*) FROM "Ticket");
+          SQL
+          EOF
+
+      - name: 📥 Restauration sur le serveur
+        run: |
+          ssh prod 'mkdir -p ~/ticketick-prod/migration && cat > ~/ticketick-prod/server-restore.sh' < deploy/server-restore.sh
+          tar -cf - -C work . | ssh prod 'tar -xf - -C ~/ticketick-prod/migration'
+          rm -rf work
+          ssh prod 'bash ~/ticketick-prod/server-restore.sh'
+
+      - name: ↩️ Redémarrage du GB10 après échec
+        if: failure() && inputs.arreter_gb10
+        run: |
+          ssh gb10 'docker start ticketick-v2-prod-app > /dev/null && echo "↩️  Application du GB10 redémarrée : le site reste servi par le GB10."'
+
+      - name: 📋 Suite
+        if: success()
+        run: |
+          {
+            echo "### Données reprises"
+            echo ""
+            echo "1. Dans Cloudflare, faire pointer les enregistrements A/AAAA de \`ticketick.ch\` et \`www\` sur le serveur (proxy orange conservé)."
+            echo "2. Mettre la variable GitHub \`PROD_TARGET\` à \`server\` : les push sur \`main\` déploieront le serveur et plus le GB10."
+            echo "3. Vérifier https://ticketick.ch, une connexion admin et un achat."
+            echo ""
+            echo "Retour arrière : repointer Cloudflare sur le GB10 et y relancer \`docker start ticketick-v2-prod-app\`."
+          } >> "$GITHUB_STEP_SUMMARY"

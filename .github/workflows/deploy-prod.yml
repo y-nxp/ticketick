@@ -14,6 +14,9 @@ concurrency:
 jobs:
   deploy:
     name: Deploy to GB10 (production)
+    # Après la bascule sur Jelastic ou un VPS (PROD_TARGET=server), relancer
+    # la stack du GB10 ferait tourner deux productions qui divergent.
+    if: vars.PROD_TARGET != 'server'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 

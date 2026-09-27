@@ -1,0 +1,26 @@
+# ============================================================
+# ticketick — frontal HTTPS du serveur de production (Jelastic ou VPS)
+# Utilisé par docker-compose.server.yml
+# ============================================================
+# Caddy obtient et renouvelle seul le certificat Let's Encrypt. Derrière le
+# proxy Cloudflare, le défi HTTP-01 passe par le port 80 : il faut donc que
+# les ports 80 et 443 du serveur soient ouverts.
+#
+# SITE_ADDRESS accepte plusieurs noms séparés par des virgules, par exemple
+# « ticketick.ch, nouveau.ticketick.ch » pour essayer le serveur sur un nom de
+# test avant de basculer ticketick.ch. En local : « :80 ».
+
+{
+	email {$ACME_EMAIL:info@ticketick.ch}
+}
+
+{$SITE_ADDRESS:ticketick.ch} {
+	encode zstd gzip
+	reverse_proxy app:3000
+}
+
+# Un seul nom public : les cookies de session sont liés à l'hôte, et les
+# retours de paiement reviennent sur NEXT_PUBLIC_APP_URL.
+{$WWW_ADDRESS:www.ticketick.ch} {
+	redir {$CANONICAL_URL:https://ticketick.ch}{uri} permanent
+}

@@ -106,10 +106,14 @@ prisma/                     # schema.prisma + seed.ts
 
 ## Déploiement
 
-| Branche   | Cible                            | Mécanisme                              |
-| --------- | -------------------------------- | -------------------------------------- |
-| `develop` | gb10 → `appbetadev.ticketick.ch` | `.github/workflows/deploy-betadev.yml`  |
-| `main`    | Jelastic → `ticketick.ch`        | manuel (voir plus bas)                  |
+| Branche   | Cible                                    | Mécanisme                              |
+| --------- | ---------------------------------------- | -------------------------------------- |
+| `develop` | gb10 → `appbetadev.ticketick.ch`         | `.github/workflows/deploy-betadev.yml` |
+| `main`    | gb10 → `ticketick.ch` (actuel)           | `.github/workflows/deploy-prod.yml`    |
+| `main`    | Jelastic ou VPS → `ticketick.ch` (cible) | `.github/workflows/deploy-server.yml`  |
+
+La variable GitHub `PROD_TARGET` choisit la production servie par `main` :
+absente, c'est le GB10 ; `server`, c'est le serveur Jelastic ou VPS.
 
 ### BetaDev — gb10 → `appbetadev.ticketick.ch`
 
@@ -126,33 +130,59 @@ le dépôt dans `~/ticketick-v2-betadev`, puis lance `docker-compose.betadev.yml
   du volume rendrait la base inaccessible.
 - Le déploiement échoue si `/api/health` ne répond pas dans les deux minutes.
 
-### Production — Jelastic → `ticketick.ch`
+### Production — Jelastic ou VPS → `ticketick.ch`
 
-Le projet est configuré en **build standalone** (`output: "standalone"`) et fournit
-un `Dockerfile`.
+N'importe quel serveur Linux avec Docker et `docker compose` v2, joignable en
+SSH : nœud **Docker Engine** Jelastic avec IP publique, ou VPS. Il faut 2 Go
+de mémoire, quelques Go de disque et les ports 80 et 443 ouverts. Rien n'est
+construit sur le serveur : GitHub construit les images (`-app` et `-tools`)
+pour l'architecture du serveur, les publie sur ghcr.io, et le serveur les
+tire. La pile (`docker-compose.server.yml`) comprend PostgreSQL,
+l'application et Caddy, qui obtient seul le certificat HTTPS.
 
-```bash
-# Build de l'image
-docker build -t ticketick .
+**Valeurs GitHub**
 
-# Lancement
-docker run -p 3000:3000 --env-file .env ticketick
-```
+- Secrets `PROD_SERVER_HOST`, `PROD_SERVER_USER`, `PROD_SERVER_SSH_KEY` (clé
+  privée dont la clé publique est dans `authorized_keys` du serveur) et
+  `PROD_SERVER_PORT` (22 par défaut). `JELASTIC_PROD_HOST` et
+  `JELASTIC_PROD_USER` servent à défaut. L'utilisateur doit pouvoir lancer
+  `docker` (root ou groupe `docker`).
+- Encaissement et courriel : `PF_CHECKOUT_*`, `SMTP_*`, `PROD_BANK_IBAN`,
+  `PROD_BANK_BENEFICIARY`.
+- IA de l'import de plans : hors du GB10, l'application joint aimanager par
+  son adresse publique. Secret `LITELLM_API_KEY` (clé « jelastic » du projet
+  ticketick, révocable seule), variables `LITELLM_API_URL`
+  (`https://api-ai.nextalp.com/v1/chat/completions`) et `PLAN_AI_MODEL`.
+- Facultatif : variable `PROD_SITE_ADDRESS` (défaut `ticketick.ch`), par
+  exemple `ticketick.ch, nouveau.ticketick.ch` pour essayer le serveur sur un
+  nom de test avant la bascule.
 
-Sur Jelastic, utilisez l'environnement **Node.js** ou **Docker** :
+**Workflows**
 
-```bash
-npm ci
-npm run build
-npm run db:migrate      # applique les migrations
-npm run start           # sert .next/standalone
-```
+- *Deploy Production → serveur*, mode `verifier` : contrôle les valeurs
+  GitHub, la clé IA, le serveur (Docker, mémoire, disque, ports) et
+  l'export de la base du GB10. Ne modifie rien.
+- Même workflow, mode `deployer` : construit, publie et déploie. Le mot de
+  passe Postgres et `AUTH_SECRET` sont générés au premier déploiement dans
+  `~/ticketick-prod/.secrets`, puis conservés.
+- *Reprise des données — GB10 → serveur* : arrête l'application du GB10,
+  copie la base, les fichiers téléversés et `AUTH_SECRET` (les sessions et
+  les secrets PayPal chiffrés en base restent valables), puis remplace la
+  base du serveur. En cas d'échec, l'application du GB10 est redémarrée.
 
-Lecture de la légende des plans de salle par l'IA : hors du GB10, l'application
-joint aimanager par son adresse publique. Les valeurs sont dans GitHub
-(`y-nxp/ticketick`) : secret `LITELLM_API_KEY` (clé « jelastic » du projet
-ticketick, révocable seule) et variables `LITELLM_API_URL`
-(`https://api-ai.nextalp.com/v1/chat/completions`) et `PLAN_AI_MODEL`.
+**Bascule**
+
+1. `verifier`, puis `deployer` : le serveur tourne à vide, le GB10 sert
+   toujours le site.
+2. *Reprise des données* (taper `MIGRER`). Le site est indisponible jusqu'à
+   l'étape suivante.
+3. Cloudflare : faire pointer `ticketick.ch` et `www` sur l'IP du serveur,
+   en gardant le proxy. Caddy obtient son certificat dans la minute.
+4. Variable `PROD_TARGET` = `server` : les push sur `main` déploient
+   désormais le serveur, et plus le GB10.
+
+Retour arrière : repointer Cloudflare sur le GB10, y lancer
+`docker start ticketick-v2-prod-app`, puis retirer `PROD_TARGET`.
 
 ---
 

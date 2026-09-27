@@ -1,0 +1,123 @@
+# ============================================================
+# ticketick — stack de PRODUCTION sur un serveur dédié
+# (nœud Docker Jelastic ou VPS)
+# URL   : https://ticketick.ch
+# Déployée par .github/workflows/deploy-server.yml
+# ============================================================
+# Contrairement au GB10, rien n'est construit sur place : les images sont
+# bâties par GitHub Actions, publiées sur ghcr.io, puis simplement tirées.
+# Un petit serveur n'a ainsi jamais à supporter le build de Next.js.
+#
+# Toutes les valeurs viennent du fichier .env écrit par le déploiement :
+# IMAGE_APP, IMAGE_TOOLS, POSTGRES_*, AUTH_SECRET, clés de paiement, SMTP…
+# ============================================================
+
+name: ticketick-prod
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ticketick-prod-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    # Non publié sur l'hôte : seuls `migrate` et `app` y accèdent.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # Applique les migrations, puis les mêmes mises à niveau de données qu'au
+  # GB10. Image `tools` : stage builder, seul à embarquer le CLI Prisma et tsx.
+  migrate:
+    image: ${IMAGE_TOOLS}
+    container_name: ticketick-prod-migrate
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        echo "▶ Prisma migrate deploy…"
+        npx prisma migrate deploy
+        echo "▶ Compte organisateur Illyria…"
+        npx tsx prisma/ensure-illyria-account.ts
+        echo "▶ Gstaad New Year Music Festival 2026…"
+        npx tsx prisma/setup-gstaad-nymf-2026.ts || echo "⚠ Import Gstaad en échec : le site démarre quand même."
+        echo "✅ Base prête."
+
+  app:
+    image: ${IMAGE_APP}
+    container_name: ticketick-prod-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      TZ: Europe/Zurich
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      UPLOAD_DIR: /app/data/uploads
+    volumes:
+      - uploads-data:/app/data/uploads
+    ports:
+      # Boucle locale seulement : sert aux contrôles depuis l'hôte. Le public
+      # passe par Caddy.
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ticketick-prod-caddy
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-ticketick.ch}
+      WWW_ADDRESS: ${WWW_ADDRESS:-www.ticketick.ch}
+      CANONICAL_URL: ${NEXT_PUBLIC_APP_URL:-https://ticketick.ch}
+      ACME_EMAIL: ${ACME_EMAIL:-info@ticketick.ch}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificats : les perdre obligerait à les redemander à chaque
+      # redémarrage, au risque d'atteindre les limites de Let's Encrypt.
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  db-data:
+  uploads-data:
+  caddy-data:
+  caddy-config:
