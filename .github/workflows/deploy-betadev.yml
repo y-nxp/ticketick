@@ -112,6 +112,8 @@ jobs:
             # ── 3. Fichier d'environnement consommé par docker compose
             echo "🔐 Génération de .env.betadev..."
             umask 077
+            # Même clé aimanager que la production, lue sur le GB10.
+            LITELLM_API_KEY=$(cat "$HOME/.secrets/ticketick_ai_key" 2>/dev/null || true)
             cat > "$APP_DIR/.env.betadev" <<EOF
             NODE_ENV=production
             NEXT_PUBLIC_APP_URL=https://appbetadev.ticketick.ch
@@ -141,6 +143,8 @@ jobs:
             # désormais saisie depuis le backoffice, et un réamorçage à
             # chaque démarrage remettrait les spectacles fictifs en ligne.
             SEED_ON_START=false
+            LITELLM_API_URL=http://172.17.0.1:4010/v1/chat/completions
+            LITELLM_API_KEY=${LITELLM_API_KEY}
             EOF
             # docker compose lit POSTGRES_* depuis .env pour l'interpolation
             cp "$APP_DIR/.env.betadev" "$APP_DIR/.env"

@@ -11,6 +11,7 @@ import {
   UserPlus,
   Wallet,
   BadgePercent,
+  Armchair,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/dal";
@@ -43,6 +44,7 @@ export default async function AdminLayout({
           { href: "/admin/resellers", label: t("nav.resellers"), icon: Store },
           { href: "/admin/users", label: t("nav.users"), icon: Users },
           { href: "/admin/paypal", label: t("nav.paypal"), icon: Wallet },
+          { href: "/admin/seat-plans", label: t("nav.seatPlans"), icon: Armchair },
           {
             href: "/admin/inquiries",
             label: t("nav.inquiries"),
