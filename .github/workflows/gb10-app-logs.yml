@@ -33,3 +33,5 @@ jobs:
             fi
             echo "📜 $CONTENEUR — 250 dernières lignes"
             docker logs --tail 250 "$CONTENEUR" 2>&1
+            echo "📜 ${CONTENEUR%-app}-migrate — migrations et imports du dernier déploiement"
+            docker logs --tail 120 "${CONTENEUR%-app}-migrate" 2>&1 || true
