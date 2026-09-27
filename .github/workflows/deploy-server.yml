@@ -1,16 +1,16 @@
-name: 🖥️ Deploy Production → serveur (Jelastic ou VPS)
+name: 🖥️ Deploy Production → serveur (VPS)
 
 # Production hors du GB10 : un serveur Linux avec Docker, joignable en SSH
-# (nœud Docker Jelastic ou VPS). Les images sont construites ici et publiées
-# sur ghcr.io ; le serveur ne fait que les tirer.
+# (VPS Infomaniak, préparé par deploy/vps-setup.sh). Les images sont
+# construites ici et publiées sur ghcr.io ; le serveur ne fait que les tirer.
 #
 # Tant que la variable PROD_TARGET ne vaut pas « server », la production
 # reste au GB10 : ce workflow ne part qu'à la main, et « verifier » ne touche
 # à rien. Bascule : voir README, section Production.
 #
 # Secrets : PROD_SERVER_HOST, PROD_SERVER_USER, PROD_SERVER_SSH_KEY et
-# PROD_SERVER_PORT (22 par défaut). JELASTIC_PROD_HOST et JELASTIC_PROD_USER
-# servent à défaut.
+# PROD_SERVER_PORT (22 par défaut). Volontairement aucun repli sur les
+# secrets JELASTIC_* : ils peuvent désigner le serveur d'un autre projet.
 on:
   push:
     branches: [main]
@@ -31,10 +31,10 @@ permissions:
 
 env:
   MODE: ${{ github.event_name == 'push' && 'deployer' || inputs.mode }}
-  SERVER_HOST: ${{ secrets.PROD_SERVER_HOST || secrets.JELASTIC_PROD_HOST }}
-  SERVER_USER: ${{ secrets.PROD_SERVER_USER || secrets.JELASTIC_PROD_USER }}
+  SERVER_HOST: ${{ secrets.PROD_SERVER_HOST }}
+  SERVER_USER: ${{ secrets.PROD_SERVER_USER }}
   SERVER_PORT: ${{ secrets.PROD_SERVER_PORT || '22' }}
-  SERVER_SSH_KEY: ${{ secrets.PROD_SERVER_SSH_KEY || secrets.JELASTIC_PROD_SSH_KEY }}
+  SERVER_SSH_KEY: ${{ secrets.PROD_SERVER_SSH_KEY }}
   IMAGE_APP: ghcr.io/${{ github.repository }}-app:${{ github.sha }}
   IMAGE_TOOLS: ghcr.io/${{ github.repository }}-tools:${{ github.sha }}
 
@@ -61,6 +61,8 @@ jobs:
           LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
           LITELLM_API_URL: ${{ vars.LITELLM_API_URL }}
           GB10_SSH_PRIVATE_KEY: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+          BACKUP_REMOTE: ${{ vars.BACKUP_REMOTE }}
+          BACKUP_RCLONE_CONF: ${{ secrets.BACKUP_RCLONE_CONF }}
         run: |
           status() { # nom, niveau (requis|conseillé), rôle
             if [ -n "${!1:-}" ]; then echo "✅ $1 — $3"
@@ -69,8 +71,8 @@ jobs:
           }
           MISSING=0
           echo "── Serveur"
-          status SERVER_HOST requis "adresse SSH du serveur (PROD_SERVER_HOST ou JELASTIC_PROD_HOST)"
-          status SERVER_USER requis "utilisateur SSH (PROD_SERVER_USER ou JELASTIC_PROD_USER)"
+          status SERVER_HOST requis "adresse SSH du serveur (PROD_SERVER_HOST)"
+          status SERVER_USER requis "utilisateur SSH (PROD_SERVER_USER)"
           status SERVER_SSH_KEY requis "clé privée SSH (PROD_SERVER_SSH_KEY)"
           echo "── Encaissement et courriel"
           status PF_CHECKOUT_SPACE_ID requis "PostFinance Checkout"
@@ -84,6 +86,9 @@ jobs:
           echo "── Import de plans de salle"
           status LITELLM_API_URL conseillé "variable, adresse publique d'aimanager"
           status LITELLM_API_KEY conseillé "lecture de la légende par l'IA"
+          echo "── Sauvegardes (quotidiennes sur le serveur dans tous les cas)"
+          status BACKUP_REMOTE conseillé "variable, destination rclone hors serveur (ex. swissbackup-crypt:ticketick)"
+          status BACKUP_RCLONE_CONF conseillé "secret, contenu de rclone.conf pour cette destination"
           echo "── Reprise des données"
           status GB10_SSH_PRIVATE_KEY conseillé "accès au GB10 pour copier la base actuelle"
           if [ "$MISSING" -ne 0 ]; then
@@ -275,6 +280,8 @@ jobs:
           PLAN_AI_MODEL: ${{ vars.PLAN_AI_MODEL }}
           SITE_ADDRESS: ${{ vars.PROD_SITE_ADDRESS || 'ticketick.ch' }}
           WWW_ADDRESS: ${{ vars.PROD_WWW_ADDRESS || 'www.ticketick.ch' }}
+          BACKUP_REMOTE: ${{ vars.BACKUP_REMOTE }}
+          BACKUP_RCLONE_CONF: ${{ secrets.BACKUP_RCLONE_CONF }}
           REGISTRY_USER: ${{ github.actor }}
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -291,12 +298,13 @@ jobs:
           }
           umask 077
           mkdir bundle
-          cp docker-compose.server.yml deploy/Caddyfile deploy/server-deploy.sh bundle/
+          cp docker-compose.server.yml deploy/Caddyfile deploy/server-deploy.sh deploy/backup.sh bundle/
+          if [ -n "$BACKUP_RCLONE_CONF" ]; then printf '%s\n' "$BACKUP_RCLONE_CONF" > bundle/rclone.conf; fi
           write NEXT_PUBLIC_APP_URL STRIPE_SECRET_KEY STRIPE_PUBLISHABLE_KEY STRIPE_WEBHOOK_SECRET \
             PF_CHECKOUT_SPACE_ID PF_CHECKOUT_USER PF_CHECKOUT_SECRET BANK_IBAN BANK_BENEFICIARY \
             SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS MAIL_FROM MAIL_TO \
             LITELLM_API_URL LITELLM_API_KEY PLAN_AI_MODEL > bundle/app.env
-          write IMAGE_APP IMAGE_TOOLS SITE_ADDRESS WWW_ADDRESS REGISTRY_USER > bundle/release.env
+          write IMAGE_APP IMAGE_TOOLS SITE_ADDRESS WWW_ADDRESS BACKUP_REMOTE REGISTRY_USER > bundle/release.env
           printf '%s' "$REGISTRY_TOKEN" > bundle/registry-token
 
       - name: 🚀 Déploiement sur le serveur

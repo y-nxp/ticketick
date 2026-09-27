@@ -51,6 +51,11 @@ for _ in $(seq 1 30); do
   sleep 2
 done
 
+# Gardée avec les sauvegardes : c'est l'état exact de la base au moment de
+# la bascule.
+mkdir -p "$APP_DIR/backups"
+cp "$MIG/db.dump" "$APP_DIR/backups/ticketick-$(date +%Y%m%d-%H%M%S)-reprise-gb10.dump"
+
 echo "🗄️  Restauration de la base..."
 "${COMPOSE[@]}" exec -T db psql -v ON_ERROR_STOP=1 -q -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
   -c 'SET client_min_messages = warning;' -c 'DROP SCHEMA public CASCADE;' -c 'CREATE SCHEMA public;'

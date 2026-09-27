@@ -7,6 +7,7 @@
 #   app.env      valeurs tirées de GitHub (paiement, SMTP, IA…)
 #   release.env  images à tirer et adresses du site
 #   registry-token  jeton ghcr.io valable le temps du workflow
+#   backup.sh, rclone.conf (facultatif) : sauvegardes de la base
 # ============================================================
 set -euo pipefail
 
@@ -38,9 +39,18 @@ if [ ! -f "$SECRETS" ]; then
 fi
 
 # ── 2. Fichiers de la version
-mv -f "$IN/docker-compose.server.yml" "$APP_DIR/docker-compose.server.yml"
-mv -f "$IN/Caddyfile" "$APP_DIR/Caddyfile"
-chmod 644 "$APP_DIR/Caddyfile" "$APP_DIR/docker-compose.server.yml"
+for f in docker-compose.server.yml Caddyfile backup.sh; do
+  mv -f "$IN/$f" "$APP_DIR/$f"
+  chmod 644 "$APP_DIR/$f"
+done
+# Monté tel quel dans le service de sauvegarde : absent, Docker créerait un
+# dossier à sa place. Vide, la copie hors serveur est simplement désactivée.
+if [ -s "$IN/rclone.conf" ]; then
+  mv -f "$IN/rclone.conf" "$APP_DIR/rclone.conf"
+else
+  : > "$APP_DIR/rclone.conf"
+fi
+mkdir -p "$APP_DIR/backups"
 cat "$SECRETS" "$IN/app.env" "$IN/release.env" > "$APP_DIR/.env"
 # shellcheck disable=SC1091
 . "$APP_DIR/.env"
@@ -57,7 +67,13 @@ if [ "$PULL_OK" -ne 1 ]; then
   exit 1
 fi
 
-# ── 4. Démarrage
+# ── 4. Sauvegarde avant de toucher à la base (migrations)
+if [ "$(docker inspect -f '{{.State.Running}}' ticketick-prod-db 2>/dev/null)" = true ]; then
+  echo "💾 Sauvegarde avant déploiement..."
+  "${COMPOSE[@]}" run --rm --no-deps -T backup now avant-deploiement
+fi
+
+# ── 5. Démarrage
 echo "🚀 Démarrage..."
 if ! "${COMPOSE[@]}" up -d --remove-orphans; then
   echo "❌ Démarrage en échec — sortie des migrations :"
@@ -81,7 +97,7 @@ if [ "$OK" -ne 1 ]; then
 fi
 echo "✅ Application opérationnelle"
 
-# ── 5. Contrôles propres à la production
+# ── 6. Contrôles propres à la production
 echo "🔎 État de la base :"
 "${COMPOSE[@]}" exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -qtc \
   "SELECT 'spectacles=' || (SELECT count(*) FROM \"Event\")
@@ -97,6 +113,12 @@ check PF_CHECKOUT_SECRET "PostFinance Checkout configuré" "PostFinance NON conf
 check BANK_IBAN "IBAN configuré" "BANK_IBAN absent — le virement sera refusé (503)."
 check SMTP_HOST "SMTP configuré" "SMTP absent — aucun courriel ne partira, ni billets ni réinitialisations."
 check LITELLM_API_KEY "IA configurée pour l'import de plans" "Clé IA absente — l'import de plan marche, catégories à nommer à la main."
+if [ -n "${BACKUP_REMOTE:-}" ] && [ -s "$APP_DIR/rclone.conf" ]; then
+  echo "   ✅ Sauvegardes quotidiennes, copiées vers $BACKUP_REMOTE"
+else
+  echo "   ⚠ Sauvegardes quotidiennes sur le serveur seulement (BACKUP_REMOTE / BACKUP_RCLONE_CONF absents)"
+fi
+echo "   ↳ $(find "$APP_DIR/backups" -name 'ticketick-*.dump' | wc -l | tr -d ' ') sauvegarde(s) dans ~/ticketick-prod/backups"
 
 echo "🔎 Frontal HTTPS :"
 if "${COMPOSE[@]}" exec -T caddy wget -q -O /dev/null http://app:3000/api/health; then
@@ -108,7 +130,7 @@ fi
   | grep -E '"msg":"(certificate obtained successfully|obtaining certificate|could not get certificate from issuer)"' \
   | sed -E 's/.*"msg":"([^"]+)".*"identifier":"([^"]+)".*/   ↳ \2 : \1/' | sort -u | tail -6 || true
 
-# ── 6. Nettoyage
+# ── 7. Nettoyage
 docker image prune -af --filter "until=168h" > /dev/null 2>&1 || true
 rm -rf "$IN"
 

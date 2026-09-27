@@ -36,10 +36,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      SERVER_HOST: ${{ secrets.PROD_SERVER_HOST || secrets.JELASTIC_PROD_HOST }}
-      SERVER_USER: ${{ secrets.PROD_SERVER_USER || secrets.JELASTIC_PROD_USER }}
+      SERVER_HOST: ${{ secrets.PROD_SERVER_HOST }}
+      SERVER_USER: ${{ secrets.PROD_SERVER_USER }}
       SERVER_PORT: ${{ secrets.PROD_SERVER_PORT || '22' }}
-      SERVER_SSH_KEY: ${{ secrets.PROD_SERVER_SSH_KEY || secrets.JELASTIC_PROD_SSH_KEY }}
+      SERVER_SSH_KEY: ${{ secrets.PROD_SERVER_SSH_KEY }}
       GB10_HOST: ${{ secrets.GB10_HOST }}
       GB10_USER: ${{ secrets.GB10_USER }}
       GB10_PORT: ${{ secrets.GB10_PORT }}
@@ -133,7 +133,7 @@ jobs:
           {
             echo "### Données reprises"
             echo ""
-            echo "1. Dans Cloudflare, faire pointer les enregistrements A/AAAA de \`ticketick.ch\` et \`www\` sur le serveur (proxy orange conservé)."
+            echo "1. Dans Cloudflare, faire pointer les enregistrements A/AAAA de \`ticketick.ch\` et \`www\` sur le serveur, proxy orange **obligatoire** : le serveur refuse tout accès qui ne vient pas de Cloudflare."
             echo "2. Mettre la variable GitHub \`PROD_TARGET\` à \`server\` : les push sur \`main\` déploieront le serveur et plus le GB10."
             echo "3. Vérifier https://ticketick.ch, une connexion admin et un achat."
             echo ""

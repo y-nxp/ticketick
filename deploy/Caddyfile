@@ -9,18 +9,32 @@
 # SITE_ADDRESS accepte plusieurs noms séparés par des virgules, par exemple
 # « ticketick.ch, nouveau.ticketick.ch » pour essayer le serveur sur un nom de
 # test avant de basculer ticketick.ch. En local : « :80 ».
-
 {
 	email {$ACME_EMAIL:info@ticketick.ch}
 }
 
+# Seul Cloudflare parle au serveur. L'application identifie le visiteur par
+# l'en-tête cf-connecting-ip (limites de tentatives) : joignable en direct,
+# n'importe qui pourrait le falsifier. Docker contournant le pare-feu de
+# l'hôte pour les ports publiés, le filtre se fait ici. Les défis Let's
+# Encrypt sont traités par Caddy avant ce filtre.
+(cloudflare_only) {
+	@direct not remote_ip {$ALLOWED_IPS}
+	respond @direct 403
+}
+
 {$SITE_ADDRESS:ticketick.ch} {
+	import cloudflare_only
 	encode zstd gzip
 	reverse_proxy app:3000
 }
 
 # Un seul nom public : les cookies de session sont liés à l'hôte, et les
 # retours de paiement reviennent sur NEXT_PUBLIC_APP_URL.
+# `route` impose l'ordre écrit : sinon Caddy passe `redir` avant le filtre.
 {$WWW_ADDRESS:www.ticketick.ch} {
-	redir {$CANONICAL_URL:https://ticketick.ch}{uri} permanent
+	route {
+		import cloudflare_only
+		redir {$CANONICAL_URL:https://ticketick.ch}{uri} permanent
+	}
 }

@@ -138,15 +138,36 @@ de mémoire, quelques Go de disque et les ports 80 et 443 ouverts. Rien n'est
 construit sur le serveur : GitHub construit les images (`-app` et `-tools`)
 pour l'architecture du serveur, les publie sur ghcr.io, et le serveur les
 tire. La pile (`docker-compose.server.yml`) comprend PostgreSQL,
-l'application et Caddy, qui obtient seul le certificat HTTPS.
+l'application, les sauvegardes et Caddy, qui obtient seul le certificat HTTPS.
+
+**Préparer un VPS neuf** (Ubuntu ou Debian, une fois, avec le compte
+d'administration créé par l'hébergeur — `ubuntu` chez Infomaniak — et sa clé
+SSH) :
+
+```bash
+ssh-keygen -t ed25519 -f ticketick-deploy -N ""   # sur son poste
+scp deploy/vps-setup.sh ubuntu@IP:
+ssh ubuntu@IP 'sudo bash vps-setup.sh "$(cat)"' < ticketick-deploy.pub
+```
+
+Le script met le système à jour, installe Docker, crée l'utilisateur
+`deploy` (clé de déploiement seulement), ferme la connexion par mot de passe,
+active le pare-feu (SSH, 80, 443), fail2ban et les mises à jour de sécurité
+automatiques (redémarrage à 04:30 si nécessaire).
+
+**Cloudflare obligatoire** : Caddy répond 403 à toute connexion qui ne vient
+pas de Cloudflare (plages de https://www.cloudflare.com/ips, variable
+`ALLOWED_IPS`). L'application se fie à l'en-tête `cf-connecting-ip` pour
+limiter les tentatives de connexion : sans ce filtre, il serait falsifiable.
+Le nuage orange doit donc rester actif sur `ticketick.ch` et `www`.
 
 **Valeurs GitHub**
 
-- Secrets `PROD_SERVER_HOST`, `PROD_SERVER_USER`, `PROD_SERVER_SSH_KEY` (clé
-  privée dont la clé publique est dans `authorized_keys` du serveur) et
-  `PROD_SERVER_PORT` (22 par défaut). `JELASTIC_PROD_HOST` et
-  `JELASTIC_PROD_USER` servent à défaut. L'utilisateur doit pouvoir lancer
-  `docker` (root ou groupe `docker`).
+- Secrets `PROD_SERVER_HOST`, `PROD_SERVER_USER` (`deploy`),
+  `PROD_SERVER_SSH_KEY` (contenu de `ticketick-deploy`) et `PROD_SERVER_PORT`
+  (22 par défaut). L'utilisateur doit pouvoir lancer `docker` (root ou groupe
+  `docker`). Les secrets `JELASTIC_*` du dépôt ne sont pas utilisés : ils
+  peuvent désigner un autre serveur.
 - Encaissement et courriel : `PF_CHECKOUT_*`, `SMTP_*`, `PROD_BANK_IBAN`,
   `PROD_BANK_BENEFICIARY`.
 - IA de l'import de plans : hors du GB10, l'application joint aimanager par
@@ -156,6 +177,29 @@ l'application et Caddy, qui obtient seul le certificat HTTPS.
 - Facultatif : variable `PROD_SITE_ADDRESS` (défaut `ticketick.ch`), par
   exemple `ticketick.ch, nouveau.ticketick.ch` pour essayer le serveur sur un
   nom de test avant la bascule.
+- Facultatif, copie des sauvegardes hors du serveur : secret
+  `BACKUP_RCLONE_CONF` (fichier de configuration rclone) et variable
+  `BACKUP_REMOTE` (par exemple `swissbackup-crypt:ticketick`). Utiliser un
+  remote rclone `crypt` : les sauvegardes contiennent toute la base.
+
+**Sauvegardes**
+
+Le service `backup` sauvegarde la base chaque nuit à 03:00 dans
+`~/ticketick-prod/backups` (14 jours gardés), et avant chaque déploiement.
+Chaque fichier est relu avant d'être gardé. Sauvegarde immédiate et
+restauration :
+
+```bash
+cd ~/ticketick-prod
+docker compose -f docker-compose.server.yml run --rm --no-deps backup now manuelle
+docker compose -f docker-compose.server.yml stop app
+docker exec -i ticketick-prod-db pg_restore -U ticketick -d ticketick \
+  --clean --if-exists --no-owner < backups/ticketick-AAAAMMJJ-HHMMSS.dump
+docker compose -f docker-compose.server.yml start app
+```
+
+Le GB10 a le même service : sauvegardes dans `~/ticketick-v2-prod-backups`
+(conteneur `ticketick-v2-prod-db`).
 
 **Workflows**
 

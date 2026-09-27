@@ -166,6 +166,12 @@ jobs:
               exit 1
             fi
 
+            # Sauvegarde avant les migrations : la base telle qu'elle était.
+            if [ "$(docker inspect -f '{{.State.Running}}' ticketick-v2-prod-db 2>/dev/null)" = true ]; then
+              echo "💾 Sauvegarde avant déploiement..."
+              docker compose -f docker-compose.prod.yml run --rm --no-deps -T backup now avant-deploiement
+            fi
+
             echo "🏗️  Build de l'image Next.js..."
             docker compose -f docker-compose.prod.yml up -d --build --remove-orphans
 

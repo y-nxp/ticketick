@@ -81,12 +81,20 @@ async function loadPdf(file: File): Promise<LoadedPlan> {
     import.meta.url,
   ).toString();
 
-  let doc;
+  const task = pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) });
   try {
-    doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
-  } catch {
-    throw new PlanFileError("planFileUnreadable");
+    return await readPdf(pdfjs, await task.promise.catch(() => {
+      throw new PlanFileError("planFileUnreadable");
+    }));
+  } finally {
+    await task.destroy();
   }
+}
+
+async function readPdf(
+  pdfjs: typeof import("pdfjs-dist"),
+  doc: import("pdfjs-dist").PDFDocumentProxy,
+): Promise<LoadedPlan> {
   const page = await doc.getPage(1);
   const base = page.getViewport({ scale: 1 });
   const scale = RENDER_SIZE / Math.max(base.width, base.height);
@@ -124,7 +132,6 @@ async function loadPdf(file: File): Promise<LoadedPlan> {
       });
     }
   }
-  await doc.destroy();
   return finish(canvas, words);
 }
 
