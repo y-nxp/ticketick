@@ -3,27 +3,38 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { Prisma, type PaymentMethod } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { claimSeats, releaseOrderSeats, unavailableAmong } from "@/lib/seating/seats";
+import { zoneAllowed } from "@/lib/seating/layout";
 import { cancelOrderTickets, issueMissingTickets } from "@/lib/tickets/issue";
 import { EVENT_TIME_ZONE } from "@/lib/utils";
+import {
+  applyAttendees,
+  checkAttendees,
+  type AttendeeError,
+  type AttendeeInput,
+} from "./attendees";
+import { resolveAutoDiscounts } from "./discounts";
 import { inheritPayment, intersectOffers } from "./payment-methods";
 import {
   resolveOrderOptions,
   type OptionSelectionInput,
   type ResolvedOption,
 } from "./options";
-import { CARD_HOLD_MS } from "./reservation";
+import { CARD_HOLD_MS, HELD_METHODS } from "./reservation";
 
 /**
  * Création d'une commande.
  *
- * Le client n'envoie que des identifiants de tarif et des quantités. Les prix
- * sont relus en base : les accepter depuis la requête laisserait n'importe qui
- * fixer le montant à payer.
+ * Le client n'envoie que des identifiants de tarif, des quantités et, en
+ * placement numéroté, les sièges choisis. Les prix sont relus en base : les
+ * accepter depuis la requête laisserait n'importe qui fixer le montant.
  */
 
 export interface OrderLineInput {
   ticketTypeId: string;
   quantity: number;
+  /** Séance numérotée : exactement un siège par billet. */
+  seats?: string[];
 }
 
 export interface CreateOrderInput {
@@ -39,16 +50,35 @@ export interface CreateOrderInput {
   soldByUserId?: string;
   options?: OptionSelectionInput[];
   holdTokenHash?: string;
+  /** Titulaires des billets nominatifs (gratuités d'âge). */
+  attendees?: AttendeeInput[];
+  /**
+   * Exiger les titulaires dès maintenant. La rétention à l'arrivée sur le
+   * checkout les ignore : ils ne sont saisis qu'avec les coordonnées.
+   */
+  requireAttendees?: boolean;
+  /**
+   * Rétention à l'arrivée sur le checkout : le moyen de paiement n'est pas
+   * encore choisi, il sera contrôlé à la validation.
+   */
+  hold?: boolean;
 }
 
 export type CreateOrderResult =
   | { ok: true; order: CreatedOrder }
-  | { ok: false; error: OrderError; ticketTypeId?: string };
+  | {
+      ok: false;
+      error: OrderError;
+      ticketTypeId?: string;
+      /** Sièges déjà pris, à retirer du panier. */
+      seatKeys?: string[];
+    };
 
 export interface CreatedOrder {
   id: string;
   reference: string;
   subtotalCents: number;
+  discountCents: number;
   feeCents: number;
   totalCents: number;
   currency: string;
@@ -62,6 +92,8 @@ export interface CreatedOrder {
   project: string;
   /** Nom affiché sur la page PostFinance (ex. Chœur Cantabile). */
   organizerName: string;
+  /** Organisateurs du panier : PayPal encaisse sur le compte de l'unique. */
+  organizerIds: string[];
   createdAt: Date;
 }
 
@@ -80,7 +112,10 @@ export type OrderError =
   | "hold_mismatch"
   | "option_unavailable"
   | "option_incomplete"
-  | "option_invalid";
+  | "option_invalid"
+  | "invalid_seats"
+  | "seat_taken"
+  | AttendeeError;
 
 /**
  * L'encaissement carte va sur le compte PostFinance de l'organisateur.
@@ -97,13 +132,17 @@ export async function createOrder(
   // Un même tarif peut arriver en plusieurs lignes depuis le panier : les
   // fusionner évite de contrôler le stock deux fois par petits morceaux et de
   // laisser passer un total supérieur à ce qui reste.
-  const merged = new Map<string, number>();
+  const merged = new Map<string, { quantity: number; seats: string[] }>();
   for (const line of input.lines) {
-    merged.set(
-      line.ticketTypeId,
-      (merged.get(line.ticketTypeId) ?? 0) + line.quantity,
-    );
+    const prev = merged.get(line.ticketTypeId) ?? { quantity: 0, seats: [] };
+    merged.set(line.ticketTypeId, {
+      quantity: prev.quantity + line.quantity,
+      seats: [...prev.seats, ...(line.seats ?? [])],
+    });
   }
+  const quantities = new Map(
+    [...merged].map(([id, m]) => [id, m.quantity] as const),
+  );
 
   const ticketTypes = await prisma.ticketType.findMany({
     where: { id: { in: [...merged.keys()] } },
@@ -119,6 +158,9 @@ export async function createOrder(
       companionOfId: true,
       salesStartAt: true,
       salesEndAt: true,
+      seatZones: true,
+      requiresAttendee: true,
+      maxAgeYears: true,
       session: {
         select: {
           id: true,
@@ -127,6 +169,8 @@ export async function createOrder(
           capacity: true,
           acceptCard: true,
           acceptIban: true,
+          seatPlanId: true,
+          venueId: true,
           event: {
             select: {
               status: true,
@@ -134,6 +178,7 @@ export async function createOrder(
               title: true,
               acceptCard: true,
               acceptIban: true,
+              acceptPaypal: true,
               organizer: { select: { id: true, name: true, slug: true } },
             },
           },
@@ -145,7 +190,7 @@ export async function createOrder(
   const byId = new Map(ticketTypes.map((tt) => [tt.id, tt]));
   const now = new Date();
 
-  for (const [ticketTypeId, quantity] of merged) {
+  for (const [ticketTypeId, { quantity }] of merged) {
     const tt = byId.get(ticketTypeId);
     if (!tt) return { ok: false, error: "unknown_ticket_type", ticketTypeId };
 
@@ -175,6 +220,23 @@ export async function createOrder(
     }
   }
 
+  // Placement numéroté : un siège par billet, jamais deux fois le même dans
+  // la commande. En placement libre, aucun siège n'est accepté.
+  const siegesVus = new Map<string, Set<string>>();
+  for (const [ticketTypeId, { quantity, seats }] of merged) {
+    const tt = byId.get(ticketTypeId)!;
+    if (!tt.session.seatPlanId) {
+      if (seats.length > 0) return { ok: false, error: "invalid_seats", ticketTypeId };
+      continue;
+    }
+    const vus = siegesVus.get(tt.session.id) ?? new Set<string>();
+    if (seats.length !== quantity || seats.some((s) => !s || s.length > 40 || vus.has(s))) {
+      return { ok: false, error: "invalid_seats", ticketTypeId };
+    }
+    seats.forEach((s) => vus.add(s));
+    siegesVus.set(tt.session.id, vus);
+  }
+
   // Places gratuites plafonnées par les billets payants de la même séance :
   // sans cela on pourrait emporter uniquement des places à 0 fr.
   const parSeance = new Map<
@@ -190,7 +252,7 @@ export async function createOrder(
     }
   >();
   const siegesParSeance = new Map<string, number>();
-  for (const [ticketTypeId, quantity] of merged) {
+  for (const [ticketTypeId, { quantity }] of merged) {
     const tt = byId.get(ticketTypeId)!;
     const sid = tt.session.id;
     siegesParSeance.set(sid, (siegesParSeance.get(sid) ?? 0) + quantity);
@@ -214,7 +276,7 @@ export async function createOrder(
       const payants =
         acc.sourceId == null
           ? groupe.payants
-          : (merged.get(acc.sourceId) ?? 0);
+          : (quantities.get(acc.sourceId) ?? 0);
       if (payants === 0) {
         return { ok: false, error: "companion_requires_paid", ticketTypeId: acc.id };
       }
@@ -224,21 +286,32 @@ export async function createOrder(
     }
   }
 
+  let holders: Map<string, { name: string; birthDate: Date }[]> = new Map();
+  if (input.requireAttendees) {
+    const checked = checkAttendees(
+      ticketTypes.map((tt) => ({
+        id: tt.id,
+        requiresAttendee: tt.requiresAttendee,
+        maxAgeYears: tt.maxAgeYears,
+        sessionStartsAt: tt.session.startsAt,
+      })),
+      quantities,
+      input.attendees ?? [],
+    );
+    if (!checked.ok) return checked;
+    holders = checked.byType;
+  }
+
   const paiement = intersectOffers(
     ticketTypes.map((tt) => inheritPayment(tt.session.event, tt.session)),
   );
-  if (
-    (input.paymentMethod === "CARD" && !paiement.card) ||
-    (input.paymentMethod === "IBAN" && !paiement.iban)
-  ) {
-    return { ok: false, error: "method_not_allowed" };
-  }
 
-  const lines = [...merged].map(([ticketTypeId, quantity]) => {
+  const lines = [...merged].map(([ticketTypeId, { quantity, seats }]) => {
     const tt = byId.get(ticketTypeId)!;
     return {
       ticketTypeId,
       quantity,
+      seats,
       unitPriceCents: tt.priceCents,
       label: paymentLineLabel({
         organizer: tt.session.event.organizer.name,
@@ -258,14 +331,36 @@ export async function createOrder(
   });
   if (!options.ok) return options;
 
+  const discounts = await resolveAutoDiscounts(
+    lines.map((l) => {
+      const tt = byId.get(l.ticketTypeId)!;
+      return {
+        quantity: l.quantity,
+        unitPriceCents: l.unitPriceCents,
+        sessionId: tt.session.id,
+        venueId: tt.session.venueId,
+        organizerId: tt.session.event.organizer.id,
+      };
+    }),
+    now,
+  );
+
   const ticketSubtotal = lines.reduce(
     (sum, l) => sum + l.unitPriceCents * l.quantity,
     0,
   );
   const optionAmount = options.rows.reduce((sum, r) => sum + r.amountCents, 0);
   const subtotalCents = ticketSubtotal + optionAmount;
-  const feeCents = Math.round((subtotalCents * PLATFORM_FEE_BPS) / 10_000);
-  const totalCents = subtotalCents + feeCents;
+  const discountCents = discounts.reduce((sum, d) => sum + d.amountCents, 0);
+  const feeCents = Math.round(
+    ((subtotalCents - discountCents) * PLATFORM_FEE_BPS) / 10_000,
+  );
+  const totalCents = subtotalCents - discountCents + feeCents;
+
+  if (!input.hold && !methodAllowed(input.paymentMethod, paiement, totalCents)) {
+    return { ok: false, error: "method_not_allowed" };
+  }
+
   const paymentLines = [
     ...lines,
     ...options.rows.map(optionPaymentLine),
@@ -275,6 +370,9 @@ export async function createOrder(
     ...new Set(ticketTypes.map((tt) => tt.session.event.slug)),
   ].join("+");
   const organizerName = ticketTypes[0]?.session.event.organizer.name.trim() ?? "";
+  const organizerIds = [
+    ...new Set(ticketTypes.map((tt) => tt.session.event.organizer.id)),
+  ];
 
   try {
     const order = await prisma.$transaction(async (tx) => {
@@ -331,6 +429,7 @@ export async function createOrder(
           userId: input.userId,
           holdTokenHash: input.holdTokenHash,
           subtotalCents,
+          discountCents,
           feeCents,
           totalCents,
           currency,
@@ -339,6 +438,7 @@ export async function createOrder(
               ticketTypeId: l.ticketTypeId,
               quantity: l.quantity,
               unitPriceCents: l.unitPriceCents,
+              seatKeys: l.seats,
             })),
           },
           options: {
@@ -351,9 +451,31 @@ export async function createOrder(
               amountCents: r.amountCents,
             })),
           },
+          discounts: {
+            create: discounts.map((d) => ({
+              discountId: d.discountId,
+              amountCents: d.amountCents,
+            })),
+          },
         },
         select: { id: true, reference: true, createdAt: true },
       });
+
+      // Les sièges se prennent une fois la commande créée : ils portent son
+      // identifiant, et un seul manquant annule toute la transaction.
+      for (const line of lines) {
+        if (line.seats.length === 0) continue;
+        const tt = byId.get(line.ticketTypeId)!;
+        const got = await claimSeats(tx, {
+          orderId: order.id,
+          sessionId: tt.session.id,
+          keys: line.seats,
+          zones: tt.seatZones,
+        });
+        if (got !== line.seats.length) {
+          throw new SeatTakenError(line.ticketTypeId, tt.session.id, line.seats);
+        }
+      }
 
       await issueMissingTickets(
         tx,
@@ -362,19 +484,18 @@ export async function createOrder(
           items: lines.map((line) => ({
             ticketTypeId: line.ticketTypeId,
             quantity: line.quantity,
+            seatKeys: line.seats,
           })),
         },
         "PENDING",
       );
+      await applyAttendees(tx, order.id, holders);
 
       return order;
     });
 
     if (input.userId) {
-      await followIfOptedIn(
-        input.userId,
-        ticketTypes.map((tt) => tt.session.event.organizer.id),
-      );
+      await followIfOptedIn(input.userId, organizerIds);
     }
 
     return {
@@ -383,18 +504,32 @@ export async function createOrder(
         id: order.id,
         reference: order.reference,
         subtotalCents,
+        discountCents,
         feeCents,
         totalCents,
         currency,
         lines: paymentLines,
         project,
         organizerName,
+        organizerIds,
         createdAt: order.createdAt,
       },
     };
   } catch (error) {
     if (error instanceof SoldOutError) {
       return { ok: false, error: "sold_out", ticketTypeId: error.ticketTypeId };
+    }
+    if (error instanceof SeatTakenError) {
+      const taken = await unavailableAmong(error.sessionId, error.keys);
+      // Un siège hors des zones du tarif n'est pas « pris » : il ne peut pas
+      // être vendu sous ce tarif, ce qui revient au même pour l'acheteur.
+      const hors = await seatsOutsideZones(error.sessionId, error.keys, byId.get(error.ticketTypeId)?.seatZones ?? []);
+      return {
+        ok: false,
+        error: "seat_taken",
+        ticketTypeId: error.ticketTypeId,
+        seatKeys: [...new Set([...taken, ...hors])],
+      };
     }
     // P2002 : la référence tirée au hasard existait déjà. L'appelant peut
     // réessayer, la transaction ayant tout annulé, stock compris.
@@ -406,6 +541,44 @@ export async function createOrder(
     }
     throw error;
   }
+}
+
+/**
+ * Moyen retenu compatible avec le panier. Une commande à 0 fr. se valide
+ * sans encaissement, quel que soit le moyen choisi ; « gratuit » n'est en
+ * revanche jamais accepté pour un montant dû.
+ */
+function methodAllowed(
+  method: PaymentMethod,
+  offer: { card: boolean; iban: boolean; paypal: boolean },
+  totalCents: number,
+): boolean {
+  if (totalCents === 0) return true;
+  switch (method) {
+    case "CARD":
+      return offer.card;
+    case "IBAN":
+      return offer.iban;
+    case "PAYPAL":
+      return offer.paypal;
+    case "FREE":
+      return false;
+    default:
+      return true;
+  }
+}
+
+async function seatsOutsideZones(
+  sessionId: string,
+  keys: string[],
+  zones: string[],
+): Promise<string[]> {
+  if (zones.length === 0) return [];
+  const rows = await prisma.sessionSeat.findMany({
+    where: { sessionId, seatKey: { in: keys } },
+    select: { seatKey: true, zone: true },
+  });
+  return rows.filter((r) => !zoneAllowed(zones, r.zone)).map((r) => r.seatKey);
 }
 
 /** Nombre de rétentions périmées traitées par appel. */
@@ -423,7 +596,7 @@ export async function releaseStaleUnpaidCardOrders(): Promise<number> {
   const stale = await prisma.order.findMany({
     where: {
       status: "AWAITING_PAYMENT",
-      paymentMethod: "CARD",
+      paymentMethod: { in: HELD_METHODS },
       createdAt: { lt: limite },
     },
     select: { id: true },
@@ -460,7 +633,7 @@ export async function releaseHeldOrder(
       status: "AWAITING_PAYMENT",
       // Un virement attendu reste dû : aucun navigateur ne l'annule, pas
       // même celui de l'acheteur qui recommence un panier.
-      paymentMethod: "CARD",
+      paymentMethod: { in: HELD_METHODS },
       holdTokenHash: hashHoldToken(token),
     },
     select: { id: true },
@@ -479,39 +652,67 @@ export async function releaseOrder(orderId: string): Promise<void> {
       data: { status: "CANCELLED" },
     });
     if (claimed.count === 0) return;
+    await returnOrderStock(tx, orderId);
+  });
+}
 
-    const order = await tx.order.findUniqueOrThrow({
-      where: { id: orderId },
-      select: {
-        items: {
-          select: {
-            quantity: true,
-            ticketType: { select: { id: true, sessionId: true } },
-          },
+/**
+ * Passe une commande payée à REFUNDED et remet ses places en vente, une fois
+ * le remboursement accepté par le prestataire. Sans effet si elle n'est plus
+ * payée (remboursement déjà enregistré par un autre clic).
+ */
+export async function recordOrderRefund(orderId: string): Promise<boolean> {
+  return prisma.$transaction(async (tx) => {
+    const claimed = await tx.order.updateMany({
+      where: { id: orderId, status: "PAID" },
+      data: { status: "REFUNDED" },
+    });
+    if (claimed.count === 0) return false;
+    await tx.payment.updateMany({
+      where: { orderId },
+      data: { status: "REFUNDED" },
+    });
+    await returnOrderStock(tx, orderId);
+    return true;
+  });
+}
+
+async function returnOrderStock(
+  tx: Prisma.TransactionClient,
+  orderId: string,
+): Promise<void> {
+  const order = await tx.order.findUniqueOrThrow({
+    where: { id: orderId },
+    select: {
+      items: {
+        select: {
+          quantity: true,
+          ticketType: { select: { id: true, sessionId: true } },
         },
       },
-    });
-
-    const sieges = new Map<string, number>();
-    for (const item of order.items) {
-      await tx.$executeRaw`
-        UPDATE "TicketType"
-        SET sold = GREATEST(sold - ${item.quantity}, 0)
-        WHERE id = ${item.ticketType.id}
-      `;
-      const sid = item.ticketType.sessionId;
-      sieges.set(sid, (sieges.get(sid) ?? 0) + item.quantity);
-    }
-    for (const [sessionId, n] of sieges) {
-      await tx.$executeRaw`
-        UPDATE "EventSession"
-        SET sold = GREATEST(sold - ${n}, 0)
-        WHERE id = ${sessionId}
-      `;
-    }
-
-    await cancelOrderTickets(tx, orderId);
+    },
   });
+
+  const sieges = new Map<string, number>();
+  for (const item of order.items) {
+    await tx.$executeRaw`
+      UPDATE "TicketType"
+      SET sold = GREATEST(sold - ${item.quantity}, 0)
+      WHERE id = ${item.ticketType.id}
+    `;
+    const sid = item.ticketType.sessionId;
+    sieges.set(sid, (sieges.get(sid) ?? 0) + item.quantity);
+  }
+  for (const [sessionId, n] of sieges) {
+    await tx.$executeRaw`
+      UPDATE "EventSession"
+      SET sold = GREATEST(sold - ${n}, 0)
+      WHERE id = ${sessionId}
+    `;
+  }
+
+  await releaseOrderSeats(tx, orderId);
+  await cancelOrderTickets(tx, orderId);
 }
 
 export const HOLD_PLACEHOLDER_DOMAIN = "hold.ticketick.invalid";
@@ -522,7 +723,7 @@ export function isCheckoutHoldEmail(email: string): boolean {
 
 export type CreateHoldResult =
   | { ok: true; order: CreatedOrder; holdToken: string }
-  | { ok: false; error: OrderError; ticketTypeId?: string };
+  | Extract<CreateOrderResult, { ok: false }>;
 
 /**
  * Retient le stock dès l'arrivée sur le checkout, avant les coordonnées.
@@ -543,6 +744,7 @@ export async function createCheckoutHold(input: {
     locale: input.locale,
     paymentMethod: "CARD",
     holdTokenHash: hashHoldToken(holdToken),
+    hold: true,
   });
   return created.ok ? { ...created, holdToken } : created;
 }
@@ -573,31 +775,41 @@ export async function fulfillCheckoutHold(
       id: true,
       reference: true,
       createdAt: true,
-      subtotalCents: true,
-      feeCents: true,
-      totalCents: true,
+      discountCents: true,
       currency: true,
       items: {
-        select: { ticketTypeId: true, quantity: true, unitPriceCents: true },
+        select: {
+          ticketTypeId: true,
+          quantity: true,
+          unitPriceCents: true,
+          seatKeys: true,
+        },
       },
     },
   });
   if (!order) return { ok: false, error: "hold_expired" };
 
-  const attendu = new Map<string, number>();
+  // Le panier validé doit être celui qui a été retenu, sièges compris : sans
+  // cela on paierait des places différentes de celles bloquées.
+  const attendu = new Map<string, { quantity: number; seats: string[] }>();
   for (const line of input.lines) {
-    attendu.set(
-      line.ticketTypeId,
-      (attendu.get(line.ticketTypeId) ?? 0) + line.quantity,
-    );
+    const prev = attendu.get(line.ticketTypeId) ?? { quantity: 0, seats: [] };
+    attendu.set(line.ticketTypeId, {
+      quantity: prev.quantity + line.quantity,
+      seats: [...prev.seats, ...(line.seats ?? [])],
+    });
   }
   if (order.items.length !== attendu.size) {
     return { ok: false, error: "hold_mismatch" };
   }
   for (const item of order.items) {
-    if (attendu.get(item.ticketTypeId) !== item.quantity) {
+    const want = attendu.get(item.ticketTypeId);
+    if (!want || want.quantity !== item.quantity) {
       return { ok: false, error: "hold_mismatch" };
     }
+    const a = [...want.seats].sort().join(",");
+    const b = [...item.seatKeys].sort().join(",");
+    if (a !== b) return { ok: false, error: "hold_mismatch" };
   }
 
   const ticketTypes = await prisma.ticketType.findMany({
@@ -605,21 +817,40 @@ export async function fulfillCheckoutHold(
     select: {
       id: true,
       name: true,
+      requiresAttendee: true,
+      maxAgeYears: true,
       session: {
         select: {
           id: true,
           startsAt: true,
+          acceptCard: true,
+          acceptIban: true,
           event: {
             select: {
               slug: true,
               title: true,
-              organizer: { select: { name: true } },
+              acceptCard: true,
+              acceptIban: true,
+              acceptPaypal: true,
+              organizer: { select: { id: true, name: true } },
             },
           },
         },
       },
     },
   });
+
+  const checked = checkAttendees(
+    ticketTypes.map((tt) => ({
+      id: tt.id,
+      requiresAttendee: tt.requiresAttendee,
+      maxAgeYears: tt.maxAgeYears,
+      sessionStartsAt: tt.session.startsAt,
+    })),
+    new Map(order.items.map((i) => [i.ticketTypeId, i.quantity] as const)),
+    input.attendees ?? [],
+  );
+  if (!checked.ok) return checked;
 
   const options = await resolveOrderOptions({
     sessionIds: [...new Set(ticketTypes.map((tt) => tt.session.id))],
@@ -634,8 +865,19 @@ export async function fulfillCheckoutHold(
   );
   const optionAmount = options.rows.reduce((sum, r) => sum + r.amountCents, 0);
   const subtotalCents = ticketSubtotal + optionAmount;
-  const feeCents = Math.round((subtotalCents * PLATFORM_FEE_BPS) / 10_000);
-  const totalCents = subtotalCents + feeCents;
+  // Le rabais a été figé à la rétention, sur les mêmes billets.
+  const discountCents = order.discountCents;
+  const feeCents = Math.round(
+    ((subtotalCents - discountCents) * PLATFORM_FEE_BPS) / 10_000,
+  );
+  const totalCents = subtotalCents - discountCents + feeCents;
+
+  const paiement = intersectOffers(
+    ticketTypes.map((tt) => inheritPayment(tt.session.event, tt.session)),
+  );
+  if (!methodAllowed(input.paymentMethod, paiement, totalCents)) {
+    return { ok: false, error: "method_not_allowed" };
+  }
 
   await prisma.$transaction(async (tx) => {
     await tx.orderOption.deleteMany({ where: { orderId: order.id } });
@@ -666,6 +908,7 @@ export async function fulfillCheckoutHold(
       },
     });
     await issueMissingTickets(tx, order, "PENDING");
+    await applyAttendees(tx, order.id, checked.byType);
   });
 
   const byId = new Map(ticketTypes.map((tt) => [tt.id, tt]));
@@ -696,6 +939,7 @@ export async function fulfillCheckoutHold(
       id: order.id,
       reference: order.reference,
       subtotalCents,
+      discountCents,
       feeCents,
       totalCents,
       currency: order.currency,
@@ -704,6 +948,9 @@ export async function fulfillCheckoutHold(
         ...new Set(ticketTypes.map((tt) => tt.session.event.slug)),
       ].join("+"),
       organizerName: ticketTypes[0]?.session.event.organizer.name.trim() ?? "",
+      organizerIds: [
+        ...new Set(ticketTypes.map((tt) => tt.session.event.organizer.id)),
+      ],
       createdAt: order.createdAt,
     },
   };
@@ -712,6 +959,16 @@ export async function fulfillCheckoutHold(
 class SoldOutError extends Error {
   constructor(readonly ticketTypeId: string) {
     super(`Stock insuffisant pour ${ticketTypeId}`);
+  }
+}
+
+class SeatTakenError extends Error {
+  constructor(
+    readonly ticketTypeId: string,
+    readonly sessionId: string,
+    readonly keys: string[],
+  ) {
+    super(`Siège indisponible pour ${ticketTypeId}`);
   }
 }
 

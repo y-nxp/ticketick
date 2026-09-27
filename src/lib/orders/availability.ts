@@ -6,6 +6,7 @@ import { releaseStaleUnpaidCardOrders } from "./create-order";
 export type AvailabilityLine = {
   ticketTypeId: string;
   quantity: number;
+  seats?: string[];
 };
 
 export type AvailabilityItem = {
@@ -17,6 +18,8 @@ export type AvailabilityItem = {
 export type AvailabilityResult = {
   available: boolean;
   items: AvailabilityItem[];
+  /** Sièges demandés qui ne sont plus libres. */
+  takenSeats?: string[];
 };
 
 /**
@@ -102,5 +105,19 @@ export async function checkLinesAvailability(
     }
   }
 
-  return { available, items };
+  const takenSeats: string[] = [];
+  for (const line of lines) {
+    const tt = byId.get(line.ticketTypeId);
+    if (!tt || !line.seats?.length) continue;
+    const seats = line.seats.slice(0, 100);
+    const free = await prisma.sessionSeat.findMany({
+      where: { sessionId: tt.session.id, seatKey: { in: seats }, status: "AVAILABLE" },
+      select: { seatKey: true },
+    });
+    const ok = new Set(free.map((s) => s.seatKey));
+    takenSeats.push(...seats.filter((k) => !ok.has(k)));
+  }
+  if (takenSeats.length > 0) available = false;
+
+  return { available, items, takenSeats };
 }

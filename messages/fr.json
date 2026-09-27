@@ -83,7 +83,23 @@
     "free": "Gratuit",
     "companionHint": "Jusqu’à {n} par billet payant, jusqu’à 16 ans révolus.",
     "companionRule": "{n, plural, =1 {Une place gratuite max} other {# places gratuites max}} par billet payant.",
-    "companionRuleNamed": "{n, plural, =1 {Une place gratuite max} other {# places gratuites max}} par billet « {ticket} »."
+    "companionRuleNamed": "{n, plural, =1 {Une place gratuite max} other {# places gratuites max}} par billet « {ticket} ».",
+    "companionRuleOrder": "{n, plural, =1 {Une place gratuite} other {Jusqu’à # places gratuites}} par commande, avec au moins un billet payant.",
+    "seatPickTitle": "Choisissez vos places",
+    "seatPickHint": "Touchez une place libre sur le plan pour l'ajouter. Le tarif se choisit ensuite pour chaque place.",
+    "seatSelected": "Votre sélection",
+    "seatTaken": "Occupée",
+    "seatFree": "Place libre",
+    "seatNone": "Aucune place sélectionnée.",
+    "seatTariff": "Tarif",
+    "seatRemove": "Retirer cette place",
+    "seatLimit": "Nombre maximum de places atteint pour cette commande.",
+    "seatLoading": "Chargement du plan…",
+    "seatError": "Plan indisponible pour le moment. Réessayez dans un instant.",
+    "zoomIn": "Agrandir le plan",
+    "zoomOut": "Réduire le plan",
+    "attendeeNote": "Nom et date de naissance demandés au paiement.",
+    "attendeeNoteAge": "Moins de {age} ans : nom et date de naissance demandés au paiement, pièce d'identité à l'entrée."
   },
   "portal": {
     "tickets": "Billetterie",
@@ -116,7 +132,8 @@
     "viewCart": "Aller au panier",
     "reserveHint": "Les places ne sont réservées qu’une fois le paiement commencé.",
     "continue": "Continuer mes achats",
-    "session": "Séance"
+    "session": "Séance",
+    "seatCount": "{count, plural, one {# place} other {# places}}"
   },
   "checkout": {
     "title": "Paiement",
@@ -145,7 +162,7 @@
     "paidTooLate": "Votre paiement est arrivé après l’expiration de la réservation et les places ont été vendues entre-temps. Aucun billet n’a été émis : vous serez remboursé intégralement, sans démarche de votre part.",
     "failed": "Une erreur est survenue. Veuillez réessayer.",
     "unavailable": "Le paiement en ligne est momentanément indisponible. Votre commande n'a pas été enregistrée et vos places ont été remises en vente. Merci de réessayer plus tard.",
-    "companion_limit": "Au plus 2 places gratuites (jusqu’à 16 ans) par billet payant.",
+    "companion_limit": "Trop de places gratuites par rapport aux billets payants de la commande.",
     "companion_requires_paid": "Les places gratuites s’ajoutent à un billet payant.",
     "sold_out": "Plus assez de places pour cette sélection.",
     "throttled": "Trop de réservations en peu de temps depuis cette connexion. Patientez quelques minutes puis réessayez.",
@@ -169,7 +186,24 @@
     "hold_mismatch": "Votre panier a changé. Nous reprenons la réservation.",
     "option_unavailable": "Cette option n’est plus proposée pour votre sélection.",
     "option_incomplete": "Choisissez un horaire de navette, ou décochez l’option.",
-    "option_invalid": "Le choix d’option n’est pas valable."
+    "option_invalid": "Le choix d’option n’est pas valable.",
+    "reserveFree": "Réserver mes places",
+    "freeTitle": "Aucun paiement",
+    "freeHint": "Cette réservation est gratuite. Vos billets vous sont envoyés par e-mail dès la confirmation.",
+    "paypal": "PayPal",
+    "paypalHint": "Paiement sécurisé par PayPal, avec ou sans compte (carte acceptée).",
+    "discount": "Rabais",
+    "attendeesTitle": "Bénéficiaires des places gratuites",
+    "attendeesHint": "Indiquez le nom complet et la date de naissance de chaque bénéficiaire. Une pièce d'identité sera demandée à l'entrée.",
+    "attendeeName": "Prénom et nom",
+    "attendeeBirthDate": "Date de naissance",
+    "attendeeAgeHint": "Moins de {age} ans le jour du concert.",
+    "attendee_missing": "Indiquez le nom et la date de naissance de chaque bénéficiaire de place gratuite.",
+    "attendee_invalid": "Nom complet (prénom et nom) ou date de naissance invalide pour une place gratuite.",
+    "attendee_too_old": "Un bénéficiaire dépasse la limite d'âge de la place gratuite. Choisissez un autre tarif pour cette place.",
+    "seat_taken": "Une ou plusieurs places viennent d'être prises. Elles ont été retirées de votre panier.",
+    "seatsRemoved": "Certaines places viennent d'être prises par un autre acheteur et ont été retirées de votre panier. Vérifiez votre sélection.",
+    "invalid_seats": "Sélection de places invalide. Choisissez à nouveau vos places."
   },
   "account": {
     "title": "Mon espace",
@@ -211,10 +245,12 @@
       "ORGANIZER": "Organisateur",
       "RESELLER_AGENT": "Point de vente",
       "DOOR_STAFF": "Contrôleur",
-      "ADMIN": "Administrateur"
+      "ADMIN": "Administrateur",
+      "ORGANIZER_VIEWER": "Responsable (lecture seule)"
     },
     "ticketCount": "{count} billet(s)",
-    "downloadPdf": "Télécharger / imprimer le PDF"
+    "downloadPdf": "Télécharger / imprimer le PDF",
+    "adminAccessHintViewer": "Consulter les ventes et les commandes de votre organisation."
   },
   "organizer": {
     "title": "Espace organisateur",
@@ -296,7 +332,9 @@
     "otherSession": "Billet pour une autre séance — non consommé, il reste valable ce jour-là.",
     "usedAt": "Passé à {time}",
     "noSessions": "Aucune séance à contrôler",
-    "noSessionsHint": "Les séances à venir apparaissent ici, ainsi que celles commencées depuis moins de 12 h."
+    "noSessionsHint": "Les séances à venir apparaissent ici, ainsi que celles commencées depuis moins de 12 h.",
+    "checkId": "Vérifier la pièce d'identité",
+    "bornOn": "Né·e le {date}"
   },
   "about": {
     "title": "À propos",
@@ -448,7 +486,9 @@
       "users": "Comptes",
       "settings": "Paramètres",
       "inquiries": "Demandes",
-      "door": "Contrôle"
+      "door": "Contrôle",
+      "team": "Équipe",
+      "paypal": "PayPal"
     },
     "overview": {
       "title": "Vue d’ensemble",
@@ -510,8 +550,15 @@
         "notFound": "Commande introuvable.",
         "alreadyPaid": "Cette commande est déjà payée.",
         "notPayable": "Cette commande ne peut plus être encaissée.",
-        "amount": "Le montant ne correspond pas."
-      }
+        "amount": "Le montant ne correspond pas.",
+        "notRefundable": "Cette commande ne peut pas être remboursée ici.",
+        "paypalMissing": "Compte PayPal de l'organisateur introuvable ou désactivé.",
+        "refundFailed": "PayPal a refusé le remboursement. Vérifiez dans votre compte PayPal."
+      },
+      "refundPaypal": "Rembourser via PayPal",
+      "refundPending": "Remboursement…",
+      "refundConfirm": "Rembourser intégralement cette commande ? Les billets seront annulés et les places remises en vente.",
+      "refundDone": "Commande remboursée."
     },
     "resellers": {
       "title": "Points de vente",
@@ -551,7 +598,9 @@
         "lastAdmin": "Impossible : ce serait le dernier administrateur actif.",
         "notFound": "Compte introuvable.",
         "invalid": "Requête invalide."
-      }
+      },
+      "statsOrganizer": "Ventes consultées par {email}",
+      "statsNoOrganizer": "Aucun organisateur"
     },
     "status": {
       "DRAFT": "Brouillon",
@@ -576,7 +625,9 @@
     "paymentMethod": {
       "CARD": "Carte",
       "IBAN": "Virement",
-      "CASH": "Cash"
+      "CASH": "Cash",
+      "PAYPAL": "PayPal",
+      "FREE": "Gratuit"
     },
     "channel": {
       "ONLINE": "En ligne",
@@ -768,7 +819,8 @@
       "acceptIban": "Virement IBAN",
       "inheritPayment": "Comme le spectacle ({state})",
       "paymentOn": "oui",
-      "paymentOff": "non"
+      "paymentOff": "non",
+      "seats": "Places"
     },
     "options": {
       "title": "Options de commande",
@@ -836,6 +888,84 @@
         "MULTI_SESSION": "Plusieurs séances",
         "UNSURE": "Pas encore défini"
       }
+    },
+    "team": {
+      "title": "Équipe",
+      "subtitle": "Invitez des responsables qui consultent les ventes et les commandes, sans pouvoir rien modifier.",
+      "organizer": "Organisateur",
+      "invite": "Inviter un responsable",
+      "inviteHint": "La personne reçoit un e-mail pour choisir son mot de passe. Le lien est valable 7 jours.",
+      "email": "E-mail",
+      "name": "Nom (facultatif)",
+      "send": "Envoyer l'invitation",
+      "sent": "Invitation envoyée à {email}.",
+      "person": "Personne",
+      "status": "Statut",
+      "lastLogin": "Dernière connexion",
+      "active": "Actif",
+      "pending": "Invitation en attente",
+      "empty": "Aucun responsable invité pour l'instant.",
+      "revoke": "Retirer l'accès",
+      "revokeLabel": "Retirer l'accès de {email}",
+      "errors": {
+        "invalid": "Adresse e-mail invalide.",
+        "forbidden": "Droits insuffisants.",
+        "otherRole": "Ce compte a déjà un autre rôle (organisateur, contrôleur…). Contactez ticketick.",
+        "throttled": "Trop d'invitations en peu de temps. Réessayez plus tard.",
+        "unavailable": "L'e-mail n'a pas pu être envoyé. Réessayez."
+      }
+    },
+    "paypal": {
+      "title": "PayPal",
+      "subtitle": "Compte PayPal Business sur lequel chaque organisateur encaisse ses ventes.",
+      "account": "Compte de l'organisateur",
+      "enabled": "Actif",
+      "disabled": "Désactivé",
+      "live": "Production",
+      "sandbox": "Sandbox (test)",
+      "none": "Non configuré",
+      "hint": "Client ID et Secret se trouvent sur developer.paypal.com › Apps & Credentials (onglet Live), dans une application REST liée au compte Business.",
+      "updated": "Modifié le {date}",
+      "payeeEmail": "E-mail du compte PayPal bénéficiaire",
+      "payeeEmailHint": "Doit être l'adresse principale du compte Business qui a créé l'application.",
+      "clientId": "Client ID",
+      "secret": "Secret",
+      "secretKeep": "Laisser vide pour conserver",
+      "liveLabel": "Production (décocher pour la sandbox de test)",
+      "enabledLabel": "Proposer PayPal aux acheteurs",
+      "save": "Enregistrer",
+      "saving": "Vérification auprès de PayPal…",
+      "saved": "Compte PayPal enregistré et vérifié.",
+      "errors": {
+        "invalid": "Champs invalides.",
+        "notFound": "Organisateur introuvable.",
+        "secretRequired": "Le Secret est obligatoire.",
+        "credentials": "PayPal refuse ce Client ID / Secret. Vérifiez la paire et le mode (production ou sandbox)."
+      }
+    },
+    "seats": {
+      "back": "← Retour au spectacle",
+      "title": "Places numérotées",
+      "zone": "Catégorie",
+      "total": "Places",
+      "sold": "Vendues",
+      "blocked": "Bloquées",
+      "available": "En vente",
+      "selection": "{count, plural, =0 {Aucune place sélectionnée} one {# place sélectionnée} other {# places sélectionnées}}",
+      "hint": "Touchez des places libres pour les réserver aux invités, ou des places bloquées pour les remettre en vente. Les places vendues ne changent pas.",
+      "legendBlocked": "Bloquée (invités)",
+      "legendSold": "Vendue ou en cours d'achat",
+      "note": "Note (facultatif)",
+      "notePlaceholder": "Invités artiste, presse…",
+      "block": "{count, plural, =0 {Bloquer} other {Bloquer (#)}}",
+      "unblock": "{count, plural, =0 {Remettre en vente} other {Remettre en vente (#)}}",
+      "done": "{count, plural, =0 {Aucune place modifiée (déjà vendue entre-temps ?).} one {# place mise à jour.} other {# places mises à jour.}}",
+      "errors": {
+        "invalid": "Sélection invalide.",
+        "notFound": "Séance introuvable."
+      },
+      "blockedList": "Places bloquées ({count})",
+      "noneBlocked": "Aucune place bloquée."
     }
   }
 }

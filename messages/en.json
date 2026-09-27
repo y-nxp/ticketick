@@ -83,7 +83,23 @@
     "free": "Free",
     "companionHint": "Up to {n} per paying ticket, 16 and under.",
     "companionRule": "{n, plural, =1 {One free seat max} other {# free seats max}} per paying ticket.",
-    "companionRuleNamed": "{n, plural, =1 {One free seat max} other {# free seats max}} per “{ticket}” ticket."
+    "companionRuleNamed": "{n, plural, =1 {One free seat max} other {# free seats max}} per “{ticket}” ticket.",
+    "companionRuleOrder": "{n, plural, =1 {One free seat} other {Up to # free seats}} per order, with at least one paying ticket.",
+    "seatPickTitle": "Choose your seats",
+    "seatPickHint": "Tap a free seat on the plan to add it. You can then choose the rate for each seat.",
+    "seatSelected": "Your selection",
+    "seatTaken": "Taken",
+    "seatFree": "Free seat",
+    "seatNone": "No seat selected.",
+    "seatTariff": "Rate",
+    "seatRemove": "Remove this seat",
+    "seatLimit": "Maximum number of seats reached for this order.",
+    "seatLoading": "Loading the seating plan…",
+    "seatError": "Seating plan unavailable right now. Please try again shortly.",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "attendeeNote": "Name and date of birth required at checkout.",
+    "attendeeNoteAge": "Under {age}: name and date of birth required at checkout, ID checked at the door."
   },
   "portal": {
     "tickets": "Tickets",
@@ -116,7 +132,8 @@
     "viewCart": "Go to cart",
     "reserveHint": "Seats are only reserved once you start checkout.",
     "continue": "Continue shopping",
-    "session": "Session"
+    "session": "Session",
+    "seatCount": "{count, plural, one {# seat} other {# seats}}"
   },
   "checkout": {
     "title": "Checkout",
@@ -145,7 +162,7 @@
     "paidTooLate": "Your payment arrived after the reservation expired and the seats were sold in the meantime. No ticket was issued: you will be refunded in full, with nothing for you to do.",
     "failed": "Something went wrong. Please try again.",
     "unavailable": "Online payment is temporarily unavailable. Your order was not placed and your seats have been released. Please try again later.",
-    "companion_limit": "At most 2 free seats (16 and under) per paying ticket.",
+    "companion_limit": "Too many free tickets for the number of paid tickets in the order.",
     "companion_requires_paid": "Free seats must be added to a paying ticket.",
     "sold_out": "Not enough seats left for this selection.",
     "throttled": "Too many reservations in a short time from this connection. Please wait a few minutes and try again.",
@@ -169,7 +186,24 @@
     "hold_mismatch": "Your cart has changed. We are reserving the new selection.",
     "option_unavailable": "This option is no longer available for your selection.",
     "option_incomplete": "Pick a shuttle time, or uncheck the option.",
-    "option_invalid": "That option choice is not valid."
+    "option_invalid": "That option choice is not valid.",
+    "reserveFree": "Book my seats",
+    "freeTitle": "No payment",
+    "freeHint": "This booking is free. Your tickets are emailed as soon as you confirm.",
+    "paypal": "PayPal",
+    "paypalHint": "Secure payment with PayPal, with or without an account (cards accepted).",
+    "discount": "Discount",
+    "attendeesTitle": "Free ticket holders",
+    "attendeesHint": "Enter the full name and date of birth of each holder. ID will be checked at the door.",
+    "attendeeName": "First and last name",
+    "attendeeBirthDate": "Date of birth",
+    "attendeeAgeHint": "Under {age} on the day of the concert.",
+    "attendee_missing": "Enter the name and date of birth of each free ticket holder.",
+    "attendee_invalid": "Invalid full name (first and last) or date of birth for a free ticket.",
+    "attendee_too_old": "A holder is over the age limit for the free ticket. Choose another rate for that seat.",
+    "seat_taken": "One or more seats have just been taken. They were removed from your cart.",
+    "seatsRemoved": "Some seats were just taken by another buyer and removed from your cart. Please check your selection.",
+    "invalid_seats": "Invalid seat selection. Please choose your seats again."
   },
   "account": {
     "title": "My account",
@@ -211,10 +245,12 @@
       "ORGANIZER": "Organizer",
       "RESELLER_AGENT": "Point of sale",
       "DOOR_STAFF": "Door staff",
-      "ADMIN": "Administrator"
+      "ADMIN": "Administrator",
+      "ORGANIZER_VIEWER": "Manager (read-only)"
     },
     "ticketCount": "{count} ticket(s)",
-    "downloadPdf": "Download / print PDF"
+    "downloadPdf": "Download / print PDF",
+    "adminAccessHintViewer": "View your organization's sales and orders."
   },
   "organizer": {
     "title": "Organizer space",
@@ -296,7 +332,9 @@
     "otherSession": "Ticket for another performance — not used up, still valid on that date.",
     "usedAt": "Scanned at {time}",
     "noSessions": "No performance to check",
-    "noSessionsHint": "Upcoming performances appear here, as well as those that started less than 12 hours ago."
+    "noSessionsHint": "Upcoming performances appear here, as well as those that started less than 12 hours ago.",
+    "checkId": "Check ID",
+    "bornOn": "Born {date}"
   },
   "about": {
     "title": "About",
@@ -448,7 +486,9 @@
       "users": "Accounts",
       "settings": "Settings",
       "inquiries": "Inquiries",
-      "door": "Door"
+      "door": "Door",
+      "team": "Team",
+      "paypal": "PayPal"
     },
     "overview": {
       "title": "Overview",
@@ -510,8 +550,15 @@
         "notFound": "Order not found.",
         "alreadyPaid": "This order is already paid.",
         "notPayable": "This order can no longer be collected.",
-        "amount": "The amount does not match."
-      }
+        "amount": "The amount does not match.",
+        "notRefundable": "This order cannot be refunded here.",
+        "paypalMissing": "The organizer's PayPal account is missing or disabled.",
+        "refundFailed": "PayPal refused the refund. Check your PayPal account."
+      },
+      "refundPaypal": "Refund via PayPal",
+      "refundPending": "Refunding…",
+      "refundConfirm": "Refund this order in full? The tickets will be cancelled and the seats put back on sale.",
+      "refundDone": "Order refunded."
     },
     "resellers": {
       "title": "Points of sale",
@@ -551,7 +598,9 @@
         "lastAdmin": "Not possible: this would be the last active administrator.",
         "notFound": "Account not found.",
         "invalid": "Invalid request."
-      }
+      },
+      "statsOrganizer": "Sales viewed by {email}",
+      "statsNoOrganizer": "No organizer"
     },
     "status": {
       "DRAFT": "Draft",
@@ -576,7 +625,9 @@
     "paymentMethod": {
       "CARD": "Card",
       "IBAN": "Bank transfer",
-      "CASH": "Cash"
+      "CASH": "Cash",
+      "PAYPAL": "PayPal",
+      "FREE": "Free"
     },
     "channel": {
       "ONLINE": "Online",
@@ -768,7 +819,8 @@
       "acceptIban": "IBAN transfer",
       "inheritPayment": "Same as the show ({state})",
       "paymentOn": "on",
-      "paymentOff": "off"
+      "paymentOff": "off",
+      "seats": "Seats"
     },
     "options": {
       "title": "Order options",
@@ -836,6 +888,84 @@
         "MULTI_SESSION": "Several sessions",
         "UNSURE": "Not defined yet"
       }
+    },
+    "team": {
+      "title": "Team",
+      "subtitle": "Invite managers who can view sales and orders without being able to change anything.",
+      "organizer": "Organizer",
+      "invite": "Invite a manager",
+      "inviteHint": "They receive an email to choose a password. The link is valid for 7 days.",
+      "email": "Email",
+      "name": "Name (optional)",
+      "send": "Send invitation",
+      "sent": "Invitation sent to {email}.",
+      "person": "Person",
+      "status": "Status",
+      "lastLogin": "Last login",
+      "active": "Active",
+      "pending": "Invitation pending",
+      "empty": "No managers invited yet.",
+      "revoke": "Remove access",
+      "revokeLabel": "Remove access for {email}",
+      "errors": {
+        "invalid": "Invalid email address.",
+        "forbidden": "Insufficient permissions.",
+        "otherRole": "This account already has another role (organizer, door staff…). Contact ticketick.",
+        "throttled": "Too many invitations in a short time. Try again later.",
+        "unavailable": "The email could not be sent. Please try again."
+      }
+    },
+    "paypal": {
+      "title": "PayPal",
+      "subtitle": "PayPal Business account on which each organizer collects its sales.",
+      "account": "Organizer account",
+      "enabled": "Active",
+      "disabled": "Disabled",
+      "live": "Live",
+      "sandbox": "Sandbox (test)",
+      "none": "Not configured",
+      "hint": "Client ID and Secret are on developer.paypal.com › Apps & Credentials (Live tab), in a REST app linked to the Business account.",
+      "updated": "Updated {date}",
+      "payeeEmail": "Payee PayPal account email",
+      "payeeEmailHint": "Must be the primary email of the Business account that created the app.",
+      "clientId": "Client ID",
+      "secret": "Secret",
+      "secretKeep": "Leave empty to keep",
+      "liveLabel": "Live (uncheck for the test sandbox)",
+      "enabledLabel": "Offer PayPal to buyers",
+      "save": "Save",
+      "saving": "Checking with PayPal…",
+      "saved": "PayPal account saved and verified.",
+      "errors": {
+        "invalid": "Invalid fields.",
+        "notFound": "Organizer not found.",
+        "secretRequired": "The Secret is required.",
+        "credentials": "PayPal rejects this Client ID / Secret. Check the pair and the mode (live or sandbox)."
+      }
+    },
+    "seats": {
+      "back": "← Back to the show",
+      "title": "Numbered seats",
+      "zone": "Category",
+      "total": "Seats",
+      "sold": "Sold",
+      "blocked": "Blocked",
+      "available": "On sale",
+      "selection": "{count, plural, =0 {No seat selected} one {# seat selected} other {# seats selected}}",
+      "hint": "Tap free seats to reserve them for guests, or blocked seats to put them back on sale. Sold seats do not change.",
+      "legendBlocked": "Blocked (guests)",
+      "legendSold": "Sold or being purchased",
+      "note": "Note (optional)",
+      "notePlaceholder": "Artist guests, press…",
+      "block": "{count, plural, =0 {Block} other {Block (#)}}",
+      "unblock": "{count, plural, =0 {Put back on sale} other {Put back on sale (#)}}",
+      "done": "{count, plural, =0 {No seat changed (sold in the meantime?).} one {# seat updated.} other {# seats updated.}}",
+      "errors": {
+        "invalid": "Invalid selection.",
+        "notFound": "Session not found."
+      },
+      "blockedList": "Blocked seats ({count})",
+      "noneBlocked": "No blocked seats."
     }
   }
 }

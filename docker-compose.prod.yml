@@ -65,6 +65,8 @@ services:
         npx prisma migrate deploy
         echo "▶ Compte organisateur Illyria…"
         npx tsx prisma/ensure-illyria-account.ts
+        echo "▶ Gstaad New Year Music Festival 2026…"
+        npx tsx prisma/setup-gstaad-nymf-2026.ts || echo "⚠ Import Gstaad en échec : le site démarre quand même."
         echo "✅ Base prête."
 
   app:

@@ -24,6 +24,8 @@ enum UserRole {
   RESELLER_AGENT
   /// Contrôleur à l'entrée : scanner uniquement, aucun accès au backoffice.
   DOOR_STAFF
+  /// Responsable invité par un organisateur : consulte ses ventes, ne modifie rien.
+  ORGANIZER_VIEWER
   ADMIN
 }
 
@@ -152,6 +154,18 @@ enum PaymentMethod {
   CARD
   IBAN
   CASH
+  PAYPAL
+  /// Commande à 0 fr. : validée sans encaissement.
+  FREE
+}
+
+/// État d'un siège numéroté pour une séance.
+enum SeatStatus {
+  AVAILABLE
+  /// Pris par une commande (rétention, virement attendu ou payée).
+  RESERVED
+  /// Retiré de la vente à la main (invités, régie, presse).
+  BLOCKED
 }
 
 enum PaymentStatus {
@@ -228,7 +242,7 @@ model User {
   emailVerifiedAt DateTime?
 
   sessions           Session[]
-  impersonations     Session[] @relation("SessionImpersonator")
+  impersonations     Session[]                @relation("SessionImpersonator")
   passwordResets     PasswordResetToken[]
   emailVerifications EmailVerificationToken[]
 
@@ -242,6 +256,10 @@ model User {
   doorOrganizer   Organizer? @relation("DoorStaff", fields: [doorOrganizerId], references: [id], onDelete: SetNull)
   doorOrganizerId String?
 
+  /// Responsable invité : organisateur dont il consulte les ventes.
+  statsOrganizer   Organizer? @relation("StatsViewers", fields: [statsOrganizerId], references: [id], onDelete: SetNull)
+  statsOrganizerId String?
+
   /// Renseigné pour les agents d'un point de vente revendeur.
   reseller   Reseller? @relation(fields: [resellerId], references: [id])
   resellerId String?
@@ -251,7 +269,7 @@ model User {
 
   /// Offres des organisateurs suivis. Jamais implicite : case décochée
   /// à l'inscription, révocable depuis le compte.
-  marketingOptIn   Boolean   @default(false)
+  marketingOptIn   Boolean           @default(false)
   marketingOptInAt DateTime?
   follows          OrganizerFollow[]
 
@@ -260,6 +278,7 @@ model User {
 
   @@index([resellerId])
   @@index([doorOrganizerId])
+  @@index([statsOrganizerId])
 }
 
 model Organizer {
@@ -284,9 +303,9 @@ model Organizer {
   notifyEmails String[] @default([])
 
   /// Responsable légal imprimé sur les billets. Si vide : pied ticketick seul.
-  producerName    String?
-  producerUrl     String?
-  producerLogoUrl String?
+  producerName     String?
+  producerUrl      String?
+  producerLogoUrl  String?
   /// CG du billet { fr, en, de, it }. Si vide : conditions ticketick.ch/terms.
   ticketDisclaimer Json?
 
@@ -296,12 +315,34 @@ model Organizer {
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @unique
 
-  events Event[]
-  followers OrganizerFollow[]
-  doorStaff User[] @relation("DoorStaff")
+  events       Event[]
+  followers    OrganizerFollow[]
+  doorStaff    User[]                  @relation("DoorStaff")
+  statsViewers User[]                  @relation("StatsViewers")
+  discounts    Discount[]
+  paypal       OrganizerPaypalAccount?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// Compte PayPal Business sur lequel l'organisateur encaisse.
+///
+/// Le secret n'est stocké que chiffré (AES-256-GCM, clé hors base) : une
+/// copie de la base ne suffit pas à rembourser ni à encaisser à sa place.
+model OrganizerPaypalAccount {
+  id          String    @id @default(cuid())
+  organizer   Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  organizerId String    @unique
+  /// Adresse du compte qui reçoit les paiements.
+  payeeEmail  String
+  clientId    String
+  secretEnc   String
+  /// `false` : environnement de test PayPal (sandbox).
+  live        Boolean   @default(true)
+  enabled     Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 /// Un spectateur ne reçoit les offres que des organisateurs qu'il suit.
@@ -339,7 +380,9 @@ model Venue {
   lat     Float?
   lng     Float?
 
-  sessions EventSession[]
+  sessions  EventSession[]
+  seatPlans SeatPlan[]
+  discounts Discount[]
 }
 
 /// L'œuvre. Ne porte ni date, ni lieu, ni inventaire : tout cela vit
@@ -357,8 +400,10 @@ model Event {
   gallery     String[]        @default([])
 
   /// Moyens d'encaissement proposés par défaut à toutes les séances.
-  acceptCard Boolean @default(true)
-  acceptIban Boolean @default(true)
+  acceptCard   Boolean @default(true)
+  acceptIban   Boolean @default(true)
+  /// Encaissement sur le compte PayPal de l'organisateur.
+  acceptPaypal Boolean @default(false)
 
   organizer   Organizer @relation(fields: [organizerId], references: [id])
   organizerId String
@@ -397,7 +442,9 @@ model EventSession {
   venueId String?
 
   /// Plan de salle facultatif : placement libre si absent.
-  seatMap SeatMap?
+  seatPlan   SeatPlan?     @relation(fields: [seatPlanId], references: [id])
+  seatPlanId String?
+  seats      SessionSeat[]
 
   /// Jauge de la salle pour cette séance, toutes catégories confondues.
   /// Absente : seuls les contingents de chaque tarif limitent la vente.
@@ -420,34 +467,71 @@ model EventSession {
   @@index([startsAt, status])
 }
 
-model SeatMap {
+/// Plan de salle numéroté, propre à un lieu et partagé par ses séances.
+model SeatPlan {
+  id      String @id @default(cuid())
+  /// Clé stable du plan dans le code (`rougemont-eglise`).
+  slug    String @unique
+  name    String
+  venue   Venue  @relation(fields: [venueId], references: [id])
+  venueId String
+  /// `SeatLayout` : zones, sections, sièges et coordonnées (lib/seating).
+  layout  Json
+
+  sessions EventSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([venueId])
+}
+
+/// État d'un siège pour une séance : une ligne par siège du plan.
+model SessionSeat {
   id        String       @id @default(cuid())
   session   EventSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  sessionId String       @unique
-  /// Définition JSON du plan (sections, rangées, sièges)
-  layout    Json
+  sessionId String
+  seatKey   String
+  zone      String
+  status    SeatStatus   @default(AVAILABLE)
+  order     Order?       @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  orderId   String?
+  /// Motif d'un blocage (« Invité artiste », « Presse »…).
+  blockNote String?
+  updatedAt DateTime     @updatedAt
+
+  @@unique([sessionId, seatKey])
+  @@index([sessionId, status])
+  @@index([orderId])
 }
 
 /// Inventaire et tarif, rattachés à une session précise.
 model TicketType {
-  id          String       @id @default(cuid())
-  session     EventSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  sessionId   String
-  name        Json // { fr, en, de, it }
-  description Json?
-  priceCents  Int
-  currency    String       @default("CHF")
-  quantity    Int
-  sold        Int          @default(0)
-  maxPerOrder Int          @default(10)
+  id               String       @id @default(cuid())
+  session          EventSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId        String
+  name             Json // { fr, en, de, it }
+  description      Json?
+  priceCents       Int
+  currency         String       @default("CHF")
+  quantity         Int
+  sold             Int          @default(0)
+  maxPerOrder      Int          @default(10)
   /// Si renseigné, ce tarif n'est vendu qu'avec des billets payants de la
   /// même séance : au plus N de ces places par billet payant.
   maxPerPaidTicket Int?
   /// Tarif payant qui débloque ces places. Absent : tous les payants de la
   /// séance comptent. Renseigné : seule la zone visée compte.
-  companionOfId String?
-  companionOf   TicketType?  @relation("Companion", fields: [companionOfId], references: [id], onDelete: SetNull)
-  companions    TicketType[] @relation("Companion")
+  companionOfId    String?
+  companionOf      TicketType?  @relation("Companion", fields: [companionOfId], references: [id], onDelete: SetNull)
+  companions       TicketType[] @relation("Companion")
+
+  /// Séance numérotée : zones du plan où ce tarif se vend. Vide = toutes.
+  seatZones        String[] @default([])
+  /// Nom complet et date de naissance exigés pour chaque billet.
+  requiresAttendee Boolean  @default(false)
+  /// Âge maximal (exclu) le jour de la séance : 25 = moins de 25 ans.
+  maxAgeYears      Int?
 
   salesStartAt DateTime?
   salesEndAt   DateTime?
@@ -543,6 +627,15 @@ model Discount {
 
   scope DiscountScope @default(ORDER)
 
+  /// Rabais automatique propre à un organisateur.
+  organizer           Organizer? @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  organizerId         String?
+  /// Ne compte et ne réduit que les séances de ce lieu.
+  venue               Venue?     @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  venueId             String?
+  /// Nombre de séances payantes distinctes requis dans la commande.
+  minDistinctSessions Int?
+
   event   Event?  @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId String?
 
@@ -569,6 +662,7 @@ model Discount {
 
   @@index([eventId])
   @@index([sessionId])
+  @@index([organizerId])
 }
 
 model OrderDiscount {
@@ -625,6 +719,7 @@ model Order {
   tickets   Ticket[]
   payment   Payment?
   ledger    ResellerLedgerEntry[]
+  seats     SessionSeat[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -642,6 +737,8 @@ model OrderItem {
   ticketTypeId   String
   quantity       Int
   unitPriceCents Int
+  /// Séance numérotée : sièges retenus, un par billet.
+  seatKeys       String[]   @default([])
 
   @@index([orderId])
 }
@@ -660,17 +757,17 @@ model EventOption {
   session   EventSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId String?
 
-  enabled   Boolean              @default(false)
-  title     Json
-  hint      Json?
+  enabled     Boolean              @default(false)
+  title       Json
+  hint        Json?
   /// Libellé imprimé sur le billet. Absent : on reprend le titre d'achat.
   ticketTitle Json?
-  priceCents Int                 @default(0)
-  priceMode EventOptionPriceMode @default(FLAT)
-  sortOrder Int                  @default(0)
+  priceCents  Int                  @default(0)
+  priceMode   EventOptionPriceMode @default(FLAT)
+  sortOrder   Int                  @default(0)
 
-  groups  EventOptionGroup[]
-  orders  OrderOption[]
+  groups EventOptionGroup[]
+  orders OrderOption[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -685,8 +782,8 @@ model EventOptionGroup {
   optionId String
 
   title     Json
-  required  Boolean @default(false)
-  sortOrder Int     @default(0)
+  required  Boolean             @default(false)
+  sortOrder Int                 @default(0)
   choices   EventOptionChoice[]
 
   @@index([optionId])
@@ -698,7 +795,7 @@ model EventOptionChoice {
   groupId String
 
   label     Json
-  sortOrder Int @default(0)
+  sortOrder Int  @default(0)
 
   @@index([groupId])
 }
@@ -722,17 +819,20 @@ model OrderOption {
 }
 
 model Ticket {
-  id           String       @id @default(cuid())
-  code         String       @unique
-  order        Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId      String
-  ticketType   TicketType   @relation(fields: [ticketTypeId], references: [id])
-  ticketTypeId String
-  attendeeName String?
-  seatLabel    String?
-  status       TicketStatus @default(VALID)
-  usedAt       DateTime?
-  createdAt    DateTime     @default(now())
+  id                String       @id @default(cuid())
+  code              String       @unique
+  order             Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId           String
+  ticketType        TicketType   @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeId      String
+  attendeeName      String?
+  /// Exigée par les gratuités d'âge ; montrée au contrôle d'entrée.
+  attendeeBirthDate DateTime?    @db.Date
+  seatKey           String?
+  seatLabel         String?
+  status            TicketStatus @default(VALID)
+  usedAt            DateTime?
+  createdAt         DateTime     @default(now())
 
   @@index([orderId])
   @@index([ticketTypeId])
@@ -742,7 +842,7 @@ model Payment {
   id          String        @id @default(cuid())
   order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderId     String        @unique
-  provider    String // "postfinance" | "stripe" | "iban" | "cash" | "mock"
+  provider    String // "postfinance" | "stripe" | "paypal" | "iban" | "cash" | "free" | "mock"
   providerRef String? // id de transaction PostFinance ou session Stripe
   method      PaymentMethod
   status      PaymentStatus @default(PENDING)

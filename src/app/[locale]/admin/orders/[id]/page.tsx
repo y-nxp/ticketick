@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
+import { getCurrentUser } from "@/lib/auth/dal";
 import { getAdminOrder } from "@/lib/data/admin";
 import { isCheckoutHoldEmail } from "@/lib/orders/create-order";
 import { isAbandonedCardHold, isRefundDue } from "@/lib/orders/reservation";
@@ -20,8 +21,9 @@ export default async function AdminOrderDetailPage({
   const { locale, id } = await params;
   setRequestLocale(locale);
 
-  const order = await getAdminOrder(id);
+  const [order, user] = await Promise.all([getAdminOrder(id), getCurrentUser()]);
   if (!order) notFound();
+  const readOnly = user?.role === "ORGANIZER_VIEWER";
 
   const t = await getTranslations("admin");
   const hold = isCheckoutHoldEmail(order.email);
@@ -33,6 +35,10 @@ export default async function AdminOrderDetailPage({
     order.status === "AWAITING_PAYMENT" ||
     order.status === "PENDING" ||
     order.tickets.length > 0;
+  const canRefundPaypal =
+    order.status === "PAID" &&
+    order.payment?.provider === "paypal" &&
+    order.payment.status === "COMPLETED";
 
   return (
     <div>
@@ -185,6 +191,17 @@ export default async function AdminOrderDetailPage({
               </p>
             </li>
           ))}
+          {order.discounts.map((d, index) => (
+            <li
+              key={`discount-${index}`}
+              className="flex items-start justify-between gap-4 px-4 py-3 text-sm"
+            >
+              <p>{translate(d.discount.label as Translated, locale)}</p>
+              <p className="shrink-0 tabular-nums text-muted-foreground">
+                −{formatPrice(d.amountCents, locale)}
+              </p>
+            </li>
+          ))}
         </ul>
       </section>
 
@@ -197,7 +214,22 @@ export default async function AdminOrderDetailPage({
                 key={ticket.id}
                 className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm"
               >
-                <p className="font-mono text-xs tracking-wider">{ticket.code}</p>
+                <div className="min-w-0">
+                  <p className="font-mono text-xs tracking-wider">{ticket.code}</p>
+                  {ticket.seatLabel || ticket.attendeeName ? (
+                    <p className="text-xs text-muted-foreground">
+                      {[
+                        ticket.seatLabel,
+                        ticket.attendeeName,
+                        ticket.attendeeBirthDate
+                          ? swissDay(ticket.attendeeBirthDate)
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  ) : null}
+                </div>
                 <Badge
                   variant={ticket.status === "VALID" ? "default" : "secondary"}
                 >
@@ -220,12 +252,20 @@ export default async function AdminOrderDetailPage({
         </p>
       )}
 
-      <OrderActions
-        orderId={order.id}
-        reference={order.reference}
-        canMarkCash={canMarkCash}
-        canDownload={canDownload}
-      />
+      {readOnly ? null : (
+        <OrderActions
+          orderId={order.id}
+          reference={order.reference}
+          canMarkCash={canMarkCash}
+          canDownload={canDownload}
+          canRefundPaypal={canRefundPaypal}
+        />
+      )}
     </div>
   );
+}
+
+function swissDay(date: Date): string {
+  const [year, month, day] = date.toISOString().slice(0, 10).split("-");
+  return `${day}.${month}.${year}`;
 }

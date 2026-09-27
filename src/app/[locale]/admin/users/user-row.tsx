@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   impersonateUser,
   setDoorOrganizer,
+  setStatsOrganizer,
   setUserActive,
   setUserRole,
   type AdminActionState,
@@ -17,6 +18,7 @@ const ROLES = [
   "ORGANIZER",
   "RESELLER_AGENT",
   "DOOR_STAFF",
+  "ORGANIZER_VIEWER",
   "ADMIN",
 ] as const;
 
@@ -26,6 +28,7 @@ export interface UserRowData {
   name: string | null;
   role: string;
   doorOrganizerId: string | null;
+  statsOrganizerId: string | null;
   active: boolean;
   isSelf: boolean;
   lastLogin: string;
@@ -51,6 +54,10 @@ export function UserRow({
     AdminActionState | undefined,
     FormData
   >(setDoorOrganizer, undefined);
+  const [statsState, statsAction, statsPending] = useActionState<
+    AdminActionState | undefined,
+    FormData
+  >(setStatsOrganizer, undefined);
   const [activeState, activeAction, activePending] = useActionState<
     AdminActionState | undefined,
     FormData
@@ -64,6 +71,7 @@ export function UserRow({
   const error =
     roleState?.error ??
     doorState?.error ??
+    statsState?.error ??
     activeState?.error ??
     impersonateState?.error;
 
@@ -115,6 +123,26 @@ export function UserRow({
               className="h-9 max-w-56 rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-ring disabled:opacity-50"
             >
               <option value="">{t("users.doorAllOrganizers")}</option>
+              {organizers.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </form>
+        ) : null}
+        {!user.isSelf && user.role === "ORGANIZER_VIEWER" ? (
+          <form action={statsAction} className="mt-2">
+            <input type="hidden" name="userId" value={user.id} />
+            <select
+              name="organizerId"
+              defaultValue={user.statsOrganizerId ?? ""}
+              disabled={statsPending}
+              onChange={(e) => e.currentTarget.form?.requestSubmit()}
+              aria-label={t("users.statsOrganizer", { email: user.email })}
+              className="h-9 max-w-56 rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-ring disabled:opacity-50"
+            >
+              <option value="">{t("users.statsNoOrganizer")}</option>
               {organizers.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.name}

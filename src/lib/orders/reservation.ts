@@ -1,6 +1,14 @@
+import type { PaymentMethod } from "@prisma/client";
+
 /** Durée pendant laquelle une commande carte retient les places. */
 export const CARD_HOLD_MINUTES = 25;
 export const CARD_HOLD_MS = CARD_HOLD_MINUTES * 60 * 1000;
+
+/**
+ * Paiements en ligne qui retiennent les places le temps du chrono : sans
+ * retour du prestataire, la rétention est rendue à la vente.
+ */
+export const HELD_METHODS: PaymentMethod[] = ["CARD", "PAYPAL"];
 
 export function reservedUntilFrom(createdAt: Date): Date {
   return new Date(createdAt.getTime() + CARD_HOLD_MS);
@@ -15,7 +23,10 @@ export function isAbandonedCardHold(
   order: { status: string; paymentMethod: string | null; createdAt: Date },
   now: Date = new Date(),
 ): boolean {
-  if (order.status !== "AWAITING_PAYMENT" || order.paymentMethod !== "CARD") {
+  if (
+    order.status !== "AWAITING_PAYMENT" ||
+    !HELD_METHODS.includes(order.paymentMethod as PaymentMethod)
+  ) {
     return false;
   }
   return reservedUntilFrom(order.createdAt) <= now;

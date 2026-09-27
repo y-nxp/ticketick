@@ -56,6 +56,12 @@ export interface TicketType {
   /** Tarif payant qui débloque ces places. Absent : tous les payants comptent. */
   companionOfId?: string;
   salesEndAt?: string;
+  /** Séance numérotée : zones où ce tarif se vend. Vide : toute la salle. */
+  seatZones?: string[];
+  /** Nom et date de naissance à fournir pour chaque billet. */
+  requiresAttendee?: boolean;
+  /** Âge maximal exclu le jour de la séance (25 = moins de 25 ans). */
+  maxAgeYears?: number;
 }
 
 export interface OrganizerNavLink {
@@ -98,6 +104,8 @@ export interface SessionItem {
   status: EventStatus;
   venue?: Venue;
   hasMap: boolean;
+  /** Places numérotées : le choix se fait sur le plan de salle. */
+  seated: boolean;
   /** Jauge de salle, tous tarifs confondus. Absente : seuls les contingents comptent. */
   capacity?: number;
   sold: number;

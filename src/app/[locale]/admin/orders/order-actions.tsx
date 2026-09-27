@@ -2,9 +2,9 @@
 
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import { Banknote, Download } from "lucide-react";
+import { Banknote, Download, Undo2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { markOrderPaidCash } from "@/lib/admin/order-actions";
+import { markOrderPaidCash, refundPaypalOrder } from "@/lib/admin/order-actions";
 import type { FormState } from "@/lib/admin/types";
 
 export function OrderActions({
@@ -12,17 +12,23 @@ export function OrderActions({
   reference,
   canMarkCash,
   canDownload,
+  canRefundPaypal,
 }: {
   orderId: string;
   reference: string;
   canMarkCash: boolean;
   canDownload: boolean;
+  canRefundPaypal: boolean;
 }) {
   const t = useTranslations("admin.orders");
   const [state, action, pending] = useActionState<FormState, FormData>(
     markOrderPaidCash,
     undefined,
   );
+  const [refundState, refundAction, refunding] = useActionState<
+    FormState,
+    FormData
+  >(refundPaypalOrder, undefined);
 
   return (
     <div className="mt-6 space-y-3">
@@ -45,6 +51,20 @@ export function OrderActions({
             </Button>
           </form>
         ) : null}
+        {canRefundPaypal ? (
+          <form
+            action={refundAction}
+            onSubmit={(e) => {
+              if (!window.confirm(t("refundConfirm"))) e.preventDefault();
+            }}
+          >
+            <input type="hidden" name="orderId" value={orderId} />
+            <Button type="submit" variant="outline" disabled={refunding}>
+              <Undo2 />
+              {refunding ? t("refundPending") : t("refundPaypal")}
+            </Button>
+          </form>
+        ) : null}
       </div>
       {canDownload ? (
         <p className="text-xs text-muted-foreground">{t("downloadHint")}</p>
@@ -58,6 +78,14 @@ export function OrderActions({
       {state && !state.ok ? (
         <p role="alert" className="text-sm text-destructive">
           {t(`errors.${state.error}`)}
+        </p>
+      ) : null}
+      {refundState?.ok ? (
+        <p className="text-sm text-emerald-700">{t("refundDone")}</p>
+      ) : null}
+      {refundState && !refundState.ok ? (
+        <p role="alert" className="text-sm text-destructive">
+          {t(`errors.${refundState.error}`)}
         </p>
       ) : null}
     </div>

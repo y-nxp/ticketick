@@ -156,7 +156,9 @@ function afterLoginHref(
 ): string {
   const dest = safeNext(next);
   if (dest !== "/") return dest;
-  if (role === "ADMIN" || role === "ORGANIZER") return "/admin";
+  if (role === "ADMIN" || role === "ORGANIZER" || role === "ORGANIZER_VIEWER") {
+    return "/admin";
+  }
   if (role === "DOOR_STAFF") return "/door";
   return "/";
 }

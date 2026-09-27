@@ -8,6 +8,8 @@ import {
   Settings,
   MessageSquare,
   ScanLine,
+  UserPlus,
+  Wallet,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/dal";
@@ -27,16 +29,19 @@ export default async function AdminLayout({
 }) {
   const t = await getTranslations("admin");
   const user = await getCurrentUser();
-  const organizerView = user?.role === "ORGANIZER";
+  const viewer = user?.role === "ORGANIZER_VIEWER";
+  const organizerView = user?.role === "ORGANIZER" || viewer;
+  const admin = user?.role === "ADMIN";
 
   const sections = [
     { href: "/admin", label: t("nav.overview"), icon: LayoutDashboard },
     { href: "/admin/events", label: t("nav.events"), icon: CalendarDays },
     { href: "/admin/orders", label: t("nav.orders"), icon: Receipt },
-    ...(!organizerView
+    ...(admin
       ? [
           { href: "/admin/resellers", label: t("nav.resellers"), icon: Store },
           { href: "/admin/users", label: t("nav.users"), icon: Users },
+          { href: "/admin/paypal", label: t("nav.paypal"), icon: Wallet },
           {
             href: "/admin/inquiries",
             label: t("nav.inquiries"),
@@ -44,8 +49,13 @@ export default async function AdminLayout({
           },
         ]
       : []),
-    { href: "/door", label: t("nav.door"), icon: ScanLine },
-    { href: "/admin/settings", label: t("nav.settings"), icon: Settings },
+    ...(viewer
+      ? []
+      : [
+          { href: "/admin/team", label: t("nav.team"), icon: UserPlus },
+          { href: "/door", label: t("nav.door"), icon: ScanLine },
+          { href: "/admin/settings", label: t("nav.settings"), icon: Settings },
+        ]),
   ];
 
   return (

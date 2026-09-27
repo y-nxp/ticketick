@@ -2,8 +2,8 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/auth/dal";
-import { catalogActor } from "@/lib/admin/access";
+import { requireAdmin, requireCatalog } from "@/lib/auth/dal";
+import { statsActor } from "@/lib/admin/access";
 import { sumInventory } from "@/lib/inventory";
 
 function catalogOrderWhere(
@@ -20,9 +20,9 @@ function catalogOrderWhere(
 /**
  * Requêtes du backoffice.
  *
- * Les lectures catalogue passent par `catalogActor` : un organisateur ne voit
- * que sa fiche. Les écrans plateforme (comptes, revendeurs, demandes)
- * restent derrière `requireAdmin`.
+ * Les lectures de ventes passent par `statsActor` : un organisateur et les
+ * responsables qu'il a invités ne voient que sa fiche. Les écrans plateforme
+ * (comptes, revendeurs, demandes) restent derrière `requireAdmin`.
  */
 
 export interface AdminOverview {
@@ -35,7 +35,7 @@ export interface AdminOverview {
 }
 
 export async function getAdminOverview(): Promise<AdminOverview> {
-  const { organizerId } = await catalogActor();
+  const { organizerId } = await statsActor();
   const eventWhere = organizerId ? { organizerId } : {};
   const sessionWhere = organizerId
     ? { event: { organizerId } }
@@ -104,7 +104,7 @@ export async function getAdminOverview(): Promise<AdminOverview> {
 }
 
 export async function getAdminEvents() {
-  const { organizerId } = await catalogActor();
+  const { organizerId } = await statsActor();
 
   const events = await prisma.event.findMany({
     where: organizerId ? { organizerId } : undefined,
@@ -156,9 +156,77 @@ export async function getAdminUsers() {
       createdAt: true,
       organizer: { select: { id: true, name: true } },
       doorOrganizerId: true,
+      statsOrganizerId: true,
       _count: { select: { sessions: true, orders: true } },
     },
   });
+}
+
+/**
+ * Responsables d'un organisateur. L'organisateur voit les siens ;
+ * l'administrateur choisit l'organisateur (le premier par défaut).
+ */
+export async function getTeam(requestedOrganizerId?: string) {
+  const user = await requireCatalog();
+  const organizers =
+    user.role === "ADMIN"
+      ? await prisma.organizer.findMany({
+          orderBy: { name: "asc" },
+          select: { id: true, name: true },
+        })
+      : [];
+  const organizerId =
+    user.role === "ORGANIZER"
+      ? user.organizerId!
+      : (organizers.find((o) => o.id === requestedOrganizerId) ?? organizers[0])
+          ?.id;
+
+  const viewers = organizerId
+    ? await prisma.user.findMany({
+        where: { role: "ORGANIZER_VIEWER", statsOrganizerId: organizerId },
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          lastLoginAt: true,
+          passwordHash: true,
+        },
+      })
+    : [];
+
+  return {
+    organizers,
+    organizerId: organizerId ?? null,
+    viewers: viewers.map(({ passwordHash, ...v }) => ({
+      ...v,
+      activated: passwordHash != null,
+    })),
+  };
+}
+
+export async function getPaypalSettings(requestedOrganizerId?: string) {
+  await requireAdmin();
+  const organizers = await prisma.organizer.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+  const organizerId = (
+    organizers.find((o) => o.id === requestedOrganizerId) ?? organizers[0]
+  )?.id;
+  const account = organizerId
+    ? await prisma.organizerPaypalAccount.findUnique({
+        where: { organizerId },
+        select: {
+          payeeEmail: true,
+          clientId: true,
+          live: true,
+          enabled: true,
+          updatedAt: true,
+        },
+      })
+    : null;
+  return { organizers, organizerId: organizerId ?? null, account };
 }
 
 export async function getOrganizerChoices() {
@@ -177,6 +245,7 @@ const adminOrderSelect = {
   channel: true,
   paymentMethod: true,
   totalCents: true,
+  discountCents: true,
   currency: true,
   email: true,
   firstName: true,
@@ -193,6 +262,9 @@ const adminOrderSelect = {
     },
   },
   options: { select: { title: true, summary: true, amountCents: true } },
+  discounts: {
+    select: { amountCents: true, discount: { select: { label: true } } },
+  },
   items: {
     select: {
       quantity: true,
@@ -212,12 +284,19 @@ const adminOrderSelect = {
   },
   tickets: {
     orderBy: { createdAt: "asc" as const },
-    select: { id: true, code: true, status: true },
+    select: {
+      id: true,
+      code: true,
+      status: true,
+      seatLabel: true,
+      attendeeName: true,
+      attendeeBirthDate: true,
+    },
   },
 } satisfies Prisma.OrderSelect;
 
 export async function getAdminOrders() {
-  const { organizerId } = await catalogActor();
+  const { organizerId } = await statsActor();
 
   return prisma.order.findMany({
     where: catalogOrderWhere(organizerId),
@@ -228,7 +307,7 @@ export async function getAdminOrders() {
 }
 
 export async function getAdminOrder(id: string) {
-  const { organizerId } = await catalogActor();
+  const { organizerId } = await statsActor();
 
   const order = await prisma.order.findFirst({
     where: { id, ...catalogOrderWhere(organizerId) },

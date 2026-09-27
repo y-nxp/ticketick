@@ -18,6 +18,10 @@ export interface DoorTicket {
   when: string;
   venue: string;
   buyer: string;
+  seat: string | null;
+  /** Gratuité nominative : à comparer avec une pièce d'identité. */
+  attendee: string | null;
+  attendeeBirthDate: string | null;
 }
 
 export type DoorLookup =
@@ -52,6 +56,9 @@ export async function admitTicket(
       code: true,
       status: true,
       usedAt: true,
+      seatLabel: true,
+      attendeeName: true,
+      attendeeBirthDate: true,
       order: { select: { firstName: true, lastName: true } },
       ticketType: {
         select: {
@@ -86,6 +93,11 @@ export async function admitTicket(
     when: formatDate(session.startsAt, `${locale}-CH`),
     venue: [session.venue?.name, session.venue?.city].filter(Boolean).join(", "),
     buyer: `${ticket.order.firstName} ${ticket.order.lastName}`.trim(),
+    seat: ticket.seatLabel,
+    attendee: ticket.attendeeName,
+    attendeeBirthDate: ticket.attendeeBirthDate
+      ? ticket.attendeeBirthDate.toISOString().slice(0, 10).split("-").reverse().join(".")
+      : null,
   };
 
   if (session.id !== sessionId) {

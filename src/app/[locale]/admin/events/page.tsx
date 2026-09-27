@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CalendarDays, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
+import { getCurrentUser } from "@/lib/auth/dal";
 import { getAdminEvents } from "@/lib/data/admin";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { t as translate, type Translated } from "@/lib/types";
@@ -16,8 +17,9 @@ export default async function AdminEventsPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const events = await getAdminEvents();
+  const [events, user] = await Promise.all([getAdminEvents(), getCurrentUser()]);
   const t = await getTranslations("admin");
+  const readOnly = user?.role === "ORGANIZER_VIEWER";
 
   return (
     <div>
@@ -28,13 +30,15 @@ export default async function AdminEventsPage({
             {t("events.subtitle", { count: events.length })}
           </p>
         </div>
-        <Link
-          href="/admin/events/new"
-          className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary-hover"
-        >
-          <Plus className="size-4" />
-          {t("events.create")}
-        </Link>
+        {readOnly ? null : (
+          <Link
+            href="/admin/events/new"
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary-hover"
+          >
+            <Plus className="size-4" />
+            {t("events.create")}
+          </Link>
+        )}
       </div>
 
       <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
@@ -59,12 +63,18 @@ export default async function AdminEventsPage({
             {events.map((event) => (
               <tr key={event.id} className="hover:bg-muted/30">
                 <td className="px-4 py-3">
-                  <Link
-                    href={`/admin/events/${event.id}`}
-                    className="font-medium hover:text-primary hover:underline"
-                  >
-                    {translate(event.title as Translated, locale)}
-                  </Link>
+                  {readOnly ? (
+                    <p className="font-medium">
+                      {translate(event.title as Translated, locale)}
+                    </p>
+                  ) : (
+                    <Link
+                      href={`/admin/events/${event.id}`}
+                      className="font-medium hover:text-primary hover:underline"
+                    >
+                      {translate(event.title as Translated, locale)}
+                    </Link>
+                  )}
                   <p className="text-xs text-muted-foreground">
                     {event.organizer.name}
                   </p>

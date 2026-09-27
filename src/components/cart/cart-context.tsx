@@ -15,6 +15,12 @@ export interface CartLine {
   currency: string;
   quantity: number;
   coverImage: string;
+  /** Places numérotées : une clé par billet, la quantité suit leur nombre. */
+  seats?: string[];
+  seatLabels?: string[];
+  /** Gratuité nominative : nom et date de naissance demandés au paiement. */
+  requiresAttendee?: boolean;
+  maxAgeYears?: number;
 }
 
 interface CartState {
@@ -22,6 +28,8 @@ interface CartState {
   add: (line: Omit<CartLine, "quantity">, quantity?: number) => void;
   updateQuantity: (ticketTypeId: string, quantity: number) => void;
   remove: (ticketTypeId: string) => void;
+  /** Retire des places précises (prises entre-temps par quelqu'un d'autre). */
+  removeSeats: (seatKeys: string[]) => void;
   clear: () => void;
   count: number;
   subtotalCents: number;
@@ -67,13 +75,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setLines((prev) => {
       const existing = prev.find((l) => l.ticketTypeId === line.ticketTypeId);
       if (existing) {
-        return prev.map((l) =>
-          l.ticketTypeId === line.ticketTypeId
-            ? { ...l, quantity: l.quantity + quantity }
-            : l,
-        );
+        return prev.map((l) => {
+          if (l.ticketTypeId !== line.ticketTypeId) return l;
+          if (!line.seats?.length) return { ...l, quantity: l.quantity + quantity };
+          const seats = [...(l.seats ?? [])];
+          const seatLabels = [...(l.seatLabels ?? [])];
+          line.seats.forEach((key, i) => {
+            if (seats.includes(key)) return;
+            seats.push(key);
+            seatLabels.push(line.seatLabels?.[i] ?? key);
+          });
+          return { ...l, seats, seatLabels, quantity: seats.length };
+        });
       }
-      return [...prev, { ...line, quantity }];
+      return [
+        ...prev,
+        { ...line, quantity: line.seats?.length ? line.seats.length : quantity },
+      ];
     });
     setAddedRevision((n) => n + 1);
   }, []);
@@ -84,7 +102,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         quantity <= 0
           ? prev.filter((l) => l.ticketTypeId !== ticketTypeId)
           : prev.map((l) =>
-              l.ticketTypeId === ticketTypeId ? { ...l, quantity } : l,
+              l.ticketTypeId === ticketTypeId && !l.seats?.length
+                ? { ...l, quantity }
+                : l,
             ),
       );
     },
@@ -93,6 +113,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const remove: CartState["remove"] = React.useCallback((ticketTypeId) => {
     setLines((prev) => prev.filter((l) => l.ticketTypeId !== ticketTypeId));
+  }, []);
+
+  const removeSeats: CartState["removeSeats"] = React.useCallback((seatKeys) => {
+    const gone = new Set(seatKeys);
+    setLines((prev) =>
+      prev.flatMap((l) => {
+        if (!l.seats?.some((k) => gone.has(k))) return [l];
+        const kept = l.seats
+          .map((key, i) => ({ key, label: l.seatLabels?.[i] ?? key }))
+          .filter((s) => !gone.has(s.key));
+        if (kept.length === 0) return [];
+        return [
+          {
+            ...l,
+            seats: kept.map((s) => s.key),
+            seatLabels: kept.map((s) => s.label),
+            quantity: kept.length,
+          },
+        ];
+      }),
+    );
   }, []);
 
   const clear = React.useCallback(() => setLines([]), []);
@@ -108,6 +149,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     add,
     updateQuantity,
     remove,
+    removeSeats,
     clear,
     count,
     subtotalCents,

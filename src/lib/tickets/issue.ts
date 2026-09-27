@@ -3,8 +3,14 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { Prisma, type TicketStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { readLayout, seatLabel } from "@/lib/seating/layout";
 
-type TicketLine = { ticketTypeId: string; quantity: number };
+type TicketLine = {
+  ticketTypeId: string;
+  quantity: number;
+  /** Séance numérotée : un siège par billet, dans l'ordre d'émission. */
+  seatKeys?: string[];
+};
 
 /**
  * Code de billet imprévisible.
@@ -35,23 +41,55 @@ export async function issueMissingTickets(
     already.set(ticket.ticketTypeId, (already.get(ticket.ticketTypeId) ?? 0) + 1);
   }
 
+  const labels = await seatLabelsFor(tx, order);
+
   const codes: string[] = [];
   for (const item of order.items) {
     const have = already.get(item.ticketTypeId) ?? 0;
     for (let i = have; i < item.quantity; i++) {
       const code = generateTicketCode();
       codes.push(code);
+      const seatKey = item.seatKeys?.[i];
       await tx.ticket.create({
         data: {
           code,
           orderId: order.id,
           ticketTypeId: item.ticketTypeId,
           status,
+          seatKey: seatKey ?? null,
+          seatLabel: seatKey ? (labels.get(seatKey) ?? seatKey) : null,
         },
       });
     }
   }
   return codes;
+}
+
+/** Libellés des sièges de la commande, dans la langue de l'acheteur. */
+async function seatLabelsFor(
+  tx: Prisma.TransactionClient,
+  order: { id: string; items: TicketLine[] },
+): Promise<Map<string, string>> {
+  const seated = order.items.filter((i) => i.seatKeys?.length);
+  const out = new Map<string, string>();
+  if (seated.length === 0) return out;
+
+  const [row, types] = await Promise.all([
+    tx.order.findUnique({ where: { id: order.id }, select: { locale: true } }),
+    tx.ticketType.findMany({
+      where: { id: { in: seated.map((i) => i.ticketTypeId) } },
+      select: { id: true, session: { select: { seatPlan: { select: { layout: true } } } } },
+    }),
+  ]);
+  const locale = row?.locale ?? "fr";
+  for (const item of seated) {
+    const layout = readLayout(
+      types.find((t) => t.id === item.ticketTypeId)?.session.seatPlan?.layout,
+    );
+    if (!layout) continue;
+    for (const key of item.seatKeys!) out.set(key, seatLabel(layout, key, locale));
+  }
+  return out;
 }
 
 /** Passe les billets encore en attente à VALID, une fois le paiement reçu. */
@@ -93,7 +131,7 @@ export async function ensureTicketsForReference(
       select: {
         id: true,
         status: true,
-        items: { select: { ticketTypeId: true, quantity: true } },
+        items: { select: { ticketTypeId: true, quantity: true, seatKeys: true } },
         _count: { select: { tickets: true } },
       },
     });

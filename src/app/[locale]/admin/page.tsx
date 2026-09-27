@@ -26,7 +26,8 @@ export default async function AdminOverviewPage({
     getCurrentUser(),
   ]);
   const t = await getTranslations("admin");
-  const organizerView = user?.role === "ORGANIZER";
+  const organizerView =
+    user?.role === "ORGANIZER" || user?.role === "ORGANIZER_VIEWER";
 
   const cards = [
     {

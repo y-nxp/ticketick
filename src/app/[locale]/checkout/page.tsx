@@ -3,7 +3,17 @@
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CreditCard, Landmark, CheckCircle2, Loader2, Copy, Clock } from "lucide-react";
+import {
+  CreditCard,
+  Landmark,
+  CheckCircle2,
+  Loader2,
+  Copy,
+  Clock,
+  Wallet,
+  Gift,
+} from "lucide-react";
+import { useRouter } from "@/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ContinueShopping } from "@/components/cart/continue-shopping";
 import {
@@ -19,10 +29,22 @@ import { cn, formatPrice } from "@/lib/utils";
 import {
   checkCartAvailability,
   getCartPaymentMethods,
+  previewCartDiscounts,
 } from "@/lib/orders/payment-actions";
 import { formatHoldClock } from "@/lib/orders/reservation";
 
-type Method = "CARD" | "IBAN";
+type Method = "CARD" | "IBAN" | "PAYPAL";
+
+interface Attendee {
+  name: string;
+  birthDate: string;
+}
+
+interface HoldLine {
+  ticketTypeId: string;
+  quantity: number;
+  seats?: string[];
+}
 
 interface OrderResult {
   reference: string;
@@ -46,7 +68,7 @@ const HOLD_KEY = "ticketick.hold.v1";
 
 type HoldOutcome =
   | { ok: true; hold: SeatHold }
-  | { ok: false; error: string };
+  | { ok: false; error: string; seatKeys?: string[] };
 
 const inflightHolds = new Map<string, Promise<HoldOutcome>>();
 
@@ -80,22 +102,33 @@ function readHoldSafe(): SeatHold | null {
   return readHold();
 }
 
-function linesFromCartKey(
-  cartKey: string,
-): { ticketTypeId: string; quantity: number }[] {
+/** `tarif:quantité[:siège+siège]`, trié : deux paniers identiques, une clé. */
+function cartKeyOf(lines: HoldLine[]): string {
+  return lines
+    .map((l) =>
+      l.seats?.length
+        ? `${l.ticketTypeId}:${l.quantity}:${[...l.seats].sort().join("+")}`
+        : `${l.ticketTypeId}:${l.quantity}`,
+    )
+    .sort()
+    .join(",");
+}
+
+function linesFromCartKey(cartKey: string): HoldLine[] {
   if (!cartKey) return [];
   return cartKey.split(",").map((part) => {
-    const sep = part.lastIndexOf(":");
+    const [ticketTypeId, quantity, seats] = part.split(":");
     return {
-      ticketTypeId: part.slice(0, sep),
-      quantity: Number(part.slice(sep + 1)),
+      ticketTypeId,
+      quantity: Number(quantity),
+      ...(seats ? { seats: seats.split("+") } : {}),
     };
   });
 }
 
 function requestHold(args: {
   cartKey: string;
-  lines: { ticketTypeId: string; quantity: number }[];
+  lines: HoldLine[];
   locale: string;
   replaceReference?: string;
   replaceToken?: string;
@@ -118,10 +151,15 @@ function requestHold(args: {
       holdToken?: string;
       reservedUntil?: string;
       error?: string;
+      seatKeys?: string[];
     } | null;
     if (!res.ok || !body?.reference || !body.reservedUntil) {
       inflightHolds.delete(args.cartKey);
-      return { ok: false, error: body?.error ?? "failed" };
+      return {
+        ok: false,
+        error: body?.error ?? "failed",
+        seatKeys: body?.seatKeys,
+      };
     }
     const hold: SeatHold = {
       reference: body.reference,
@@ -151,12 +189,25 @@ function CheckoutInner() {
   const t = useTranslations("checkout");
   const tc = useTranslations("cart");
   const locale = useLocale();
-  const { lines, subtotalCents, clear, hydrated } = useCart();
+  const { lines, subtotalCents, clear, hydrated, removeSeats } = useCart();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const canceled = searchParams.get("canceled") === "1";
 
   const [method, setMethod] = React.useState<Method>("CARD");
-  const [offer, setOffer] = React.useState({ card: true, iban: true });
+  const [offer, setOffer] = React.useState({
+    card: true,
+    iban: true,
+    paypal: false,
+  });
+  const [attendees, setAttendees] = React.useState<Record<string, Attendee[]>>(
+    {},
+  );
+  const [discount, setDiscount] = React.useState({
+    amountCents: 0,
+    labels: [] as string[],
+  });
+  const [seatNotice, setSeatNotice] = React.useState(false);
   const [form, setForm] = React.useState({
     firstName: "",
     lastName: "",
@@ -193,7 +244,9 @@ function CheckoutInner() {
         setMethod((actuel) => {
           if (actuel === "CARD" && next.card) return actuel;
           if (actuel === "IBAN" && next.iban) return actuel;
+          if (actuel === "PAYPAL" && next.paypal) return actuel;
           if (next.card) return "CARD";
+          if (next.paypal) return "PAYPAL";
           if (next.iban) return "IBAN";
           return actuel;
         });
@@ -205,11 +258,26 @@ function CheckoutInner() {
   }, [ticketIds]);
 
   const sessionIds = [...new Set(lines.map((l) => l.sessionId))];
-  const total = subtotalCents + optionDraft.amountCents;
-  const cartKey = lines
-    .map((l) => `${l.ticketTypeId}:${l.quantity}`)
-    .sort()
-    .join(",");
+  const cartKey = cartKeyOf(lines);
+  const free = lines.length > 0 && subtotalCents + optionDraft.amountCents === 0;
+  const total = Math.max(
+    0,
+    subtotalCents + optionDraft.amountCents - discount.amountCents,
+  );
+
+  React.useEffect(() => {
+    let ignore = false;
+    const wanted = linesFromCartKey(cartKey);
+    if (wanted.length === 0) return;
+    previewCartDiscounts(wanted, locale)
+      .then((next) => {
+        if (!ignore) setDiscount(next);
+      })
+      .catch(() => {});
+    return () => {
+      ignore = true;
+    };
+  }, [cartKey, locale]);
 
   const stored = hydrated ? readHoldSafe() : null;
   const storedUntil = stored ? Date.parse(stored.reservedUntil) : NaN;
@@ -293,6 +361,11 @@ function CheckoutInner() {
       }
       setCreatedHold(null);
       setFailedFor(cartKey);
+      if (outcome.error === "seat_taken" && outcome.seatKeys?.length) {
+        setSeatNotice(true);
+        removeSeats(outcome.seatKeys);
+        return;
+      }
       if (t.has(outcome.error)) {
         setError(t(outcome.error));
         return;
@@ -303,7 +376,15 @@ function CheckoutInner() {
     return () => {
       cancelled = true;
     };
-  }, [needsCreate, cartKey, locale, t, replaceReference, replaceToken]);
+  }, [
+    needsCreate,
+    cartKey,
+    locale,
+    t,
+    replaceReference,
+    replaceToken,
+    removeSeats,
+  ]);
 
   React.useEffect(() => {
     if (!hold) return;
@@ -331,7 +412,7 @@ function CheckoutInner() {
         body: JSON.stringify({
           ...form,
           locale,
-          paymentMethod: method,
+          paymentMethod: free ? "FREE" : method,
           holdReference: hold?.reference,
           holdToken: hold?.token,
           options: optionDraft.payload,
@@ -342,7 +423,9 @@ function CheckoutInner() {
             unitPriceCents: l.unitPriceCents,
             quantity: l.quantity,
             currency: l.currency,
+            ...(l.seats?.length ? { seats: l.seats } : {}),
           })),
+          attendees: attendeePayload,
         }),
       });
       // 503 : aucun encaissement n'est configuré. La commande a été annulée
@@ -355,8 +438,14 @@ function CheckoutInner() {
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as {
           error?: string;
+          seatKeys?: string[];
         } | null;
         const cle = body?.error;
+        if (cle === "seat_taken" && body?.seatKeys?.length) {
+          setSeatNotice(true);
+          removeSeats(body.seatKeys);
+          return;
+        }
         if (cle && t.has(cle)) {
           setError(t(cle));
           return;
@@ -369,9 +458,24 @@ function CheckoutInner() {
         holdToken?: string;
       } = await res.json();
 
-      // Paiement carte : on part tout de suite. Rester sur la page avec
-      // l'URL PostFinance ferait alterner « Continuer » et « Reprendre ».
-      if (method === "CARD" && data.checkoutUrl && data.reservedUntil) {
+      // Rien à payer : billets émis, on montre la confirmation et le PDF.
+      if (data.status === "PAID") {
+        clear();
+        clearHold();
+        router.push({
+          pathname: "/checkout/success",
+          query: { ref: data.reference },
+        });
+        return;
+      }
+
+      // Carte ou PayPal : on part tout de suite. Rester sur la page avec
+      // l'URL du prestataire ferait alterner « Continuer » et « Reprendre ».
+      if (
+        (method === "CARD" || method === "PAYPAL") &&
+        data.checkoutUrl &&
+        data.reservedUntil
+      ) {
         const nextHold = {
           reference: data.reference,
           token: data.holdToken,
@@ -380,7 +484,7 @@ function CheckoutInner() {
         };
         writeHold(nextHold);
         setCreatedHold(nextHold);
-        window.location.href = data.checkoutUrl;
+        window.location.assign(data.checkoutUrl);
         return;
       }
 
@@ -394,6 +498,27 @@ function CheckoutInner() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  const attendeeLines = lines.filter((l) => l.requiresAttendee);
+  const attendeePayload = attendeeLines.flatMap((l) =>
+    Array.from({ length: l.quantity }, (_, i) => ({
+      ticketTypeId: l.ticketTypeId,
+      name: attendees[l.ticketTypeId]?.[i]?.name ?? "",
+      birthDate: attendees[l.ticketTypeId]?.[i]?.birthDate ?? "",
+    })),
+  );
+
+  function setAttendee(
+    ticketTypeId: string,
+    index: number,
+    patch: Partial<Attendee>,
+  ) {
+    setAttendees((prev) => {
+      const list = [...(prev[ticketTypeId] ?? [])];
+      list[index] = { ...(list[index] ?? { name: "", birthDate: "" }), ...patch };
+      return { ...prev, [ticketTypeId]: list };
+    });
   }
 
   if (result) {
@@ -456,7 +581,7 @@ function CheckoutInner() {
     creatingHold ||
     checkingSeats ||
     seatsOk === false ||
-    (!offer.card && !offer.iban);
+    (!free && !offer.card && !offer.iban && !offer.paypal);
 
   function payActions(id: string) {
     return (
@@ -473,6 +598,8 @@ function CheckoutInner() {
               <Loader2 className="size-4 animate-spin" />
               {t("processing")}
             </>
+          ) : free ? (
+            t("reserveFree")
           ) : (
             t("payNow", { amount: formatPrice(total, `${locale}-CH`) })
           )}
@@ -529,6 +656,7 @@ function CheckoutInner() {
                     lines.map((l) => ({
                       ticketTypeId: l.ticketTypeId,
                       quantity: l.quantity,
+                      seats: l.seats,
                     })),
                   );
                   setSeatsOk(result.available);
@@ -621,6 +749,50 @@ function CheckoutInner() {
             </div>
           </section>
 
+          {attendeeLines.length > 0 ? (
+            <section className="rounded-2xl border border-border bg-card p-5">
+              <h2 className="text-lg font-semibold">{t("attendeesTitle")}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t("attendeesHint")}
+              </p>
+              <div className="mt-4 space-y-4">
+                {attendeeLines.flatMap((l) =>
+                  Array.from({ length: l.quantity }, (_, i) => (
+                    <fieldset
+                      key={`${l.ticketTypeId}-${i}`}
+                      className="grid gap-3 rounded-xl border border-border p-3 sm:grid-cols-2"
+                    >
+                      <legend className="px-1 text-sm font-medium">
+                        {l.eventTitle} · {l.ticketName}
+                        {l.seatLabels?.[i] ? ` · ${l.seatLabels[i]}` : ""}
+                      </legend>
+                      <Input
+                        label={t("attendeeName")}
+                        value={attendees[l.ticketTypeId]?.[i]?.name ?? ""}
+                        onChange={(v) => setAttendee(l.ticketTypeId, i, { name: v })}
+                        required
+                      />
+                      <Input
+                        label={t("attendeeBirthDate")}
+                        type="date"
+                        value={attendees[l.ticketTypeId]?.[i]?.birthDate ?? ""}
+                        onChange={(v) =>
+                          setAttendee(l.ticketTypeId, i, { birthDate: v })
+                        }
+                        hint={
+                          l.maxAgeYears
+                            ? t("attendeeAgeHint", { age: l.maxAgeYears })
+                            : undefined
+                        }
+                        required
+                      />
+                    </fieldset>
+                  )),
+                )}
+              </div>
+            </section>
+          ) : null}
+
           <EventOptions
             sessionIds={sessionIds}
             locale={locale}
@@ -628,6 +800,17 @@ function CheckoutInner() {
           />
 
           {/* Paiement */}
+          {free ? (
+            <section className="flex items-start gap-3 rounded-2xl border border-border bg-card p-5">
+              <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
+                <Gift className="size-5" />
+              </span>
+              <div>
+                <h2 className="text-lg font-semibold">{t("freeTitle")}</h2>
+                <p className="text-sm text-muted-foreground">{t("freeHint")}</p>
+              </div>
+            </section>
+          ) : (
           <section className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">{t("paymentMethod")}</h2>
             <div className="mt-4 space-y-3">
@@ -643,6 +826,18 @@ function CheckoutInner() {
                   hint={t("cardHint")}
                 />
               ) : null}
+              {offer.paypal ? (
+                <PaymentOption
+                  active={method === "PAYPAL"}
+                  onClick={() => {
+                    setMethod("PAYPAL");
+                    scrollToIdIfStacked("checkout-pay-mobile");
+                  }}
+                  icon={<Wallet className="size-5" />}
+                  title={t("paypal")}
+                  hint={t("paypalHint")}
+                />
+              ) : null}
               {offer.iban ? (
                 <PaymentOption
                   active={method === "IBAN"}
@@ -655,13 +850,20 @@ function CheckoutInner() {
                   hint={t("ibanHint")}
                 />
               ) : null}
-              {!offer.card && !offer.iban ? (
+              {!offer.card && !offer.iban && !offer.paypal ? (
                 <p className="text-sm text-muted-foreground">
                   {t("noMethod")}
                 </p>
               ) : null}
             </div>
           </section>
+          )}
+
+          {seatNotice ? (
+            <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {t("seatsRemoved")}
+            </p>
+          ) : null}
 
           {error && (
             <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -691,6 +893,11 @@ function CheckoutInner() {
                     <span className="text-muted-foreground">
                       {l.quantity} × {l.ticketName}
                     </span>
+                    {l.seatLabels?.length ? (
+                      <span className="block text-xs text-muted-foreground">
+                        {l.seatLabels.join(" ; ")}
+                      </span>
+                    ) : null}
                   </span>
                   <span className="whitespace-nowrap font-medium">
                     {formatPrice(l.unitPriceCents * l.quantity, `${locale}-CH`)}
@@ -711,6 +918,16 @@ function CheckoutInner() {
                 <dt className="text-muted-foreground">{tc("subtotal")}</dt>
                 <dd>{formatPrice(subtotalCents, `${locale}-CH`)}</dd>
               </div>
+              {discount.amountCents > 0 ? (
+                <div className="flex justify-between gap-3">
+                  <dt className="text-muted-foreground">
+                    {discount.labels.join(", ") || t("discount")}
+                  </dt>
+                  <dd className="whitespace-nowrap">
+                    −{formatPrice(discount.amountCents, `${locale}-CH`)}
+                  </dd>
+                </div>
+              ) : null}
               <div className="flex justify-between border-t border-border pt-2 text-base font-bold">
                 <dt>{tc("total")}</dt>
                 <dd>{formatPrice(total, `${locale}-CH`)}</dd>

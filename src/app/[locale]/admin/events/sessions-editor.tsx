@@ -3,8 +3,9 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { Plus, Pencil, Trash2, X, Ticket } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Plus, Pencil, Trash2, X, Ticket, Armchair } from "lucide-react";
+import { Link } from "@/i18n/navigation";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Field,
   FormFeedback,
@@ -71,6 +72,7 @@ export function SessionsEditor({
               />
             ) : (
               <SessionRow
+                eventId={event.id}
                 session={s}
                 venues={reference.venues}
                 onEdit={() => setEdite(s.id)}
@@ -101,10 +103,12 @@ export function SessionsEditor({
 }
 
 function SessionRow({
+  eventId,
   session,
   venues,
   onEdit,
 }: {
+  eventId: string;
   session: Session;
   venues: ReferenceData["venues"];
   onEdit: () => void;
@@ -141,6 +145,15 @@ function SessionRow({
               : t("soldOf", { sold: vendus, total: offre })}
           </p>
         </div>
+        {session.seatPlanId ? (
+          <Link
+            href={`/admin/events/${eventId}/seats/${session.id}`}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
+            <Armchair className="size-4" />
+            {t("seats")}
+          </Link>
+        ) : null}
         <Button variant="ghost" size="sm" onClick={onEdit}>
           <Pencil className="size-4" />
           {t("edit")}

@@ -11,6 +11,7 @@ import { clientIpFrom, consume } from "@/lib/rate-limit";
 const lineSchema = z.object({
   ticketTypeId: z.string().min(1),
   quantity: z.number().int().positive().max(100),
+  seats: z.array(z.string().min(1).max(40)).max(100).optional(),
 });
 
 const holdSchema = z.object({
@@ -63,7 +64,11 @@ export async function POST(request: Request) {
 
   if (!created.ok) {
     return NextResponse.json(
-      { error: created.error, ticketTypeId: created.ticketTypeId },
+      {
+        error: created.error,
+        ticketTypeId: created.ticketTypeId,
+        seatKeys: created.seatKeys,
+      },
       { status: 409 },
     );
   }

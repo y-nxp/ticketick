@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
 import { rememberShopOrigin } from "@/lib/shop-origin";
 import { formatDate, formatPrice } from "@/lib/utils";
+import { SeatedSelector } from "./seated-selector";
+import { maxFor as limitFor } from "./ticket-limits";
 import {
   t,
   type EventItem,
@@ -15,18 +17,24 @@ import {
   type TicketType,
 } from "@/lib/types";
 
-export function TicketSelector({
-  event,
-  session,
-  locale,
-}: {
+interface SelectorProps {
   event: EventItem;
   /** Séance retenue : c'est elle qui porte les tarifs et le stock. */
   session: SessionItem;
   locale: string;
   /** Dans un iframe : le paiement s'ouvre dans la fenêtre parente. */
   embed?: boolean;
-}) {
+}
+
+export function TicketSelector(props: SelectorProps) {
+  return props.session.seated ? (
+    <SeatedSelector {...props} />
+  ) : (
+    <QuantitySelector {...props} />
+  );
+}
+
+function QuantitySelector({ event, session, locale }: SelectorProps) {
   const te = useTranslations("event");
   const { add, previewOpen } = useCart();
   const pathname = usePathname();
@@ -38,31 +46,8 @@ export function TicketSelector({
   );
   const totalCount = Object.values(qty).reduce((a, b) => a + b, 0);
 
-  /** Billets qui débloquent un tarif gratuit : la zone désignée, sinon tous. */
-  function payantsPour(tt: TicketType, current: Record<string, number>) {
-    if (tt.companionOfId) return current[tt.companionOfId] ?? 0;
-    return session.ticketTypes.reduce((sum, x) => {
-      if (x.maxPerPaidTicket != null || x.priceCents <= 0) return sum;
-      return sum + (current[x.id] ?? 0);
-    }, 0);
-  }
-
-  function maxFor(tt: TicketType, current: Record<string, number>) {
-    const resteTarif = Math.max(0, tt.quantity - tt.sold);
-    const autres = session.ticketTypes.reduce(
-      (sum, x) => (x.id === tt.id ? sum : sum + (current[x.id] ?? 0)),
-      0,
-    );
-    const resteJauge =
-      session.capacity == null
-        ? Number.POSITIVE_INFINITY
-        : Math.max(0, session.capacity - session.sold - autres);
-    let max = Math.min(tt.maxPerOrder, resteTarif, resteJauge);
-    if (tt.maxPerPaidTicket != null) {
-      max = Math.min(max, payantsPour(tt, current) * tt.maxPerPaidTicket);
-    }
-    return max;
-  }
+  const maxFor = (tt: TicketType, current: Record<string, number>) =>
+    limitFor(session, tt, current);
 
   function setQuantity(id: string, next: number) {
     setQty((prev) => {
@@ -96,6 +81,8 @@ export function TicketSelector({
             unitPriceCents: tt.priceCents,
             currency: tt.currency,
             coverImage: event.coverImage,
+            requiresAttendee: tt.requiresAttendee,
+            maxAgeYears: tt.maxAgeYears,
           },
           n,
         );
@@ -185,9 +172,11 @@ function TicketRow({
   const hint =
     ratio != null
       ? !soldOut && qty >= max
-        ? sourceName
-          ? te("companionRuleNamed", { n: ratio, ticket: sourceName })
-          : te("companionRule", { n: ratio })
+        ? ticket.maxPerOrder <= ratio
+          ? te("companionRuleOrder", { n: ticket.maxPerOrder })
+          : sourceName
+            ? te("companionRuleNamed", { n: ratio, ticket: sourceName })
+            : te("companionRule", { n: ratio })
         : null
       : ticket.description
         ? t(ticket.description, locale)
@@ -205,6 +194,13 @@ function TicketRow({
         </p>
         {hint ? (
           <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+        ) : null}
+        {ticket.requiresAttendee ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            {ticket.maxAgeYears
+              ? te("attendeeNoteAge", { age: ticket.maxAgeYears })
+              : te("attendeeNote")}
+          </p>
         ) : null}
       </div>
       {soldOut ? (

@@ -71,10 +71,22 @@ export default function CartPage() {
                 <p className="text-sm text-muted-foreground">
                   {formatDate(line.sessionStartsAt, `${locale}-CH`)}
                 </p>
+                {line.seatLabels?.length ? (
+                  <ul className="mt-1 space-y-0.5 text-sm text-muted-foreground">
+                    {line.seatLabels.map((label) => (
+                      <li key={label}>{label}</li>
+                    ))}
+                  </ul>
+                ) : null}
                 <p className="mt-1 text-sm font-medium">
                   {formatPrice(line.unitPriceCents, `${locale}-CH`)}
                 </p>
                 <div className="mt-auto flex items-center justify-between pt-2">
+                  {line.seats?.length ? (
+                    <span className="font-semibold tabular-nums">
+                      {t("seatCount", { count: line.quantity })}
+                    </span>
+                  ) : (
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() =>
@@ -96,6 +108,7 @@ export default function CartPage() {
                       <Plus className="size-3.5" />
                     </button>
                   </div>
+                  )}
                   <button
                     onClick={() => remove(line.ticketTypeId)}
                     className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive"

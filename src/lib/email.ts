@@ -401,6 +401,89 @@ export async function sendEmailConfirmation(payload: {
   });
 }
 
+const INVITATION_TEXTES: Record<
+  string,
+  {
+    sujet: (org: string) => string;
+    bonjour: string;
+    corps: (org: string) => string;
+    bouton: string;
+    expire: (d: number) => string;
+  }
+> = {
+  fr: {
+    sujet: (org) => `Accès aux ventes — ${org}`,
+    bonjour: "Bonjour",
+    corps: (org) =>
+      `${org} vous invite à consulter ses ventes de billets sur ticketick. Pour activer votre accès, choisissez votre mot de passe :`,
+    bouton: "Choisir mon mot de passe",
+    expire: (d) => `Ce lien est valable ${d} jours et ne fonctionne qu'une fois.`,
+  },
+  en: {
+    sujet: (org) => `Access to sales — ${org}`,
+    bonjour: "Hello",
+    corps: (org) =>
+      `${org} invites you to view its ticket sales on ticketick. To activate your access, choose your password:`,
+    bouton: "Choose my password",
+    expire: (d) => `This link is valid for ${d} days and works only once.`,
+  },
+  de: {
+    sujet: (org) => `Zugang zu den Verkäufen — ${org}`,
+    bonjour: "Guten Tag",
+    corps: (org) =>
+      `${org} lädt Sie ein, die Ticketverkäufe auf ticketick einzusehen. Um Ihren Zugang zu aktivieren, wählen Sie Ihr Passwort:`,
+    bouton: "Passwort wählen",
+    expire: (d) => `Dieser Link ist ${d} Tage gültig und funktioniert nur einmal.`,
+  },
+  it: {
+    sujet: (org) => `Accesso alle vendite — ${org}`,
+    bonjour: "Buongiorno",
+    corps: (org) =>
+      `${org} ti invita a consultare le vendite di biglietti su ticketick. Per attivare l'accesso, scegli la tua password:`,
+    bouton: "Scegli la password",
+    expire: (d) => `Il link è valido ${d} giorni e funziona una sola volta.`,
+  },
+};
+
+export async function sendStatsInvitationEmail(payload: {
+  to: string;
+  name: string | null;
+  locale: string;
+  organizerName: string;
+  url: string;
+  expiresInDays: number;
+}) {
+  const l = INVITATION_TEXTES[payload.locale] ?? INVITATION_TEXTES.fr;
+  const salutation = payload.name ? `${l.bonjour} ${payload.name},` : `${l.bonjour},`;
+  const corps = l.corps(payload.organizerName);
+
+  const text = [
+    salutation,
+    "",
+    corps,
+    payload.url,
+    "",
+    l.expire(payload.expiresInDays),
+    "",
+    "ticketick.ch",
+  ].join("\n");
+
+  const html = [
+    `<p>${echapper(salutation)}</p>`,
+    `<p>${echapper(corps)}</p>`,
+    `<p><a href="${payload.url}" style="display:inline-block;padding:12px 20px;border-radius:12px;background:#6C5CE7;color:#fff;text-decoration:none;font-weight:600">${echapper(l.bouton)}</a></p>`,
+    `<p style="color:#6b7280;font-size:13px">${echapper(l.expire(payload.expiresInDays))}</p>`,
+  ].join("");
+
+  return envoyer({
+    to: payload.to,
+    subject: l.sujet(payload.organizerName),
+    text,
+    html: `<div style="font:14px/1.6 system-ui,sans-serif;color:#2A2C30">${html}</div>`,
+    etiquette: "invitation responsable",
+  });
+}
+
 /** Les valeurs insérées dans le HTML viennent en partie de la base. */
 function echapper(value: string): string {
   return value

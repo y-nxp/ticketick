@@ -94,10 +94,17 @@ export function EventBooking({
     <div className="space-y-8">
       {heading ? <div key="event-heading">{heading}</div> : null}
       {picker}
-      <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
-        <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
-          {tickets}
-        </aside>
+      {session.seated ? tickets : null}
+      <div
+        className={
+          session.seated ? "space-y-8" : "grid gap-8 lg:grid-cols-[1fr_380px]"
+        }
+      >
+        {session.seated ? null : (
+          <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
+            {tickets}
+          </aside>
+        )}
         <div className="order-2 space-y-8 lg:order-1">
           <div className="grid gap-4 sm:grid-cols-2">
             <InfoCard

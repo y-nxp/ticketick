@@ -34,6 +34,8 @@ export interface CurrentUser {
   organizerId: string | null;
   /** Contrôleur rattaché à un organisateur ; `null` pour tous. */
   doorOrganizerId: string | null;
+  /** Responsable invité : organisateur dont il consulte les ventes. */
+  statsOrganizerId: string | null;
   emailVerified: boolean;
   impersonator: { id: string; email: string; name: string | null } | null;
 }
@@ -68,6 +70,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
             locale: true,
             active: true,
             doorOrganizerId: true,
+            statsOrganizerId: true,
             emailVerifiedAt: true,
             organizer: { select: { id: true } },
           },
@@ -117,6 +120,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     locale: session.user.locale,
     organizerId: session.user.organizer?.id ?? null,
     doorOrganizerId: session.user.doorOrganizerId,
+    statsOrganizerId: session.user.statsOrganizerId,
     emailVerified: session.user.emailVerifiedAt != null,
     impersonator,
   };
@@ -170,6 +174,32 @@ export async function requireCatalog(
     return redirect({ href: "/forbidden", locale: await getLocale() });
   }
   return user;
+}
+
+/**
+ * Lecture des ventes : le catalogue, plus les responsables invités.
+ *
+ * Un responsable sans organisateur rattaché ne voit rien plutôt que tout.
+ */
+export async function requireStats(returnTo?: string): Promise<CurrentUser> {
+  const user = await requireRole(
+    ["ADMIN", "ORGANIZER", "ORGANIZER_VIEWER"],
+    returnTo,
+  );
+  if (
+    (user.role === "ORGANIZER" && !user.organizerId) ||
+    (user.role === "ORGANIZER_VIEWER" && !user.statsOrganizerId)
+  ) {
+    return redirect({ href: "/forbidden", locale: await getLocale() });
+  }
+  return user;
+}
+
+/** Organisateur dont l'utilisateur voit les ventes ; `null` = tous (admin). */
+export function statsOrganizerOf(user: CurrentUser): string | null {
+  if (user.role === "ORGANIZER") return user.organizerId;
+  if (user.role === "ORGANIZER_VIEWER") return user.statsOrganizerId;
+  return null;
 }
 
 /**

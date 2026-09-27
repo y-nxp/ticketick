@@ -2,6 +2,8 @@ import "server-only";
 
 import { catalogActor, forbidIfForeignEvent } from "@/lib/admin/access";
 import { prisma } from "@/lib/prisma";
+import { readLayout } from "@/lib/seating/layout";
+import { syncSessionSeats } from "@/lib/seating/seats";
 
 /**
  * Lectures du backoffice d'édition.
@@ -128,6 +130,7 @@ export async function getEventForEdit(id: string) {
           doorsAt: true,
           status: true,
           venueId: true,
+          seatPlanId: true,
           capacity: true,
           sold: true,
           acceptCard: true,
@@ -155,3 +158,35 @@ export async function getEventForEdit(id: string) {
 }
 
 export type EventForEdit = NonNullable<Awaited<ReturnType<typeof getEventForEdit>>>;
+
+/** Sièges d'une séance numérotée, pour le blocage des places invités. */
+export async function getSessionSeats(eventId: string, sessionId: string) {
+  const { organizerId } = await catalogActor();
+  await forbidIfForeignEvent(eventId, organizerId);
+
+  const session = await prisma.eventSession.findFirst({
+    where: { id: sessionId, eventId },
+    select: {
+      id: true,
+      startsAt: true,
+      label: true,
+      event: { select: { id: true, title: true } },
+      seatPlan: { select: { layout: true } },
+    },
+  });
+  const layout = readLayout(session?.seatPlan?.layout);
+  if (!session || !layout) return null;
+
+  await syncSessionSeats(session.id);
+  const seats = await prisma.sessionSeat.findMany({
+    where: { sessionId: session.id },
+    select: {
+      seatKey: true,
+      zone: true,
+      status: true,
+      blockNote: true,
+      order: { select: { id: true, reference: true, status: true } },
+    },
+  });
+  return { session, layout, seats };
+}

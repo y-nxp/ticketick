@@ -71,7 +71,19 @@ export function CartPreview({
                   year: undefined,
                 })}
               </p>
+              {line.seatLabels?.length ? (
+                <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                  {line.seatLabels.map((label) => (
+                    <li key={label}>{label}</li>
+                  ))}
+                </ul>
+              ) : null}
               <div className="mt-1.5 flex items-center justify-between gap-2">
+                {line.seats?.length ? (
+                  <span className="text-sm font-semibold tabular-nums">
+                    {t("seatCount", { count: line.quantity })}
+                  </span>
+                ) : (
                 <div className="flex items-center gap-0.5">
                   <button
                     type="button"
@@ -97,6 +109,7 @@ export function CartPreview({
                     <Plus className="size-3" />
                   </button>
                 </div>
+                )}
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">
                     {formatPrice(

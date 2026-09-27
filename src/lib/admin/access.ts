@@ -2,7 +2,12 @@ import "server-only";
 
 import { getLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
-import { requireCatalog, type CurrentUser } from "@/lib/auth/dal";
+import {
+  requireCatalog,
+  requireStats,
+  statsOrganizerOf,
+  type CurrentUser,
+} from "@/lib/auth/dal";
 import { prisma } from "@/lib/prisma";
 
 /** Acteur du catalogue, et filtre organisateur (null = tout voir). */
@@ -14,6 +19,20 @@ export async function catalogActor(): Promise<{
   return {
     user,
     organizerId: user.role === "ORGANIZER" ? user.organizerId : null,
+  };
+}
+
+/** Lecture seule des ventes : catalogue ou responsable invité. */
+export async function statsActor(): Promise<{
+  user: CurrentUser;
+  organizerId: string | null;
+  readOnly: boolean;
+}> {
+  const user = await requireStats();
+  return {
+    user,
+    organizerId: statsOrganizerOf(user),
+    readOnly: user.role === "ORGANIZER_VIEWER",
   };
 }
 

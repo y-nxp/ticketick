@@ -46,6 +46,8 @@ export interface CreatePostfinanceInput {
   /** Identifiant ticketick du spectateur connecté : permet le one-click PF. */
   customerId?: string;
   feeCents?: number;
+  /** Rabais automatique, en ligne négative pour que le total concorde. */
+  discountCents?: number;
 }
 
 export interface CreatePostfinanceResult {
@@ -125,6 +127,17 @@ export async function createPostfinanceCheckout(
       quantity: 1,
       amountIncludingTax: francs(input.feeCents),
       type: "FEE",
+    });
+  }
+
+  if (input.discountCents && input.discountCents > 0) {
+    lineItems.push({
+      uniqueId: lineToken(project, "discount"),
+      sku: lineToken(project, "discount"),
+      name: discountLabel(input.locale),
+      quantity: 1,
+      amountIncludingTax: -francs(input.discountCents),
+      type: "DISCOUNT",
     });
   }
 
@@ -372,6 +385,19 @@ function languageFor(locale: string): string {
       return "en-US";
     default:
       return "fr-CH";
+  }
+}
+
+function discountLabel(locale: string): string {
+  switch (locale) {
+    case "de":
+      return "Rabatt";
+    case "it":
+      return "Sconto";
+    case "en":
+      return "Discount";
+    default:
+      return "Rabais";
   }
 }
 

@@ -292,6 +292,22 @@ function Resultat({ lookup, locale }: { lookup: DoorLookup; locale: string }) {
         {lookup.ticket.ticketName} · {lookup.ticket.when}
       </p>
       <p className="text-sm text-white/90">{lookup.ticket.venue}</p>
+      {lookup.ticket.seat ? (
+        <p className="mt-2 text-lg font-bold">{lookup.ticket.seat}</p>
+      ) : null}
+      {lookup.ticket.attendee ? (
+        <div className="mx-auto mt-3 max-w-xs rounded-xl bg-white/15 px-3 py-2">
+          <p className="text-xs font-semibold uppercase tracking-wide">
+            {t("checkId")}
+          </p>
+          <p className="font-semibold">{lookup.ticket.attendee}</p>
+          {lookup.ticket.attendeeBirthDate ? (
+            <p className="text-sm">
+              {t("bornOn", { date: lookup.ticket.attendeeBirthDate })}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       <p className="mt-2 font-mono text-xs tracking-wider">{lookup.ticket.code}</p>
       <p className="mt-1 text-sm">{lookup.ticket.buyer}</p>
     </div>

@@ -54,6 +54,7 @@ export default async function AdminUsersPage({
                   name: user.name,
                   role: user.role,
                   doorOrganizerId: user.doorOrganizerId,
+                  statsOrganizerId: user.statsOrganizerId,
                   active: user.active,
                   isSelf: user.id === me?.id,
                   lastLogin: user.lastLoginAt

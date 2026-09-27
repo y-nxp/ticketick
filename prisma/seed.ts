@@ -115,7 +115,7 @@ async function main() {
       const sessionId = `${e.slug}-s${i + 1}`;
       const startsAt = addDays(shift(e.startsAt), offset);
 
-      const session = await prisma.eventSession.upsert({
+      await prisma.eventSession.upsert({
         where: { id: sessionId },
         update: { startsAt, status: e.status, venueId: venue.id },
         create: {
@@ -141,24 +141,6 @@ async function main() {
           },
         },
       });
-
-      // Plan de salle seulement si l'événement en déclare un.
-      if (e.hasMap) {
-        await prisma.seatMap.upsert({
-          where: { sessionId: session.id },
-          update: {},
-          create: {
-            sessionId: session.id,
-            layout: {
-              type: "sections",
-              sections: [
-                { id: "orchestra", name: "Orchestre", rows: 20, seatsPerRow: 30 },
-                { id: "balcony", name: "Balcon", rows: 10, seatsPerRow: 24 },
-              ],
-            },
-          },
-        });
-      }
     }
   }
 

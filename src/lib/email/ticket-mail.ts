@@ -140,6 +140,7 @@ export async function sendTicketCards(input: {
       ticket.when,
       ticket.venueInline,
       ticket.holderName,
+      ticket.seating,
       ticket.code,
       "",
     ]),

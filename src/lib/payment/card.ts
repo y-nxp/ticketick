@@ -31,6 +31,7 @@ export interface CreateCardCheckoutInput {
   organizerName?: string;
   customerId?: string;
   feeCents?: number;
+  discountCents?: number;
   metadata?: Record<string, string>;
 }
 

@@ -3,6 +3,7 @@ import "server-only";
 import type { OrderStatus, PaymentMethod, Prisma } from "@prisma/client";
 import { sendRefundAlertEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
+import { claimSeats } from "@/lib/seating/seats";
 import { activateOrderTickets, issueMissingTickets } from "@/lib/tickets/issue";
 
 /**
@@ -80,9 +81,11 @@ async function settle(
         select: {
           ticketTypeId: true,
           quantity: true,
+          seatKeys: true,
           ticketType: {
             select: {
               sessionId: true,
+              seatZones: true,
               session: { select: { capacity: true } },
             },
           },
@@ -160,7 +163,12 @@ async function reclaimSeats(
     items: {
       ticketTypeId: string;
       quantity: number;
-      ticketType: { sessionId: string; session: { capacity: number | null } };
+      seatKeys: string[];
+      ticketType: {
+        sessionId: string;
+        seatZones: string[];
+        session: { capacity: number | null };
+      };
     }[];
   },
 ): Promise<void> {
@@ -194,6 +202,19 @@ async function reclaimSeats(
               AND sold + ${n} <= capacity
           `;
     if (reserved !== 1) throw new SeatsGone(order.id);
+  }
+
+  // Mêmes sièges qu'à l'achat : un seul revendu entre-temps suffit à
+  // renvoyer la commande vers le remboursement.
+  for (const item of order.items) {
+    if (item.seatKeys.length === 0) continue;
+    const got = await claimSeats(tx, {
+      orderId: order.id,
+      sessionId: item.ticketType.sessionId,
+      keys: item.seatKeys,
+      zones: item.ticketType.seatZones,
+    });
+    if (got !== item.seatKeys.length) throw new SeatsGone(order.id);
   }
 
   await tx.ticket.updateMany({

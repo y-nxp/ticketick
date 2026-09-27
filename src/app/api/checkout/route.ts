@@ -22,6 +22,7 @@ import { publicAppOrigin } from "@/lib/app-url";
 import { prisma } from "@/lib/prisma";
 import { reservedUntilFrom } from "@/lib/orders/reservation";
 import { clientIpFrom, consume } from "@/lib/rate-limit";
+import { createPaypalOrder, paypalAccountFor } from "@/lib/payment/paypal";
 
 /**
  * Seuls l'identifiant du tarif et la quantité sont acceptés. Le libellé et le
@@ -31,6 +32,13 @@ import { clientIpFrom, consume } from "@/lib/rate-limit";
 const lineSchema = z.object({
   ticketTypeId: z.string().min(1),
   quantity: z.number().int().positive().max(100),
+  seats: z.array(z.string().min(1).max(40)).max(100).optional(),
+});
+
+const attendeeSchema = z.object({
+  ticketTypeId: z.string().min(1),
+  name: z.string().max(120),
+  birthDate: z.string().max(10),
 });
 
 const checkoutSchema = z.object({
@@ -39,7 +47,7 @@ const checkoutSchema = z.object({
   email: z.email().max(200),
   phone: z.string().max(40).optional(),
   locale: z.string().max(5).default("fr"),
-  paymentMethod: z.enum(["CARD", "IBAN"]),
+  paymentMethod: z.enum(["CARD", "IBAN", "PAYPAL", "FREE"]),
   lines: z.array(lineSchema).min(1).max(50),
   holdReference: z.string().min(3).max(32).optional(),
   holdToken: z.string().min(16).max(64).optional(),
@@ -52,6 +60,7 @@ const checkoutSchema = z.object({
     )
     .max(20)
     .optional(),
+  attendees: z.array(attendeeSchema).max(100).optional(),
 });
 
 // IBAN d'exemple, réservé aux environnements d'essai. Envoyé à un acheteur
@@ -126,8 +135,12 @@ export async function POST(request: Request) {
     paymentMethod: data.paymentMethod,
     userId: user?.id,
     options: data.options,
+    attendees: data.attendees,
+    requireAttendees: true,
     holdTokenHash:
-      data.paymentMethod === "CARD" ? hashHoldToken(freshToken) : undefined,
+      data.paymentMethod === "CARD" || data.paymentMethod === "PAYPAL"
+        ? hashHoldToken(freshToken)
+        : undefined,
   };
 
   // La rétention a déjà prélevé le stock à l'arrivée sur /checkout.
@@ -152,13 +165,94 @@ export async function POST(request: Request) {
     // 409 : la demande était bien formée, c'est l'état du catalogue qui s'y
     // oppose — stock épuisé, vente fermée, tarif disparu.
     return NextResponse.json(
-      { error: created.error, ticketTypeId: created.ticketTypeId },
+      {
+        error: created.error,
+        ticketTypeId: created.ticketTypeId,
+        seatKeys: created.seatKeys,
+      },
       { status: 409 },
     );
   }
 
   const order = created.order;
   const origin = publicAppOrigin(request);
+
+  // Rien à encaisser (concert gratuit, gratuités seules) : la commande est
+  // soldée tout de suite et les billets partent, sans passer par un
+  // prestataire qui refuserait un montant nul.
+  if (order.totalCents === 0) {
+    const paid = await markOrderPaid({
+      reference: order.reference,
+      provider: "free",
+      method: "FREE",
+      amountCents: 0,
+      currency: order.currency,
+    });
+    if (!paid.ok) {
+      console.error("[checkout] commande gratuite non soldée", order.reference, paid.error);
+      return refusePayment(order.id);
+    }
+    if (!paid.alreadyPaid) await sendPaidOrderTickets(paid.orderId);
+    return NextResponse.json({
+      reference: order.reference,
+      status: "PAID",
+      free: true,
+      totalCents: 0,
+      currency: order.currency,
+    });
+  }
+
+  if (data.paymentMethod === "PAYPAL") {
+    let approval;
+    try {
+      const account = await paypalAccountFor(order.organizerIds);
+      if (!account) {
+        console.error("[checkout] PayPal non configuré pour", order.organizerIds);
+        return refusePayment(order.id);
+      }
+      approval = await createPaypalOrder(account, {
+        reference: order.reference,
+        amountCents: order.totalCents,
+        currency: order.currency,
+        description: `${order.organizerName} — ${order.reference}`,
+        brandName: order.organizerName,
+        locale: data.locale,
+        returnUrl: `${origin}/api/paypal/return?ref=${order.reference}&locale=${data.locale}`,
+        cancelUrl: `${origin}/${data.locale}/checkout?canceled=1`,
+      });
+      await prisma.payment.upsert({
+        where: { orderId: order.id },
+        create: {
+          orderId: order.id,
+          provider: "paypal",
+          providerRef: approval.id,
+          method: "PAYPAL",
+          status: "PENDING",
+          amountCents: order.totalCents,
+          currency: order.currency,
+        },
+        update: {
+          provider: "paypal",
+          providerRef: approval.id,
+          method: "PAYPAL",
+          amountCents: order.totalCents,
+        },
+      });
+    } catch (error) {
+      console.error("[checkout] création PayPal impossible", error);
+      return refusePayment(order.id);
+    }
+
+    return NextResponse.json({
+      reference: order.reference,
+      holdToken: token,
+      status: "AWAITING_PAYMENT",
+      checkoutUrl: approval.approveUrl,
+      totalCents: order.totalCents,
+      currency: order.currency,
+      reservedUntil: reservedUntilFrom(order.createdAt).toISOString(),
+    });
+  }
 
   if (data.paymentMethod === "CARD") {
     let session;
@@ -176,6 +270,7 @@ export async function POST(request: Request) {
         organizerName: order.organizerName,
         customerId: user?.id,
         feeCents: order.feeCents,
+        discountCents: order.discountCents,
         lineItems: order.lines.map((l) => ({
           name: l.label,
           quantity: l.quantity,

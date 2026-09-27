@@ -230,7 +230,7 @@ export async function resetPassword(
   // sous son visage « lien expiré » — un échec annoncé après une réussite.
   redirect({
     href:
-      role === "ADMIN" || role === "ORGANIZER"
+      role === "ADMIN" || role === "ORGANIZER" || role === "ORGANIZER_VIEWER"
         ? "/admin"
         : role === "DOOR_STAFF"
           ? "/door"
