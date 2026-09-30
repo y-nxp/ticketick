@@ -286,7 +286,8 @@ model Organizer {
   slug        String  @unique
   name        String
   email       String
-  description String?
+  /// Présentation de la page `/go/…` : { fr, en, de, it, es? }.
+  description Json?
   logoUrl     String?
   website     String?
 
@@ -426,6 +427,12 @@ model Event {
   acceptIban   Boolean @default(true)
   /// Encaissement sur le compte PayPal de l'organisateur.
   acceptPaypal Boolean @default(false)
+
+  /// Faux : aucune vente sur ticketick (conférence, entrée sur inscription).
+  /// La fiche renvoie vers le courriel ou le téléphone ci-dessous.
+  onlineSale   Boolean @default(true)
+  contactEmail String?
+  contactPhone String?
 
   organizer   Organizer @relation(fields: [organizerId], references: [id])
   organizerId String
@@ -872,4 +879,12 @@ model Payment {
   currency    String        @default("CHF")
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+}
+
+/// Reprises de données déjà passées (scripts lancés à chaque déploiement) :
+/// une étape n'est jouée qu'une fois, même si l'admin a supprimé ce qu'elle
+/// avait créé.
+model SetupStep {
+  key    String   @id
+  doneAt DateTime @default(now())
 }

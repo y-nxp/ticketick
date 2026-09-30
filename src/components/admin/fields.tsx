@@ -145,7 +145,7 @@ function texte(value: Traduit, locale: string): string {
 }
 
 /**
- * Saisie d'un libellé dans les quatre langues.
+ * Saisie d'un libellé dans les quatre langues, plus l'espagnol facultatif.
  *
  * Le français est seul obligatoire : l'affichage retombe dessus quand une
  * traduction manque, si bien qu'exiger les quatre alourdirait chaque création
@@ -168,7 +168,8 @@ export function TranslatedField({
 }) {
   const t = useTranslations("admin.form");
   const [ouvert, setOuvert] = React.useState(false);
-  const autres = ["en", "de", "it"] as const;
+  // L'espagnol reste facultatif : à défaut, les hispanophones lisent l'anglais.
+  const autres = ["en", "de", "it", "es"] as const;
 
   const renseignees = autres.filter((l) => texte(value, l) !== "").length;
 
@@ -201,30 +202,34 @@ export function TranslatedField({
         <span className="text-xs text-muted-foreground">{hint}</span>
       ) : null}
 
-      {ouvert ? (
-        <div className="mt-1 grid gap-2 rounded-xl border border-dashed border-border p-3">
-          {autres.map((l) => (
-            <label key={l} className="flex items-center gap-2">
-              <span className="w-8 shrink-0 text-xs font-semibold uppercase text-muted-foreground">
-                {l}
-              </span>
-              {multiline ? (
-                <TextArea
-                  name={`${name}.${l}`}
-                  defaultValue={texte(value, l)}
-                  rows={2}
-                />
-              ) : (
-                <input
-                  name={`${name}.${l}`}
-                  defaultValue={texte(value, l)}
-                  className={inputClass}
-                />
-              )}
-            </label>
-          ))}
-        </div>
-      ) : null}
+      {/* Replié, le bloc reste dans le formulaire : sinon l'enregistrement
+          n'enverrait que le français et effacerait les traductions. */}
+      <div
+        className={`mt-1 gap-2 rounded-xl border border-dashed border-border p-3 ${
+          ouvert ? "grid" : "hidden"
+        }`}
+      >
+        {autres.map((l) => (
+          <label key={l} className="flex items-center gap-2">
+            <span className="w-8 shrink-0 text-xs font-semibold uppercase text-muted-foreground">
+              {l}
+            </span>
+            {multiline ? (
+              <TextArea
+                name={`${name}.${l}`}
+                defaultValue={texte(value, l)}
+                rows={2}
+              />
+            ) : (
+              <input
+                name={`${name}.${l}`}
+                defaultValue={texte(value, l)}
+                className={inputClass}
+              />
+            )}
+          </label>
+        ))}
+      </div>
     </div>
   );
 }

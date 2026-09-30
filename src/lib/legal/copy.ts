@@ -640,8 +640,10 @@ const privacy: Record<LegalLocale, LegalDoc> = {
   },
 };
 
+/** Pas de version espagnole des textes juridiques : l'anglais la remplace. */
 export function legalLocale(locale: string): LegalLocale {
   if (locale === "en" || locale === "de" || locale === "it") return locale;
+  if (locale === "es") return "en";
   return "fr";
 }
 

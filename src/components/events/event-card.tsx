@@ -20,7 +20,12 @@ export function EventCard({
 }: {
   event: EventItem;
   locale: string;
-  labels: { from: string; soldOut: string; dates: (n: number) => string };
+  labels: {
+    from: string;
+    soldOut: string;
+    dates: (n: number) => string;
+    onRegistration: string;
+  };
   /** Page de l'organisateur : la carte y mène à sa propre fiche. */
   href?: string;
 }) {
@@ -98,10 +103,16 @@ export function EventCard({
           )}
         </div>
         <div className="flex items-center justify-between border-t border-border pt-3">
-          <span className="text-xs text-muted-foreground">{labels.from}</span>
-          <span className="text-base font-bold">
-            {formatPrice(price, `${locale}-CH`)}
-          </span>
+          {event.onlineSale ? (
+            <>
+              <span className="text-xs text-muted-foreground">{labels.from}</span>
+              <span className="text-base font-bold">
+                {formatPrice(price, `${locale}-CH`)}
+              </span>
+            </>
+          ) : (
+            <span className="text-sm font-medium">{labels.onRegistration}</span>
+          )}
         </div>
       </div>
     </Link>

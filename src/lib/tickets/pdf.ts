@@ -561,6 +561,23 @@ function labels(locale: string) {
       unpaid: "NON VALIDO — pagamento in attesa",
       unpaidShort: "NON VALIDO",
     },
+    es: {
+      nOf: (n: number, total: number) => `Entrada ${n} / ${total}`,
+      address: "DIRECCIÓN",
+      start: "INICIO",
+      doors: "APERTURA",
+      price: "PRECIO",
+      tariff: "TARIFA",
+      holder: "TITULAR",
+      place: "ASIENTO",
+      order: "PEDIDO",
+      practical:
+        "Si llegas después del inicio, el acceso ya no está garantizado.",
+      disclaimer:
+        "Esta entrada no se puede anular, devolver, cambiar ni reembolsar. Está prohibido presentar varias copias de una misma entrada, modificarla o imitarla. Condiciones: ticketick.ch/terms",
+      unpaid: "NO VÁLIDA — pago pendiente",
+      unpaidShort: "NO VÁLIDA",
+    },
   } as const;
   return pack[locale as keyof typeof pack] ?? pack.fr;
 }

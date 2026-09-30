@@ -24,6 +24,7 @@
     "heroCta": "Veranstaltungen entdecken",
     "heroSecondary": "So funktioniert's",
     "payments": "PostFinance, Stripe, PayPal",
+    "ticketsByEmail": "Tickets per E-Mail",
     "sectionAll": "Alle Veranstaltungen",
     "sectionFeatured": "Empfohlen",
     "sectionUpcoming": "Demnächst",
@@ -99,7 +100,14 @@
     "zoomIn": "Plan vergrößern",
     "zoomOut": "Plan verkleinern",
     "attendeeNote": "Name und Geburtsdatum werden beim Bezahlen verlangt.",
-    "attendeeNoteAge": "Unter {age} Jahren: Name und Geburtsdatum beim Bezahlen, Ausweis am Eingang."
+    "attendeeNoteAge": "Unter {age} Jahren: Name und Geburtsdatum beim Bezahlen, Ausweis am Eingang.",
+    "contact": {
+      "badge": "Mit Anmeldung",
+      "title": "Anmeldung",
+      "intro": "Kein Ticketkauf nötig: Die Anmeldung erfolgt direkt beim Veranstalter.",
+      "subject": "Anmeldung – {title} – {date}",
+      "pending": "Die Angaben zur Anmeldung werden in Kürze bekannt gegeben."
+    }
   },
   "portal": {
     "tickets": "Ticketverkauf",
@@ -742,7 +750,8 @@
         "discountValueInvalid": "Einen Prozentsatz zwischen 0 und 100 oder einen Betrag über null angeben.",
         "discountMinSessionsInvalid": "Die Anzahl Vorstellungen muss eine ganze Zahl von mindestens 1 sein.",
         "validityInvalid": "Ungültiger Gültigkeitszeitraum: Das Ende muss nach dem Beginn liegen.",
-        "discountHasOrders": "Dieser Rabatt wurde bereits auf Bestellungen gewährt: stattdessen deaktivieren."
+        "discountHasOrders": "Dieser Rabatt wurde bereits auf Bestellungen gewährt: stattdessen deaktivieren.",
+        "phoneInvalid": "Ungültige Telefonnummer."
       }
     },
     "settings": {
@@ -782,7 +791,9 @@
         "navLinksHint": "Eine Zeile pro Link: Bezeichnung | https://… — für die gehostete Seite, wenn WordPress nicht zugänglich ist.",
         "notifyEmails": "Ticketkopien",
         "notifyEmailsHint": "Eine Adresse pro Zeile. Jeder Verkauf sendet dieselbe E-Mail wie an die Käuferin oder den Käufer.",
-        "eventCount": "{count} Veranstaltung(en)"
+        "eventCount": "{count} Veranstaltung(en)",
+        "description": "Beschreibung",
+        "descriptionHint": "Oben auf der gehosteten Seite. Fehlt eine Übersetzung, erscheint der französische Text (für Spanisch der englische)."
       },
       "venues": {
         "title": "Orte",
@@ -838,7 +849,12 @@
       "acceptCard": "Karte",
       "acceptIban": "IBAN-Überweisung",
       "delete": "Veranstaltung löschen",
-      "acceptPaypal": "PayPal"
+      "acceptPaypal": "PayPal",
+      "booking": "Verkauf und Anmeldung",
+      "onlineSale": "Online-Verkauf auf ticketick",
+      "contactHint": "Nicht angekreuzt: kein Ticketverkauf; die Seite lädt zur Anmeldung per E-Mail oder Telefon ein (Vortrag, Begegnung). Diese Angaben ersetzen dann die Tickets.",
+      "contactEmail": "E-Mail für Anmeldungen",
+      "contactPhone": "Telefon für Anmeldungen"
     },
     "embed": {
       "title": "Ticketverkauf einbinden",

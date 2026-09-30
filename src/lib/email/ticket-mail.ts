@@ -1,6 +1,7 @@
 import "server-only";
 
 import { envoyer, echapper, type MailAttachment } from "@/lib/email";
+import { byLocale } from "@/lib/i18n-fallback";
 import { publicAppOrigin } from "@/lib/app-url";
 import { ticketQrPng } from "@/lib/tickets/qr";
 import { buildTicketsPdf } from "@/lib/tickets/pdf";
@@ -397,6 +398,26 @@ function textes(locale: string) {
       salutations: "Con i nostri ringraziamenti e i migliori saluti,",
       pied: "Il team ticketick.ch",
     },
+    es: {
+      sujet: "Tu pedido en ticketick.ch: tus entradas",
+      apercuSujet: "Vista previa — entrada ticketick",
+      bonjour: (nom: string) => `Hola, ${nom}:`,
+      corps: "Gracias por tu pedido. Muestra el código QR en la entrada: cada entrada solo es válida una vez.",
+      pdfLien: "Descargar tus entradas",
+      apercuCorps:
+        "Esto es una vista previa: el código QR no da acceso. Así es lo que recibe quien compra.",
+      reference: "Tu referencia:",
+      recap: "Resumen de tu pedido",
+      colPlace: "Entrada",
+      colTarif: "Tarifa",
+      colPrix: "Precio",
+      total: "Total",
+      holder: "Titular:",
+      disclaimer:
+        "Esta entrada no se puede anular, devolver, cambiar ni reembolsar. Está prohibido presentar varias copias de una misma entrada, modificarla o imitarla. Condiciones: ticketick.ch/terms",
+      salutations: "Con nuestro agradecimiento y un cordial saludo,",
+      pied: "El equipo de ticketick.ch",
+    },
   } as const;
-  return pack[locale as keyof typeof pack] ?? pack.fr;
+  return byLocale<(typeof pack)[keyof typeof pack]>(pack, locale);
 }

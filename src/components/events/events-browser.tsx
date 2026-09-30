@@ -271,6 +271,7 @@ export function EventsBrowser({
                 from: te("from"),
                 soldOut: te("soldOut"),
                 dates: (n) => te("datesCount", { count: n }),
+                onRegistration: te("contact.badge"),
               }}
             />
           ))}

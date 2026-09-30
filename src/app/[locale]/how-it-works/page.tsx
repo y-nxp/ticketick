@@ -2,6 +2,7 @@ import { setRequestLocale } from "next-intl/server";
 import { Search, ShoppingBag, CreditCard, Mail } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
+import { byLocale } from "@/lib/i18n-fallback";
 
 const content = {
   fr: {
@@ -59,7 +60,7 @@ export default async function HowItWorksPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const c = content[locale as keyof typeof content] ?? content.fr;
+  const c = byLocale<(typeof content)[keyof typeof content]>(content, locale);
 
   return (
     <div className="container-page py-16">

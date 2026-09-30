@@ -9,6 +9,7 @@ import {
   getOrganizerBySlug,
   getOrganizerEvents,
 } from "@/lib/data/events";
+import { t } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -17,12 +18,14 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string; orgSlug: string }>;
 }): Promise<Metadata> {
-  const { orgSlug } = await params;
+  const { locale, orgSlug } = await params;
   const organizer = await getOrganizerBySlug(orgSlug);
   if (!organizer) return {};
   return {
     title: organizer.name,
-    description: organizer.description ?? organizer.website,
+    description: organizer.description
+      ? t(organizer.description, locale)
+      : organizer.website,
     openGraph: organizer.logoUrl ? { images: [organizer.logoUrl] } : undefined,
   };
 }
@@ -53,8 +56,8 @@ export default async function OrganizerPortalPage({
           <p className="organizer-kicker">{tp("tickets")}</p>
           <h1 className="organizer-title">{organizer.name}</h1>
           {organizer.description ? (
-            <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-              {organizer.description}
+            <p className="mt-3 max-w-2xl whitespace-pre-line text-sm text-muted-foreground">
+              {t(organizer.description, locale)}
             </p>
           ) : null}
           {organizer.website ? (
@@ -88,6 +91,7 @@ export default async function OrganizerPortalPage({
                   from: tp("from"),
                   soldOut: te("soldOut"),
                   dates: (n) => tp("dateCount", { count: n }),
+                  onRegistration: te("contact.badge"),
                 }}
               />
             ))}

@@ -5,21 +5,26 @@ import { parseGoOrigin, SHOP_ORIGIN_COOKIE } from "./lib/shop-origin";
 
 const detectLocale = createMiddleware(routing);
 
-/** Pages destinées au site du client : pas de bascule selon le navigateur. */
+/**
+ * Pages destinées au site du client : le lien partagé s'ouvre en français
+ * quelle que soit la langue du navigateur, puis le visiteur peut en changer.
+ */
 const hostedLocale = createMiddleware({
   ...routing,
   localeDetection: false,
 });
 
-const hostedPath =
-  /^(?:\/(?:en|de|it))?\/(?:go|embed)(?:\/|$)/;
+const prefixes = routing.locales
+  .filter((l) => l !== routing.defaultLocale)
+  .join("|");
+const localePrefix = new RegExp(`^/(?:${prefixes})(?=/|$)`);
+const hostedPath = new RegExp(`^(?:/(?:${prefixes}))?/(?:go|embed)(?:/|$)`);
 
 function withShopOriginCookie(
   request: NextRequest,
   response: NextResponse,
 ): NextResponse {
-  const path =
-    request.nextUrl.pathname.replace(/^\/(?:en|de|it)(?=\/|$)/, "") || "/";
+  const path = request.nextUrl.pathname.replace(localePrefix, "") || "/";
   const origin = parseGoOrigin(path);
   if (origin) {
     response.cookies.set(SHOP_ORIGIN_COOKIE, origin.path, {
@@ -32,15 +37,7 @@ function withShopOriginCookie(
 }
 
 export default function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  if (hostedPath.test(pathname)) {
-    const french = pathname.replace(/^\/(?:en|de|it)(?=\/|$)/, "") || "/";
-    if (french !== pathname) {
-      const url = request.nextUrl.clone();
-      url.pathname = french;
-      return NextResponse.redirect(url);
-    }
+  if (hostedPath.test(request.nextUrl.pathname)) {
     return withShopOriginCookie(request, hostedLocale(request));
   }
 

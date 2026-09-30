@@ -1,3 +1,5 @@
+import { byLocale } from "@/lib/i18n-fallback";
+
 /** Société de com responsable d’un spectacle hébergé (CG + logo sur le billet). */
 export type TicketResponsible = {
   name: string;
@@ -33,5 +35,5 @@ export function ticketDisclaimer(
 ): string | undefined {
   const pack = ticketResponsible(organizerSlug)?.disclaimer;
   if (!pack) return undefined;
-  return pack[locale as keyof typeof pack] ?? pack.fr;
+  return byLocale(pack, locale);
 }

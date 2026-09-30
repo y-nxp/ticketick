@@ -1,6 +1,7 @@
 import "server-only";
 
 import nodemailer, { type Transporter } from "nodemailer";
+import { byLocale } from "@/lib/i18n-fallback";
 
 /**
  * Envoi de courriels.
@@ -116,7 +117,79 @@ async function envoyer(options: {
 
 // ─────────────────────────────── Billets
 
+const COMMANDE_TEXTES: Record<
+  string,
+  {
+    bonjour: string;
+    enAttente: (ref: string) => string;
+    confirmee: (ref: string) => string;
+    sujetAttente: (ref: string) => string;
+    sujetConfirmee: (ref: string) => string;
+    virement: string;
+    beneficiaire: string;
+    montant: string;
+    reference: string;
+  }
+> = {
+  fr: {
+    bonjour: "Bonjour",
+    enAttente: (r) => `Votre commande ${r} est enregistrée. Elle sera confirmée dès réception de votre virement.`,
+    confirmee: (r) => `Votre commande ${r} est confirmée.`,
+    sujetAttente: (r) => `Commande ${r} — en attente de paiement`,
+    sujetConfirmee: (r) => `Commande ${r} — confirmée`,
+    virement: "Coordonnées pour le virement :",
+    beneficiaire: "Bénéficiaire",
+    montant: "Montant",
+    reference: "Référence",
+  },
+  en: {
+    bonjour: "Hello",
+    enAttente: (r) => `Your order ${r} is registered. It will be confirmed as soon as your bank transfer arrives.`,
+    confirmee: (r) => `Your order ${r} is confirmed.`,
+    sujetAttente: (r) => `Order ${r} — awaiting payment`,
+    sujetConfirmee: (r) => `Order ${r} — confirmed`,
+    virement: "Bank transfer details:",
+    beneficiaire: "Beneficiary",
+    montant: "Amount",
+    reference: "Reference",
+  },
+  de: {
+    bonjour: "Guten Tag",
+    enAttente: (r) => `Ihre Bestellung ${r} ist registriert. Sie wird bestätigt, sobald Ihre Überweisung eingegangen ist.`,
+    confirmee: (r) => `Ihre Bestellung ${r} ist bestätigt.`,
+    sujetAttente: (r) => `Bestellung ${r} — Zahlung ausstehend`,
+    sujetConfirmee: (r) => `Bestellung ${r} — bestätigt`,
+    virement: "Angaben für die Überweisung:",
+    beneficiaire: "Empfänger",
+    montant: "Betrag",
+    reference: "Referenz",
+  },
+  it: {
+    bonjour: "Buongiorno",
+    enAttente: (r) => `Il tuo ordine ${r} è registrato. Sarà confermato non appena riceveremo il bonifico.`,
+    confirmee: (r) => `Il tuo ordine ${r} è confermato.`,
+    sujetAttente: (r) => `Ordine ${r} — in attesa di pagamento`,
+    sujetConfirmee: (r) => `Ordine ${r} — confermato`,
+    virement: "Coordinate per il bonifico:",
+    beneficiaire: "Beneficiario",
+    montant: "Importo",
+    reference: "Riferimento",
+  },
+  es: {
+    bonjour: "Hola",
+    enAttente: (r) => `Tu pedido ${r} está registrado. Se confirmará en cuanto recibamos tu transferencia.`,
+    confirmee: (r) => `Tu pedido ${r} está confirmado.`,
+    sujetAttente: (r) => `Pedido ${r} — pendiente de pago`,
+    sujetConfirmee: (r) => `Pedido ${r} — confirmado`,
+    virement: "Datos para la transferencia:",
+    beneficiaire: "Beneficiario",
+    montant: "Importe",
+    reference: "Referencia",
+  },
+};
+
 export async function sendTicketEmail(payload: TicketEmailPayload) {
+  const l = byLocale(COMMANDE_TEXTES, payload.locale);
   const lignes = payload.items
     .map((i) => `- ${i.quantity} × ${i.name}`)
     .join("\n");
@@ -127,24 +200,22 @@ export async function sendTicketEmail(payload: TicketEmailPayload) {
   const virement = payload.ibanInstructions
     ? [
         "",
-        "Coordonnées pour le virement :",
-        `  IBAN        : ${payload.ibanInstructions.iban}`,
-        `  Bénéficiaire: ${payload.ibanInstructions.beneficiary}`,
-        `  Montant     : ${montant} ${payload.currency}`,
-        `  Référence   : ${payload.ibanInstructions.reference}`,
+        l.virement,
+        `  IBAN: ${payload.ibanInstructions.iban}`,
+        `  ${l.beneficiaire}: ${payload.ibanInstructions.beneficiary}`,
+        `  ${l.montant}: ${montant} ${payload.currency}`,
+        `  ${l.reference}: ${payload.ibanInstructions.reference}`,
       ].join("\n")
     : "";
 
   const text = [
-    `Bonjour ${payload.firstName},`,
+    `${l.bonjour} ${payload.firstName},`,
     "",
-    attente
-      ? `Votre commande ${payload.reference} est enregistrée. Elle sera confirmée dès réception de votre virement.`
-      : `Votre commande ${payload.reference} est confirmée.`,
+    attente ? l.enAttente(payload.reference) : l.confirmee(payload.reference),
     "",
     lignes,
     "",
-    `Total : ${montant} ${payload.currency}`,
+    `Total: ${montant} ${payload.currency}`,
     virement,
     "",
     "ticketick.ch",
@@ -153,8 +224,8 @@ export async function sendTicketEmail(payload: TicketEmailPayload) {
   return envoyer({
     to: payload.to,
     subject: attente
-      ? `Commande ${payload.reference} — en attente de paiement`
-      : `Commande ${payload.reference} — confirmée`,
+      ? l.sujetAttente(payload.reference)
+      : l.sujetConfirmee(payload.reference),
     text,
     html: `<pre style="font:14px/1.5 system-ui">${echapper(text)}</pre>`,
     etiquette: "billets",
@@ -205,6 +276,14 @@ const RESET_TEXTES: Record<
     ignorer:
       "Se non hai richiesto tu questa operazione, ignora il messaggio: la password resta invariata.",
     expire: (n) => `Il link è valido ${n} minuti e funziona una sola volta.`,
+  },
+  es: {
+    sujet: "Restablece tu contraseña de ticketick",
+    bonjour: "Hola",
+    corps: "Para elegir una nueva contraseña, abre este enlace:",
+    ignorer:
+      "Si no has sido tú quien lo ha solicitado, ignora este mensaje: tu contraseña no cambia.",
+    expire: (n) => `Este enlace es válido durante ${n} minutos y solo funciona una vez.`,
   },
 };
 
@@ -286,7 +365,7 @@ export async function sendRefundAlertEmail(payload: {
 }
 
 export async function sendPasswordResetEmail(payload: PasswordResetPayload) {
-  const l = RESET_TEXTES[payload.locale] ?? RESET_TEXTES.fr;
+  const l = byLocale(RESET_TEXTES, payload.locale);
   const salutation = payload.name ? `${l.bonjour} ${payload.name},` : `${l.bonjour},`;
 
   const text = [
@@ -359,6 +438,15 @@ const CONFIRMATION_TEXTES: Record<
       "Se non hai creato un account ticketick, ignora il messaggio: nulla verrà collegato a questo indirizzo.",
     expire: (h) => `Il link è valido ${h} ore.`,
   },
+  es: {
+    sujet: "Confirma tu dirección en ticketick",
+    bonjour: "Hola",
+    corps:
+      "Para confirmar tu dirección y encontrar en tu cuenta las entradas compradas con ella, abre este enlace:",
+    ignorer:
+      "Si no has creado una cuenta en ticketick, ignora este mensaje: no se vinculará nada a esta dirección.",
+    expire: (h) => `Este enlace es válido durante ${h} horas.`,
+  },
 };
 
 export async function sendEmailConfirmation(payload: {
@@ -368,7 +456,7 @@ export async function sendEmailConfirmation(payload: {
   url: string;
   expiresInHours: number;
 }) {
-  const l = CONFIRMATION_TEXTES[payload.locale] ?? CONFIRMATION_TEXTES.fr;
+  const l = byLocale(CONFIRMATION_TEXTES, payload.locale);
   const salutation = payload.name ? `${l.bonjour} ${payload.name},` : `${l.bonjour},`;
 
   const text = [
@@ -453,7 +541,7 @@ export async function sendStatsInvitationEmail(payload: {
   url: string;
   expiresInDays: number;
 }) {
-  const l = INVITATION_TEXTES[payload.locale] ?? INVITATION_TEXTES.fr;
+  const l = byLocale(INVITATION_TEXTES, payload.locale);
   const salutation = payload.name ? `${l.bonjour} ${payload.name},` : `${l.bonjour},`;
   const corps = l.corps(payload.organizerName);
 

@@ -1,17 +1,19 @@
+/**
+ * Contenu saisi dans l'admin. L'espagnol est facultatif : les visiteurs
+ * hispanophones lisent l'anglais tant qu'il manque.
+ */
 export type Translated = {
   fr: string;
   en: string;
   de: string;
   it: string;
+  es?: string;
 };
 
 export function t(value: Translated, locale: string): string {
-  return (
-    value[locale as keyof Translated] ??
-    value.fr ??
-    Object.values(value)[0] ??
-    ""
-  );
+  const v = value as Partial<Record<string, string>>;
+  const exact = locale === "es" ? v.es || v.en : v[locale];
+  return exact ?? v.fr ?? Object.values(v)[0] ?? "";
 }
 
 export type EventStatus =
@@ -84,7 +86,7 @@ export interface Organizer {
   id: string;
   slug: string;
   name: string;
-  description?: string;
+  description?: Translated;
   logoUrl?: string;
   website?: string;
   brand: OrganizerBrand;
@@ -124,6 +126,10 @@ export interface EventItem {
   featured: boolean;
   coverImage: string;
   gallery: string[];
+  /** Faux : inscription auprès de l'organisateur, sans vente en ligne. */
+  onlineSale: boolean;
+  contactEmail?: string;
+  contactPhone?: string;
   organizer: Organizer;
   categories: Category[];
   sessions: SessionItem[];

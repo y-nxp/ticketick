@@ -102,8 +102,22 @@ export async function saveEvent(
   const acceptCard = readBoolean(data, "acceptCard");
   const acceptIban = readBoolean(data, "acceptIban");
   const acceptPaypal = readBoolean(data, "acceptPaypal");
-  if (!acceptCard && !acceptIban && !acceptPaypal) {
+  const onlineSale = readBoolean(data, "onlineSale");
+  if (onlineSale && !acceptCard && !acceptIban && !acceptPaypal) {
     return failure("paymentRequired");
+  }
+
+  const contactEmail = readOptionalText(data, "contactEmail") ?? null;
+  const contactPhone = readOptionalText(data, "contactPhone") ?? null;
+  if (
+    contactEmail &&
+    (contactEmail.length > 200 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail))
+  ) {
+    return failure("emailInvalid");
+  }
+  if (contactPhone && !/^\+?[\d\s().\/-]{6,40}$/.test(contactPhone)) {
+    return failure("phoneInvalid");
   }
 
   if (id && scoped) {
@@ -127,6 +141,9 @@ export async function saveEvent(
     acceptCard,
     acceptIban,
     acceptPaypal,
+    onlineSale,
+    contactEmail,
+    contactPhone,
   };
 
   const liens = categoryIds.map((cid) => ({ id: cid }));

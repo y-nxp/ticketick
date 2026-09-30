@@ -89,7 +89,7 @@ export function formatTicketPrice(
   currency = "CHF",
 ): string {
   if (cents <= 0) {
-    if (locale === "de") return "Gratis";
+    if (locale === "de" || locale === "es") return "Gratis";
     if (locale === "it") return "Gratuito";
     if (locale === "en") return "Free";
     return "Gratuit";
@@ -100,7 +100,8 @@ export function formatTicketPrice(
 export function readTitle(value: unknown, locale: string): string {
   if (value && typeof value === "object") {
     const record = value as Record<string, unknown>;
-    const hit = record[locale] ?? record.fr ?? Object.values(record)[0];
+    const exact = locale === "es" ? record.es || record.en : record[locale];
+    const hit = exact ?? record.fr ?? Object.values(record)[0];
     if (typeof hit === "string") return hit;
   }
   return "";
@@ -182,6 +183,7 @@ function seatingLabel(locale: string): string {
   if (locale === "de") return "Freie Platzwahl";
   if (locale === "it") return "Posti non numerati";
   if (locale === "en") return "Free seating";
+  if (locale === "es") return "Localidad no numerada";
   return "Placement libre";
 }
 

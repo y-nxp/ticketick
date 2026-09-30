@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { LegalPage } from "@/components/layout/legal-page";
-import { termsCopy } from "@/lib/legal/copy";
+import { legalLocale, termsCopy } from "@/lib/legal/copy";
 
 const titles: Record<string, string> = {
   fr: "Conditions générales",
@@ -18,7 +18,7 @@ export default async function TermsPage({
   setRequestLocale(locale);
   return (
     <LegalPage
-      title={titles[locale] ?? titles.fr}
+      title={titles[legalLocale(locale)]}
       doc={termsCopy(locale)}
     />
   );

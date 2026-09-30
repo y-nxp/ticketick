@@ -85,11 +85,14 @@ export async function saveOrganizer(
     .filter((adresse) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(adresse));
 
   const disclaimer = readTranslated(data, "ticketDisclaimer");
+  const description = readTranslated(data, "description");
 
   const fields = {
     name,
     email,
-    description: readOptionalText(data, "description") ?? null,
+    description: (description.fr
+      ? description
+      : Prisma.DbNull) as Prisma.InputJsonValue,
     website: readOptionalText(data, "website") ?? null,
     logoUrl: readOptionalText(data, "logoUrl") ?? null,
     brandPrimary: parseHexColor(readOptionalText(data, "brandPrimary")) ?? null,

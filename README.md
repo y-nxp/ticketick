@@ -117,7 +117,17 @@ prisma/                     # schema.prisma + seed.ts
      admin › Spectacles. Dans cette liste, l'interrupteur « Publier sur
      ticketick » affiche ou non le spectacle sur l'accueil de ticketick.ch
      (visibilité publique ou non listée) ; il reste vendu sur la page de
-     l'organisateur dans les deux cas.
+     l'organisateur dans les deux cas. Le lien partagé s'ouvre en français,
+     le sélecteur de langue propose ensuite en, de, it et es.
+   - **Espagnol** : parcours d'achat seulement (`messages/es.json`, courriels,
+     billets). Libellés absents et contenus sans texte `es` : anglais. Pages
+     légales : anglais. Admin et contrôle restent en fr/en/de/it.
+   - **Sans vente en ligne** (fiche spectacle › « Vente en ligne » décochée) :
+     conférence ou entrée sur inscription. La fiche affiche le courriel ou le
+     téléphone saisis à la place des billets, et aucune commande n'est acceptée.
+   - **Reprises de données** : `prisma/setup-*.ts` tournent à chaque
+     déploiement ; une étape `once(clé)` (table `SetupStep`) n'est jouée
+     qu'une fois par base, même si l'admin défait ensuite son résultat.
 2. **E-mail** : configurer SMTP dans `src/lib/email.ts` + génération PDF des billets (QR).
 3. **Auth.js** : brancher l'authentification réelle sur le modèle `User`.
 4. **Persistance des commandes** : écrire les `Order`/`Ticket` en base dans `api/checkout`.

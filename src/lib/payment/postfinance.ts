@@ -411,6 +411,8 @@ function languageFor(locale: string): string {
       return "it-CH";
     case "en":
       return "en-US";
+    case "es":
+      return "es-ES";
     default:
       return "fr-CH";
   }
@@ -424,6 +426,8 @@ function discountLabel(locale: string): string {
       return "Sconto";
     case "en":
       return "Discount";
+    case "es":
+      return "Descuento";
     default:
       return "Rabais";
   }
@@ -437,6 +441,8 @@ function feeLabel(locale: string): string {
       return "Costi di servizio";
     case "en":
       return "Service fee";
+    case "es":
+      return "Gastos de gestión";
     default:
       return "Frais de service";
   }

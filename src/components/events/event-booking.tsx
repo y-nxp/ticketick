@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, MapPin, DoorOpen, Building2 } from "lucide-react";
 import { SessionPicker } from "./session-picker";
 import { TicketSelector } from "./ticket-selector";
+import { ContactBooking } from "./contact-booking";
 import { rememberShopOrigin } from "@/lib/shop-origin";
 import { scrollToIdIfStacked } from "@/lib/scroll-into-view";
 import { formatDate } from "@/lib/utils";
@@ -68,10 +69,11 @@ export function EventBooking({
       selectedId={session.id}
       onSelect={selectSession}
       locale={locale}
+      priced={event.onlineSale}
     />
   );
 
-  const tickets = (
+  const tickets = event.onlineSale ? (
     <TicketSelector
       event={event}
       session={session}
@@ -79,7 +81,10 @@ export function EventBooking({
       embed={widget}
       key={session.id}
     />
+  ) : (
+    <ContactBooking event={event} session={session} locale={locale} />
   );
+  const seated = session.seated && event.onlineSale;
 
   if (widget) {
     return (
@@ -94,13 +99,13 @@ export function EventBooking({
     <div className="space-y-8">
       {heading ? <div key="event-heading">{heading}</div> : null}
       {picker}
-      {session.seated ? tickets : null}
+      {seated ? tickets : null}
       <div
         className={
-          session.seated ? "space-y-8" : "grid gap-8 lg:grid-cols-[1fr_380px]"
+          seated ? "space-y-8" : "grid gap-8 lg:grid-cols-[1fr_380px]"
         }
       >
-        {session.seated ? null : (
+        {seated ? null : (
           <aside className="order-1 space-y-4 lg:order-2 lg:sticky lg:top-24 lg:self-start">
             {tickets}
           </aside>
@@ -140,7 +145,7 @@ export function EventBooking({
 
           <section>
             <h2 className="mb-3 text-xl font-semibold">{te("about")}</h2>
-            <p className="leading-relaxed text-muted-foreground">
+            <p className="whitespace-pre-line leading-relaxed text-muted-foreground">
               {t(event.description, locale)}
             </p>
           </section>

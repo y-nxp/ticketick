@@ -144,6 +144,7 @@ const PAYPAL_LOCALES: Record<string, string> = {
   de: "de-DE",
   it: "it-IT",
   en: "en-GB",
+  es: "es-ES",
 };
 
 interface PaypalLink {

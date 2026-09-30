@@ -3,7 +3,8 @@ import { EVENT_TIME_ZONE } from "@/lib/utils";
 function readTitle(value: unknown, locale: string): string {
   if (value && typeof value === "object") {
     const record = value as Record<string, unknown>;
-    const hit = record[locale] ?? record.fr ?? Object.values(record)[0];
+    const exact = locale === "es" ? record.es || record.en : record[locale];
+    const hit = exact ?? record.fr ?? Object.values(record)[0];
     if (typeof hit === "string") return hit;
   }
   return "";
@@ -241,6 +242,13 @@ function copy(locale: string) {
       optionHeading: "Opzione",
       trip: "Corsa",
       totalLabel: "Totale:",
+    },
+    es: {
+      shuttleHeading:
+        "Incluye servicio de lanzadera en minibús (se paga directamente al conductor)",
+      optionHeading: "Opción",
+      trip: "Trayecto",
+      totalLabel: "Total:",
     },
   } as const;
   return pack[locale as keyof typeof pack] ?? pack.fr;

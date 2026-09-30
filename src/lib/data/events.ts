@@ -37,7 +37,8 @@ const eventInclude = {
 function translated(value: unknown): Translated {
   const v = (value ?? {}) as Partial<Translated>;
   const fr = v.fr ?? "";
-  return { fr, en: v.en ?? fr, de: v.de ?? fr, it: v.it ?? fr };
+  const en = v.en ?? fr;
+  return { fr, en, de: v.de ?? fr, it: v.it ?? fr, es: v.es || en };
 }
 
 function optionalTranslated(value: unknown): Translated | undefined {
@@ -101,12 +102,20 @@ function mapSession(s: RawEvent["sessions"][number]): SessionItem {
   };
 }
 
+function organizerDescription(value: unknown): Translated | undefined {
+  if (typeof value === "string") {
+    return value.trim() ? translated({ fr: value.trim() }) : undefined;
+  }
+  const text = translated(value);
+  return text.fr.trim() ? text : undefined;
+}
+
 function mapOrganizer(o: RawEvent["organizer"]): Organizer {
   return {
     id: o.id,
     slug: o.slug,
     name: o.name,
-    description: o.description?.trim() || undefined,
+    description: organizerDescription(o.description),
     logoUrl: o.logoUrl ?? undefined,
     website: o.website ?? undefined,
     brand: organizerBrandFromRow(o),
@@ -135,6 +144,9 @@ function mapEvent(e: RawEvent): EventItem {
     featured: e.featured,
     coverImage: e.coverImage ?? "",
     gallery: e.gallery,
+    onlineSale: e.onlineSale,
+    contactEmail: e.contactEmail?.trim() || undefined,
+    contactPhone: e.contactPhone?.trim() || undefined,
     organizer: mapOrganizer(e.organizer),
     categories: e.categories.map(mapCategory),
     sessions: e.sessions.map(mapSession),

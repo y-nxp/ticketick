@@ -21,6 +21,7 @@ import {
   type ResolvedOption,
 } from "./options";
 import { CARD_HOLD_MS, HELD_METHODS } from "./reservation";
+import { intlLocale } from "@/lib/i18n-fallback";
 
 /**
  * Création d'une commande.
@@ -174,6 +175,7 @@ export async function createOrder(
           event: {
             select: {
               status: true,
+              onlineSale: true,
               slug: true,
               title: true,
               acceptCard: true,
@@ -194,7 +196,11 @@ export async function createOrder(
     const tt = byId.get(ticketTypeId);
     if (!tt) return { ok: false, error: "unknown_ticket_type", ticketTypeId };
 
-    if (tt.session.event.status !== "PUBLISHED" || tt.session.status !== "PUBLISHED") {
+    if (
+      tt.session.event.status !== "PUBLISHED" ||
+      tt.session.status !== "PUBLISHED" ||
+      !tt.session.event.onlineSale
+    ) {
       return { ok: false, error: "not_on_sale", ticketTypeId };
     }
 
@@ -1019,7 +1025,7 @@ function paymentLineLabel(input: {
   ticketName: string;
   locale: string;
 }): string {
-  const date = new Intl.DateTimeFormat(dateLocale(input.locale), {
+  const date = new Intl.DateTimeFormat(intlLocale(input.locale), {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -1032,23 +1038,12 @@ function paymentLineLabel(input: {
     .slice(0, 150);
 }
 
-function dateLocale(locale: string): string {
-  switch (locale) {
-    case "de":
-      return "de-CH";
-    case "it":
-      return "it-CH";
-    case "en":
-      return "en-CH";
-    default:
-      return "fr-CH";
-  }
-}
 
 function readTitle(value: unknown, locale: string): string {
   if (value && typeof value === "object") {
     const record = value as Record<string, unknown>;
-    const hit = record[locale] ?? record.fr ?? Object.values(record)[0];
+    const exact = locale === "es" ? record.es || record.en : record[locale];
+    const hit = exact ?? record.fr ?? Object.values(record)[0];
     if (typeof hit === "string") return hit;
   }
   return "";

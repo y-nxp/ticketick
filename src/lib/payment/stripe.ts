@@ -45,7 +45,7 @@ export interface CreateCheckoutResult {
   mock: boolean;
 }
 
-const SUPPORTED_LOCALES = ["fr", "en", "de", "it"] as const;
+const SUPPORTED_LOCALES = ["fr", "en", "de", "it", "es"] as const;
 
 export async function createStripeCheckout(
   input: CreateCheckoutInput,

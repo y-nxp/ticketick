@@ -24,6 +24,7 @@
     "heroCta": "Scopri gli spettacoli",
     "heroSecondary": "Come funziona",
     "payments": "PostFinance, Stripe, PayPal",
+    "ticketsByEmail": "Biglietti via e-mail",
     "sectionAll": "Tutti gli spettacoli",
     "sectionFeatured": "In evidenza",
     "sectionUpcoming": "Prossimamente",
@@ -99,7 +100,14 @@
     "zoomIn": "Ingrandisci la pianta",
     "zoomOut": "Riduci la pianta",
     "attendeeNote": "Nome e data di nascita richiesti al pagamento.",
-    "attendeeNoteAge": "Meno di {age} anni: nome e data di nascita al pagamento, documento d'identità all'ingresso."
+    "attendeeNoteAge": "Meno di {age} anni: nome e data di nascita al pagamento, documento d'identità all'ingresso.",
+    "contact": {
+      "badge": "Su iscrizione",
+      "title": "Iscrizione",
+      "intro": "Nessun biglietto da acquistare: l’iscrizione avviene direttamente presso l’organizzatore.",
+      "subject": "Iscrizione – {title} – {date}",
+      "pending": "I recapiti per l’iscrizione saranno comunicati a breve."
+    }
   },
   "portal": {
     "tickets": "Biglietteria",
@@ -742,7 +750,8 @@
         "discountValueInvalid": "Indicare una percentuale tra 0 e 100 o un importo superiore a zero.",
         "discountMinSessionsInvalid": "Il numero di date deve essere un intero di almeno 1.",
         "validityInvalid": "Periodo di validità non valido: la fine deve seguire l’inizio.",
-        "discountHasOrders": "Questo sconto è già stato concesso su ordini: disattivarlo invece."
+        "discountHasOrders": "Questo sconto è già stato concesso su ordini: disattivarlo invece.",
+        "phoneInvalid": "Numero di telefono non valido."
       }
     },
     "settings": {
@@ -782,7 +791,9 @@
         "navLinksHint": "Una riga per link: Etichetta | https://… — per la pagina ospitata se non possono modificare WordPress.",
         "notifyEmails": "Copie dei biglietti",
         "notifyEmailsHint": "Un indirizzo per riga. Ogni vendita invia la stessa e-mail dell’acquirente.",
-        "eventCount": "{count} spettacolo/i"
+        "eventCount": "{count} spettacolo/i",
+        "description": "Presentazione",
+        "descriptionHint": "In cima alla pagina ospitata. Se manca una traduzione compare il testo francese (l’inglese per lo spagnolo)."
       },
       "venues": {
         "title": "Luoghi",
@@ -838,7 +849,12 @@
       "acceptCard": "Carta",
       "acceptIban": "Bonifico IBAN",
       "delete": "Elimina lo spettacolo",
-      "acceptPaypal": "PayPal"
+      "acceptPaypal": "PayPal",
+      "booking": "Vendita e iscrizione",
+      "onlineSale": "Vendita online su ticketick",
+      "contactHint": "Non selezionata: nessun biglietto in vendita; la pagina invita a iscriversi via e-mail o telefono (conferenza, incontro). Questi recapiti sostituiscono allora i biglietti.",
+      "contactEmail": "E-mail per le iscrizioni",
+      "contactPhone": "Telefono per le iscrizioni"
     },
     "embed": {
       "title": "Integrare la biglietteria",

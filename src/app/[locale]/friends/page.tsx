@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Smartphone, Ticket, Bell, Wallet, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { byLocale } from "@/lib/i18n-fallback";
 
 export default async function FriendsPage({
   params,
@@ -34,7 +35,7 @@ export default async function FriendsPage({
     ],
   } as const;
 
-  const list = features[locale as keyof typeof features] ?? features.fr;
+  const list = byLocale<(typeof features)[keyof typeof features]>(features, locale);
   const icons = [Ticket, Bell, Wallet];
 
   return (

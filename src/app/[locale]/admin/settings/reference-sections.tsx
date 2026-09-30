@@ -236,6 +236,14 @@ function OrganizerForm({
           required
         />
       </Field>
+      <TranslatedField
+        name="description"
+        label={t("description")}
+        hint={t("descriptionHint")}
+        value={organizer?.description as Record<string, unknown> | undefined}
+        multiline
+        required={false}
+      />
       <Field label={t("website")}>
         <TextInput name="website" defaultValue={organizer?.website} />
       </Field>

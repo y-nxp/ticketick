@@ -143,6 +143,33 @@ export function EventForm({
         defaultChecked={event?.featured}
       />
 
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-medium">{t("booking")}</legend>
+        <Checkbox
+          name="onlineSale"
+          label={t("onlineSale")}
+          defaultChecked={event?.onlineSale ?? true}
+        />
+        <p className="text-xs text-muted-foreground">{t("contactHint")}</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label={t("contactEmail")}>
+            <TextInput
+              name="contactEmail"
+              type="email"
+              defaultValue={event?.contactEmail}
+            />
+          </Field>
+          <Field label={t("contactPhone")}>
+            <TextInput
+              name="contactPhone"
+              type="tel"
+              defaultValue={event?.contactPhone}
+              placeholder="+41 33 000 00 00"
+            />
+          </Field>
+        </div>
+      </fieldset>
+
       <fieldset>
         <legend className="text-sm font-medium">{t("payments")}</legend>
         <p className="mt-1 text-xs text-muted-foreground">{t("paymentsHint")}</p>

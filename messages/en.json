@@ -24,6 +24,7 @@
     "heroCta": "Explore events",
     "heroSecondary": "How it works",
     "payments": "PostFinance, Stripe, PayPal",
+    "ticketsByEmail": "Tickets by email",
     "sectionAll": "All events",
     "sectionFeatured": "Featured",
     "sectionUpcoming": "Coming up",
@@ -99,7 +100,14 @@
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "attendeeNote": "Name and date of birth required at checkout.",
-    "attendeeNoteAge": "Under {age}: name and date of birth required at checkout, ID checked at the door."
+    "attendeeNoteAge": "Under {age}: name and date of birth required at checkout, ID checked at the door.",
+    "contact": {
+      "badge": "Registration required",
+      "title": "Registration",
+      "intro": "No ticket to buy: please register directly with the organiser.",
+      "subject": "Registration – {title} – {date}",
+      "pending": "Registration details will be announced shortly."
+    }
   },
   "portal": {
     "tickets": "Tickets",
@@ -742,7 +750,8 @@
         "discountValueInvalid": "Enter a percentage between 0 and 100, or an amount above zero.",
         "discountMinSessionsInvalid": "The number of sessions must be a whole number of at least 1.",
         "validityInvalid": "Invalid validity period: the end must come after the start.",
-        "discountHasOrders": "This discount has already been granted on orders: deactivate it instead."
+        "discountHasOrders": "This discount has already been granted on orders: deactivate it instead.",
+        "phoneInvalid": "Invalid phone number."
       }
     },
     "settings": {
@@ -782,7 +791,9 @@
         "navLinksHint": "One line per link: Label | https://… — for the hosted page when they cannot edit WordPress.",
         "notifyEmails": "Ticket copies",
         "notifyEmailsHint": "One address per line. Each sale sends them the same email as the buyer.",
-        "eventCount": "{count} show(s)"
+        "eventCount": "{count} show(s)",
+        "description": "Description",
+        "descriptionHint": "Shown at the top of the hosted page. A missing translation shows the French text (English for Spanish)."
       },
       "venues": {
         "title": "Venues",
@@ -838,7 +849,12 @@
       "acceptCard": "Card",
       "acceptIban": "IBAN transfer",
       "delete": "Delete the show",
-      "acceptPaypal": "PayPal"
+      "acceptPaypal": "PayPal",
+      "booking": "Sales and registration",
+      "onlineSale": "Online sales on ticketick",
+      "contactHint": "Unticked: no tickets on sale; the page invites visitors to register by email or phone (talk, meet-up). These details then replace the tickets.",
+      "contactEmail": "Registration email",
+      "contactPhone": "Registration phone"
     },
     "embed": {
       "title": "Embed ticketing",

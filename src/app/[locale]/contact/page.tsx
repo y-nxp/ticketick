@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { ContentPage } from "@/components/layout/content-page";
+import { byLocale } from "@/lib/i18n-fallback";
 
 const copy: Record<string, { title: string; organizer: string; platform: string }> =
   {
@@ -40,7 +41,7 @@ export default async function ContactPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const c = copy[locale] ?? copy.fr;
+  const c = byLocale(copy, locale);
   return (
     <ContentPage title={c.title}>
       <p>{c.organizer}</p>

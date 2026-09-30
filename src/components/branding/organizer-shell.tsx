@@ -5,6 +5,7 @@ import { Lora, Open_Sans } from "next/font/google";
 import { useTranslations } from "next-intl";
 import { Menu, X } from "lucide-react";
 import { CartButton } from "@/components/layout/cart-button";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { THEME_STORAGE_KEY } from "@/components/layout/theme";
 import { organizerThemeStyle } from "@/lib/branding/theme";
 import type { Organizer } from "@/lib/types";
@@ -39,6 +40,18 @@ export function OrganizerShell({
   const nav = organizer.brand.nav;
   const site = organizer.website;
   const scheme = organizer.brand.scheme;
+  // Un logo en largeur porte déjà le nom : ni rognage en rond, ni nom répété.
+  const [wideLogo, setWideLogo] = React.useState(false);
+  const logoRef = React.useRef<HTMLImageElement>(null);
+  const measureLogo = React.useCallback((img: HTMLImageElement) => {
+    if (img.naturalHeight > 0) {
+      setWideLogo(img.naturalWidth / img.naturalHeight > 1.3);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (logoRef.current?.complete) measureLogo(logoRef.current);
+  }, [measureLogo]);
 
   React.useEffect(() => {
     const root = document.documentElement;
@@ -77,14 +90,24 @@ export function OrganizerShell({
               // Logo organisateur : fichier local ou téléversé, hors loader next/image.
               // eslint-disable-next-line @next/next/no-img-element
               <img
+                ref={logoRef}
                 src={organizer.logoUrl}
                 alt=""
-                width={56}
-                height={56}
-                className="size-14 rounded-full object-cover"
+                onLoad={(e) => measureLogo(e.currentTarget)}
+                className={
+                  wideLogo
+                    ? "h-12 w-auto max-w-[11rem] object-contain sm:h-14 sm:max-w-[13rem]"
+                    : "size-14 rounded-full object-cover"
+                }
               />
             ) : null}
-            <span className="organizer-wordmark truncate text-lg sm:text-xl">
+            <span
+              className={
+                wideLogo
+                  ? "sr-only"
+                  : "organizer-wordmark truncate text-lg sm:text-xl"
+              }
+            >
               {organizer.name}
             </span>
           </a>
@@ -101,6 +124,7 @@ export function OrganizerShell({
                 </a>
               ))}
             </nav>
+            <LanguageSwitcher />
             <CartButton panelOffsetClass="top-[5.75rem]" />
             {nav.length > 0 ? (
               <button

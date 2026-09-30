@@ -34,6 +34,7 @@ export const translatedSchema = z.object({
   en: z.string().trim().max(300).optional(),
   de: z.string().trim().max(300).optional(),
   it: z.string().trim().max(300).optional(),
+  es: z.string().trim().max(300).optional(),
 });
 
 export type Translated = z.infer<typeof translatedSchema>;
@@ -44,7 +45,7 @@ export function readTranslated(
   prefix: string,
 ): Record<string, string> {
   const out: Record<string, string> = {};
-  for (const locale of ["fr", "en", "de", "it"]) {
+  for (const locale of ["fr", "en", "de", "it", "es"]) {
     const value = data.get(`${prefix}.${locale}`);
     if (typeof value === "string" && value.trim()) {
       out[locale] = value.trim();

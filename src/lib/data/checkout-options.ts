@@ -27,7 +27,8 @@ export type CheckoutOption = {
 function asTranslated(value: unknown): Translated {
   const v = (value ?? {}) as Partial<Translated>;
   const fr = v.fr ?? "";
-  return { fr, en: v.en ?? fr, de: v.de ?? fr, it: v.it ?? fr };
+  const en = v.en ?? fr;
+  return { fr, en, de: v.de ?? fr, it: v.it ?? fr, es: v.es || en };
 }
 
 /** Options activées pour les séances présentes dans le panier. */

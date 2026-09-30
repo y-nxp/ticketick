@@ -24,6 +24,7 @@
     "heroCta": "Découvrir les spectacles",
     "heroSecondary": "Comment ça marche",
     "payments": "PostFinance, Stripe, PayPal",
+    "ticketsByEmail": "Billets par e-mail",
     "sectionAll": "Tous les spectacles",
     "sectionFeatured": "À l'affiche",
     "sectionUpcoming": "Prochainement",
@@ -99,7 +100,14 @@
     "zoomIn": "Agrandir le plan",
     "zoomOut": "Réduire le plan",
     "attendeeNote": "Nom et date de naissance demandés au paiement.",
-    "attendeeNoteAge": "Moins de {age} ans : nom et date de naissance demandés au paiement, pièce d'identité à l'entrée."
+    "attendeeNoteAge": "Moins de {age} ans : nom et date de naissance demandés au paiement, pièce d'identité à l'entrée.",
+    "contact": {
+      "badge": "Sur inscription",
+      "title": "Inscription",
+      "intro": "Pas de billet à acheter : l’inscription se fait directement auprès de l’organisateur.",
+      "subject": "Inscription – {title} – {date}",
+      "pending": "Les coordonnées d’inscription seront communiquées prochainement."
+    }
   },
   "portal": {
     "tickets": "Billetterie",
@@ -742,7 +750,8 @@
         "discountValueInvalid": "Indiquez un pourcentage entre 0 et 100, ou un montant supérieur à zéro.",
         "discountMinSessionsInvalid": "Le nombre de séances doit être un entier d’au moins 1.",
         "validityInvalid": "Période de validité invalide : la fin doit suivre le début.",
-        "discountHasOrders": "Ce rabais a déjà été accordé sur des commandes : désactivez-le plutôt."
+        "discountHasOrders": "Ce rabais a déjà été accordé sur des commandes : désactivez-le plutôt.",
+        "phoneInvalid": "Numéro de téléphone invalide."
       }
     },
     "settings": {
@@ -782,7 +791,9 @@
         "navLinksHint": "Une ligne par lien : Libellé | https://…  — pour la page hébergée quand ils n’ont pas la main sur WordPress.",
         "notifyEmails": "Copies des billets",
         "notifyEmailsHint": "Une adresse par ligne. Chaque vente leur envoie le même e-mail que l’acheteur.",
-        "eventCount": "{count} spectacle(s)"
+        "eventCount": "{count} spectacle(s)",
+        "description": "Présentation",
+        "descriptionHint": "En tête de la page hébergée. Une traduction manquante affiche le français (l’anglais pour l’espagnol)."
       },
       "venues": {
         "title": "Lieux",
@@ -838,7 +849,12 @@
       "acceptCard": "Carte",
       "acceptIban": "Virement IBAN",
       "delete": "Supprimer le spectacle",
-      "acceptPaypal": "PayPal"
+      "acceptPaypal": "PayPal",
+      "booking": "Vente et inscription",
+      "onlineSale": "Vente en ligne sur ticketick",
+      "contactHint": "Décochée : aucun billet en vente, la fiche invite à s’inscrire par courriel ou par téléphone (conférence, rencontre). Ces coordonnées remplacent alors les billets.",
+      "contactEmail": "Courriel d’inscription",
+      "contactPhone": "Téléphone d’inscription"
     },
     "embed": {
       "title": "Intégrer la billetterie",

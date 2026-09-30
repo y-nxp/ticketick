@@ -79,13 +79,7 @@ export default async function HomePage({
               </span>
               <span className="inline-flex items-center gap-2">
                 <Mail className="size-4 text-primary" />
-                {locale === "fr"
-                  ? "Billets par e-mail"
-                  : locale === "de"
-                    ? "Tickets per E-Mail"
-                    : locale === "it"
-                      ? "Biglietti via e-mail"
-                      : "Tickets by email"}
+                {t("ticketsByEmail")}
               </span>
               {/* Masqué tant que rien n'est à l'affiche : « 0+ billets »
                   annoncerait le vide comme un argument de vente. */}
@@ -118,6 +112,7 @@ export default async function HomePage({
                   from: te("from"),
                   soldOut: te("soldOut"),
                   dates: (n) => te("datesCount", { count: n }),
+                  onRegistration: te("contact.badge"),
                 }}
               />
             ))}

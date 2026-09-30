@@ -19,11 +19,14 @@ export function SessionPicker({
   selectedId,
   onSelect,
   locale,
+  priced = true,
 }: {
   sessions: SessionItem[];
   selectedId: string;
   onSelect: (id: string) => void;
   locale: string;
+  /** Faux : entrée sur inscription, aucun tarif à annoncer. */
+  priced?: boolean;
 }) {
   const te = useTranslations("event");
   if (sessions.length <= 1) return null;
@@ -90,11 +93,13 @@ export function SessionPicker({
                   </span>
                 ) : null}
               </span>
-              <span className="shrink-0 text-sm font-semibold">
-                {soldOut
-                  ? te("soldOut")
-                  : `${te("from")} ${formatPrice(sessionMinPriceCents(s), `${locale}-CH`)}`}
-              </span>
+              {priced ? (
+                <span className="shrink-0 text-sm font-semibold">
+                  {soldOut
+                    ? te("soldOut")
+                    : `${te("from")} ${formatPrice(sessionMinPriceCents(s), `${locale}-CH`)}`}
+                </span>
+              ) : null}
             </button>
           );
         })}

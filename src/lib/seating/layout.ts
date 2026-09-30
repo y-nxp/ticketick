@@ -1,4 +1,4 @@
-import type { Translated } from "@/lib/types";
+import { t, type Translated } from "@/lib/types";
 
 /**
  * Plan de salle numéroté.
@@ -63,10 +63,11 @@ const WORDS: Record<string, { row: string; seat: string }> = {
   en: { row: "Row", seat: "Seat" },
   de: { row: "Reihe", seat: "Platz" },
   it: { row: "Fila", seat: "Posto" },
+  es: { row: "Fila", seat: "Asiento" },
 };
 
 function tr(value: Translated, locale: string): string {
-  return value[locale as keyof Translated] ?? value.fr;
+  return t(value, locale);
 }
 
 /** Libellé imprimé sur le billet : « Nef · Rang 5 · Place 9 ». */
