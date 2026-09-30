@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { CalendarDays, MapPin } from "lucide-react";
+import { CalendarDays, MapPin, Ticket } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
 import { formatDate, formatPrice } from "@/lib/utils";
@@ -16,10 +16,13 @@ export function EventCard({
   event,
   locale,
   labels,
+  href = `/events/${event.slug}`,
 }: {
   event: EventItem;
   locale: string;
   labels: { from: string; soldOut: string; dates: (n: number) => string };
+  /** Page de l'organisateur : la carte y mène à sa propre fiche. */
+  href?: string;
 }) {
   const soldOut = isSoldOut(event);
   const price = minPriceCents(event);
@@ -30,19 +33,25 @@ export function EventCard({
 
   return (
     <Link
-      href={`/events/${event.slug}`}
+      href={href}
       // En mode sombre l'ombre noire est invisible : le relief au survol
       // est porté par un halo violet et une bordure accentuée.
       className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 dark:hover:border-primary/40 dark:hover:shadow-primary/20"
     >
       <div className="relative aspect-[4/3] overflow-hidden">
-        <Image
-          src={event.coverImage}
-          alt={t(event.title, locale)}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
+        {event.coverImage ? (
+          <Image
+            src={event.coverImage}
+            alt={t(event.title, locale)}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="grid size-full place-items-center bg-primary/10 text-primary">
+            <Ticket className="size-10" aria-hidden />
+          </div>
+        )}
         <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
           {event.categories.slice(0, 2).map((c) => (
             <span

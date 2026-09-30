@@ -312,6 +312,10 @@ model Organizer {
   /// Active la PWA "amis du festival" pour cet organisateur
   friendsAppEnabled Boolean @default(false)
 
+  /// Compte qui reçoit les virements des acheteurs. Vide : pas de virement.
+  bankIban        String?
+  bankBeneficiary String?
+
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @unique
 
@@ -321,9 +325,27 @@ model Organizer {
   statsViewers User[]                  @relation("StatsViewers")
   discounts    Discount[]
   paypal       OrganizerPaypalAccount?
+  postfinance  OrganizerPostfinanceAccount?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// Espace PostFinance Checkout sur lequel l'organisateur encaisse les cartes.
+/// Chacun le sien : un paiement ne doit jamais arriver chez un autre.
+/// Le secret n'est stocké que chiffré, comme celui de PayPal.
+model OrganizerPostfinanceAccount {
+  id          String    @id @default(cuid())
+  organizer   Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  organizerId String    @unique
+  spaceId     Int
+  userId      Int
+  secretEnc   String
+  /// Page de paiement dédiée, facultative.
+  spaceViewId Int?
+  enabled     Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 /// Compte PayPal Business sur lequel l'organisateur encaisse.

@@ -111,7 +111,9 @@
     "from": "From",
     "dateCount": "{count} dates",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "share": "Share",
+    "linkCopied": "Link copied"
   },
   "cart": {
     "title": "Your cart",
@@ -203,7 +205,17 @@
     "attendee_too_old": "A holder is over the age limit for the free ticket. Choose another rate for that seat.",
     "seat_taken": "One or more seats have just been taken. They were removed from your cart.",
     "seatsRemoved": "Some seats were just taken by another buyer and removed from your cart. Please check your selection.",
-    "invalid_seats": "Invalid seat selection. Please choose your seats again."
+    "invalid_seats": "Invalid seat selection. Please choose your seats again.",
+    "paymentBlocked": {
+      "notActivated": {
+        "title": "Payment not activated yet",
+        "body": "The organiser has not opened online payment for these tickets yet. You will be able to buy them as soon as it is activated."
+      },
+      "mixedOrganizers": {
+        "title": "One order per organiser",
+        "body": "Your cart contains shows from several organisers, each paid into their own account. Please place a separate order for each."
+      }
+    }
   },
   "account": {
     "title": "My account",
@@ -488,9 +500,9 @@
       "inquiries": "Inquiries",
       "door": "Door",
       "team": "Team",
-      "paypal": "PayPal",
       "discounts": "Discounts",
-      "seatPlans": "Seating plans"
+      "seatPlans": "Seating plans",
+      "payments": "Payments"
     },
     "overview": {
       "title": "Overview",
@@ -520,7 +532,22 @@
       "sold": "Sold",
       "revenue": "Revenue",
       "empty": "No shows.",
-      "create": "New show"
+      "create": "New show",
+      "listing": {
+        "column": "Publish on ticketick",
+        "on": "On ticketick.ch",
+        "off": "Organiser page only",
+        "members": "Members only",
+        "aria": "Publish “{title}” on ticketick.ch",
+        "error": "Failed, try again"
+      },
+      "share": {
+        "title": "Your ticketing page",
+        "hint": "All your shows on sale, in your colours, including those not published on ticketick.ch. Share this link on your website, social media or emails.",
+        "copy": "Copy link",
+        "copied": "Link copied",
+        "open": "Open"
+      }
     },
     "orders": {
       "title": "Orders",
@@ -781,8 +808,8 @@
       "status": "Status",
       "visibility": "Visibility",
       "visibilities": {
-        "PUBLIC": "Public",
-        "UNLISTED": "Unlisted (link only)",
+        "PUBLIC": "Published on ticketick.ch",
+        "UNLISTED": "Organiser page and direct link only",
         "MEMBERS": "Members only"
       },
       "coverImage": "Cover image",
@@ -1119,6 +1146,51 @@
         "planFileType": "Unsupported format: PDF, PNG, JPG or WebP.",
         "planFileUnreadable": "This file cannot be read.",
         "noSeats": "No seats detected: seats must be drawn in colour on the plan."
+      }
+    },
+    "payments": {
+      "title": "Payments",
+      "subtitle": "Each organiser is paid into their own accounts. With no method activated, their tickets stay visible but cannot be paid for.",
+      "organizer": "Organiser",
+      "methods": "Active methods",
+      "card": "Card (PostFinance)",
+      "paypal": "PayPal",
+      "iban": "Bank transfer",
+      "pending": "Pending",
+      "pendingHint": "No payment method activated: buyers can fill in their order, but at the last step they see “Payment not activated yet” and cannot pay.",
+      "postfinance": {
+        "title": "PostFinance Checkout",
+        "hint": "The organiser’s space on checkout.postfinance.ch › Account › Application users: space ID, user ID and its authentication key. Also register the webhook https://ticketick.ch/api/webhooks/postfinance in the space.",
+        "spaceId": "Space ID",
+        "userId": "Application user ID",
+        "secret": "Authentication key",
+        "secretKeep": "Leave empty to keep",
+        "spaceViewId": "Dedicated payment page (Space View ID, optional)",
+        "enabledLabel": "Offer card payment to buyers",
+        "save": "Save",
+        "saving": "Checking with PostFinance…",
+        "saved": "PostFinance space saved and verified.",
+        "errors": {
+          "invalid": "Invalid fields: IDs are numbers.",
+          "notFound": "Organiser not found.",
+          "secretRequired": "The authentication key is required.",
+          "credentials": "PostFinance rejects these credentials. Check the space ID, the user and its key."
+        }
+      },
+      "bank": {
+        "title": "Bank transfer",
+        "iban": "IBAN",
+        "beneficiary": "Account holder",
+        "hint": "Shown to buyers who choose bank transfer; the order is then marked as paid by hand once the money arrives. Clearing both fields removes bank transfer.",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Bank account saved.",
+        "errors": {
+          "invalid": "Invalid fields.",
+          "notFound": "Organiser not found.",
+          "iban": "Invalid IBAN: please check it.",
+          "beneficiary": "Enter the account holder."
+        }
       }
     }
   }

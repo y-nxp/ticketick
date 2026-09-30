@@ -4,10 +4,8 @@ import {
   mockPaymentsAllowed,
   PaymentNotConfiguredError,
 } from "@/lib/payment/config";
-import {
-  createPostfinanceCheckout,
-  isPostfinanceConfigured,
-} from "@/lib/payment/postfinance";
+import { createPostfinanceCheckout } from "@/lib/payment/postfinance";
+import type { PostfinanceAccount } from "@/lib/payment/postfinance-account";
 
 export { mockPaymentsAllowed, PaymentNotConfiguredError };
 
@@ -42,11 +40,13 @@ export interface CreateCardCheckoutResult {
   mock: boolean;
 }
 
+/** Encaisse sur l'espace PostFinance de l'organisateur, jamais sur un autre. */
 export async function createCardCheckout(
+  account: PostfinanceAccount | null,
   input: CreateCardCheckoutInput,
 ): Promise<CreateCardCheckoutResult> {
-  if (isPostfinanceConfigured()) {
-    return createPostfinanceCheckout(input);
+  if (account) {
+    return createPostfinanceCheckout(account, input);
   }
 
   if (!mockPaymentsAllowed()) throw new PaymentNotConfiguredError();

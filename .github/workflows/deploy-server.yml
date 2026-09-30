@@ -56,8 +56,6 @@ jobs:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          PROD_BANK_IBAN: ${{ secrets.PROD_BANK_IBAN }}
-          PROD_BANK_BENEFICIARY: ${{ secrets.PROD_BANK_BENEFICIARY }}
           LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
           LITELLM_API_URL: ${{ vars.LITELLM_API_URL }}
           GB10_SSH_PRIVATE_KEY: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
@@ -75,14 +73,14 @@ jobs:
           status SERVER_USER requis "utilisateur SSH (PROD_SERVER_USER)"
           status SERVER_SSH_KEY requis "clé privée SSH (PROD_SERVER_SSH_KEY)"
           echo "── Encaissement et courriel"
-          status PF_CHECKOUT_SPACE_ID requis "PostFinance Checkout"
-          status PF_CHECKOUT_USER_ID requis "PostFinance Checkout"
-          status PF_CHECKOUT_SECRET requis "PostFinance Checkout"
+          # Chaque organisateur encaisse sur ses comptes (admin › Encaissement).
+          # PF_CHECKOUT_* : espace d'Illyria, repris une fois comme le sien.
+          status PF_CHECKOUT_SPACE_ID conseillé "PostFinance d'Illyria (repris dans Encaissement)"
+          status PF_CHECKOUT_USER_ID conseillé "PostFinance d'Illyria (repris dans Encaissement)"
+          status PF_CHECKOUT_SECRET conseillé "PostFinance d'Illyria (repris dans Encaissement)"
           status SMTP_HOST requis "envoi des billets et des réinitialisations"
           status SMTP_USER requis "envoi des billets et des réinitialisations"
           status SMTP_PASS requis "envoi des billets et des réinitialisations"
-          status PROD_BANK_IBAN conseillé "paiement par virement (refusé sans)"
-          status PROD_BANK_BENEFICIARY conseillé "titulaire affiché avec l'IBAN"
           echo "── Import de plans de salle"
           status LITELLM_API_URL conseillé "variable, adresse publique d'aimanager"
           status LITELLM_API_KEY conseillé "lecture de la légende par l'IA"
@@ -267,8 +265,6 @@ jobs:
           PF_CHECKOUT_SPACE_ID: ${{ secrets.PF_CHECKOUT_SPACE_ID }}
           PF_CHECKOUT_USER: ${{ secrets.PF_CHECKOUT_USER_ID }}
           PF_CHECKOUT_SECRET: ${{ secrets.PF_CHECKOUT_SECRET }}
-          BANK_IBAN: ${{ secrets.PROD_BANK_IBAN }}
-          BANK_BENEFICIARY: ${{ secrets.PROD_BANK_BENEFICIARY }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_PORT: ${{ vars.SMTP_PORT || '587' }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
@@ -301,7 +297,7 @@ jobs:
           cp docker-compose.server.yml deploy/Caddyfile deploy/server-deploy.sh deploy/backup.sh bundle/
           if [ -n "$BACKUP_RCLONE_CONF" ]; then printf '%s\n' "$BACKUP_RCLONE_CONF" > bundle/rclone.conf; fi
           write NEXT_PUBLIC_APP_URL STRIPE_SECRET_KEY STRIPE_PUBLISHABLE_KEY STRIPE_WEBHOOK_SECRET \
-            PF_CHECKOUT_SPACE_ID PF_CHECKOUT_USER PF_CHECKOUT_SECRET BANK_IBAN BANK_BENEFICIARY \
+            PF_CHECKOUT_SPACE_ID PF_CHECKOUT_USER PF_CHECKOUT_SECRET \
             SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS MAIL_FROM MAIL_TO \
             LITELLM_API_URL LITELLM_API_KEY PLAN_AI_MODEL > bundle/app.env
           write IMAGE_APP IMAGE_TOOLS SITE_ADDRESS WWW_ADDRESS BACKUP_REMOTE REGISTRY_USER > bundle/release.env

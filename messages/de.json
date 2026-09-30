@@ -111,7 +111,9 @@
     "from": "Ab",
     "dateCount": "{count} Termine",
     "openMenu": "Menü öffnen",
-    "closeMenu": "Menü schliessen"
+    "closeMenu": "Menü schliessen",
+    "share": "Teilen",
+    "linkCopied": "Link kopiert"
   },
   "cart": {
     "title": "Ihr Warenkorb",
@@ -203,7 +205,17 @@
     "attendee_too_old": "Eine Person überschreitet die Altersgrenze des Gratisplatzes. Wählen Sie für diesen Platz einen anderen Tarif.",
     "seat_taken": "Ein oder mehrere Plätze wurden soeben vergeben. Sie wurden aus Ihrem Warenkorb entfernt.",
     "seatsRemoved": "Einige Plätze wurden soeben von einer anderen Person gekauft und aus Ihrem Warenkorb entfernt. Bitte prüfen Sie Ihre Auswahl.",
-    "invalid_seats": "Ungültige Platzauswahl. Bitte wählen Sie Ihre Plätze erneut."
+    "invalid_seats": "Ungültige Platzauswahl. Bitte wählen Sie Ihre Plätze erneut.",
+    "paymentBlocked": {
+      "notActivated": {
+        "title": "Zahlung noch nicht aktiviert",
+        "body": "Der Veranstalter hat die Online-Zahlung für diese Tickets noch nicht freigeschaltet. Sie können sie kaufen, sobald sie aktiviert ist."
+      },
+      "mixedOrganizers": {
+        "title": "Eine Bestellung pro Veranstalter",
+        "body": "Ihr Warenkorb enthält Veranstaltungen mehrerer Veranstalter, die jeweils auf ihr eigenes Konto einkassieren. Bitte geben Sie für jeden eine eigene Bestellung auf."
+      }
+    }
   },
   "account": {
     "title": "Mein Konto",
@@ -488,9 +500,9 @@
       "inquiries": "Anfragen",
       "door": "Kontrolle",
       "team": "Team",
-      "paypal": "PayPal",
       "discounts": "Rabatte",
-      "seatPlans": "Saalpläne"
+      "seatPlans": "Saalpläne",
+      "payments": "Zahlungen"
     },
     "overview": {
       "title": "Übersicht",
@@ -520,7 +532,22 @@
       "sold": "Verkauft",
       "revenue": "Einnahmen",
       "empty": "Keine Veranstaltungen.",
-      "create": "Neue Veranstaltung"
+      "create": "Neue Veranstaltung",
+      "listing": {
+        "column": "Auf ticketick veröffentlichen",
+        "on": "Auf ticketick.ch",
+        "off": "Nur Veranstalterseite",
+        "members": "Nur für Mitglieder",
+        "aria": "«{title}» auf ticketick.ch veröffentlichen",
+        "error": "Fehlgeschlagen, bitte erneut versuchen"
+      },
+      "share": {
+        "title": "Ihre Ticketseite",
+        "hint": "Alle Ihre Veranstaltungen im Verkauf, in Ihren Farben, auch jene, die nicht auf ticketick.ch veröffentlicht sind. Teilen Sie diesen Link auf Ihrer Website, in sozialen Netzwerken oder E-Mails.",
+        "copy": "Link kopieren",
+        "copied": "Link kopiert",
+        "open": "Öffnen"
+      }
     },
     "orders": {
       "title": "Bestellungen",
@@ -781,8 +808,8 @@
       "status": "Status",
       "visibility": "Sichtbarkeit",
       "visibilities": {
-        "PUBLIC": "Öffentlich",
-        "UNLISTED": "Nicht gelistet (nur per Link)",
+        "PUBLIC": "Auf ticketick.ch veröffentlicht",
+        "UNLISTED": "Nur Veranstalterseite und Direktlink",
         "MEMBERS": "Nur für Mitglieder"
       },
       "coverImage": "Titelbild",
@@ -1119,6 +1146,51 @@
         "planFileType": "Format nicht unterstützt: PDF, PNG, JPG oder WebP.",
         "planFileUnreadable": "Diese Datei kann nicht gelesen werden.",
         "noSeats": "Keine Plätze erkannt: Die Plätze müssen farbig im Plan eingezeichnet sein."
+      }
+    },
+    "payments": {
+      "title": "Zahlungen",
+      "subtitle": "Jeder Veranstalter kassiert auf seine eigenen Konten. Ohne aktivierte Zahlungsart bleiben seine Tickets sichtbar, können aber nicht bezahlt werden.",
+      "organizer": "Veranstalter",
+      "methods": "Aktive Zahlungsarten",
+      "card": "Karte (PostFinance)",
+      "paypal": "PayPal",
+      "iban": "Überweisung",
+      "pending": "Ausstehend",
+      "pendingHint": "Keine Zahlungsart aktiviert: Käufer können ihre Bestellung ausfüllen, sehen im letzten Schritt aber «Zahlung noch nicht aktiviert» und können nicht bezahlen.",
+      "postfinance": {
+        "title": "PostFinance Checkout",
+        "hint": "Space des Veranstalters auf checkout.postfinance.ch › Konto › Applikationsbenutzer: Space-ID, Benutzer-ID und Authentifizierungsschlüssel. Im Space auch den Webhook https://ticketick.ch/api/webhooks/postfinance eintragen.",
+        "spaceId": "Space-ID",
+        "userId": "ID des Applikationsbenutzers",
+        "secret": "Authentifizierungsschlüssel",
+        "secretKeep": "Leer lassen, um beizubehalten",
+        "spaceViewId": "Eigene Zahlungsseite (Space-View-ID, optional)",
+        "enabledLabel": "Kartenzahlung anbieten",
+        "save": "Speichern",
+        "saving": "Prüfung bei PostFinance…",
+        "saved": "PostFinance-Space gespeichert und geprüft.",
+        "errors": {
+          "invalid": "Ungültige Felder: IDs sind Zahlen.",
+          "notFound": "Veranstalter nicht gefunden.",
+          "secretRequired": "Der Authentifizierungsschlüssel ist erforderlich.",
+          "credentials": "PostFinance lehnt diese Zugangsdaten ab. Prüfen Sie Space-ID, Benutzer und Schlüssel."
+        }
+      },
+      "bank": {
+        "title": "Banküberweisung",
+        "iban": "IBAN",
+        "beneficiary": "Kontoinhaber",
+        "hint": "Wird Käufern angezeigt, die Überweisung wählen; die Bestellung wird nach Zahlungseingang von Hand als bezahlt markiert. Beide Felder leeren entfernt die Überweisung.",
+        "save": "Speichern",
+        "saving": "Wird gespeichert…",
+        "saved": "Bankkonto gespeichert.",
+        "errors": {
+          "invalid": "Ungültige Felder.",
+          "notFound": "Veranstalter nicht gefunden.",
+          "iban": "Ungültige IBAN: bitte prüfen.",
+          "beneficiary": "Kontoinhaber angeben."
+        }
       }
     }
   }

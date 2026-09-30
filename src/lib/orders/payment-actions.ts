@@ -6,13 +6,13 @@ import {
   type AvailabilityResult,
 } from "./availability";
 import { previewDiscounts, type DiscountPreview } from "./discounts";
-import { resolveCartPayments, type PaymentOffer } from "./payment-methods";
+import { resolveCartPayments, type CartPayments } from "./payment-methods";
 
 /** Lecture des moyens encore proposés pour les lignes du panier. */
 export async function getCartPaymentMethods(
   ticketTypeIds: string[],
-): Promise<PaymentOffer> {
-  return resolveCartPayments(ticketTypeIds);
+): Promise<CartPayments> {
+  return resolveCartPayments(ticketTypeIds.slice(0, 50));
 }
 
 /** Stock réel après libération des rétentions de 25 minutes expirées. */

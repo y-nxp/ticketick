@@ -1,19 +1,14 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { ExternalLink } from "lucide-react";
 import { OrganizerShell } from "@/components/branding/organizer-shell";
-import { Link } from "@/i18n/navigation";
+import { SharePageButton } from "@/components/branding/share-page-button";
+import { EventCard } from "@/components/events/event-card";
 import {
   getOrganizerBySlug,
   getOrganizerEvents,
 } from "@/lib/data/events";
-import { formatDate, formatPrice } from "@/lib/utils";
-import {
-  minPriceCents,
-  nextSession,
-  t,
-  upcomingSessions,
-} from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -27,10 +22,15 @@ export async function generateMetadata({
   if (!organizer) return {};
   return {
     title: organizer.name,
-    description: organizer.website,
+    description: organizer.description ?? organizer.website,
+    openGraph: organizer.logoUrl ? { images: [organizer.logoUrl] } : undefined,
   };
 }
 
+/**
+ * Page de billetterie de l'organisateur, à ses couleurs : tous ses
+ * spectacles en vente, publiés ou non sur l'accueil de ticketick.
+ */
 export default async function OrganizerPortalPage({
   params,
 }: {
@@ -44,52 +44,54 @@ export default async function OrganizerPortalPage({
 
   const events = await getOrganizerEvents(organizer.id);
   const tp = await getTranslations("portal");
+  const te = await getTranslations("event");
 
   return (
     <OrganizerShell organizer={organizer}>
-      <p className="organizer-kicker">{tp("tickets")}</p>
-      <h1 className="organizer-title">{organizer.name}</h1>
-      {organizer.website ? (
-        <p className="mt-3 text-sm text-neutral-600">
-          <a href={organizer.website} className="hover:underline">
-            {tp("visitSite")}
-          </a>
-        </p>
-      ) : null}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className="organizer-kicker">{tp("tickets")}</p>
+          <h1 className="organizer-title">{organizer.name}</h1>
+          {organizer.description ? (
+            <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
+              {organizer.description}
+            </p>
+          ) : null}
+          {organizer.website ? (
+            <a
+              href={organizer.website}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-[var(--brand-accent)] hover:underline"
+            >
+              <ExternalLink className="size-4" />
+              {tp("visitSite")}
+            </a>
+          ) : null}
+        </div>
+        <SharePageButton title={organizer.name} />
+      </div>
 
       <section className="mt-10">
         <h2 className="organizer-title text-2xl">{tp("upcoming")}</h2>
         {events.length === 0 ? (
-          <p className="mt-4 text-sm text-neutral-600">{tp("noEvents")}</p>
+          <p className="mt-4 text-sm text-muted-foreground">{tp("noEvents")}</p>
         ) : (
-          <ul className="mt-6 space-y-4">
-            {events.map((event) => {
-              const session = nextSession(event);
-              const dates = upcomingSessions(event);
-              return (
-                <li key={event.id}>
-                  <Link
-                    href={`/go/${organizer.slug}/${event.slug}`}
-                    className="block rounded-2xl border border-black/10 bg-white p-5 shadow-sm transition-colors hover:border-[var(--brand-accent)]"
-                  >
-                    <p className="text-lg font-medium">{t(event.title, locale)}</p>
-                    {session ? (
-                      <p className="mt-1 text-sm text-neutral-600">
-                        {formatDate(session.startsAt, `${locale}-CH`)}
-                        {session.venue ? ` · ${session.venue.name}` : ""}
-                        {dates.length > 1
-                          ? ` · ${tp("dateCount", { count: dates.length })}`
-                          : ""}
-                      </p>
-                    ) : null}
-                    <p className="mt-2 text-sm font-semibold text-[var(--brand-accent)]">
-                      {tp("from")} {formatPrice(minPriceCents(event), `${locale}-CH`)}
-                    </p>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {events.map((event) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                locale={locale}
+                href={`/go/${organizer.slug}/${event.slug}`}
+                labels={{
+                  from: tp("from"),
+                  soldOut: te("soldOut"),
+                  dates: (n) => tp("dateCount", { count: n }),
+                }}
+              />
+            ))}
+          </div>
         )}
       </section>
     </OrganizerShell>

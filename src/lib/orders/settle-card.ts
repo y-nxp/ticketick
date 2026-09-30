@@ -7,10 +7,10 @@ import {
   amountToCents,
   fetchPostfinanceTransaction,
   isPaidTransactionState,
-  isPostfinanceConfigured,
   orderReferenceFromMerchant,
   type PostfinanceTransaction,
 } from "@/lib/payment/postfinance";
+import { postfinanceAccountForOrder } from "@/lib/payment/postfinance-account";
 
 /**
  * Solde une commande carte d'après l'état réel chez PostFinance.
@@ -66,15 +66,26 @@ export async function settlePostfinanceTransaction(
   await sendPaidOrderTickets(paid.orderId);
 }
 
+/**
+ * Webhook : l'identifiant de transaction mène à la commande, et la commande
+ * à l'espace de son organisateur, où la transaction est relue. Une
+ * transaction inconnue de ticketick est ignorée.
+ */
 export async function settlePostfinanceById(transactionId: number): Promise<void> {
-  const transaction = await fetchPostfinanceTransaction(transactionId);
-  await settlePostfinanceTransaction(transaction);
+  const payment = await prisma.payment.findFirst({
+    where: { provider: "postfinance", providerRef: String(transactionId) },
+    select: { status: true, order: { select: { reference: true } } },
+  });
+  if (!payment) {
+    console.warn("[postfinance] transaction sans commande", { transactionId });
+    return;
+  }
+  if (payment.status === "COMPLETED") return;
+  await settleWithOrderAccount(payment.order.reference, transactionId);
 }
 
 /** Reprend une commande encore en attente quand l'acheteur revient. */
 export async function settlePostfinanceOrder(reference: string): Promise<void> {
-  if (!isPostfinanceConfigured()) return;
-
   const payment = await prisma.payment.findFirst({
     where: {
       provider: "postfinance",
@@ -88,6 +99,27 @@ export async function settlePostfinanceOrder(reference: string): Promise<void> {
   const id = Number(payment.providerRef);
   if (!Number.isInteger(id) || id <= 0) return;
 
-  await settlePostfinanceById(id);
+  await settleWithOrderAccount(reference, id);
+}
+
+async function settleWithOrderAccount(reference: string, transactionId: number) {
+  const account = await postfinanceAccountForOrder(reference);
+  if (!account) {
+    console.error("[postfinance] espace de l'organisateur introuvable", { reference });
+    return;
+  }
+  const transaction = await fetchPostfinanceTransaction(account, transactionId);
+  // La transaction relue doit bien être celle de cette commande.
+  const read =
+    transaction.metaData?.reference ??
+    orderReferenceFromMerchant(transaction.merchantReference);
+  if (read !== reference) {
+    console.error("[postfinance] transaction d'une autre commande", {
+      reference,
+      transactionId,
+    });
+    return;
+  }
+  await settlePostfinanceTransaction(transaction);
 }
 

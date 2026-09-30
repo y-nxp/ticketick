@@ -1,5 +1,6 @@
 import "server-only";
 
+import { mockPaymentsAllowed } from "@/lib/payment/config";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -7,11 +8,20 @@ import { prisma } from "@/lib/prisma";
  * peut les restreindre. Un panier mélangeant plusieurs séances ne propose
  * que l'intersection : on n'offre pas un IBAN qu'une des lignes refuse.
  *
- * PayPal encaisse sur le compte de l'organisateur : il n'est proposé que si
- * tout le panier relève d'un seul organisateur dont le compte est configuré.
+ * Chaque organisateur encaisse sur ses propres comptes (PostFinance, PayPal,
+ * IBAN) : un moyen n'est proposé que si tout le panier relève d'un seul
+ * organisateur qui l'a activé.
  */
 
 export type PaymentOffer = { card: boolean; iban: boolean; paypal: boolean };
+
+/**
+ * Pourquoi rien n'est proposé : l'organisateur n'a encore activé aucun
+ * encaissement, ou le panier réunit plusieurs organisateurs.
+ */
+export type PaymentBlock = "notActivated" | "mixedOrganizers";
+
+export type CartPayments = PaymentOffer & { blocked?: PaymentBlock };
 
 export function inheritPayment(
   event: { acceptCard: boolean; acceptIban: boolean; acceptPaypal: boolean },
@@ -37,9 +47,9 @@ export function intersectOffers(offres: PaymentOffer[]): PaymentOffer {
 
 export async function resolveCartPayments(
   ticketTypeIds: string[],
-): Promise<PaymentOffer> {
+): Promise<CartPayments> {
   const ids = [...new Set(ticketTypeIds.filter(Boolean))];
-  if (ids.length === 0) return { card: true, iban: true, paypal: false };
+  if (ids.length === 0) return { card: false, iban: false, paypal: false };
 
   const rows = await prisma.ticketType.findMany({
     where: { id: { in: ids } },
@@ -65,24 +75,44 @@ export async function resolveCartPayments(
     return { card: false, iban: false, paypal: false };
   }
 
-  const offer = intersectOffers(
+  const organizerIds = [...new Set(rows.map((r) => r.session.event.organizerId))];
+  if (organizerIds.length !== 1) {
+    return { card: false, iban: false, paypal: false, blocked: "mixedOrganizers" };
+  }
+
+  const ready = await organizerPayments(organizerIds[0]!);
+  const wanted = intersectOffers(
     rows.map((r) => inheritPayment(r.session.event, r.session)),
   );
-  if (offer.paypal) {
-    offer.paypal = await paypalReadyFor(
-      rows.map((r) => r.session.event.organizerId),
-    );
+  const offer = {
+    card: wanted.card && ready.card,
+    iban: wanted.iban && ready.iban,
+    paypal: wanted.paypal && ready.paypal,
+  };
+  if (!ready.card && !ready.iban && !ready.paypal) {
+    return { ...offer, blocked: "notActivated" };
   }
   return offer;
 }
 
-/** Un seul organisateur, et son compte PayPal actif. */
-export async function paypalReadyFor(organizerIds: string[]): Promise<boolean> {
-  const distinct = [...new Set(organizerIds)];
-  if (distinct.length !== 1) return false;
-  const account = await prisma.organizerPaypalAccount.findUnique({
-    where: { organizerId: distinct[0] },
-    select: { enabled: true },
+/**
+ * Moyens que l'organisateur a activés. La simulation (essai et poste de
+ * développement seulement) remplace la carte et le virement manquants.
+ */
+export async function organizerPayments(organizerId: string): Promise<PaymentOffer> {
+  const organizer = await prisma.organizer.findUnique({
+    where: { id: organizerId },
+    select: {
+      bankIban: true,
+      bankBeneficiary: true,
+      postfinance: { select: { enabled: true } },
+      paypal: { select: { enabled: true } },
+    },
   });
-  return Boolean(account?.enabled);
+  const mock = mockPaymentsAllowed();
+  return {
+    card: Boolean(organizer?.postfinance?.enabled) || mock,
+    iban: Boolean(organizer?.bankIban && organizer.bankBeneficiary) || mock,
+    paypal: Boolean(organizer?.paypal?.enabled),
+  };
 }

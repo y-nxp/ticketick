@@ -84,6 +84,7 @@ export interface Organizer {
   id: string;
   slug: string;
   name: string;
+  description?: string;
   logoUrl?: string;
   website?: string;
   brand: OrganizerBrand;

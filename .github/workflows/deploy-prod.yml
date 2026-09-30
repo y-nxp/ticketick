@@ -33,8 +33,6 @@ jobs:
           PF_CHECKOUT_SPACE_ID: ${{ secrets.PF_CHECKOUT_SPACE_ID }}
           PF_CHECKOUT_USER: ${{ secrets.PF_CHECKOUT_USER_ID }}
           PF_CHECKOUT_SECRET: ${{ secrets.PF_CHECKOUT_SECRET }}
-          BANK_IBAN: ${{ secrets.PROD_BANK_IBAN }}
-          BANK_BENEFICIARY: ${{ secrets.PROD_BANK_BENEFICIARY }}
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
@@ -43,7 +41,7 @@ jobs:
           username: ${{ secrets.GB10_USER }}
           key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
           port: ${{ secrets.GB10_PORT }}
-          envs: STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,PF_CHECKOUT_SPACE_ID,PF_CHECKOUT_USER,PF_CHECKOUT_SECRET,BANK_IBAN,BANK_BENEFICIARY,SMTP_HOST,SMTP_USER,SMTP_PASS
+          envs: STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,PF_CHECKOUT_SPACE_ID,PF_CHECKOUT_USER,PF_CHECKOUT_SECRET,SMTP_HOST,SMTP_USER,SMTP_PASS
           command_timeout: 30m
           script: |
             set -euo pipefail
@@ -144,8 +142,6 @@ jobs:
             PF_CHECKOUT_SPACE_ID=${PF_CHECKOUT_SPACE_ID:-}
             PF_CHECKOUT_USER=${PF_CHECKOUT_USER:-}
             PF_CHECKOUT_SECRET=${PF_CHECKOUT_SECRET:-}
-            BANK_IBAN=${BANK_IBAN:-}
-            BANK_BENEFICIARY=${BANK_BENEFICIARY:-}
             SMTP_HOST=${SMTP_HOST:-}
             SMTP_PORT=${SMTP_PORT:-587}
             SMTP_USER=${SMTP_USER:-}
@@ -203,19 +199,23 @@ jobs:
                    || ' commandes=' || (SELECT count(*) FROM \"Order\");" \
               || echo "   ⚠ Contrôle impossible"
 
-            # Un encaissement absent n'empêche pas le site de tourner, mais
-            # aucune vente ne pourra aboutir : autant le dire ici plutôt que
-            # de le découvrir sur une commande refusée.
-            if grep -qE '^PF_CHECKOUT_SECRET=.+' "$APP_DIR/.env.prod"; then
-              echo "   ✅ PostFinance Checkout configuré"
-            else
-              echo "   ⚠ PostFinance NON configuré — le paiement par carte sera refusé (503)."
-            fi
-            if grep -qE '^BANK_IBAN=.+' "$APP_DIR/.env.prod"; then
-              echo "   ✅ IBAN configuré"
-            else
-              echo "   ⚠ BANK_IBAN absent — le virement sera refusé (503)."
-            fi
+            # Chaque organisateur encaisse sur ses comptes (admin › Encaissement).
+            # Sans aucun, ses billets s'affichent mais ne se paient pas.
+            echo "💳 Encaissement des organisateurs qui vendent :"
+            docker compose -f docker-compose.prod.yml exec -T db \
+              psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -qtc \
+              "SELECT '   ' || o.name || ' : ' || coalesce(nullif(concat_ws(', ',
+                        CASE WHEN pf.enabled THEN 'carte' END,
+                        CASE WHEN pp.enabled THEN 'PayPal' END,
+                        CASE WHEN o.\"bankIban\" IS NOT NULL THEN 'virement' END), ''),
+                      '⚠ aucun — paiement pas encore activé')
+                 FROM \"Organizer\" o
+                 LEFT JOIN \"OrganizerPostfinanceAccount\" pf ON pf.\"organizerId\" = o.id
+                 LEFT JOIN \"OrganizerPaypalAccount\" pp ON pp.\"organizerId\" = o.id
+                WHERE EXISTS (SELECT 1 FROM \"Event\" e
+                               WHERE e.\"organizerId\" = o.id AND e.status = 'PUBLISHED')
+                ORDER BY o.name;" \
+              | sed -n 's/^ *\(.\)/   \1/p' || echo "   ⚠ Contrôle impossible"
             # Sans SMTP, la demande de réinitialisation répond « lien envoyé »
             # et n'envoie rien : personne ne pourrait plus récupérer son accès.
             if grep -qE '^SMTP_HOST=.+' "$APP_DIR/.env.prod"; then

@@ -11,9 +11,7 @@ export function mockPaymentsAllowed(): boolean {
 /** Levée quand aucun moyen d'encaisser n'est configuré. */
 export class PaymentNotConfiguredError extends Error {
   constructor() {
-    super(
-      "Aucun encaissement configuré (PF_CHECKOUT_* manquant).",
-    );
+    super("Aucun encaissement configuré pour cet organisateur.");
     this.name = "PaymentNotConfiguredError";
   }
 }

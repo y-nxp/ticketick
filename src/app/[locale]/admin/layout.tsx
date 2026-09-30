@@ -43,7 +43,7 @@ export default async function AdminLayout({
       ? [
           { href: "/admin/resellers", label: t("nav.resellers"), icon: Store },
           { href: "/admin/users", label: t("nav.users"), icon: Users },
-          { href: "/admin/paypal", label: t("nav.paypal"), icon: Wallet },
+          { href: "/admin/payments", label: t("nav.payments"), icon: Wallet },
           { href: "/admin/seat-plans", label: t("nav.seatPlans"), icon: Armchair },
           {
             href: "/admin/inquiries",

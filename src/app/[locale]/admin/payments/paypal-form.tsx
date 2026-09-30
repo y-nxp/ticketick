@@ -1,11 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 import { Save } from "lucide-react";
+import { useKeptForm } from "@/components/admin/use-kept-form";
 import { Button } from "@/components/ui/button";
 import { savePaypalAccount } from "@/lib/admin/paypal-actions";
-import type { FormState } from "@/lib/admin/types";
 
 const fieldClass =
   "h-11 rounded-xl border border-border bg-background px-3.5 text-sm outline-none focus:border-ring";
@@ -23,13 +22,10 @@ export function PaypalForm({
   } | null;
 }) {
   const t = useTranslations("admin.paypal");
-  const [state, action, pending] = useActionState<FormState, FormData>(
-    savePaypalAccount,
-    undefined,
-  );
+  const { state, pending, formProps } = useKeptForm(savePaypalAccount);
 
   return (
-    <form action={action} className="mt-5 grid gap-4 sm:grid-cols-2">
+    <form {...formProps} className="mt-5 grid gap-4 sm:grid-cols-2">
       <input type="hidden" name="organizerId" value={organizerId} />
       <label className="flex flex-col gap-1.5 sm:col-span-2">
         <span className="text-sm font-medium">{t("payeeEmail")}</span>

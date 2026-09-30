@@ -116,7 +116,7 @@ export async function getAdminEvents() {
       status: true,
       visibility: true,
       featured: true,
-      organizer: { select: { name: true } },
+      organizer: { select: { name: true, slug: true } },
       sessions: {
         orderBy: { startsAt: "asc" },
         select: {
@@ -139,6 +139,16 @@ export async function getAdminEvents() {
     nextSessionAt:
       event.sessions.find((s) => s.startsAt >= new Date())?.startsAt ?? null,
   }));
+}
+
+/** Page publique de l'organisateur connecté ; `null` pour l'administrateur. */
+export async function getOwnOrganizerPage() {
+  const { organizerId } = await statsActor();
+  if (!organizerId) return null;
+  return prisma.organizer.findUnique({
+    where: { id: organizerId },
+    select: { name: true, slug: true },
+  });
 }
 
 export async function getAdminUsers() {
@@ -205,28 +215,44 @@ export async function getTeam(requestedOrganizerId?: string) {
   };
 }
 
-export async function getPaypalSettings(requestedOrganizerId?: string) {
+/**
+ * Encaissements de chaque organisateur : l'état de tous pour la vue
+ * d'ensemble, le détail (sans les secrets) de celui qui est choisi.
+ */
+export async function getPaymentSettings(requestedOrganizerId?: string) {
   await requireAdmin();
-  const organizers = await prisma.organizer.findMany({
+  const rows = await prisma.organizer.findMany({
     orderBy: { name: "asc" },
-    select: { id: true, name: true },
+    select: {
+      id: true,
+      name: true,
+      bankIban: true,
+      bankBeneficiary: true,
+      postfinance: {
+        select: { spaceId: true, userId: true, spaceViewId: true, enabled: true, updatedAt: true },
+      },
+      paypal: {
+        select: { payeeEmail: true, clientId: true, live: true, enabled: true, updatedAt: true },
+      },
+    },
   });
-  const organizerId = (
-    organizers.find((o) => o.id === requestedOrganizerId) ?? organizers[0]
-  )?.id;
-  const account = organizerId
-    ? await prisma.organizerPaypalAccount.findUnique({
-        where: { organizerId },
-        select: {
-          payeeEmail: true,
-          clientId: true,
-          live: true,
-          enabled: true,
-          updatedAt: true,
-        },
-      })
-    : null;
-  return { organizers, organizerId: organizerId ?? null, account };
+  const organizers = rows.map((o) => ({
+    id: o.id,
+    name: o.name,
+    card: Boolean(o.postfinance?.enabled),
+    paypal: Boolean(o.paypal?.enabled),
+    iban: Boolean(o.bankIban && o.bankBeneficiary),
+  }));
+  const selected = rows.find((o) => o.id === requestedOrganizerId) ?? rows[0];
+  return {
+    organizers,
+    organizerId: selected?.id ?? null,
+    postfinance: selected?.postfinance ?? null,
+    paypal: selected?.paypal ?? null,
+    bank: selected
+      ? { iban: selected.bankIban ?? "", beneficiary: selected.bankBeneficiary ?? "" }
+      : null,
+  };
 }
 
 export async function getOrganizerChoices() {

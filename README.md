@@ -56,10 +56,9 @@ Voir [`.env.example`](.env.example). Principales :
 | --- | --- |
 | `DATABASE_URL` | Connexion PostgreSQL |
 | `AUTH_SECRET` | Secret d'authentification (Auth.js) |
-| `PF_CHECKOUT_SPACE_ID` / `PF_CHECKOUT_USER` / `PF_CHECKOUT_SECRET` | PostFinance de l'organisateur (billets, sans marge) |
+| `PF_CHECKOUT_SPACE_ID` / `PF_CHECKOUT_USER` / `PF_CHECKOUT_SECRET` | Espace PostFinance d'Illyria, repris une fois dans l'admin (voir Encaissement) |
 | `STRIPE_*` | Facturation des organisateurs (plus tard), pas les billets |
 | `SMTP_*` / `MAIL_FROM` | Envoi des e-mails (vide = journalisation console) |
-| `BANK_IBAN` / `BANK_BENEFICIARY` | Coordonnées pour le paiement par virement |
 
 ## Structure
 
@@ -94,12 +93,31 @@ prisma/                     # schema.prisma + seed.ts
 
 ## À brancher pour la production
 
-1. **PostFinance Checkout** : renseigner `PF_CHECKOUT_*`. Le paiement carte crée
-   une transaction (`src/lib/payment/postfinance.ts`) et redirige vers la page
-   hébergée. Le webhook (`/api/webhooks/postfinance`) et le retour acheteur
-   soldent la commande puis envoient les billets. Dans le portail : Webhook URL
-   + listener `pf_paid`, entité Transaction. Les spectacles se distinguent
-   par la référence `{slug}:{commande}`.
+1. **Encaissement par organisateur** (admin › Encaissement, `/admin/payments`) :
+   chaque organisateur encaisse sur ses propres comptes — espace PostFinance
+   Checkout (carte), PayPal, IBAN (virement). Il n'y a aucun compte commun :
+   un organisateur sans compte reste « En attente » ; ses billets s'achètent
+   jusqu'à l'étape du paiement, qui affiche « Paiement pas encore activé ».
+   Un panier ne peut mêler plusieurs organisateurs.
+   - Au déploiement, `prisma/ensure-illyria-account.ts` reprend `PF_CHECKOUT_*`
+     comme espace d'Illyria s'il n'en a pas encore ; ensuite, seul l'admin fait foi.
+   - Le paiement carte crée une transaction dans l'espace de l'organisateur
+     (`src/lib/payment/postfinance.ts`) et redirige vers la page hébergée. Le
+     webhook (`/api/webhooks/postfinance`) et le retour acheteur soldent la
+     commande puis envoient les billets. **Dans chaque espace PostFinance** :
+     Webhook URL + listener `pf_paid`, entité Transaction. Les spectacles se
+     distinguent par la référence `{slug}:{commande}`.
+   - Les secrets sont chiffrés en base (`PAYMENT_SECRETS_KEY`, à défaut
+     `AUTH_SECRET`).
+   - `ALLOW_MOCK_PAYMENTS=true` (local, betadev) remplace carte et virement
+     manquants par un paiement simulé : le message « pas encore activé »
+     n'apparaît donc qu'en production.
+   - **Page de l'organisateur** `/go/{organisateur}` : ses spectacles à venir,
+     à ses couleurs, avec un bouton de partage. Le lien figure en tête de
+     admin › Spectacles. Dans cette liste, l'interrupteur « Publier sur
+     ticketick » affiche ou non le spectacle sur l'accueil de ticketick.ch
+     (visibilité publique ou non listée) ; il reste vendu sur la page de
+     l'organisateur dans les deux cas.
 2. **E-mail** : configurer SMTP dans `src/lib/email.ts` + génération PDF des billets (QR).
 3. **Auth.js** : brancher l'authentification réelle sur le modèle `User`.
 4. **Persistance des commandes** : écrire les `Order`/`Ticket` en base dans `api/checkout`.
@@ -168,8 +186,8 @@ Le nuage orange doit donc rester actif sur `ticketick.ch` et `www`.
   (22 par défaut). L'utilisateur doit pouvoir lancer `docker` (root ou groupe
   `docker`). Les secrets `JELASTIC_*` du dépôt ne sont pas utilisés : ils
   peuvent désigner un autre serveur.
-- Encaissement et courriel : `PF_CHECKOUT_*`, `SMTP_*`, `PROD_BANK_IBAN`,
-  `PROD_BANK_BENEFICIARY`.
+- Courriel : `SMTP_*`. Encaissement : `PF_CHECKOUT_*` (espace d'Illyria,
+  repris au premier déploiement) ; le reste se saisit dans admin › Encaissement.
 - IA de l'import de plans : hors du GB10, l'application joint aimanager par
   son adresse publique. Secret `LITELLM_API_KEY` (clé « jelastic » du projet
   ticketick, révocable seule), variables `LITELLM_API_URL`

@@ -79,6 +79,6 @@ export async function savePaypalAccount(
     update: fields,
   });
 
-  revalidatePath("/admin/paypal");
+  revalidatePath("/admin/payments");
   return success(organizer.id);
 }

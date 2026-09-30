@@ -1,16 +1,14 @@
 import { NextResponse } from "next/server";
-import { isPostfinanceConfigured } from "@/lib/payment/postfinance";
 import { settlePostfinanceById } from "@/lib/orders/settle-card";
 
 /**
- * Webhook PostFinance Checkout.
+ * Webhook PostFinance Checkout, commun à tous les organisateurs.
  *
- * Dans le portail : Espace → Webhooks → URL
+ * Dans le portail de chaque espace : Espace → Webhooks → URL
  *   https://ticketick.ch/api/webhooks/postfinance
- * Listener : nom `pf_paid` (commun à tous les clients), entité
- * Transaction, états AUTHORIZED / COMPLETED / FULFILL.
- * Le spectacle se distingue ensuite par la référence
- * `{slug}:{commande}`, pas par le nom du listener.
+ * Listener : entité Transaction, états AUTHORIZED / COMPLETED / FULFILL.
+ * La transaction est retrouvée par la commande qui l'a créée, puis relue
+ * dans l'espace de son organisateur.
  *
  * Le montant et l'état sont relus via l'API : le corps n'est pas une preuve.
  */
@@ -18,13 +16,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  if (!isPostfinanceConfigured()) {
-    return NextResponse.json(
-      { error: "postfinance_not_configured" },
-      { status: 503 },
-    );
-  }
-
   const body = await request.json().catch(() => null);
   const transactionId = readEntityId(body);
   if (transactionId == null) {

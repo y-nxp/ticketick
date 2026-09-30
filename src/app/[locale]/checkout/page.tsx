@@ -31,6 +31,7 @@ import {
   getCartPaymentMethods,
   previewCartDiscounts,
 } from "@/lib/orders/payment-actions";
+import type { CartPayments } from "@/lib/orders/payment-methods";
 import { formatHoldClock } from "@/lib/orders/reservation";
 
 type Method = "CARD" | "IBAN" | "PAYPAL";
@@ -195,11 +196,12 @@ function CheckoutInner() {
   const canceled = searchParams.get("canceled") === "1";
 
   const [method, setMethod] = React.useState<Method>("CARD");
-  const [offer, setOffer] = React.useState({
-    card: true,
-    iban: true,
+  const [offer, setOffer] = React.useState<CartPayments>({
+    card: false,
+    iban: false,
     paypal: false,
   });
+  const [offerReady, setOfferReady] = React.useState(false);
   const [attendees, setAttendees] = React.useState<Record<string, Attendee[]>>(
     {},
   );
@@ -237,10 +239,13 @@ function CheckoutInner() {
 
   React.useEffect(() => {
     let ignore = false;
-    getCartPaymentMethods(ticketIds ? ticketIds.split(",") : []).then(
-      (next) => {
+    getCartPaymentMethods(ticketIds ? ticketIds.split(",") : [])
+      // Sans réponse, on propose tout : /api/checkout tranche de toute façon.
+      .catch((): CartPayments => ({ card: true, iban: true, paypal: false }))
+      .then((next) => {
         if (ignore) return;
         setOffer(next);
+        setOfferReady(true);
         setMethod((actuel) => {
           if (actuel === "CARD" && next.card) return actuel;
           if (actuel === "IBAN" && next.iban) return actuel;
@@ -250,8 +255,7 @@ function CheckoutInner() {
           if (next.iban) return "IBAN";
           return actuel;
         });
-      },
-    );
+      });
     return () => {
       ignore = true;
     };
@@ -581,7 +585,7 @@ function CheckoutInner() {
     creatingHold ||
     checkingSeats ||
     seatsOk === false ||
-    (!free && !offer.card && !offer.iban && !offer.paypal);
+    (!free && (!offerReady || (!offer.card && !offer.iban && !offer.paypal)));
 
   function payActions(id: string) {
     return (
@@ -814,6 +818,12 @@ function CheckoutInner() {
           <section className="rounded-2xl border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">{t("paymentMethod")}</h2>
             <div className="mt-4 space-y-3">
+              {!offerReady ? (
+                <div
+                  aria-hidden
+                  className="h-[4.5rem] animate-pulse rounded-xl border border-border bg-muted/50"
+                />
+              ) : null}
               {offer.card ? (
                 <PaymentOption
                   active={method === "CARD"}
@@ -850,10 +860,24 @@ function CheckoutInner() {
                   hint={t("ibanHint")}
                 />
               ) : null}
-              {!offer.card && !offer.iban && !offer.paypal ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("noMethod")}
-                </p>
+              {offerReady && !offer.card && !offer.iban && !offer.paypal ? (
+                offer.blocked ? (
+                  <div
+                    role="status"
+                    className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm"
+                  >
+                    <p className="font-medium">
+                      {t(`paymentBlocked.${offer.blocked}.title`)}
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      {t(`paymentBlocked.${offer.blocked}.body`)}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {t("noMethod")}
+                  </p>
+                )
               ) : null}
             </div>
           </section>

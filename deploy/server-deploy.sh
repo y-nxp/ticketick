@@ -106,11 +106,25 @@ echo "🔎 État de la base :"
        || ' commandes=' || (SELECT count(*) FROM \"Order\");" \
   | sed -n 's/^ *\(.\)/   \1/p' || echo "   ⚠ Contrôle impossible"
 
+# Chaque organisateur encaisse sur ses comptes (admin › Encaissement).
+echo "💳 Encaissement des organisateurs qui vendent :"
+"${COMPOSE[@]}" exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -qtc \
+  "SELECT o.name || ' : ' || coalesce(nullif(concat_ws(', ',
+            CASE WHEN pf.enabled THEN 'carte' END,
+            CASE WHEN pp.enabled THEN 'PayPal' END,
+            CASE WHEN o.\"bankIban\" IS NOT NULL THEN 'virement' END), ''),
+          '⚠ aucun — paiement pas encore activé')
+     FROM \"Organizer\" o
+     LEFT JOIN \"OrganizerPostfinanceAccount\" pf ON pf.\"organizerId\" = o.id
+     LEFT JOIN \"OrganizerPaypalAccount\" pp ON pp.\"organizerId\" = o.id
+    WHERE EXISTS (SELECT 1 FROM \"Event\" e
+                   WHERE e.\"organizerId\" = o.id AND e.status = 'PUBLISHED')
+    ORDER BY o.name;" \
+  | sed -n 's/^ *\(.\)/   \1/p' || echo "   ⚠ Contrôle impossible"
+
 check() {
   if [ -n "${!1:-}" ]; then echo "   ✅ $2"; else echo "   ⚠ $3"; fi
 }
-check PF_CHECKOUT_SECRET "PostFinance Checkout configuré" "PostFinance NON configuré — le paiement par carte sera refusé (503)."
-check BANK_IBAN "IBAN configuré" "BANK_IBAN absent — le virement sera refusé (503)."
 check SMTP_HOST "SMTP configuré" "SMTP absent — aucun courriel ne partira, ni billets ni réinitialisations."
 check LITELLM_API_KEY "IA configurée pour l'import de plans" "Clé IA absente — l'import de plan marche, catégories à nommer à la main."
 if [ -n "${BACKUP_REMOTE:-}" ] && [ -s "$APP_DIR/rclone.conf" ]; then

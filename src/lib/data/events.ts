@@ -106,6 +106,7 @@ function mapOrganizer(o: RawEvent["organizer"]): Organizer {
     id: o.id,
     slug: o.slug,
     name: o.name,
+    description: o.description?.trim() || undefined,
     logoUrl: o.logoUrl ?? undefined,
     website: o.website ?? undefined,
     brand: organizerBrandFromRow(o),
@@ -188,14 +189,19 @@ export async function getOrganizerBySlug(slug: string): Promise<Organizer | null
   return row ? mapOrganizer(row) : null;
 }
 
-/** Spectacles d'un organisateur, y compris non listés (lien direct). */
+/**
+ * Spectacles en vente d'un organisateur, pour sa page : y compris ceux qui
+ * ne sont pas publiés sur l'accueil de ticketick. Seuls comptent ceux qui
+ * ont encore une séance à venir.
+ */
 export async function getOrganizerEvents(
   organizerId: string,
 ): Promise<EventItem[]> {
   const rows = await prisma.event.findMany({
     where: {
       organizerId,
-      status: { not: "DRAFT" },
+      status: { in: ["PUBLISHED", "SOLD_OUT"] },
+      sessions: { some: { startsAt: { gte: new Date() }, status: { not: "CANCELLED" } } },
     },
     include: eventInclude,
   });

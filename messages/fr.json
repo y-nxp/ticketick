@@ -111,7 +111,9 @@
     "from": "Dès",
     "dateCount": "{count} dates",
     "openMenu": "Ouvrir le menu",
-    "closeMenu": "Fermer le menu"
+    "closeMenu": "Fermer le menu",
+    "share": "Partager",
+    "linkCopied": "Lien copié"
   },
   "cart": {
     "title": "Votre panier",
@@ -203,7 +205,17 @@
     "attendee_too_old": "Un bénéficiaire dépasse la limite d'âge de la place gratuite. Choisissez un autre tarif pour cette place.",
     "seat_taken": "Une ou plusieurs places viennent d'être prises. Elles ont été retirées de votre panier.",
     "seatsRemoved": "Certaines places viennent d'être prises par un autre acheteur et ont été retirées de votre panier. Vérifiez votre sélection.",
-    "invalid_seats": "Sélection de places invalide. Choisissez à nouveau vos places."
+    "invalid_seats": "Sélection de places invalide. Choisissez à nouveau vos places.",
+    "paymentBlocked": {
+      "notActivated": {
+        "title": "Paiement pas encore activé",
+        "body": "L’organisateur n’a pas encore ouvert le paiement en ligne pour ces billets. Vous pourrez les acheter dès qu’il sera activé."
+      },
+      "mixedOrganizers": {
+        "title": "Une commande par organisateur",
+        "body": "Votre panier réunit des spectacles de plusieurs organisateurs, qui encaissent chacun sur leur propre compte. Passez une commande pour chacun."
+      }
+    }
   },
   "account": {
     "title": "Mon espace",
@@ -488,9 +500,9 @@
       "inquiries": "Demandes",
       "door": "Contrôle",
       "team": "Équipe",
-      "paypal": "PayPal",
       "discounts": "Rabais",
-      "seatPlans": "Plans de salle"
+      "seatPlans": "Plans de salle",
+      "payments": "Encaissement"
     },
     "overview": {
       "title": "Vue d’ensemble",
@@ -520,7 +532,22 @@
       "sold": "Vendus",
       "revenue": "Recettes",
       "empty": "Aucun spectacle.",
-      "create": "Nouveau spectacle"
+      "create": "Nouveau spectacle",
+      "listing": {
+        "column": "Publier sur ticketick",
+        "on": "Sur ticketick.ch",
+        "off": "Page organisateur seulement",
+        "members": "Réservé aux membres",
+        "aria": "Publier « {title} » sur ticketick.ch",
+        "error": "Échec, réessayez"
+      },
+      "share": {
+        "title": "Votre page de billetterie",
+        "hint": "Tous vos spectacles en vente, à vos couleurs, y compris ceux qui ne sont pas publiés sur ticketick.ch. Partagez ce lien sur votre site, vos réseaux ou vos courriels.",
+        "copy": "Copier le lien",
+        "copied": "Lien copié",
+        "open": "Ouvrir"
+      }
     },
     "orders": {
       "title": "Commandes",
@@ -781,8 +808,8 @@
       "status": "Statut",
       "visibility": "Visibilité",
       "visibilities": {
-        "PUBLIC": "Public",
-        "UNLISTED": "Non listé (lien seul)",
+        "PUBLIC": "Publié sur ticketick.ch",
+        "UNLISTED": "Page de l’organisateur et lien direct seulement",
         "MEMBERS": "Réservé aux membres"
       },
       "coverImage": "Image de couverture",
@@ -1119,6 +1146,51 @@
         "planFileType": "Format non pris en charge : PDF, PNG, JPG ou WebP.",
         "planFileUnreadable": "Ce fichier ne peut pas être lu.",
         "noSeats": "Aucune place détectée : les places doivent être dessinées en couleur sur le plan."
+      }
+    },
+    "payments": {
+      "title": "Encaissement",
+      "subtitle": "Chaque organisateur encaisse sur ses propres comptes. Sans aucun moyen activé, ses billets restent visibles mais ne peuvent pas être payés.",
+      "organizer": "Organisateur",
+      "methods": "Moyens activés",
+      "card": "Carte (PostFinance)",
+      "paypal": "PayPal",
+      "iban": "Virement",
+      "pending": "En attente",
+      "pendingHint": "Aucun encaissement activé : les acheteurs peuvent remplir leur commande, mais à la dernière étape ils voient « Paiement pas encore activé » et ne peuvent pas payer.",
+      "postfinance": {
+        "title": "PostFinance Checkout",
+        "hint": "Espace de l’organisateur sur checkout.postfinance.ch › Compte › Utilisateurs d’application : identifiant de l’espace, ID de l’utilisateur et sa clé d’authentification. Déclarer aussi le webhook https://ticketick.ch/api/webhooks/postfinance dans l’espace.",
+        "spaceId": "ID de l’espace (Space ID)",
+        "userId": "ID de l’utilisateur d’application",
+        "secret": "Clé d’authentification",
+        "secretKeep": "Laisser vide pour conserver",
+        "spaceViewId": "Page de paiement dédiée (Space View ID, facultatif)",
+        "enabledLabel": "Proposer la carte aux acheteurs",
+        "save": "Enregistrer",
+        "saving": "Vérification auprès de PostFinance…",
+        "saved": "Espace PostFinance enregistré et vérifié.",
+        "errors": {
+          "invalid": "Champs invalides : les identifiants sont des nombres.",
+          "notFound": "Organisateur introuvable.",
+          "secretRequired": "La clé d’authentification est obligatoire.",
+          "credentials": "PostFinance refuse ces accès. Vérifiez l’ID de l’espace, l’utilisateur et sa clé."
+        }
+      },
+      "bank": {
+        "title": "Virement bancaire",
+        "iban": "IBAN",
+        "beneficiary": "Titulaire du compte",
+        "hint": "Communiqués à l’acheteur qui choisit le virement ; la commande est ensuite soldée à la main dès réception. Vider les deux champs retire le virement.",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "saved": "Compte bancaire enregistré.",
+        "errors": {
+          "invalid": "Champs invalides.",
+          "notFound": "Organisateur introuvable.",
+          "iban": "IBAN invalide : vérifiez sa saisie.",
+          "beneficiary": "Indiquez le titulaire du compte."
+        }
       }
     }
   }

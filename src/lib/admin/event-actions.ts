@@ -168,6 +168,36 @@ export async function saveEvent(
   }
 }
 
+/**
+ * « Publier sur ticketick » : un spectacle public figure sur l'accueil et
+ * dans la recherche ; retiré, il reste en vente sur la page de
+ * l'organisateur et par lien direct. La diffusion « membres » ne se change
+ * pas d'ici.
+ */
+export async function setEventListed(
+  eventId: unknown,
+  listed: unknown,
+): Promise<FormState> {
+  const { organizerId: scoped } = await catalogActor();
+  if (typeof eventId !== "string" || typeof listed !== "boolean") {
+    return failure("invalid");
+  }
+
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { organizerId: true, visibility: true },
+  });
+  if (!event || (scoped && event.organizerId !== scoped)) return failure("notFound");
+  if (event.visibility === "MEMBERS") return failure("members");
+
+  await prisma.event.update({
+    where: { id: eventId },
+    data: { visibility: listed ? "PUBLIC" : "UNLISTED" },
+  });
+  refresh(eventId);
+  return success(eventId);
+}
+
 export async function deleteEvent(
   _state: FormState,
   data: FormData,

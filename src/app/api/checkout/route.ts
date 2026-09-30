@@ -23,6 +23,7 @@ import { prisma } from "@/lib/prisma";
 import { reservedUntilFrom } from "@/lib/orders/reservation";
 import { clientIpFrom, consume } from "@/lib/rate-limit";
 import { createPaypalOrder, paypalAccountFor } from "@/lib/payment/paypal";
+import { postfinanceAccountFor } from "@/lib/payment/postfinance-account";
 
 /**
  * Seuls l'identifiant du tarif et la quantité sont acceptés. Le libellé et le
@@ -69,11 +70,23 @@ const checkoutSchema = z.object({
 const DEMO_IBAN = "CH93 0076 2011 6238 5295 7";
 const DEMO_BENEFICIARY = "ticketick SA, Lausanne";
 
-/** Coordonnées bancaires réelles, ou `null` si aucune n'est configurée. */
-function bankDetails(): { iban: string; beneficiary: string } | null {
-  const iban = process.env.BANK_IBAN?.trim();
-  const beneficiary = process.env.BANK_BENEFICIARY?.trim();
-  if (iban && beneficiary) return { iban, beneficiary };
+/**
+ * Compte bancaire de l'unique organisateur du panier, ou `null` s'il n'en a
+ * pas renseigné : le virement arrive chez lui, jamais sur un compte commun.
+ */
+async function bankDetails(
+  organizerIds: string[],
+): Promise<{ iban: string; beneficiary: string } | null> {
+  const distinct = [...new Set(organizerIds)];
+  if (distinct.length === 1) {
+    const organizer = await prisma.organizer.findUnique({
+      where: { id: distinct[0] },
+      select: { bankIban: true, bankBeneficiary: true },
+    });
+    const iban = organizer?.bankIban?.trim();
+    const beneficiary = organizer?.bankBeneficiary?.trim();
+    if (iban && beneficiary) return { iban, beneficiary };
+  }
   if (mockPaymentsAllowed()) {
     return { iban: DEMO_IBAN, beneficiary: DEMO_BENEFICIARY };
   }
@@ -257,7 +270,8 @@ export async function POST(request: Request) {
   if (data.paymentMethod === "CARD") {
     let session;
     try {
-      session = await createCardCheckout({
+      const account = await postfinanceAccountFor(order.organizerIds);
+      session = await createCardCheckout(account, {
         reference: order.reference,
         currency: order.currency,
         customerEmail: data.email,
@@ -284,7 +298,7 @@ export async function POST(request: Request) {
       });
     } catch (error) {
       if (error instanceof PaymentNotConfiguredError) {
-        console.error("[checkout] paiement par carte indisponible", error);
+        console.error("[checkout] paiement par carte indisponible", order.organizerIds, error);
         return refusePayment(order.id);
       }
       // Toute autre erreur (API PostFinance, JWT, réseau) laisserait sinon
@@ -342,9 +356,9 @@ export async function POST(request: Request) {
   }
 
   // Virement : la commande reste en attente, le stock est déjà retenu.
-  const bank = bankDetails();
+  const bank = await bankDetails(order.organizerIds);
   if (!bank) {
-    console.error("[checkout] virement indisponible : BANK_IBAN absent");
+    console.error("[checkout] virement indisponible : IBAN de l'organisateur absent", order.organizerIds);
     return refusePayment(order.id);
   }
 

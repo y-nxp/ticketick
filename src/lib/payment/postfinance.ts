@@ -14,15 +14,21 @@ import { EVENT_TIME_ZONE } from "@/lib/utils";
  * est `{slug}:{commande}` (ex. beethoven-cantabile-2026:TT-ABCD-EFGH) pour
  * les distinguer dans le back-office Checkout.
  *
- *   PF_CHECKOUT_SPACE_ID / USER / SECRET — accès de l'organisateur
- *   PF_CHECKOUT_ENVIRONMENT              — LIVE | PREVIEW (facultatif)
- *   PF_CHECKOUT_SPACE_VIEW_ID            — page de paiement dédiée (facultatif)
+ * Chaque appel porte les accès de l'organisateur concerné, saisis dans
+ * l'admin (voir `postfinance-account.ts`).
  */
 
 const API_PREFIX = "/api/v2.0";
 const API_BASE = `https://checkout.postfinance.ch${API_PREFIX}`;
 
 const PAID_STATES = new Set(["AUTHORIZED", "COMPLETED", "FULFILL"]);
+
+export interface PostfinanceCredentials {
+  spaceId: number;
+  userId: number;
+  secret: string;
+  spaceViewId?: number;
+}
 
 export interface CheckoutLineItem {
   name: string;
@@ -90,10 +96,6 @@ export function orderReferenceFromMerchant(value: string | undefined): string | 
   return value;
 }
 
-export function isPostfinanceConfigured(): boolean {
-  return Boolean(spaceId() && userId() && secret());
-}
-
 export function isPaidTransactionState(state: string | undefined): boolean {
   return Boolean(state && PAID_STATES.has(state));
 }
@@ -104,6 +106,7 @@ export function amountToCents(amount: number | undefined): number | undefined {
 }
 
 export async function createPostfinanceCheckout(
+  creds: PostfinanceCredentials,
   input: CreatePostfinanceInput,
 ): Promise<CreatePostfinanceResult> {
   const project = projectLabel(input.project);
@@ -176,12 +179,11 @@ export async function createPostfinanceCheckout(
   // Ne pas forcer LIVE : un espace encore en test refuse alors la création.
   // Sans ce champ, PostFinance prend le mode de l'espace.
 
-  const viewId = Number(process.env.PF_CHECKOUT_SPACE_VIEW_ID);
-  if (Number.isInteger(viewId) && viewId > 0) {
-    transactionCreate.spaceViewId = viewId;
+  if (creds.spaceViewId) {
+    transactionCreate.spaceViewId = creds.spaceViewId;
   }
 
-  const created = await pfFetch<PostfinanceTransaction>("/payment/transactions", {
+  const created = await pfFetch<PostfinanceTransaction>(creds, "/payment/transactions", {
     method: "POST",
     body: transactionCreate,
   });
@@ -190,7 +192,7 @@ export async function createPostfinanceCheckout(
     throw new Error("PostFinance : transaction créée sans identifiant.");
   }
 
-  const checkoutUrl = await paymentPageUrl(created.id);
+  const checkoutUrl = await paymentPageUrl(creds, created.id);
   return {
     provider: "postfinance",
     sessionId: String(created.id),
@@ -201,12 +203,36 @@ export async function createPostfinanceCheckout(
 }
 
 export async function fetchPostfinanceTransaction(
+  creds: PostfinanceCredentials,
   transactionId: number,
 ): Promise<PostfinanceTransaction> {
   return pfFetch<PostfinanceTransaction>(
+    creds,
     `/payment/transactions/${encodeURIComponent(String(transactionId))}`,
     { method: "GET" },
   );
+}
+
+/**
+ * Accès acceptés par PostFinance. Seul un refus d'authentification les
+ * invalide : une autre erreur ne dit rien de la paire saisie.
+ */
+export async function checkPostfinanceCredentials(
+  creds: PostfinanceCredentials,
+): Promise<boolean> {
+  try {
+    await pfFetch<unknown>(creds, "/payment/tokens/search", {
+      method: "GET",
+      query: { query: "customerId:ticketick-verification", limit: "1" },
+    });
+    return true;
+  } catch (error) {
+    if (error instanceof PostfinanceError && error.status !== 401 && error.status !== 403) {
+      console.warn("[postfinance] vérification des accès", error.message);
+      return true;
+    }
+    return false;
+  }
 }
 
 export interface SavedCard {
@@ -214,9 +240,11 @@ export interface SavedCard {
   label: string;
 }
 
-export async function listSavedCards(customerId: string): Promise<SavedCard[]> {
-  if (!isPostfinanceConfigured()) return [];
-  const raw = await pfFetch<unknown>("/payment/tokens/search", {
+export async function listSavedCards(
+  creds: PostfinanceCredentials,
+  customerId: string,
+): Promise<SavedCard[]> {
+  const raw = await pfFetch<unknown>(creds, "/payment/tokens/search", {
     method: "GET",
     query: {
       query: `customerId:${customerId} AND enabledForOneClickPayment:true`,
@@ -234,22 +262,26 @@ export async function listSavedCards(customerId: string): Promise<SavedCard[]> {
 }
 
 export async function deleteSavedCard(
+  creds: PostfinanceCredentials,
   customerId: string,
   tokenId: number,
 ): Promise<void> {
-  const cards = await listSavedCards(customerId);
+  const cards = await listSavedCards(creds, customerId);
   if (!cards.some((card) => card.id === tokenId)) {
     throw new Error("Carte inconnue pour ce compte.");
   }
-  await pfFetch(`/payment/tokens/${encodeURIComponent(String(tokenId))}`, {
+  await pfFetch(creds, `/payment/tokens/${encodeURIComponent(String(tokenId))}`, {
     method: "DELETE",
   });
 }
 
-async function paymentPageUrl(transactionId: number): Promise<string> {
+async function paymentPageUrl(
+  creds: PostfinanceCredentials,
+  transactionId: number,
+): Promise<string> {
   const path = `/payment/transactions/${encodeURIComponent(String(transactionId))}/payment-page-url`;
   // Cet endpoint renvoie une URL en texte : Accept: application/json → 406.
-  const raw = await pfFetch<unknown>(path, {
+  const raw = await pfFetch<unknown>(creds, path, {
     method: "GET",
     accept: "text/plain",
   });
@@ -272,7 +304,18 @@ function extractUrl(raw: unknown): string | undefined {
   return undefined;
 }
 
+export class PostfinanceError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "PostfinanceError";
+  }
+}
+
 async function pfFetch<T>(
+  creds: PostfinanceCredentials,
   path: string,
   init: {
     method: "GET" | "POST" | "DELETE";
@@ -283,7 +326,7 @@ async function pfFetch<T>(
 ): Promise<T> {
   const headers: Record<string, string> = {
     Accept: init.accept ?? "application/json",
-    Space: String(spaceId()),
+    Space: String(creds.spaceId),
   };
   if (init.body !== undefined) {
     headers["Content-Type"] = "application/json";
@@ -292,7 +335,7 @@ async function pfFetch<T>(
   const search = init.query ? new URLSearchParams(init.query).toString() : "";
   const signedPath = search ? `${path}?${search}` : path;
 
-  const token = await signRequest(signedPath, init.method);
+  const token = await signRequest(creds, signedPath, init.method);
   headers.Authorization = `Bearer ${token}`;
 
   const response = await fetch(`${API_BASE}${signedPath}`, {
@@ -303,8 +346,9 @@ async function pfFetch<T>(
 
   const text = await response.text();
   if (!response.ok) {
-    throw new Error(
+    throw new PostfinanceError(
       `PostFinance ${init.method} ${path} → ${response.status} ${text.slice(0, 400)}`,
+      response.status,
     );
   }
 
@@ -316,36 +360,20 @@ async function pfFetch<T>(
   }
 }
 
-async function signRequest(path: string, method: string): Promise<string> {
-  const key = Buffer.from(secret(), "base64");
+async function signRequest(
+  creds: PostfinanceCredentials,
+  path: string,
+  method: string,
+): Promise<string> {
+  const key = Buffer.from(creds.secret, "base64");
   return new SignJWT({
     requestPath: `${API_PREFIX}${path}`,
     requestMethod: method,
   })
     .setProtectedHeader({ alg: "HS256", typ: "JWT", ver: 1 })
-    .setSubject(String(userId()))
+    .setSubject(String(creds.userId))
     .setIssuedAt()
     .sign(key);
-}
-
-function spaceId(): number | undefined {
-  const raw = process.env.PF_CHECKOUT_SPACE_ID?.trim();
-  if (!raw) return undefined;
-  const id = Number(raw);
-  return Number.isInteger(id) && id > 0 ? id : undefined;
-}
-
-function userId(): number | undefined {
-  const raw =
-    process.env.PF_CHECKOUT_USER?.trim() ||
-    process.env.PF_CHECKOUT_USER_ID?.trim();
-  if (!raw) return undefined;
-  const id = Number(raw);
-  return Number.isInteger(id) && id > 0 ? id : undefined;
-}
-
-function secret(): string {
-  return process.env.PF_CHECKOUT_SECRET?.trim() ?? "";
 }
 
 function francs(cents: number): number {
