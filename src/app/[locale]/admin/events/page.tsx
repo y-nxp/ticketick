@@ -8,6 +8,12 @@ import { getCurrentUser } from "@/lib/auth/dal";
 import { getAdminEvents, getOwnOrganizerPage } from "@/lib/data/admin";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { t as translate, type Translated } from "@/lib/types";
+import {
+  BulkCheckbox,
+  BulkSelectAll,
+  BulkSelection,
+  BulkToolbar,
+} from "./bulk-selection";
 import { ListingSwitch } from "./listing-switch";
 
 export const dynamic = "force-dynamic";
@@ -29,11 +35,134 @@ export default async function AdminEventsPage({
   const readOnly = user?.role === "ORGANIZER_VIEWER";
   const origin = publicAppOrigin();
 
+  const table = (
+    <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
+      <table className="w-full min-w-[60rem] text-sm">
+        <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
+          <tr>
+            {readOnly ? null : (
+              <th className="w-10 py-3 pl-4">
+                <BulkSelectAll />
+              </th>
+            )}
+            <th className="px-4 py-3 font-semibold">{t("events.event")}</th>
+            <th className="px-4 py-3 font-semibold">{t("events.status")}</th>
+            <th className="px-4 py-3 font-semibold">
+              {t("events.listing.column")}
+            </th>
+            <th className="px-4 py-3 font-semibold">{t("events.sessions")}</th>
+            <th className="px-4 py-3 font-semibold">{t("events.next")}</th>
+            <th className="px-4 py-3 text-right font-semibold">
+              {t("events.sold")}
+            </th>
+            <th className="px-4 py-3 text-right font-semibold">
+              {t("events.revenue")}
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {events.map((event) => (
+            <tr key={event.id} className="hover:bg-muted/30">
+              {readOnly ? null : (
+                <td className="py-3 pl-4">
+                  <BulkCheckbox
+                    id={event.id}
+                    title={translate(event.title as Translated, locale)}
+                  />
+                </td>
+              )}
+              <td className="px-4 py-3">
+                {readOnly ? (
+                  <p className="font-medium">
+                    {translate(event.title as Translated, locale)}
+                  </p>
+                ) : (
+                  <Link
+                    href={`/admin/events/${event.id}`}
+                    className="font-medium hover:text-primary hover:underline"
+                  >
+                    {translate(event.title as Translated, locale)}
+                  </Link>
+                )}
+                <a
+                  href={`${origin}/go/${event.organizer.slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block text-xs text-muted-foreground hover:text-primary hover:underline"
+                >
+                  {event.organizer.name}
+                </a>
+              </td>
+              <td className="px-4 py-3">
+                <Badge
+                  variant={
+                    event.status === "PUBLISHED" ? "default" : "secondary"
+                  }
+                >
+                  {t(`status.${event.status}`)}
+                </Badge>
+              </td>
+              <td className="px-4 py-3">
+                {event.visibility === "MEMBERS" ? (
+                  <span className="text-xs text-muted-foreground">
+                    {t("events.listing.members")}
+                  </span>
+                ) : readOnly ? (
+                  <span className="text-xs text-muted-foreground">
+                    {t(
+                      event.visibility === "PUBLIC"
+                        ? "events.listing.on"
+                        : "events.listing.off",
+                    )}
+                  </span>
+                ) : (
+                  <ListingSwitch
+                    key={event.visibility}
+                    eventId={event.id}
+                    listed={event.visibility === "PUBLIC"}
+                    title={translate(event.title as Translated, locale)}
+                  />
+                )}
+              </td>
+              <td className="px-4 py-3 tabular-nums">
+                {event.sessions.length}
+              </td>
+              <td className="px-4 py-3 text-muted-foreground">
+                {event.nextSessionAt
+                  ? formatDate(event.nextSessionAt, `${locale}-CH`, {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "—"}
+              </td>
+              <td className="px-4 py-3 text-right tabular-nums">
+                {event.sold} / {event.capacity}
+              </td>
+              <td className="px-4 py-3 text-right tabular-nums">
+                {formatPrice(event.revenueCents, locale)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {events.length === 0 ? (
+        <p className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+          <CalendarDays className="size-4" />
+          {t("events.empty")}
+        </p>
+      ) : null}
+    </div>
+  );
+
   return (
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("events.title")}</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t("events.title")}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {t("events.subtitle", { count: events.length })}
           </p>
@@ -49,110 +178,18 @@ export default async function AdminEventsPage({
         )}
       </div>
 
-      {ownPage ? <OrganizerPageShare url={`${origin}/go/${ownPage.slug}`} /> : null}
+      {ownPage ? (
+        <OrganizerPageShare url={`${origin}/go/${ownPage.slug}`} />
+      ) : null}
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
-        <table className="w-full min-w-[60rem] text-sm">
-          <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-4 py-3 font-semibold">{t("events.event")}</th>
-              <th className="px-4 py-3 font-semibold">{t("events.status")}</th>
-              <th className="px-4 py-3 font-semibold">
-                {t("events.listing.column")}
-              </th>
-              <th className="px-4 py-3 font-semibold">
-                {t("events.sessions")}
-              </th>
-              <th className="px-4 py-3 font-semibold">{t("events.next")}</th>
-              <th className="px-4 py-3 text-right font-semibold">
-                {t("events.sold")}
-              </th>
-              <th className="px-4 py-3 text-right font-semibold">
-                {t("events.revenue")}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {events.map((event) => (
-              <tr key={event.id} className="hover:bg-muted/30">
-                <td className="px-4 py-3">
-                  {readOnly ? (
-                    <p className="font-medium">
-                      {translate(event.title as Translated, locale)}
-                    </p>
-                  ) : (
-                    <Link
-                      href={`/admin/events/${event.id}`}
-                      className="font-medium hover:text-primary hover:underline"
-                    >
-                      {translate(event.title as Translated, locale)}
-                    </Link>
-                  )}
-                  <a
-                    href={`${origin}/go/${event.organizer.slug}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs text-muted-foreground hover:text-primary hover:underline"
-                  >
-                    {event.organizer.name}
-                  </a>
-                </td>
-                <td className="px-4 py-3">
-                  <Badge
-                    variant={
-                      event.status === "PUBLISHED" ? "default" : "secondary"
-                    }
-                  >
-                    {t(`status.${event.status}`)}
-                  </Badge>
-                </td>
-                <td className="px-4 py-3">
-                  {event.visibility === "MEMBERS" ? (
-                    <span className="text-xs text-muted-foreground">
-                      {t("events.listing.members")}
-                    </span>
-                  ) : readOnly ? (
-                    <span className="text-xs text-muted-foreground">
-                      {t(event.visibility === "PUBLIC" ? "events.listing.on" : "events.listing.off")}
-                    </span>
-                  ) : (
-                    <ListingSwitch
-                      eventId={event.id}
-                      listed={event.visibility === "PUBLIC"}
-                      title={translate(event.title as Translated, locale)}
-                    />
-                  )}
-                </td>
-                <td className="px-4 py-3 tabular-nums">
-                  {event.sessions.length}
-                </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {event.nextSessionAt
-                    ? formatDate(event.nextSessionAt, `${locale}-CH`, {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })
-                    : "—"}
-                </td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {event.sold} / {event.capacity}
-                </td>
-                <td className="px-4 py-3 text-right tabular-nums">
-                  {formatPrice(event.revenueCents, locale)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {events.length === 0 ? (
-          <p className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
-            <CalendarDays className="size-4" />
-            {t("events.empty")}
-          </p>
-        ) : null}
-      </div>
+      {readOnly ? (
+        table
+      ) : (
+        <BulkSelection ids={events.map((event) => event.id)}>
+          <BulkToolbar />
+          {table}
+        </BulkSelection>
+      )}
     </div>
   );
 }

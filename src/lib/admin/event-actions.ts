@@ -198,6 +198,92 @@ export async function setEventListed(
   return success(eventId);
 }
 
+const BULK_ACTIONS = ["publish", "draft", "list", "unlist", "delete"] as const;
+export type BulkEventAction = (typeof BULK_ACTIONS)[number];
+export type BulkEventResult =
+  | { ok: true; done: number; skipped: number }
+  | { ok: false; error: string };
+
+/**
+ * Actions groupées de la liste des spectacles. Chaque spectacle hors de
+ * portée ou non concerné est compté comme ignoré plutôt que de faire
+ * échouer le lot : on ne publie qu'un brouillon, on ne dépublie qu'un
+ * spectacle publié, la diffusion « membres » ne bouge pas, et rien qui porte
+ * une vente n'est supprimé.
+ */
+export async function bulkEventAction(
+  ids: unknown,
+  action: unknown,
+): Promise<BulkEventResult> {
+  const { organizerId: scoped } = await catalogActor();
+  if (
+    !Array.isArray(ids) ||
+    ids.length === 0 ||
+    ids.length > 500 ||
+    !ids.every((id): id is string => typeof id === "string") ||
+    !(BULK_ACTIONS as readonly unknown[]).includes(action)
+  ) {
+    return { ok: false, error: "invalid" };
+  }
+  const where: Prisma.EventWhereInput = {
+    id: { in: [...new Set(ids)] },
+    ...(scoped ? { organizerId: scoped } : {}),
+  };
+  const total = new Set(ids).size;
+
+  let done = 0;
+  switch (action as BulkEventAction) {
+    case "publish":
+      done = (
+        await prisma.event.updateMany({
+          where: { ...where, status: "DRAFT" },
+          data: { status: "PUBLISHED" },
+        })
+      ).count;
+      break;
+    case "draft":
+      done = (
+        await prisma.event.updateMany({
+          where: { ...where, status: "PUBLISHED" },
+          data: { status: "DRAFT" },
+        })
+      ).count;
+      break;
+    case "list":
+    case "unlist": {
+      const visibility = action === "list" ? "PUBLIC" : "UNLISTED";
+      done = (
+        await prisma.event.updateMany({
+          where: { ...where, visibility: { notIn: ["MEMBERS", visibility] } },
+          data: { visibility },
+        })
+      ).count;
+      break;
+    }
+    case "delete": {
+      const deletable = await prisma.event.findMany({
+        where: {
+          ...where,
+          sessions: { none: { ticketTypes: { some: { sold: { gt: 0 } } } } },
+        },
+        select: { id: true },
+      });
+      for (const { id } of deletable) {
+        try {
+          await prisma.event.delete({ where: { id } });
+          done += 1;
+        } catch (error) {
+          console.error("[admin] suppression groupée", id, error);
+        }
+      }
+      break;
+    }
+  }
+
+  refresh();
+  return { ok: true, done, skipped: total - done };
+}
+
 export async function deleteEvent(
   _state: FormState,
   data: FormData,

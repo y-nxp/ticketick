@@ -547,6 +547,23 @@
         "copy": "Copia il link",
         "copied": "Link copiato",
         "open": "Apri"
+      },
+      "bulk": {
+        "select": "Seleziona «{title}»",
+        "selectAll": "Seleziona tutto",
+        "toolbar": "Azioni di gruppo",
+        "selected": "{count, plural, one {# spettacolo selezionato} other {# spettacoli selezionati}}",
+        "actions": {
+          "publish": "Pubblica",
+          "draft": "Torna in bozza",
+          "list": "Pubblica su ticketick",
+          "unlist": "Ritira da ticketick",
+          "delete": "Elimina"
+        },
+        "clear": "Deseleziona",
+        "deleteConfirm": "Eliminare {count, plural, one {questo spettacolo} other {questi # spettacoli}}? Quelli con vendite saranno conservati.",
+        "result": "{done, plural, =0 {Nessuno spettacolo modificato} one {# spettacolo modificato} other {# spettacoli modificati}}{skipped, plural, =0 {.} other {; # ignorati (già in quello stato, riservati ai membri o con vendite).}}",
+        "error": "L’azione non è riuscita. Riprovi."
       }
     },
     "orders": {

@@ -547,6 +547,23 @@
         "copy": "Link kopieren",
         "copied": "Link kopiert",
         "open": "Öffnen"
+      },
+      "bulk": {
+        "select": "„{title}“ auswählen",
+        "selectAll": "Alle auswählen",
+        "toolbar": "Sammelaktionen",
+        "selected": "{count, plural, one {# Veranstaltung ausgewählt} other {# Veranstaltungen ausgewählt}}",
+        "actions": {
+          "publish": "Veröffentlichen",
+          "draft": "Zurück zum Entwurf",
+          "list": "Auf ticketick veröffentlichen",
+          "unlist": "Von ticketick entfernen",
+          "delete": "Löschen"
+        },
+        "clear": "Auswahl aufheben",
+        "deleteConfirm": "{count, plural, one {Diese Veranstaltung} other {Diese # Veranstaltungen}} löschen? Veranstaltungen mit Verkäufen bleiben erhalten.",
+        "result": "{done, plural, =0 {Keine Veranstaltung geändert} one {# Veranstaltung geändert} other {# Veranstaltungen geändert}}{skipped, plural, =0 {.} other {; # übersprungen (bereits in diesem Zustand, nur für Mitglieder oder mit Verkäufen).}}",
+        "error": "Die Aktion ist fehlgeschlagen. Bitte erneut versuchen."
       }
     },
     "orders": {

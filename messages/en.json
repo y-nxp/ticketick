@@ -547,6 +547,23 @@
         "copy": "Copy link",
         "copied": "Link copied",
         "open": "Open"
+      },
+      "bulk": {
+        "select": "Select “{title}”",
+        "selectAll": "Select all",
+        "toolbar": "Bulk actions",
+        "selected": "{count, plural, one {# event selected} other {# events selected}}",
+        "actions": {
+          "publish": "Publish",
+          "draft": "Back to draft",
+          "list": "Publish on ticketick",
+          "unlist": "Remove from ticketick",
+          "delete": "Delete"
+        },
+        "clear": "Clear selection",
+        "deleteConfirm": "Delete {count, plural, one {this event} other {these # events}}? Events that already have sales will be kept.",
+        "result": "{done, plural, =0 {No event changed} one {# event changed} other {# events changed}}{skipped, plural, =0 {.} other {; # skipped (already in that state, members only or with sales).}}",
+        "error": "The action failed. Please try again."
       }
     },
     "orders": {
