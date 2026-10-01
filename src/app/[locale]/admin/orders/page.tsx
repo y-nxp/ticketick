@@ -85,11 +85,18 @@ export default async function AdminOrdersPage({
                       ) : (
                         <>
                           <p>
-                            {order.firstName} {order.lastName}
+                            {[
+                              `${order.firstName} ${order.lastName}`.trim(),
+                              order.ticketNote,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ") || t("orders.noName")}
                           </p>
-                          <p className="mt-0.5 text-xs text-muted-foreground">
-                            {order.email}
-                          </p>
+                          {order.email ? (
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {order.email}
+                            </p>
+                          ) : null}
                         </>
                       )}
                       {order.options.length > 0 ? (
@@ -103,7 +110,10 @@ export default async function AdminOrdersPage({
                       ) : null}
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {order.reseller?.name ?? t(`channel.${order.channel}`)}
+                      {order.reseller?.name ??
+                        (order.paymentMethod === "RESERVATION"
+                          ? t("paymentMethod.RESERVATION")
+                          : t(`channel.${order.channel}`))}
                     </td>
                     <td className="px-4 py-3">
                       {isRefundDue(order) ? (
@@ -126,7 +136,10 @@ export default async function AdminOrdersPage({
                             order.status === "PAID" ? "default" : "secondary"
                           }
                         >
-                          {t(`orderStatus.${order.status}`)}
+                          {order.status === "PAID" &&
+                          order.paymentMethod === "RESERVATION"
+                            ? t("orders.reserved")
+                            : t(`orderStatus.${order.status}`)}
                         </Badge>
                       )}
                     </td>

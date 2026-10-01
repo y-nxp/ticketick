@@ -2,9 +2,10 @@
 
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import { Banknote, Download, Undo2 } from "lucide-react";
+import { Banknote, Download, Undo2, XCircle } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { markOrderPaidCash, refundPaypalOrder } from "@/lib/admin/order-actions";
+import { cancelReservationAction } from "@/lib/admin/reservation-actions";
 import type { FormState } from "@/lib/admin/types";
 
 export function OrderActions({
@@ -13,12 +14,16 @@ export function OrderActions({
   canMarkCash,
   canDownload,
   canRefundPaypal,
+  canCancelReservation,
+  paid,
 }: {
   orderId: string;
   reference: string;
   canMarkCash: boolean;
   canDownload: boolean;
   canRefundPaypal: boolean;
+  canCancelReservation: boolean;
+  paid: boolean;
 }) {
   const t = useTranslations("admin.orders");
   const [state, action, pending] = useActionState<FormState, FormData>(
@@ -29,6 +34,10 @@ export function OrderActions({
     FormState,
     FormData
   >(refundPaypalOrder, undefined);
+  const [cancelState, cancelAction, cancelling] = useActionState<
+    FormState,
+    FormData
+  >(cancelReservationAction, undefined);
 
   return (
     <div className="mt-6 space-y-3">
@@ -65,8 +74,22 @@ export function OrderActions({
             </Button>
           </form>
         ) : null}
+        {canCancelReservation ? (
+          <form
+            action={cancelAction}
+            onSubmit={(e) => {
+              if (!window.confirm(t("cancelReservationConfirm"))) e.preventDefault();
+            }}
+          >
+            <input type="hidden" name="orderId" value={orderId} />
+            <Button type="submit" variant="outline" disabled={cancelling}>
+              <XCircle />
+              {cancelling ? t("cancelReservationPending") : t("cancelReservation")}
+            </Button>
+          </form>
+        ) : null}
       </div>
-      {canDownload ? (
+      {canDownload && !paid ? (
         <p className="text-xs text-muted-foreground">{t("downloadHint")}</p>
       ) : null}
       {canMarkCash ? (
@@ -86,6 +109,14 @@ export function OrderActions({
       {refundState && !refundState.ok ? (
         <p role="alert" className="text-sm text-destructive">
           {t(`errors.${refundState.error}`)}
+        </p>
+      ) : null}
+      {cancelState?.ok ? (
+        <p className="text-sm text-emerald-700">{t("reservationCancelled")}</p>
+      ) : null}
+      {cancelState && !cancelState.ok ? (
+        <p role="alert" className="text-sm text-destructive">
+          {t(`errors.${cancelState.error}`)}
         </p>
       ) : null}
     </div>

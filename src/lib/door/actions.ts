@@ -59,7 +59,7 @@ export async function admitTicket(
       seatLabel: true,
       attendeeName: true,
       attendeeBirthDate: true,
-      order: { select: { firstName: true, lastName: true } },
+      order: { select: { firstName: true, lastName: true, ticketNote: true } },
       ticketType: {
         select: {
           name: true,
@@ -92,7 +92,9 @@ export async function admitTicket(
     ticketName: t(ticket.ticketType.name as Translated, locale),
     when: formatDate(session.startsAt, `${locale}-CH`),
     venue: [session.venue?.name, session.venue?.city].filter(Boolean).join(", "),
-    buyer: `${ticket.order.firstName} ${ticket.order.lastName}`.trim(),
+    buyer: [`${ticket.order.firstName} ${ticket.order.lastName}`.trim(), ticket.order.ticketNote]
+      .filter(Boolean)
+      .join(" · "),
     seat: ticket.seatLabel,
     attendee: ticket.attendeeName,
     attendeeBirthDate: ticket.attendeeBirthDate

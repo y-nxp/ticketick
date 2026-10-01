@@ -42,6 +42,9 @@ export function TextInput({
   placeholder,
   step,
   min,
+  max,
+  maxLength,
+  ariaLabel,
 }: {
   name: string;
   defaultValue?: string | number | null;
@@ -50,6 +53,9 @@ export function TextInput({
   placeholder?: string;
   step?: string;
   min?: string;
+  max?: string;
+  maxLength?: number;
+  ariaLabel?: string;
 }) {
   return (
     <input
@@ -60,6 +66,9 @@ export function TextInput({
       placeholder={placeholder}
       step={step}
       min={min}
+      max={max}
+      maxLength={maxLength}
+      aria-label={ariaLabel}
       className={inputClass}
     />
   );

@@ -125,6 +125,10 @@ prisma/                     # schema.prisma + seed.ts
    - **Sans vente en ligne** (fiche spectacle › « Vente en ligne » décochée) :
      conférence ou entrée sur inscription. La fiche affiche le courriel ou le
      téléphone saisis à la place des billets, et aucune commande n'est acceptée.
+   - **Réservation sans paiement** (fiche spectacle › séance › « Réserver ») :
+     places par tarif, mention et nom facultatifs imprimés sur les billets.
+     Billets valables tout de suite, sièges attribués automatiquement en
+     placement numéroté, 0 fr. dans l'encaissé. Annulable depuis la commande.
    - **Reprises de données** : `prisma/setup-*.ts` tournent à chaque
      déploiement ; une étape `once(clé)` (table `SetupStep`) n'est jouée
      qu'une fois par base, même si l'admin défait ensuite son résultat.

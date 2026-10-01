@@ -607,12 +607,20 @@
         "amount": "Le montant ne correspond pas.",
         "notRefundable": "Cette commande ne peut pas être remboursée ici.",
         "paypalMissing": "Compte PayPal de l'organisateur introuvable ou désactivé.",
-        "refundFailed": "PayPal a refusé le remboursement. Vérifiez dans votre compte PayPal."
+        "refundFailed": "PayPal a refusé le remboursement. Vérifiez dans votre compte PayPal.",
+        "notCancellable": "Cette réservation est déjà annulée."
       },
       "refundPaypal": "Rembourser via PayPal",
       "refundPending": "Remboursement…",
       "refundConfirm": "Rembourser intégralement cette commande ? Les billets seront annulés et les places remises en vente.",
-      "refundDone": "Commande remboursée."
+      "refundDone": "Commande remboursée.",
+      "noName": "Sans nom",
+      "ticketNote": "Mention sur les billets",
+      "cancelReservation": "Annuler la réservation",
+      "cancelReservationPending": "Annulation…",
+      "cancelReservationConfirm": "Annuler cette réservation ? Les places reviennent en vente et les billets seront refusés au contrôle.",
+      "reservationCancelled": "Réservation annulée, places remises en vente.",
+      "reserved": "Réservée"
     },
     "resellers": {
       "title": "Points de vente",
@@ -681,7 +689,8 @@
       "IBAN": "Virement",
       "CASH": "Cash",
       "PAYPAL": "PayPal",
-      "FREE": "Gratuit"
+      "FREE": "Gratuit",
+      "RESERVATION": "Réservation sans paiement"
     },
     "channel": {
       "ONLINE": "En ligne",
@@ -898,7 +907,8 @@
       "seatPlan": "Plan de salle",
       "seatPlanNone": "Aucun (placement libre)",
       "seatPlanHint": "Places numérotées : le plan doit appartenir au lieu choisi. Jauge vide = nombre de sièges du plan. Non modifiable une fois des billets vendus.",
-      "seatPlanOption": "{name} — {venue} ({seats} places)"
+      "seatPlanOption": "{name} — {venue} ({seats} places)",
+      "reserve": "Réserver"
     },
     "options": {
       "title": "Options de commande",
@@ -1224,6 +1234,41 @@
           "iban": "IBAN invalide : vérifiez sa saisie.",
           "beneficiary": "Indiquez le titulaire du compte."
         }
+      }
+    },
+    "reservation": {
+      "back": "← Retour au spectacle",
+      "title": "Réservation sans paiement",
+      "intro": "Pour un groupe ou un partenaire : indiquez le nombre de places par tarif. Les billets sont valables tout de suite ; vous les téléchargez ensuite pour les remettre. Rien n'est encaissé sur ticketick.",
+      "introSeated": "Pour un groupe ou un partenaire : indiquez le nombre de places par tarif. Les sièges sont attribués automatiquement dans la catégorie, côte à côte quand c'est possible ; les places bloquées ne sont jamais prises. Les billets sont valables tout de suite et rien n'est encaissé sur ticketick.",
+      "noTariffs": "Aucun tarif sur cette séance : ajoutez-en un avant de réserver.",
+      "tariff": "Tarif",
+      "price": "Prix",
+      "available": "Disponibles",
+      "quantity": "Places",
+      "quantityFor": "Nombre de places, {name}",
+      "ticketNote": "Mention sur le billet",
+      "ticketNoteHint": "Facultatif, imprimé sur chaque billet.",
+      "ticketNotePlaceholder": "Réservation Illyria",
+      "holderName": "Nom et prénom",
+      "holderNameHint": "Facultatif, imprimé comme titulaire.",
+      "ticketLocale": "Langue des billets",
+      "submit": "Créer la réservation",
+      "submitting": "Réservation…",
+      "existing": "Réservations de cette séance ({count})",
+      "none": "Aucune réservation pour l'instant.",
+      "anonymous": "Sans mention",
+      "ticketCount": "{count, plural, one {# billet} other {# billets}}",
+      "download": "Billets (PDF)",
+      "errors": {
+        "empty": "Indiquez au moins une place.",
+        "notFound": "Séance ou tarif introuvable.",
+        "sessionPast": "Cette séance est passée : plus de réservation possible.",
+        "soldOut": "Plus assez de places sur un des tarifs. Rechargez la page pour voir les disponibilités.",
+        "seatsUnavailable": "Plus assez de sièges libres dans la catégorie demandée.",
+        "retry": "Des places viennent d'être prises en même temps. Réessayez.",
+        "invalid": "Formulaire incomplet, rechargez la page.",
+        "quantity": "Nombre de places invalide."
       }
     }
   }

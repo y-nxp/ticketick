@@ -157,6 +157,8 @@ enum PaymentMethod {
   PAYPAL
   /// Commande à 0 fr. : validée sans encaissement.
   FREE
+  /// Places réservées depuis l'admin, sans encaissement sur ticketick.
+  RESERVATION
 }
 
 /// État d'un siège numéroté pour une séance.
@@ -718,6 +720,8 @@ model Order {
   lastName  String
   phone     String?
   locale    String  @default("fr")
+  /// Mention imprimée sur chaque billet (« Réservation Illyria »).
+  ticketNote String?
 
   status        OrderStatus   @default(PENDING)
   paymentMethod PaymentMethod

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { Plus, Pencil, Trash2, X, Ticket, Armchair } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Ticket, Armchair, TicketCheck } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -153,6 +153,15 @@ function SessionRow({
             {plan ? ` · ${plan.name}` : null}
           </p>
         </div>
+        {session.ticketTypes.length > 0 ? (
+          <Link
+            href={`/admin/events/${eventId}/reserve/${session.id}`}
+            className={buttonVariants({ variant: "ghost", size: "sm" })}
+          >
+            <TicketCheck className="size-4" />
+            {t("reserve")}
+          </Link>
+        ) : null}
         {session.seatPlanId ? (
           <Link
             href={`/admin/events/${eventId}/seats/${session.id}`}

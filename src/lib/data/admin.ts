@@ -277,6 +277,7 @@ const adminOrderSelect = {
   firstName: true,
   lastName: true,
   phone: true,
+  ticketNote: true,
   createdAt: true,
   reseller: { select: { name: true } },
   payment: {

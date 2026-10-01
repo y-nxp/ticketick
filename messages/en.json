@@ -607,12 +607,20 @@
         "amount": "The amount does not match.",
         "notRefundable": "This order cannot be refunded here.",
         "paypalMissing": "The organizer's PayPal account is missing or disabled.",
-        "refundFailed": "PayPal refused the refund. Check your PayPal account."
+        "refundFailed": "PayPal refused the refund. Check your PayPal account.",
+        "notCancellable": "This reservation is already cancelled."
       },
       "refundPaypal": "Refund via PayPal",
       "refundPending": "Refunding…",
       "refundConfirm": "Refund this order in full? The tickets will be cancelled and the seats put back on sale.",
-      "refundDone": "Order refunded."
+      "refundDone": "Order refunded.",
+      "noName": "No name",
+      "ticketNote": "Note on tickets",
+      "cancelReservation": "Cancel reservation",
+      "cancelReservationPending": "Cancelling…",
+      "cancelReservationConfirm": "Cancel this reservation? The seats go back on sale and the tickets will be refused at the door.",
+      "reservationCancelled": "Reservation cancelled, seats back on sale.",
+      "reserved": "Reserved"
     },
     "resellers": {
       "title": "Points of sale",
@@ -681,7 +689,8 @@
       "IBAN": "Bank transfer",
       "CASH": "Cash",
       "PAYPAL": "PayPal",
-      "FREE": "Free"
+      "FREE": "Free",
+      "RESERVATION": "Reservation without payment"
     },
     "channel": {
       "ONLINE": "Online",
@@ -898,7 +907,8 @@
       "seatPlan": "Seating plan",
       "seatPlanNone": "None (free seating)",
       "seatPlanHint": "Numbered seats: the plan must belong to the selected venue. Empty capacity = number of seats in the plan. Locked once tickets are sold.",
-      "seatPlanOption": "{name} — {venue} ({seats} seats)"
+      "seatPlanOption": "{name} — {venue} ({seats} seats)",
+      "reserve": "Reserve"
     },
     "options": {
       "title": "Order options",
@@ -1224,6 +1234,41 @@
           "iban": "Invalid IBAN: please check it.",
           "beneficiary": "Enter the account holder."
         }
+      }
+    },
+    "reservation": {
+      "back": "← Back to the show",
+      "title": "Reservation without payment",
+      "intro": "For a group or a partner: enter the number of seats per tariff. Tickets are valid immediately; download them afterwards to hand them over. Nothing is charged on ticketick.",
+      "introSeated": "For a group or a partner: enter the number of seats per tariff. Seats are assigned automatically within the category, side by side when possible; blocked seats are never taken. Tickets are valid immediately and nothing is charged on ticketick.",
+      "noTariffs": "No tariff on this session: add one before reserving.",
+      "tariff": "Tariff",
+      "price": "Price",
+      "available": "Available",
+      "quantity": "Seats",
+      "quantityFor": "Number of seats, {name}",
+      "ticketNote": "Note on the ticket",
+      "ticketNoteHint": "Optional, printed on every ticket.",
+      "ticketNotePlaceholder": "Illyria reservation",
+      "holderName": "Full name",
+      "holderNameHint": "Optional, printed as the holder.",
+      "ticketLocale": "Ticket language",
+      "submit": "Create reservation",
+      "submitting": "Reserving…",
+      "existing": "Reservations for this session ({count})",
+      "none": "No reservations yet.",
+      "anonymous": "No note",
+      "ticketCount": "{count, plural, one {# ticket} other {# tickets}}",
+      "download": "Tickets (PDF)",
+      "errors": {
+        "empty": "Enter at least one seat.",
+        "notFound": "Session or tariff not found.",
+        "sessionPast": "This session is over: no more reservations.",
+        "soldOut": "Not enough seats left on one of the tariffs. Reload the page to see availability.",
+        "seatsUnavailable": "Not enough free seats in the requested category.",
+        "retry": "Seats were just taken at the same time. Try again.",
+        "invalid": "Incomplete form, reload the page.",
+        "quantity": "Invalid number of seats."
       }
     }
   }

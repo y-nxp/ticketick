@@ -607,12 +607,20 @@
         "amount": "L’importo non corrisponde.",
         "notRefundable": "Questo ordine non può essere rimborsato qui.",
         "paypalMissing": "Account PayPal dell'organizzatore mancante o disattivato.",
-        "refundFailed": "PayPal ha rifiutato il rimborso. Verificate il vostro account PayPal."
+        "refundFailed": "PayPal ha rifiutato il rimborso. Verificate il vostro account PayPal.",
+        "notCancellable": "Questa prenotazione è già annullata."
       },
       "refundPaypal": "Rimborsa tramite PayPal",
       "refundPending": "Rimborso…",
       "refundConfirm": "Rimborsare integralmente questo ordine? I biglietti saranno annullati e i posti rimessi in vendita.",
-      "refundDone": "Ordine rimborsato."
+      "refundDone": "Ordine rimborsato.",
+      "noName": "Senza nome",
+      "ticketNote": "Dicitura sui biglietti",
+      "cancelReservation": "Annulla la prenotazione",
+      "cancelReservationPending": "Annullamento…",
+      "cancelReservationConfirm": "Annullare questa prenotazione? I posti tornano in vendita e i biglietti saranno rifiutati al controllo.",
+      "reservationCancelled": "Prenotazione annullata, posti di nuovo in vendita.",
+      "reserved": "Prenotata"
     },
     "resellers": {
       "title": "Punti vendita",
@@ -681,7 +689,8 @@
       "IBAN": "Bonifico",
       "CASH": "Contanti",
       "PAYPAL": "PayPal",
-      "FREE": "Gratuito"
+      "FREE": "Gratuito",
+      "RESERVATION": "Prenotazione senza pagamento"
     },
     "channel": {
       "ONLINE": "Online",
@@ -898,7 +907,8 @@
       "seatPlan": "Pianta della sala",
       "seatPlanNone": "Nessuna (posti liberi)",
       "seatPlanHint": "Posti numerati: la pianta deve appartenere al luogo scelto. Capienza vuota = numero di posti della pianta. Non modificabile dopo la prima vendita.",
-      "seatPlanOption": "{name} — {venue} ({seats} posti)"
+      "seatPlanOption": "{name} — {venue} ({seats} posti)",
+      "reserve": "Prenota"
     },
     "options": {
       "title": "Opzioni d’ordine",
@@ -1224,6 +1234,41 @@
           "iban": "IBAN non valido: lo verifichi.",
           "beneficiary": "Indichi il titolare del conto."
         }
+      }
+    },
+    "reservation": {
+      "back": "← Torna allo spettacolo",
+      "title": "Prenotazione senza pagamento",
+      "intro": "Per un gruppo o un partner: indica il numero di posti per tariffa. I biglietti sono subito validi; scaricali poi per consegnarli. Su ticketick non viene incassato nulla.",
+      "introSeated": "Per un gruppo o un partner: indica il numero di posti per tariffa. I posti sono assegnati automaticamente nella categoria, vicini quando possibile; i posti bloccati non vengono mai presi. I biglietti sono subito validi e su ticketick non viene incassato nulla.",
+      "noTariffs": "Nessuna tariffa per questa data: aggiungine una prima di prenotare.",
+      "tariff": "Tariffa",
+      "price": "Prezzo",
+      "available": "Disponibili",
+      "quantity": "Posti",
+      "quantityFor": "Numero di posti, {name}",
+      "ticketNote": "Dicitura sul biglietto",
+      "ticketNoteHint": "Facoltativa, stampata su ogni biglietto.",
+      "ticketNotePlaceholder": "Prenotazione Illyria",
+      "holderName": "Nome e cognome",
+      "holderNameHint": "Facoltativo, stampato come intestatario.",
+      "ticketLocale": "Lingua dei biglietti",
+      "submit": "Crea la prenotazione",
+      "submitting": "Prenotazione…",
+      "existing": "Prenotazioni di questa data ({count})",
+      "none": "Ancora nessuna prenotazione.",
+      "anonymous": "Senza dicitura",
+      "ticketCount": "{count, plural, one {# biglietto} other {# biglietti}}",
+      "download": "Biglietti (PDF)",
+      "errors": {
+        "empty": "Indica almeno un posto.",
+        "notFound": "Data o tariffa non trovata.",
+        "sessionPast": "Questa data è passata: non è più possibile prenotare.",
+        "soldOut": "Posti insufficienti su una delle tariffe. Ricarica la pagina per vedere la disponibilità.",
+        "seatsUnavailable": "Posti liberi insufficienti nella categoria richiesta.",
+        "retry": "Alcuni posti sono appena stati presi. Riprova.",
+        "invalid": "Modulo incompleto, ricarica la pagina.",
+        "quantity": "Numero di posti non valido."
       }
     }
   }

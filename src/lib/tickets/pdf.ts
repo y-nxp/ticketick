@@ -142,6 +142,20 @@ export async function buildTicketsPdf(
       color: INK,
     });
 
+    if (ticket.note) {
+      const noteLines = wrapLines(pdfSafe(ticket.note), bold, 12, contentW - 24);
+      const boxH = 12 + noteLines.length * 15;
+      y -= 14 + boxH;
+      page.drawRectangle({ x: margin, y, width: contentW, height: boxH, color: WASH });
+      page.drawRectangle({ x: margin, y, width: 3, height: boxH, color: VIOLET });
+      let ny = y + boxH - 6 - 11;
+      for (const line of noteLines) {
+        page.drawText(line, { x: margin + 14, y: ny, size: 12, font: bold, color: INK });
+        ny -= 15;
+      }
+      y += 4;
+    }
+
     y -= 22;
     page.drawLine({
       start: { x: margin, y },
@@ -182,15 +196,17 @@ export async function buildTicketsPdf(
       });
     }
 
-    const pairs: [string, string][] = [
-      [copy.start, ticket.startTime],
-      ...(ticket.doorsTime ? [[copy.doors, ticket.doorsTime] as [string, string]] : []),
-      [copy.price, ticket.priceLabel],
-      [copy.tariff, ticket.ticketName],
-      [copy.holder, ticket.holderName],
-      [copy.place, ticket.seating],
-      [copy.order, ticket.reference],
-    ];
+    const pairs = (
+      [
+        [copy.start, ticket.startTime],
+        ...(ticket.doorsTime ? [[copy.doors, ticket.doorsTime] as [string, string]] : []),
+        [copy.price, ticket.priceLabel],
+        [copy.tariff, ticket.ticketName],
+        [copy.holder, ticket.holderName],
+        [copy.place, ticket.seating],
+        [copy.order, ticket.reference],
+      ] as [string, string][]
+    ).filter(([, value]) => value.trim());
 
     const colGap = 16;
     const colW = (factsW - colGap) / 2;

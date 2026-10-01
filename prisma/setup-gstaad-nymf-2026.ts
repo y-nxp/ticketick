@@ -37,17 +37,63 @@ type Lang = (typeof LANGS)[number];
 
 type VenueKey = "ROUGEMONT" | "STJOSEPH" | "LANDHAUS" | "YACHTCLUB";
 
-const VENUES: Record<
-  VenueKey,
-  { name: string; city: string; zip: string; canton: string; capacity: number }
-> = {
-  ROUGEMONT: { name: "Église de Rougemont", city: "Rougemont", zip: "1659", canton: "VD", capacity: 276 },
-  STJOSEPH: { name: "Kirche St. Josef", city: "Gstaad", zip: "3780", canton: "BE", capacity: 200 },
-  LANDHAUS: { name: "Hôtel Landhaus", city: "Saanen", zip: "3792", canton: "BE", capacity: 300 },
+type VenueDef = {
+  name: string;
+  city: string;
+  zip: string;
+  canton: string;
+  capacity: number;
+  address?: string;
+  lat?: number;
+  lng?: number;
+  /** Noms portés par les versions précédentes du catalogue. */
+  formerNames?: string[];
+};
+
+/** Adresses définitives fournies par le festival ; coordonnées OpenStreetMap. */
+const VENUES: Record<VenueKey, VenueDef> = {
+  ROUGEMONT: {
+    name: "Église de Rougemont (Église Saint-Nicolas)",
+    city: "Rougemont",
+    zip: "1659",
+    canton: "VD",
+    capacity: 276,
+    address: "Route de Flendruz 1",
+    lat: 46.4875854,
+    lng: 7.2062456,
+    formerNames: ["Église de Rougemont"],
+  },
+  STJOSEPH: {
+    name: "Kirche St. Josef",
+    city: "Gstaad",
+    zip: "3780",
+    canton: "BE",
+    capacity: 200,
+    address: "Rialtostrasse 12",
+    lat: 46.4748649,
+    lng: 7.2863011,
+    formerNames: ["Kirche St. Joseph"],
+  },
+  LANDHAUS: {
+    name: "Hôtel Landhaus Saanen",
+    city: "Saanen",
+    zip: "3792",
+    canton: "BE",
+    capacity: 300,
+    address: "Dorfstrasse 74",
+    lat: 46.4898071,
+    lng: 7.2605411,
+    formerNames: ["Hôtel Landhaus"],
+  },
   YACHTCLUB: { name: "Gstaad Yacht Club", city: "Gstaad", zip: "3780", canton: "BE", capacity: 0 },
 };
 /** Nom de la première version du catalogue, corrigé d'après le calendrier officiel. */
 const LEGACY_STJOSEPH = "Kirche St. Joseph";
+
+/** « Lieu, ville » dans les textes, sans répéter la ville déjà dans le nom. */
+function placeLine(name: string, city: string): string {
+  return name.includes(city) ? name : `${name}, ${city}`;
+}
 
 /** Libellés de séance de la première version, remplacés par le genre. */
 const SERIES = {
@@ -292,7 +338,7 @@ function programmeDescription(p: Programme, venue: VenueKey): Tr {
       .map((c) => (c.role ? `${c.name}, ${ROLES[c.role][lang]}` : c.name))
       .join("\n");
     const notes = (p.notes ?? []).map((n) => NOTES[n][lang]).join("\n");
-    out[lang] = [head, cast, notes, FOOTER[lang](`${v.name}, ${v.city}`)]
+    out[lang] = [head, cast, notes, FOOTER[lang](placeLine(v.name, v.city))]
       .filter(Boolean)
       .join("\n\n");
   }
@@ -420,12 +466,21 @@ async function ensureAccount(organizerId: string) {
 async function findOrCreateVenue(tx: Prisma.TransactionClient, key: VenueKey) {
   const v = VENUES[key];
   const found = await tx.venue.findFirst({
-    where: { name: v.name, city: v.city },
+    where: { name: { in: [v.name, ...(v.formerNames ?? [])] }, city: v.city },
     select: { id: true },
   });
   if (found) return found.id;
   const created = await tx.venue.create({
-    data: { name: v.name, city: v.city, zip: v.zip, canton: v.canton, country: "CH" },
+    data: {
+      name: v.name,
+      city: v.city,
+      zip: v.zip,
+      canton: v.canton,
+      country: "CH",
+      address: v.address,
+      lat: v.lat,
+      lng: v.lng,
+    },
     select: { id: true },
   });
   return created.id;
@@ -631,10 +686,9 @@ async function applyProgramme(organizerId: string): Promise<string> {
     if (!event) continue;
 
     const v = VENUES[concert.venue];
-    const untouched = new Set([
-      genericDescription(v.name, v.city).fr,
-      genericDescription(LEGACY_STJOSEPH, v.city).fr,
-    ]);
+    const untouched = new Set(
+      [v.name, ...(v.formerNames ?? [])].map((name) => genericDescription(name, v.city).fr),
+    );
     const data: Prisma.EventUpdateInput = {};
     const text = event.description as Partial<Tr> | null;
     if (!text?.fr || untouched.has(text.fr)) {
@@ -667,6 +721,65 @@ async function applyProgramme(organizerId: string): Promise<string> {
     }
   }
   return `Programme : ${texts} textes, ${titles} titres, ${labels} genres, ${covers} visuels.${renamed}`;
+}
+
+/**
+ * Adresses définitives, coordonnées de la carte et noms officiels des lieux.
+ * Les textes qui citent encore l'ancien nom suivent ; un texte réécrit dans
+ * l'admin ne contient plus la ligne d'origine et reste tel quel.
+ */
+async function applyAddresses(organizerId: string): Promise<string> {
+  const renamed: [string, string][] = [];
+  let venues = 0;
+  for (const key of ["ROUGEMONT", "STJOSEPH", "LANDHAUS"] as const) {
+    const v = VENUES[key];
+    const names = [v.name, ...(v.formerNames ?? [])];
+    const rows = await prisma.venue.findMany({
+      where: { name: { in: names }, city: v.city },
+      select: { id: true, name: true },
+    });
+    for (const row of rows) {
+      await prisma.venue.update({
+        where: { id: row.id },
+        data: { name: v.name, address: v.address, zip: v.zip, lat: v.lat, lng: v.lng },
+      });
+      venues += 1;
+      if (row.name !== v.name) {
+        // Les textes générés jusqu'ici écrivaient toujours « nom, ville ».
+        renamed.push([`${row.name}, ${v.city}`, placeLine(v.name, v.city)]);
+      }
+    }
+  }
+
+  let texts = 0;
+  if (renamed.length) {
+    const events = await prisma.event.findMany({
+      where: { organizerId },
+      select: { id: true, description: true },
+    });
+    for (const event of events) {
+      const text = event.description as Partial<Tr> | null;
+      if (!text) continue;
+      let changed = false;
+      const next: Partial<Tr> = { ...text };
+      for (const lang of LANGS) {
+        let value = next[lang];
+        if (!value) continue;
+        for (const [from, to] of renamed) {
+          if (value.includes(`. ${from}.`)) {
+            value = value.replace(`. ${from}.`, `. ${to}.`);
+            changed = true;
+          }
+        }
+        next[lang] = value;
+      }
+      if (changed) {
+        await prisma.event.update({ where: { id: event.id }, data: { description: next } });
+        texts += 1;
+      }
+    }
+  }
+  return `Adresses : ${venues} lieu(x) à jour, ${texts} texte(s) suivent le nouveau nom.`;
 }
 
 /** Les deux conférences : entrée sur inscription, coordonnées à saisir dans l'admin. */
@@ -722,6 +835,7 @@ async function main() {
   await once("gnymf-2026/identite", () => applyIdentity(id));
   await once("gnymf-2026/programme", () => applyProgramme(id));
   await once("gnymf-2026/conferences", () => createTalks(id));
+  await once("gnymf-2026/adresses", () => applyAddresses(id));
   const seats = await syncRougemont();
   console.log(
     `✅ ${ORG_NAME} : plan Rougemont à jour, ${seats.sessions} séances numérotées, ${seats.created} sièges ajoutés.`,

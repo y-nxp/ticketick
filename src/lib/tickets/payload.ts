@@ -40,6 +40,8 @@ export interface TicketCard {
   /** Faux tant que la commande n'est pas payée, ou si le billet est annulé. */
   valid: boolean;
   optionBlocks?: TicketOptionBlock[];
+  /** Mention de la réservation (« Réservation Illyria »). */
+  note?: string;
 }
 
 export function venueLines(venue?: VenueBits | null): string[] {
@@ -144,6 +146,7 @@ export function toTicketCard(input: {
   ticketDisclaimer?: unknown;
   valid?: boolean;
   optionBlocks?: TicketOptionBlock[];
+  note?: string | null;
 }): TicketCard {
   const fallback = ticketResponsible(input.organizerSlug);
   const fromRow = readTitle(input.ticketDisclaimer, input.locale);
@@ -176,6 +179,7 @@ export function toTicketCard(input: {
     seating: input.seatLabel?.trim() || seatingLabel(input.locale),
     valid: input.valid !== false,
     optionBlocks: input.optionBlocks?.length ? input.optionBlocks : undefined,
+    note: input.note?.trim() || undefined,
   };
 }
 

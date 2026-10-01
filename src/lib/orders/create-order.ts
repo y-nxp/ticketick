@@ -257,11 +257,9 @@ export async function createOrder(
       }[];
     }
   >();
-  const siegesParSeance = new Map<string, number>();
   for (const [ticketTypeId, { quantity }] of merged) {
     const tt = byId.get(ticketTypeId)!;
     const sid = tt.session.id;
-    siegesParSeance.set(sid, (siegesParSeance.get(sid) ?? 0) + quantity);
     const groupe = parSeance.get(sid) ?? { payants: 0, accompagnants: [] };
     if (tt.maxPerPaidTicket != null) {
       groupe.accompagnants.push({
@@ -382,42 +380,18 @@ export async function createOrder(
 
   try {
     const order = await prisma.$transaction(async (tx) => {
-      for (const line of lines) {
-        // Réservation en une seule instruction : la condition et l'incrément
-        // sont évalués par la base, ce qui interdit à deux commandes
-        // concurrentes de dépasser le stock. Une lecture suivie d'une
-        // écriture laisserait au contraire passer les deux.
-        const reserved = await tx.$executeRaw`
-          UPDATE "TicketType"
-          SET sold = sold + ${line.quantity}
-          WHERE id = ${line.ticketTypeId}
-            AND sold + ${line.quantity} <= quantity
-        `;
-        if (reserved !== 1) {
-          throw new SoldOutError(line.ticketTypeId);
-        }
-      }
-
-      for (const [sessionId, n] of siegesParSeance) {
-        const tt = ticketTypes.find((x) => x.session.id === sessionId);
-        if (!tt) continue;
-        if (tt.session.capacity == null) {
-          await tx.eventSession.update({
-            where: { id: sessionId },
-            data: { sold: { increment: n } },
-          });
-          continue;
-        }
-        const jauge = await tx.$executeRaw`
-          UPDATE "EventSession"
-          SET sold = sold + ${n}
-          WHERE id = ${sessionId}
-            AND sold + ${n} <= capacity
-        `;
-        if (jauge !== 1) {
-          throw new SoldOutError(tt.id);
-        }
-      }
+      await takeStock(
+        tx,
+        lines.map((line) => {
+          const tt = byId.get(line.ticketTypeId)!;
+          return {
+            ticketTypeId: line.ticketTypeId,
+            quantity: line.quantity,
+            sessionId: tt.session.id,
+            capacity: tt.session.capacity,
+          };
+        }),
+      );
 
       const order = await tx.order.create({
         data: {
@@ -550,6 +524,62 @@ export async function createOrder(
 }
 
 /**
+ * Prend les places sur les tarifs et sur la jauge des séances, ou lève
+ * `SoldOutError` : la transaction appelante annule alors tout.
+ */
+export async function takeStock(
+  tx: Prisma.TransactionClient,
+  lines: {
+    ticketTypeId: string;
+    quantity: number;
+    sessionId: string;
+    capacity: number | null;
+  }[],
+): Promise<void> {
+  const seances = new Map<string, { n: number; capacity: number | null; ticketTypeId: string }>();
+  for (const line of lines) {
+    // Réservation en une seule instruction : la condition et l'incrément
+    // sont évalués par la base, ce qui interdit à deux commandes
+    // concurrentes de dépasser le stock. Une lecture suivie d'une
+    // écriture laisserait au contraire passer les deux.
+    const reserved = await tx.$executeRaw`
+      UPDATE "TicketType"
+      SET sold = sold + ${line.quantity}
+      WHERE id = ${line.ticketTypeId}
+        AND sold + ${line.quantity} <= quantity
+    `;
+    if (reserved !== 1) {
+      throw new SoldOutError(line.ticketTypeId);
+    }
+    const prev = seances.get(line.sessionId);
+    seances.set(line.sessionId, {
+      n: (prev?.n ?? 0) + line.quantity,
+      capacity: line.capacity,
+      ticketTypeId: prev?.ticketTypeId ?? line.ticketTypeId,
+    });
+  }
+
+  for (const [sessionId, { n, capacity, ticketTypeId }] of seances) {
+    if (capacity == null) {
+      await tx.eventSession.update({
+        where: { id: sessionId },
+        data: { sold: { increment: n } },
+      });
+      continue;
+    }
+    const jauge = await tx.$executeRaw`
+      UPDATE "EventSession"
+      SET sold = sold + ${n}
+      WHERE id = ${sessionId}
+        AND sold + ${n} <= capacity
+    `;
+    if (jauge !== 1) {
+      throw new SoldOutError(ticketTypeId);
+    }
+  }
+}
+
+/**
  * Moyen retenu compatible avec le panier. Une commande à 0 fr. se valide
  * sans encaissement, quel que soit le moyen choisi ; « gratuit » n'est en
  * revanche jamais accepté pour un montant dû.
@@ -678,6 +708,23 @@ export async function recordOrderRefund(orderId: string): Promise<boolean> {
       where: { orderId },
       data: { status: "REFUNDED" },
     });
+    await returnOrderStock(tx, orderId);
+    return true;
+  });
+}
+
+/**
+ * Annule une réservation saisie dans l'admin : ses places reviennent en vente
+ * et ses billets ne passent plus le contrôle. Sans effet si elle est déjà
+ * annulée.
+ */
+export async function cancelReservation(orderId: string): Promise<boolean> {
+  return prisma.$transaction(async (tx) => {
+    const claimed = await tx.order.updateMany({
+      where: { id: orderId, paymentMethod: "RESERVATION", status: "PAID" },
+      data: { status: "CANCELLED" },
+    });
+    if (claimed.count === 0) return false;
     await returnOrderStock(tx, orderId);
     return true;
   });
@@ -962,7 +1009,7 @@ export async function fulfillCheckoutHold(
   };
 }
 
-class SoldOutError extends Error {
+export class SoldOutError extends Error {
   constructor(readonly ticketTypeId: string) {
     super(`Stock insuffisant pour ${ticketTypeId}`);
   }
@@ -984,7 +1031,7 @@ class SeatTakenError extends Error {
  * Le tirage porte sur 40 bits : une suite de six chiffres décimaux, comme
  * auparavant, entrait en collision dès le millier de commandes.
  */
-function generateReference(): string {
+export function generateReference(): string {
   const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // sans I, L, O, 0, 1
   const bytes = randomBytes(8);
   let out = "";

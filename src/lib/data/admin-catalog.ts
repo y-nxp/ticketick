@@ -218,6 +218,70 @@ export async function getSessionSeats(eventId: string, sessionId: string) {
   return { session, layout, seats };
 }
 
+/** Séance, tarifs et réservations déjà saisies, pour réserver sans paiement. */
+export async function getSessionForReservation(eventId: string, sessionId: string) {
+  const { organizerId } = await catalogActor();
+  await forbidIfForeignEvent(eventId, organizerId);
+
+  const session = await prisma.eventSession.findFirst({
+    where: { id: sessionId, eventId },
+    select: {
+      id: true,
+      startsAt: true,
+      label: true,
+      capacity: true,
+      sold: true,
+      seatPlanId: true,
+      seatPlan: { select: { layout: true } },
+      venue: { select: { name: true, city: true } },
+      event: { select: { id: true, title: true } },
+      ticketTypes: {
+        orderBy: { priceCents: "desc" },
+        select: {
+          id: true,
+          name: true,
+          priceCents: true,
+          quantity: true,
+          sold: true,
+          seatZones: true,
+        },
+      },
+    },
+  });
+  if (!session) return null;
+
+  const layout = readLayout(session.seatPlan?.layout);
+  let freeByZone: Record<string, number> | null = null;
+  if (layout) {
+    await syncSessionSeats(session.id);
+    const rows = await prisma.sessionSeat.groupBy({
+      by: ["zone"],
+      where: { sessionId: session.id, status: "AVAILABLE" },
+      _count: { _all: true },
+    });
+    freeByZone = Object.fromEntries(rows.map((r) => [r.zone, r._count._all]));
+  }
+
+  const reservations = await prisma.order.findMany({
+    where: {
+      paymentMethod: "RESERVATION",
+      items: { some: { ticketType: { sessionId: session.id } } },
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      reference: true,
+      status: true,
+      lastName: true,
+      ticketNote: true,
+      createdAt: true,
+      _count: { select: { tickets: true } },
+    },
+  });
+
+  return { session, layout, freeByZone, reservations };
+}
+
 /**
  * Rabais automatiques (sans code), ceux que la commande sait appliquer :
  * N séances payantes distinctes chez un organisateur, éventuellement dans un

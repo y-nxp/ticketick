@@ -39,6 +39,8 @@ export default async function AdminOrderDetailPage({
     order.status === "PAID" &&
     order.payment?.provider === "paypal" &&
     order.payment.status === "COMPLETED";
+  const canCancelReservation =
+    order.status === "PAID" && order.paymentMethod === "RESERVATION";
 
   return (
     <div>
@@ -72,7 +74,9 @@ export default async function AdminOrderDetailPage({
           </Badge>
         ) : (
           <Badge variant={order.status === "PAID" ? "default" : "secondary"}>
-            {t(`orderStatus.${order.status}`)}
+            {canCancelReservation
+              ? t("orders.reserved")
+              : t(`orderStatus.${order.status}`)}
           </Badge>
         )}
       </div>
@@ -88,9 +92,12 @@ export default async function AdminOrderDetailPage({
             ) : (
               <>
                 <p>
-                  {order.firstName} {order.lastName}
+                  {`${order.firstName} ${order.lastName}`.trim() ||
+                    t("orders.noName")}
                 </p>
-                <p className="text-muted-foreground">{order.email}</p>
+                {order.email ? (
+                  <p className="text-muted-foreground">{order.email}</p>
+                ) : null}
                 {order.phone ? (
                   <p className="text-muted-foreground">{order.phone}</p>
                 ) : null}
@@ -98,6 +105,14 @@ export default async function AdminOrderDetailPage({
             )}
           </dd>
         </div>
+        {order.ticketNote ? (
+          <div>
+            <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {t("orders.ticketNote")}
+            </dt>
+            <dd className="mt-1 text-sm font-medium">{order.ticketNote}</dd>
+          </div>
+        ) : null}
         <div>
           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t("orders.date")}
@@ -259,6 +274,8 @@ export default async function AdminOrderDetailPage({
           canMarkCash={canMarkCash}
           canDownload={canDownload}
           canRefundPaypal={canRefundPaypal}
+          canCancelReservation={canCancelReservation}
+          paid={order.status === "PAID"}
         />
       )}
     </div>

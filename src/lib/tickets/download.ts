@@ -114,6 +114,7 @@ export async function ticketsForPdf(
       lastName: true,
       locale: true,
       reference: true,
+      ticketNote: true,
       options: { select: orderOptionSelect },
       tickets: {
         orderBy: { createdAt: "asc" },
@@ -135,6 +136,7 @@ export async function ticketsForPdf(
       order.locale,
       order.status,
       order.options,
+      order.ticketNote,
     ),
   };
 }
@@ -221,6 +223,7 @@ function mapTickets(
   locale: string,
   orderStatus?: string,
   orderOptions: Parameters<typeof optionBlocksForTicket>[0] = [],
+  note?: string | null,
 ) {
   return tickets.map((ticket) => {
     const session = ticket.ticketType.session;
@@ -253,6 +256,7 @@ function mapTickets(
         session.startsAt,
         locale,
       ),
+      note,
     });
   });
 }
