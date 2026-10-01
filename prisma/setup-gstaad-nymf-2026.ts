@@ -789,70 +789,75 @@ async function applyAddresses(organizerId: string): Promise<string> {
 }
 
 /**
- * Portraits publiés sur gstaadnewyearmusicfestival.ch (vignettes rondes),
- * posés sur le visuel du festival dans `public/covers/gstaad/`. `null` : photo D.R.
+ * Visuels officiels du festival (module agenda de gstaadnewyearmusicfestival.ch),
+ * crédit photo imprimé dans l'image, agrandis dans `public/covers/gstaad/`.
+ * Clé : date et artiste du concert, ou nom de la conférence.
  */
-const PORTRAITS: Record<string, { cover: string; credits: (string | null)[] }> = {
-  "2026-12-26 Grigoryan / Antonyan": { cover: "grigoryan", credits: ["Evija Trifanova"] },
-  "2026-12-27 Fuchs / Cemin": { cover: "fuchs", credits: ["Edouard Brane"] },
-  "2026-12-28 Edris / Pati / Pordoy": { cover: "edris-pati", credits: ["Capucine de Chocqueuse"] },
-  "2027-01-02 Oropesa / Tézier / Praticò": { cover: "oropesa-tezier", credits: ["Jason Homa", null] },
-  "2027-01-03 Bernheim / Matheson": { cover: "bernheim", credits: ["Julia Wesely"] },
-  "2027-01-03 Mkhitaryan / Zhilikhovsky": { cover: "mkhitaryan-zhilikhovsky", credits: ["Diana Guledani", "Timur Artamonov"] },
-  "2027-01-07 Earl Rose": { cover: "earl-rose", credits: [null] },
-  "2027-01-09 Martina Meola": { cover: "meola", credits: [null] },
+const VISUALS: Record<string, string> = {
+  "2026-12-26 Grigoryan / Antonyan": "2026-12-26-grigoryan",
+  "2026-12-27 Ensemble Mare Nostrum": "2026-12-27-mare-nostrum",
+  "2026-12-27 Fuchs / Cemin": "2026-12-27-fuchs",
+  "2026-12-28 Berry / Pérot / Goimard": "2026-12-28-berry-perot",
+  "2026-12-28 Edris / Pati / Pordoy": "2026-12-28-edris-pati",
+  "2026-12-29 Angioloni / Masson": "2026-12-29-angioloni",
+  "2026-12-29 Grigolo": "2026-12-29-grigolo",
+  "2026-12-30 Nelson Monfort": "2026-12-30-monfort",
+  "2026-12-30 Spyres / Pordoy": "2026-12-30-spyres",
+  "2027-01-01 Sirolli / Pikulski": "2027-01-01-sirolli",
+  "2027-01-02 Michèle Larivière": "2027-01-02-lariviere",
+  "2027-01-02 Oropesa / Tézier / Praticò": "2027-01-02-oropesa-tezier",
+  "2027-01-03 Bernheim / Matheson": "2027-01-03-bernheim",
+  "2027-01-03 Mkhitaryan / Zhilikhovsky": "2027-01-03-mkhitaryan",
+  "2027-01-04 Ryan-Dugelay": "2027-01-04-ryan-dugelay",
+  "2027-01-04 Pagano": "2027-01-04-pagano",
+  "2027-01-05 Arderíus": "2027-01-05-arderius",
+  "2027-01-05 Amadi / Belkin": "2027-01-05-amadi-belkin",
+  "2027-01-06 Chenaux": "2027-01-06-chenaux",
+  "2027-01-06 Schmitt / Reyes": "2027-01-06-schmitt-reyes",
+  "2027-01-07 Earl Rose": "2027-01-07-earl-rose",
+  "2027-01-08 Trio Nebelmeer": "2027-01-08-nebelmeer",
+  "2027-01-08 Jany McPherson Trio": "2027-01-08-mcpherson",
+  "2027-01-09 Martina Meola": "2027-01-09-meola",
+  "2027-01-10 Alexandros Kapelis": "2027-01-10-kapelis",
 };
 
-const PHOTO_WORD: Record<Lang, [string, string, string]> = {
-  fr: ["Photo : ", "Photos : ", "D.R."],
-  en: ["Photo: ", "Photos: ", "courtesy of the artist"],
-  de: ["Foto: ", "Fotos: ", "zVg"],
-  it: ["Foto: ", "Foto: ", "per gentile concessione"],
-  es: ["Foto: ", "Fotos: ", "cortesía del artista"],
-};
+/** Ligne de crédit ajoutée par la première reprise des portraits, désormais dans l'image. */
+const PORTRAIT_CREDIT = /\n\n(Photos?|Fotos?) ?: [^\n]*$/;
 
-function creditLine(credits: (string | null)[], lang: Lang): string {
-  const [one, many, courtesy] = PHOTO_WORD[lang];
-  const names = credits.map((c) => c ?? courtesy);
-  return (credits.length > 1 ? many : one) + names.join(", ");
-}
-
-async function applyPortraits(organizerId: string): Promise<string> {
+async function applyVisuals(organizerId: string): Promise<string> {
+  const keyed = [
+    ...CONCERTS.map((c) => ({ key: `${c.date} ${c.artist}`, slug: concertSlug(c) })),
+    ...TALKS.map((t) => ({ key: `${t.date} ${t.slugName}`, slug: concertSlug({ date: t.date, artist: t.slugName }) })),
+  ];
   let covers = 0;
-  let credits = 0;
-  for (const concert of CONCERTS) {
-    const portrait = PORTRAITS[`${concert.date} ${concert.artist}`];
-    if (!portrait) continue;
+  for (const { key, slug } of keyed) {
+    const file = VISUALS[key];
+    if (!file) continue;
     const event = await prisma.event.findFirst({
-      where: { slug: concertSlug(concert), organizerId },
+      where: { slug, organizerId },
       select: { id: true, coverImage: true, description: true },
     });
     if (!event) continue;
     const data: Prisma.EventUpdateInput = {};
     // Un visuel choisi depuis l'admin reste en place.
-    if (!event.coverImage || event.coverImage === COVER || event.coverImage === LEGACY_COVER) {
-      data.coverImage = `/covers/gstaad/${portrait.cover}.jpg`;
+    const ours =
+      !event.coverImage ||
+      event.coverImage === COVER ||
+      event.coverImage === LEGACY_COVER ||
+      event.coverImage.startsWith("/covers/gstaad/");
+    if (ours) {
+      data.coverImage = `/covers/gstaad/${file}.jpg`;
       covers += 1;
     }
     const text = event.description as Partial<Tr> | null;
-    if (text) {
+    if (text && LANGS.some((lang) => text[lang] && PORTRAIT_CREDIT.test(text[lang]!))) {
       const next: Partial<Tr> = { ...text };
-      let changed = false;
-      for (const lang of LANGS) {
-        const line = creditLine(portrait.credits, lang);
-        if (next[lang] && !next[lang]!.includes(line)) {
-          next[lang] = `${next[lang]}\n\n${line}`;
-          changed = true;
-        }
-      }
-      if (changed) {
-        data.description = next;
-        credits += 1;
-      }
+      for (const lang of LANGS) if (next[lang]) next[lang] = next[lang]!.replace(PORTRAIT_CREDIT, "");
+      data.description = next;
     }
     if (Object.keys(data).length) await prisma.event.update({ where: { id: event.id }, data });
   }
-  return `Portraits : ${covers} visuel(s), ${credits} crédit(s) photo.`;
+  return `Visuels officiels : ${covers} événement(s).`;
 }
 
 /** Les deux conférences : entrée sur inscription, coordonnées à saisir dans l'admin. */
@@ -910,7 +915,7 @@ async function main() {
   await once("gnymf-2026/conferences", () => createTalks(id));
   await once("gnymf-2026/adresses", () => applyAddresses(id));
   await once("gnymf-2026/plan-rougemont", applyRougemontLayout);
-  await once("gnymf-2026/portraits", () => applyPortraits(id));
+  await once("gnymf-2026/visuels-officiels", () => applyVisuals(id));
   const seats = await syncRougemont();
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
