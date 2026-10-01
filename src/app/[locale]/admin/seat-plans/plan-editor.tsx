@@ -3,31 +3,54 @@
 import * as React from "react";
 import { useTranslations } from "next-intl";
 import {
+  AlignCenterHorizontal,
+  AlignCenterVertical,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUp,
   CircleAlert,
   CircleCheck,
+  Copy,
   Eye,
   EyeOff,
+  FlipHorizontal2,
   Loader2,
   MousePointer2,
   Plus,
   RotateCcw,
+  RotateCw,
   Save,
   Sparkles,
+  StretchHorizontal,
   Trash2,
+  TriangleAlert,
   Undo2,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { useRouter } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
-import { readPlanWithAi, saveSeatPlan, type PlanReading } from "@/lib/admin/seat-plan-actions";
-import type { DraftSeat, PlanDraft } from "@/lib/seating/detect";
+import { Link, useRouter } from "@/i18n/navigation";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
+  readPlanWithAi,
+  saveSeatPlan,
+  updateSeatPlan,
+  type PlanReading,
+} from "@/lib/admin/seat-plan-actions";
+import { seatKey, type DraftSeat, type PlanDraft } from "@/lib/seating/detect";
+import {
+  alignSeats,
   draftIssues,
   draftToLayout,
+  duplicateSeats,
   isIncomplete,
+  mirrorSeats,
+  moveSeats,
   numberRowsAndSeats,
   numberSeats,
+  rotateGroup,
+  spaceSeats,
+  tiltSeats,
   type Orientation,
 } from "@/lib/seating/draft";
 
@@ -82,25 +105,44 @@ function colorOf(name: string): [number, number, number] | null {
 
 const DEFAULT_ZONE = /^Catégorie \d+$/;
 
+interface Moving {
+  x0: number;
+  y0: number;
+  base: PlanDraft;
+  ids: Set<string>;
+  /** Place cliquée déjà dans une sélection multiple : un clic sans glisser la sélectionne seule. */
+  narrowTo: string | null;
+  moved: boolean;
+}
+
 export function PlanEditor({
   initial,
   preview,
-  aiImage,
-  aiEnabled,
-  pendingAi,
-  venueId,
+  aiImage = "",
+  aiEnabled = false,
+  pendingAi = null,
+  venueId = "",
   name,
+  planId,
+  inUseSessions = 0,
+  lockedKeys = [],
   onRestart,
 }: {
   initial: PlanDraft;
-  preview: string;
-  aiImage: string;
-  aiEnabled: boolean;
+  /** Plan importé affiché en fond ; absent quand on rouvre un plan enregistré. */
+  preview?: string;
+  aiImage?: string;
+  aiEnabled?: boolean;
   /** Lecture lancée dès l'analyse, pour une image sans texte. */
-  pendingAi: Promise<PlanReading | null> | null;
-  venueId: string;
+  pendingAi?: Promise<PlanReading | null> | null;
+  venueId?: string;
   name: string;
-  onRestart: () => void;
+  /** Plan déjà enregistré : l'enregistrement le modifie au lieu d'en créer un. */
+  planId?: string;
+  inUseSessions?: number;
+  /** Références vendues ou retenues sur une séance : ni suppression ni renumérotation. */
+  lockedKeys?: string[];
+  onRestart?: () => void;
 }) {
   const t = useTranslations("admin.seatPlans");
   const router = useRouter();
@@ -114,20 +156,48 @@ export function PlanEditor({
   const [drag, setDrag] = React.useState<{ x0: number; y0: number; x1: number; y1: number } | null>(
     null,
   );
+  const [moving, setMoving] = React.useState<Moving | null>(null);
   const [ai, setAi] = React.useState<"idle" | "running" | "done" | "failed">(
     pendingAi ? "running" : "idle",
   );
+  const [planName, setPlanName] = React.useState(name);
   const [saving, setSaving] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
   const svgRef = React.useRef<SVGSVGElement>(null);
   const nextId = React.useRef(0);
+  const lastNudge = React.useRef(0);
 
   const issues = React.useMemo(() => draftIssues(draft), [draft]);
+  const locked = React.useMemo(() => new Set(lockedKeys), [lockedKeys]);
+  const lostLocked = React.useMemo(() => {
+    const present = new Set(draft.seats.filter((seat) => !isIncomplete(seat)).map(seatKey));
+    return lockedKeys.filter((key) => !present.has(key)).length;
+  }, [draft, lockedKeys]);
   const s = draft.seatSize;
 
   function commit(next: PlanDraft) {
     setHistory((h) => [...h.slice(-40), draft]);
     setDraft(next);
+  }
+
+  function updatePositions(fn: (seats: DraftSeat[], ids: Set<string>) => DraftSeat[]) {
+    if (selected.size === 0) return;
+    commit({ ...draft, seats: fn(draft.seats, selected) });
+  }
+
+  /** Flèches du clavier : une rafale de pressions ne compte que pour une annulation. */
+  function nudge(dx: number, dy: number) {
+    if (selected.size === 0) return;
+    if (Date.now() - lastNudge.current > 800) setHistory((h) => [...h.slice(-40), draft]);
+    lastNudge.current = Date.now();
+    setDraft({ ...draft, seats: moveSeats(draft.seats, selected, dx, dy) });
+  }
+
+  function duplicateSelected() {
+    if (selected.size === 0) return;
+    const { seats, copies } = duplicateSeats(draft.seats, selected, s, () => `n${nextId.current++}`);
+    commit({ ...draft, seats });
+    setSelected(copies);
   }
 
   function undo() {
@@ -218,7 +288,28 @@ export function PlanEditor({
         e.preventDefault();
         removeSelected();
       }
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+      const arrows: Record<string, [number, number]> = {
+        ArrowLeft: [-1, 0],
+        ArrowRight: [1, 0],
+        ArrowUp: [0, -1],
+        ArrowDown: [0, 1],
+      };
+      const dir = arrows[e.key];
+      if (dir && selected.size > 0) {
+        e.preventDefault();
+        const step = e.shiftKey ? s : s / 4;
+        nudge(dir[0] * step, dir[1] * step);
+      }
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        setSelected(new Set(draft.seats.map((seat) => seat.id)));
+      }
+      if (mod && e.key.toLowerCase() === "d" && selected.size > 0) {
+        e.preventDefault();
+        duplicateSelected();
+      }
+      if (mod && e.key.toLowerCase() === "z") {
         e.preventDefault();
         undo();
       }
@@ -258,12 +349,27 @@ export function PlanEditor({
   }
 
   function onMove(e: React.PointerEvent<SVGSVGElement>) {
+    if (moving) {
+      const p = toSvg(e);
+      const dx = p.x - moving.x0;
+      const dy = p.y - moving.y0;
+      if (!moving.moved && Math.hypot(dx, dy) < s * 0.15) return;
+      if (!moving.moved) setMoving({ ...moving, moved: true });
+      setDraft({ ...moving.base, seats: moveSeats(moving.base.seats, moving.ids, dx, dy) });
+      return;
+    }
     if (!drag) return;
     const p = toSvg(e);
     setDrag({ ...drag, x1: p.x, y1: p.y });
   }
 
   function onUp(e: React.PointerEvent<SVGSVGElement>) {
+    if (moving) {
+      if (moving.moved) setHistory((h) => [...h.slice(-40), moving.base]);
+      else if (moving.narrowTo) setSelected(new Set([moving.narrowTo]));
+      setMoving(null);
+      return;
+    }
     if (!drag) return;
     const minX = Math.min(drag.x0, drag.x1);
     const maxX = Math.max(drag.x0, drag.x1);
@@ -280,14 +386,27 @@ export function PlanEditor({
 
   function onSeatDown(e: React.PointerEvent, id: string) {
     e.stopPropagation();
-    setSelected((prev) => {
-      if (e.shiftKey || e.metaKey || e.ctrlKey) {
+    if (e.shiftKey || e.metaKey || e.ctrlKey) {
+      setSelected((prev) => {
         const next = new Set(prev);
         if (next.has(id)) next.delete(id);
         else next.add(id);
         return next;
-      }
-      return new Set([id]);
+      });
+      return;
+    }
+    // Glisser une place emmène toute la sélection dont elle fait partie.
+    const ids = selected.has(id) ? selected : new Set([id]);
+    setSelected(ids);
+    svgRef.current?.setPointerCapture(e.pointerId);
+    const p = toSvg(e);
+    setMoving({
+      x0: p.x,
+      y0: p.y,
+      base: draft,
+      ids,
+      narrowTo: selected.has(id) && selected.size > 1 ? id : null,
+      moved: false,
     });
   }
 
@@ -295,13 +414,21 @@ export function PlanEditor({
     setSaving(true);
     setSaveError(null);
     const data = new FormData();
-    data.set("venueId", venueId);
-    data.set("name", name);
-    data.set("layout", JSON.stringify(draftToLayout(draft)));
-    const result = await saveSeatPlan(undefined, data);
+    data.set("name", planName.trim());
+    data.set("layout", JSON.stringify(draftToLayout(draft, { keepUnused: Boolean(planId) })));
+    let result;
+    if (planId) {
+      data.set("id", planId);
+      result = await updateSeatPlan(undefined, data);
+    } else {
+      data.set("venueId", venueId);
+      result = await saveSeatPlan(undefined, data);
+    }
     setSaving(false);
-    if (result?.ok && result.id) router.push(`/admin/seat-plans/${result.id}`);
-    else setSaveError(result && !result.ok ? result.error : "unavailable");
+    if (result?.ok && result.id) {
+      router.push(`/admin/seat-plans/${result.id}`);
+      router.refresh();
+    } else setSaveError(result && !result.ok ? result.error : "unavailable");
   }
 
   const zoneColor = new Map(draft.zones.map((z) => [z.key, z.color]));
@@ -311,6 +438,16 @@ export function PlanEditor({
   const selection = draft.seats.filter((seat) => selected.has(seat.id));
 
   return (
+    <div className="space-y-4">
+      {inUseSessions > 0 ? (
+        <div className="flex gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+          <div className="space-y-1">
+            <p className="font-semibold">{t("inUseWarning", { count: inUseSessions })}</p>
+            <p>{t("inUseWarningHint", { count: lockedKeys.length })}</p>
+          </div>
+        </div>
+      ) : null}
     <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
       <div className="min-w-0 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -353,16 +490,18 @@ export function PlanEditor({
               <Undo2 className="size-4" />
               {t("undo")}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => setShowPlan((v) => !v)}
-              aria-label={t(showPlan ? "hidePlan" : "showPlan")}
-              title={t(showPlan ? "hidePlan" : "showPlan")}
-            >
-              {showPlan ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-            </Button>
+            {preview ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setShowPlan((v) => !v)}
+                aria-label={t(showPlan ? "hidePlan" : "showPlan")}
+                title={t(showPlan ? "hidePlan" : "showPlan")}
+              >
+                {showPlan ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant="outline"
@@ -385,7 +524,10 @@ export function PlanEditor({
             </Button>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">{t(mode === "add" ? "hintAdd" : "hintSelect")}</p>
+        <p className="text-xs text-muted-foreground">
+          {t(mode === "add" ? "hintAdd" : "hintSelect")} {mode === "select" ? t("hintMove") : null}{" "}
+          {lockedKeys.length > 0 ? t("hintLocked") : null}
+        </p>
 
         <div className="max-h-[80vh] overflow-auto rounded-xl border border-border bg-white">
           <svg
@@ -397,10 +539,45 @@ export function PlanEditor({
             onPointerMove={onMove}
             onPointerUp={onUp}
           >
-            <image href={preview} x={0} y={0} width={draft.width} height={draft.height} opacity={showPlan ? 0.45 : 0} />
+            {preview ? (
+              <image href={preview} x={0} y={0} width={draft.width} height={draft.height} opacity={showPlan ? 0.45 : 0} />
+            ) : (
+              <g className="pointer-events-none">
+                {(draft.areas ?? []).map((a, i) => (
+                  <g key={`area-${i}`}>
+                    <rect x={a.x} y={a.y} width={a.w} height={a.h} rx={10} fill="#F1F2F4" stroke="#D9DBE0" />
+                    {a.label ? (
+                      <text
+                        x={a.x + a.w / 2}
+                        y={a.y + a.h / 2}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        className="fill-[#6B6E76] text-[16px] font-semibold uppercase"
+                      >
+                        {a.label.fr}
+                      </text>
+                    ) : null}
+                  </g>
+                ))}
+                {draft.marks.map((m, i) => (
+                  <text
+                    key={`mark-${i}`}
+                    x={m.x}
+                    y={m.y}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    style={{ fontSize: m.size * 0.8 }}
+                    className="fill-[#6B6E76] font-semibold uppercase"
+                  >
+                    {m.text}
+                  </text>
+                ))}
+              </g>
+            )}
             {draft.seats.map((seat) => {
               const isSelected = selected.has(seat.id);
               const broken = isIncomplete(seat) || issues.duplicates.has(seat.id);
+              const sold = locked.has(seat.id);
               return (
                 <g
                   key={seat.id}
@@ -437,6 +614,17 @@ export function PlanEditor({
                   >
                     {seat.number ?? "?"}
                   </text>
+                  {sold ? (
+                    <circle
+                      cx={s * 0.42}
+                      cy={-s * 0.42}
+                      r={s * 0.2}
+                      fill="#2A2C30"
+                      stroke="#FFFFFF"
+                      strokeWidth={s * 0.05}
+                      className="pointer-events-none"
+                    />
+                  ) : null}
                 </g>
               );
             })}
@@ -514,6 +702,18 @@ export function PlanEditor({
         </section>
 
         <section className={panelClass}>
+          {lostLocked > 0 ? (
+            <div className="mb-3 space-y-2">
+              <p className="flex items-center gap-2 text-sm font-medium text-destructive">
+                <CircleAlert className="size-4 shrink-0" />
+                {t("lockedMissing", { count: lostLocked })}
+              </p>
+              <Button type="button" variant="outline" size="sm" onClick={undo} disabled={history.length === 0}>
+                <Undo2 className="size-4" />
+                {t("undo")}
+              </Button>
+            </div>
+          ) : null}
           {issues.total === 0 ? (
             <p className="flex items-center gap-2 text-sm font-medium text-emerald-700">
               <CircleCheck className="size-4" />
@@ -566,6 +766,13 @@ export function PlanEditor({
             onNumberRows={(options) =>
               commit({ ...draft, seats: numberRowsAndSeats(draft.seats, selected, s, options) })
             }
+            onMove={(dx, dy) => updatePositions((seats, ids) => moveSeats(seats, ids, dx, dy))}
+            onTilt={(deg) => updatePositions((seats, ids) => tiltSeats(seats, ids, deg))}
+            onRotate={(deg) => updatePositions((seats, ids) => rotateGroup(seats, ids, deg))}
+            onAlign={(axis) => updatePositions((seats, ids) => alignSeats(seats, ids, axis))}
+            onSpace={(orientation) => updatePositions((seats, ids) => spaceSeats(seats, ids, orientation))}
+            onMirror={() => updatePositions(mirrorSeats)}
+            onDuplicate={duplicateSelected}
             onDelete={removeSelected}
             onClear={() => setSelected(new Set())}
           />
@@ -619,27 +826,59 @@ export function PlanEditor({
         </section>
 
         <section className={panelClass}>
-          <p className="text-sm">
-            <span className="font-semibold">{name}</span>
-          </p>
+          {planId ? (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium">{t("name")}</span>
+              <input
+                value={planName}
+                onChange={(e) => setPlanName(e.target.value)}
+                minLength={2}
+                maxLength={120}
+                className={inputClass}
+              />
+            </label>
+          ) : (
+            <p className="text-sm">
+              <span className="font-semibold">{name}</span>
+            </p>
+          )}
           {saveError ? (
             <p role="alert" className="mt-2 text-sm text-destructive">
               {t(`errors.${saveError}`)}
             </p>
           ) : null}
           <div className="mt-3 flex flex-wrap gap-2">
-            <Button type="button" onClick={save} disabled={saving || issues.total > 0 || draft.seats.length === 0}>
+            <Button
+              type="button"
+              onClick={save}
+              disabled={
+                saving ||
+                issues.total > 0 ||
+                lostLocked > 0 ||
+                draft.seats.length === 0 ||
+                planName.trim().length < 2
+              }
+            >
               {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-              {t("save")}
+              {t(planId ? "saveChanges" : "save")}
             </Button>
-            <Button type="button" variant="ghost" onClick={onRestart}>
-              <RotateCcw className="size-4" />
-              {t("restart")}
-            </Button>
+            {onRestart ? (
+              <Button type="button" variant="ghost" onClick={onRestart}>
+                <RotateCcw className="size-4" />
+                {t("restart")}
+              </Button>
+            ) : planId ? (
+              <Link href={`/admin/seat-plans/${planId}`} className={buttonVariants({ variant: "ghost" })}>
+                {t("cancelEdit")}
+              </Link>
+            ) : null}
           </div>
-          {issues.total > 0 ? <p className="mt-2 text-xs text-muted-foreground">{t("saveBlocked")}</p> : null}
+          {issues.total > 0 || lostLocked > 0 ? (
+            <p className="mt-2 text-xs text-muted-foreground">{t("saveBlocked")}</p>
+          ) : null}
         </section>
       </aside>
+    </div>
     </div>
   );
 }
@@ -652,11 +891,25 @@ function SelectionPanel({
   onRow,
   onNumberSeats,
   onNumberRows,
+  onMove,
+  onTilt,
+  onRotate,
+  onAlign,
+  onSpace,
+  onMirror,
+  onDuplicate,
   onDelete,
   onClear,
 }: {
   draft: PlanDraft;
   selection: DraftSeat[];
+  onMove: (dx: number, dy: number) => void;
+  onTilt: (deg: number) => void;
+  onRotate: (deg: number) => void;
+  onAlign: (axis: "row" | "column") => void;
+  onSpace: (orientation: Orientation) => void;
+  onMirror: () => void;
+  onDuplicate: () => void;
   onZone: (zone: string) => void;
   onSection: (section: string) => void;
   onRow: (row: string) => void;
@@ -682,8 +935,14 @@ function SelectionPanel({
   const [orientation, setOrientation] = React.useState<Orientation>("horizontal");
   const [seatsForward, setSeatsForward] = React.useState(true);
   const [rowsForward, setRowsForward] = React.useState(true);
+  const [stepSize, setStepSize] = React.useState<"fine" | "seat">("fine");
+  const tilts = new Set(selection.map((seat) => Math.round(seat.rotate)));
+  const [degrees, setDegrees] = React.useState(tilts.size === 1 ? String([...tilts][0]) : "0");
   const first = Math.max(0, Number.parseInt(firstSeat, 10) || 1);
   const along = orientation === "horizontal";
+  const step = stepSize === "seat" ? draft.seatSize : draft.seatSize / 4;
+  const deg = Math.max(-180, Math.min(180, Number.parseFloat(degrees.replace(",", ".")) || 0));
+  const several = selection.length > 1;
 
   return (
     <section className={`${panelClass} space-y-4`}>
@@ -738,6 +997,86 @@ function SelectionPanel({
           {t("apply")}
         </Button>
       </form>
+
+      <fieldset className="space-y-3 rounded-xl border border-dashed border-border p-3">
+        <legend className="px-1 text-xs font-semibold">{t("position")}</legend>
+        <div className="flex items-center gap-3">
+          <div className="grid grid-cols-3 gap-1" role="group" aria-label={t("moveBy")}>
+            <span />
+            <Button type="button" variant="outline" size="icon" className="size-8" onClick={() => onMove(0, -step)} aria-label={t("moveUp")} title={t("moveUp")}>
+              <ArrowUp />
+            </Button>
+            <span />
+            <Button type="button" variant="outline" size="icon" className="size-8" onClick={() => onMove(-step, 0)} aria-label={t("moveLeft")} title={t("moveLeft")}>
+              <ArrowLeft />
+            </Button>
+            <span />
+            <Button type="button" variant="outline" size="icon" className="size-8" onClick={() => onMove(step, 0)} aria-label={t("moveRight")} title={t("moveRight")}>
+              <ArrowRight />
+            </Button>
+            <span />
+            <Button type="button" variant="outline" size="icon" className="size-8" onClick={() => onMove(0, step)} aria-label={t("moveDown")} title={t("moveDown")}>
+              <ArrowDown />
+            </Button>
+            <span />
+          </div>
+          <label className="flex flex-1 flex-col gap-1">
+            <span className="text-xs">{t("moveBy")}</span>
+            <select value={stepSize} onChange={(e) => setStepSize(e.target.value as "fine" | "seat")} className={inputClass}>
+              <option value="fine">{t("stepFine")}</option>
+              <option value="seat">{t("stepSeat")}</option>
+            </select>
+          </label>
+        </div>
+        <p className="text-xs text-muted-foreground">{t("moveHint")}</p>
+
+        <div className="space-y-2">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs">{t("angle")}</span>
+            <input
+              value={degrees}
+              onChange={(e) => setDegrees(e.target.value.replace(/[^\d.,-]/g, "").slice(0, 6))}
+              inputMode="decimal"
+              className={inputClass}
+            />
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" variant="outline" size="sm" className="px-2" onClick={() => onTilt(deg)}>
+              {t("tilt")}
+            </Button>
+            <Button type="button" variant="outline" size="sm" className="px-2" onClick={() => onRotate(deg)} disabled={!several || deg === 0}>
+              <RotateCw />
+              {t("rotateGroup")}
+            </Button>
+          </div>
+        </div>
+
+        {several ? (
+          <div className="grid grid-cols-2 gap-2">
+            <Button type="button" variant="outline" size="sm" className="px-2" onClick={() => onAlign("row")}>
+              <AlignCenterHorizontal />
+              {t("alignRow")}
+            </Button>
+            <Button type="button" variant="outline" size="sm" className="px-2" onClick={() => onAlign("column")}>
+              <AlignCenterVertical />
+              {t("alignColumn")}
+            </Button>
+            <Button type="button" variant="outline" size="sm" className="px-2" onClick={() => onSpace(orientation)} disabled={selection.length < 3}>
+              <StretchHorizontal />
+              {t("spaceEvenly")}
+            </Button>
+            <Button type="button" variant="outline" size="sm" className="px-2" onClick={onMirror}>
+              <FlipHorizontal2 />
+              {t("mirror")}
+            </Button>
+          </div>
+        ) : null}
+        <Button type="button" variant="outline" size="sm" className="w-full" onClick={onDuplicate}>
+          <Copy />
+          {t("duplicateSeats", { count: selection.length })}
+        </Button>
+        <p className="text-xs text-muted-foreground">{t("duplicateHint")}</p>
+      </fieldset>
 
       <fieldset className="space-y-2 rounded-xl border border-dashed border-border p-3">
         <legend className="px-1 text-xs font-semibold">{t("numbering")}</legend>

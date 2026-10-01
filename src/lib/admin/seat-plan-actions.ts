@@ -1,9 +1,11 @@
 "use server";
 
+import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import * as z from "zod";
 import { requireAdmin } from "@/lib/auth/dal";
 import { prisma } from "@/lib/prisma";
+import { readLayout } from "@/lib/seating/layout";
 import { failure, readText, slugify, success, type FormState } from "./form";
 
 /**
@@ -132,6 +134,143 @@ export async function saveSeatPlan(_prev: FormState, data: FormData): Promise<Fo
     return success(plan.id);
   } catch (error) {
     console.error("[admin] enregistrement plan de salle", error);
+    return failure("unavailable");
+  }
+}
+
+class PlanConflict extends Error {
+  constructor(readonly key: "seatsSold" | "zoneInUse") {
+    super(key);
+  }
+}
+
+/**
+ * Modifie un plan, même déjà en vente : chaque séance qui l'utilise suit.
+ *
+ * Une place vendue ou retenue garde sa référence (elle est imprimée sur le
+ * billet) : la supprimer ou la renuméroter est refusé. Les places retirées
+ * libres ou bloquées disparaissent des séances, les nouvelles y sont créées.
+ */
+export async function updateSeatPlan(_prev: FormState, data: FormData): Promise<FormState> {
+  await requireAdmin();
+
+  const id = readText(data, "id");
+  const planName = readText(data, "name");
+  if (planName.length < 2 || planName.length > 120) return failure("nameRequired");
+
+  let raw: unknown;
+  try {
+    raw = JSON.parse(String(data.get("layout") ?? ""));
+  } catch {
+    return failure("layoutInvalid");
+  }
+  const parsed = layoutSchema.safeParse(raw);
+  if (!parsed.success) return failure("layoutInvalid");
+  const layout = parsed.data;
+
+  const plan = await prisma.seatPlan.findUnique({
+    where: { id },
+    select: { layout: true, sessions: { select: { id: true, capacity: true, sold: true } } },
+  });
+  if (!plan) return failure("notFound");
+
+  const keys = layout.seats.map((s) => s.key);
+  const zones = new Set(layout.zones.map((z) => z.key));
+  const sessionIds = plan.sessions.map((s) => s.id);
+  const previousCount = readLayout(plan.layout)?.seats.length ?? 0;
+
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        const tariffs = await tx.ticketType.findMany({
+          where: { sessionId: { in: sessionIds }, NOT: { seatZones: { isEmpty: true } } },
+          select: { seatZones: true },
+        });
+        if (tariffs.some((t) => t.seatZones.some((z) => !zones.has(z)))) {
+          throw new PlanConflict("zoneInUse");
+        }
+
+        await tx.sessionSeat.deleteMany({
+          where: {
+            sessionId: { in: sessionIds },
+            seatKey: { notIn: keys },
+            status: { in: ["AVAILABLE", "BLOCKED"] },
+          },
+        });
+        const orphan = await tx.sessionSeat.count({
+          where: { sessionId: { in: sessionIds }, seatKey: { notIn: keys } },
+        });
+        if (orphan > 0) throw new PlanConflict("seatsSold");
+
+        await tx.seatPlan.update({ where: { id }, data: { name: planName, layout } });
+
+        const byZone = new Map<string, string[]>();
+        for (const seat of layout.seats) byZone.set(seat.zone, [...(byZone.get(seat.zone) ?? []), seat.key]);
+        for (const [zone, zoneKeys] of byZone) {
+          await tx.sessionSeat.updateMany({
+            where: { sessionId: { in: sessionIds }, seatKey: { in: zoneKeys }, NOT: { zone } },
+            data: { zone },
+          });
+        }
+
+        for (const session of plan.sessions) {
+          await tx.sessionSeat.createMany({
+            data: layout.seats.map((s) => ({ sessionId: session.id, seatKey: s.key, zone: s.zone })),
+            skipDuplicates: true,
+          });
+          // Une jauge réglée sur tout le plan suit le plan ; une jauge réduite
+          // à la main n'est touchée que si elle dépasse les places restantes.
+          if (session.capacity === null) continue;
+          const followsPlan = session.capacity === previousCount;
+          const capacity = followsPlan ? keys.length : Math.min(session.capacity, keys.length);
+          if (capacity !== session.capacity) {
+            await tx.eventSession.update({
+              where: { id: session.id },
+              data: { capacity: Math.max(capacity, session.sold) },
+            });
+          }
+        }
+      },
+      { timeout: 30_000 },
+    );
+  } catch (error) {
+    if (error instanceof PlanConflict) return failure(error.key);
+    console.error("[admin] modification plan de salle", error);
+    return failure("unavailable");
+  }
+
+  refresh();
+  revalidatePath(`/admin/seat-plans/${id}`);
+  return success(id);
+}
+
+/** Copie d'un plan, pour une autre disposition de la même salle. */
+export async function duplicateSeatPlan(_prev: FormState, data: FormData): Promise<FormState> {
+  await requireAdmin();
+  const id = readText(data, "id");
+  const copyName = readText(data, "name");
+  if (copyName.length < 2 || copyName.length > 120) return failure("nameRequired");
+
+  const plan = await prisma.seatPlan.findUnique({
+    where: { id },
+    select: { layout: true, venueId: true, venue: { select: { name: true } } },
+  });
+  if (!plan) return failure("notFound");
+
+  const base = slugify(`${plan.venue.name} ${copyName}`) || "plan";
+  let slug = base;
+  for (let i = 2; await prisma.seatPlan.findUnique({ where: { slug }, select: { id: true } }); i++) {
+    slug = `${base}-${i}`;
+  }
+
+  try {
+    const copy = await prisma.seatPlan.create({
+      data: { slug, name: copyName, venueId: plan.venueId, layout: plan.layout as Prisma.InputJsonValue },
+    });
+    refresh();
+    return success(copy.id);
+  } catch (error) {
+    console.error("[admin] copie plan de salle", error);
     return failure("unavailable");
   }
 }

@@ -589,21 +589,27 @@ async function createCatalog() {
   );
 }
 
-async function syncRougemont() {
-  const found = await prisma.seatPlan.findUnique({
+/** Dernière version du plan dessiné ici ; ensuite, il se modifie dans l'admin. */
+async function applyRougemontLayout() {
+  const { count } = await prisma.seatPlan.updateMany({
     where: { slug: ROUGEMONT_PLAN_SLUG },
-    select: { id: true },
-  });
-  if (!found) return { sessions: 0, created: 0 };
-  const plan = await prisma.seatPlan.update({
-    where: { id: found.id },
     data: { layout: rougemontLayout as unknown as Prisma.InputJsonValue },
-    select: { id: true, sessions: { select: { id: true } } },
   });
+  return `Plan Rougemont : ${count ? "version du script appliquée" : "absent"}.`;
+}
+
+/** Sièges manquants des séances, d'après le plan tel qu'il est en base. */
+async function syncRougemont() {
+  const plan = await prisma.seatPlan.findUnique({
+    where: { slug: ROUGEMONT_PLAN_SLUG },
+    select: { layout: true, sessions: { select: { id: true } } },
+  });
+  const layout = plan?.layout as unknown as typeof rougemontLayout | undefined;
+  if (!plan || !Array.isArray(layout?.seats)) return { sessions: 0, created: 0 };
   let created = 0;
   for (const session of plan.sessions) {
     const { count } = await prisma.sessionSeat.createMany({
-      data: rougemontLayout.seats.map((s) => ({
+      data: layout.seats.map((s) => ({
         sessionId: session.id,
         seatKey: s.key,
         zone: s.zone,
@@ -836,9 +842,10 @@ async function main() {
   await once("gnymf-2026/programme", () => applyProgramme(id));
   await once("gnymf-2026/conferences", () => createTalks(id));
   await once("gnymf-2026/adresses", () => applyAddresses(id));
+  await once("gnymf-2026/plan-rougemont", applyRougemontLayout);
   const seats = await syncRougemont();
   console.log(
-    `✅ ${ORG_NAME} : plan Rougemont à jour, ${seats.sessions} séances numérotées, ${seats.created} sièges ajoutés.`,
+    `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );
 }
 

@@ -129,6 +129,10 @@ prisma/                     # schema.prisma + seed.ts
      places par tarif, mention et nom facultatifs imprimés sur les billets.
      Billets valables tout de suite, sièges attribués automatiquement en
      placement numéroté, 0 fr. dans l'encaissé. Annulable depuis la commande.
+   - **Plans de salle** (Plans de salle › plan › « Modifier le plan ») :
+     déplacement, rotation, alignement et numérotation par sélection
+     multiple, même sur un plan en vente. Les places vendues ne peuvent être
+     ni supprimées ni renumérotées. « Dupliquer » pour une autre disposition.
    - **Reprises de données** : `prisma/setup-*.ts` tournent à chaque
      déploiement ; une étape `once(clé)` (table `SetupStep`) n'est jouée
      qu'une fois par base, même si l'admin défait ensuite son résultat.

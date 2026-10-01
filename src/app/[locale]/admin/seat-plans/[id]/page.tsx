@@ -1,8 +1,10 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Pencil } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { buttonVariants } from "@/components/ui/button";
 import { getSeatPlan } from "@/lib/data/admin-seat-plans";
-import { DeletePlan, PlanPreview } from "./plan-preview";
+import { DeletePlan, DuplicatePlan, PlanPreview } from "./plan-preview";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +36,14 @@ export default async function SeatPlanPage({
           {t("sessionCount", { count: plan._count.sessions })}
         </p>
       </header>
+
+      <div className="flex flex-wrap items-start gap-3">
+        <Link href={`/admin/seat-plans/${plan.id}/edit`} className={buttonVariants()}>
+          <Pencil />
+          {t("edit")}
+        </Link>
+        <DuplicatePlan id={plan.id} name={t("copyName", { name: plan.name })} />
+      </div>
 
       <PlanPreview layout={plan.layout} locale={locale} />
 

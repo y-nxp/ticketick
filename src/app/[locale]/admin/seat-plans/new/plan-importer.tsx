@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { readPlanWithAi, type PlanReading } from "@/lib/admin/seat-plan-actions";
 import { detectPlan, type PlanDraft } from "@/lib/seating/detect";
 import { loadPlanFile, PlanFileError } from "@/lib/seating/load-plan";
-import { PlanEditor } from "./plan-editor";
+import { PlanEditor } from "../plan-editor";
 
 const inputClass =
   "h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring";

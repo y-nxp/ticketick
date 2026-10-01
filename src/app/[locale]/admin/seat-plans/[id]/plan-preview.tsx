@@ -2,11 +2,11 @@
 
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import { Trash2 } from "lucide-react";
+import { Copy, Trash2 } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { SeatLegend, SeatMap } from "@/components/seating/seat-map";
-import { deleteSeatPlan } from "@/lib/admin/seat-plan-actions";
+import { deleteSeatPlan, duplicateSeatPlan } from "@/lib/admin/seat-plan-actions";
 import type { FormState } from "@/lib/admin/types";
 import type { SeatLayout } from "@/lib/seating/layout";
 
@@ -16,6 +16,41 @@ export function PlanPreview({ layout, locale }: { layout: SeatLayout; locale: st
       <SeatLegend layout={layout} locale={locale} zonePrices={{}} />
       <SeatMap layout={layout} locale={locale} stateOf={() => "free"} onToggle={() => {}} />
     </div>
+  );
+}
+
+/** Autre disposition de la même salle : la copie s'ouvre dans l'éditeur. */
+export function DuplicatePlan({ id, name }: { id: string; name: string }) {
+  const t = useTranslations("admin.seatPlans");
+  const router = useRouter();
+  const [state, action, pending] = useActionState<FormState, FormData>(async (prev, data) => {
+    const result = await duplicateSeatPlan(prev, data);
+    if (result?.ok && result.id) router.push(`/admin/seat-plans/${result.id}/edit`);
+    return result;
+  }, undefined);
+
+  return (
+    <form action={action} className="flex flex-wrap items-center gap-2">
+      <input type="hidden" name="id" value={id} />
+      <input
+        name="name"
+        defaultValue={name}
+        required
+        minLength={2}
+        maxLength={120}
+        aria-label={t("copyNameLabel")}
+        className="h-10 w-64 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-ring"
+      />
+      <Button type="submit" variant="outline" disabled={pending}>
+        <Copy />
+        {t("duplicate")}
+      </Button>
+      {state && !state.ok ? (
+        <p role="alert" className="w-full text-sm text-destructive">
+          {t(`errors.${state.error}`)}
+        </p>
+      ) : null}
+    </form>
   );
 }
 

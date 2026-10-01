@@ -3,9 +3,9 @@ import type { SeatLayout } from "./layout";
 import { seatKey, type DraftSeat, type PlanDraft } from "./detect";
 
 /**
- * Brouillon de plan relevé automatiquement, puis corrigé dans l'éditeur :
- * contrôles avant enregistrement, numérotation par blocs, conversion au
- * format `SeatLayout` des plans publiés.
+ * Brouillon de plan relevé automatiquement, ou plan publié rouvert, corrigé
+ * dans l'éditeur : contrôles avant enregistrement, numérotation et
+ * déplacements par blocs, conversion au format `SeatLayout` des plans publiés.
  */
 
 /** Côté d'une place dans les plans publiés (unités du `viewBox`). */
@@ -47,14 +47,70 @@ export function draftIssues(draft: PlanDraft): DraftIssues {
   };
 }
 
-function translated(text: string): Translated {
+function translated(text: string, i18n?: Translated): Translated {
+  if (i18n && i18n.fr === text) return i18n;
   return { fr: text, en: text, de: text, it: text };
 }
 
 const round = (v: number) => Math.round(v * 10) / 10;
 
-export function draftToLayout(draft: PlanDraft): SeatLayout {
+/** Les marques relevées sur une image s'affichent un peu plus petites que la police du PDF. */
+const MARK_SCALE = 0.8;
+
+/**
+ * Plan publié rouvert dans l'éditeur. Les places gardent leur référence comme
+ * identifiant : le serveur reconnaît ainsi celles qui ont déjà été vendues.
+ */
+export function layoutToDraft(layout: SeatLayout): PlanDraft {
+  const s = layout.seatSize;
+  const pad = 6 * s;
+  const ox = layout.viewBox.x - pad;
+  const oy = layout.viewBox.y - pad;
+  return {
+    width: layout.viewBox.w + 2 * pad,
+    height: layout.viewBox.h + 2 * pad,
+    seatSize: s,
+    seats: layout.seats.map((seat) => ({
+      id: seat.key,
+      x: seat.x - ox,
+      y: seat.y - oy,
+      rotate: seat.rotate ?? 0,
+      zone: seat.zone,
+      section: seat.section,
+      row: seat.row,
+      number: seat.number,
+    })),
+    zones: layout.zones.map((z) => ({
+      key: z.key,
+      color: z.color,
+      name: z.name.fr,
+      declared: null,
+      i18n: z.name,
+    })),
+    sections: layout.sections.map((sec) => ({ key: sec.key, name: sec.name.fr, i18n: sec.name })),
+    marks: layout.marks.map((m) => ({
+      text: m.text.fr,
+      x: m.x - ox,
+      y: m.y - oy,
+      size: ((m.size ?? 12) * s) / SEAT_SIZE / MARK_SCALE,
+      i18n: m.text,
+    })),
+    areas: layout.areas.map((a) => ({ ...a, x: a.x - ox, y: a.y - oy })),
+    origin: { x: ox, y: oy },
+    declaredTotal: null,
+  };
+}
+
+/**
+ * `keepUnused` garde les catégories et zones vidées : sur un plan déjà en
+ * vente, des tarifs peuvent s'y rattacher.
+ */
+export function draftToLayout(draft: PlanDraft, { keepUnused = false } = {}): SeatLayout {
   const k = SEAT_SIZE / draft.seatSize;
+  const ox = draft.origin?.x ?? 0;
+  const oy = draft.origin?.y ?? 0;
+  const X = (x: number) => round((x + ox) * k);
+  const Y = (y: number) => round((y + oy) * k);
   const usedSections = new Set(draft.seats.map((s) => s.section));
   const usedZones = new Set(draft.seats.map((s) => s.zone));
   const seats = draft.seats.map((s) => ({
@@ -63,19 +119,26 @@ export function draftToLayout(draft: PlanDraft): SeatLayout {
     row: s.row!,
     number: s.number!,
     zone: s.zone,
-    x: round(s.x * k),
-    y: round(s.y * k),
-    ...(s.rotate ? { rotate: s.rotate } : {}),
+    x: X(s.x),
+    y: Y(s.y),
+    ...(s.rotate ? { rotate: round(s.rotate) } : {}),
   }));
   const marks = draft.marks.map((m) => ({
-    text: translated(m.text),
-    x: round(m.x * k),
-    y: round(m.y * k),
-    size: Math.max(6, Math.round(m.size * k * 0.8)),
+    text: translated(m.text, m.i18n),
+    x: X(m.x),
+    y: Y(m.y),
+    size: Math.max(6, Math.round(m.size * k * MARK_SCALE)),
+  }));
+  const areas = (draft.areas ?? []).map((a) => ({
+    ...a,
+    x: X(a.x),
+    y: Y(a.y),
+    w: round(a.w * k),
+    h: round(a.h * k),
   }));
 
-  const xs = [...seats.map((s) => s.x), ...marks.map((m) => m.x)];
-  const ys = [...seats.map((s) => s.y), ...marks.map((m) => m.y)];
+  const xs = [...seats.map((s) => s.x), ...marks.map((m) => m.x), ...areas.flatMap((a) => [a.x, a.x + a.w])];
+  const ys = [...seats.map((s) => s.y), ...marks.map((m) => m.y), ...areas.flatMap((a) => [a.y, a.y + a.h])];
   const margin = 2 * SEAT_SIZE;
   const minX = Math.floor(Math.min(...xs) - margin);
   const minY = Math.floor(Math.min(...ys) - margin);
@@ -89,15 +152,104 @@ export function draftToLayout(draft: PlanDraft): SeatLayout {
     },
     seatSize: SEAT_SIZE,
     zones: draft.zones
-      .filter((z) => usedZones.has(z.key))
-      .map((z) => ({ key: z.key, name: translated(z.name), color: z.color })),
+      .filter((z) => keepUnused || usedZones.has(z.key))
+      .map((z) => ({ key: z.key, name: translated(z.name, z.i18n), color: z.color })),
     sections: draft.sections
-      .filter((s) => usedSections.has(s.key))
-      .map((s) => ({ key: s.key, name: translated(s.name) })),
+      .filter((s) => keepUnused || usedSections.has(s.key))
+      .map((s) => ({ key: s.key, name: translated(s.name, s.i18n) })),
     seats,
     marks,
-    areas: [],
+    areas,
   };
+}
+
+/* Opérations groupées de l'éditeur, appliquées aux places sélectionnées. */
+
+type Seats = DraftSeat[];
+
+function apply(seats: Seats, selected: Set<string>, fn: (seat: DraftSeat) => DraftSeat): Seats {
+  return seats.map((s) => (selected.has(s.id) ? fn(s) : s));
+}
+
+function centre(seats: Seats, selected: Set<string>): { x: number; y: number } {
+  const picked = seats.filter((s) => selected.has(s.id));
+  return {
+    x: picked.reduce((sum, s) => sum + s.x, 0) / (picked.length || 1),
+    y: picked.reduce((sum, s) => sum + s.y, 0) / (picked.length || 1),
+  };
+}
+
+const angle = (deg: number) => ((((deg + 180) % 360) + 360) % 360) - 180;
+
+export function moveSeats(seats: Seats, selected: Set<string>, dx: number, dy: number): Seats {
+  return apply(seats, selected, (s) => ({ ...s, x: round(s.x + dx), y: round(s.y + dy) }));
+}
+
+/** Même inclinaison pour chaque place, sans les déplacer. */
+export function tiltSeats(seats: Seats, selected: Set<string>, deg: number): Seats {
+  return apply(seats, selected, (s) => ({ ...s, rotate: angle(deg) }));
+}
+
+/** Fait tourner le bloc autour de son centre, places comprises. */
+export function rotateGroup(seats: Seats, selected: Set<string>, deg: number): Seats {
+  const c = centre(seats, selected);
+  const a = (deg * Math.PI) / 180;
+  const cos = Math.cos(a);
+  const sin = Math.sin(a);
+  return apply(seats, selected, (s) => ({
+    ...s,
+    x: round(c.x + (s.x - c.x) * cos - (s.y - c.y) * sin),
+    y: round(c.y + (s.x - c.x) * sin + (s.y - c.y) * cos),
+    rotate: angle(s.rotate + deg),
+  }));
+}
+
+export function alignSeats(seats: Seats, selected: Set<string>, axis: "row" | "column"): Seats {
+  const c = centre(seats, selected);
+  return apply(seats, selected, (s) =>
+    axis === "row" ? { ...s, y: round(c.y), rotate: 0 } : { ...s, x: round(c.x) },
+  );
+}
+
+/** Répartit les places à intervalles égaux entre les deux extrêmes du bloc. */
+export function spaceSeats(seats: Seats, selected: Set<string>, orientation: Orientation): Seats {
+  const picked = seats.filter((s) => selected.has(s.id));
+  if (picked.length < 3) return seats;
+  const [ux, uy] = axisOf(picked, orientation);
+  const along = (s: DraftSeat) => s.x * ux + s.y * uy;
+  const sorted = [...picked].sort((a, b) => along(a) - along(b));
+  const first = sorted[0]!;
+  const last = sorted[sorted.length - 1]!;
+  const step = (along(last) - along(first)) / (sorted.length - 1);
+  const target = new Map<string, number>();
+  sorted.forEach((s, i) => target.set(s.id, along(first) + i * step));
+  return apply(seats, selected, (s) => {
+    const d = target.get(s.id)! - along(s);
+    return { ...s, x: round(s.x + d * ux), y: round(s.y + d * uy) };
+  });
+}
+
+/** Retourne le bloc de gauche à droite (côté symétrique d'une salle). */
+export function mirrorSeats(seats: Seats, selected: Set<string>): Seats {
+  const c = centre(seats, selected);
+  return apply(seats, selected, (s) => ({ ...s, x: round(2 * c.x - s.x), rotate: angle(-s.rotate) }));
+}
+
+/**
+ * Copie de la sélection, décalée sous le bloc. Les copies gardent rang et
+ * numéros : elles sont signalées en double jusqu'à leur renumérotation.
+ */
+export function duplicateSeats(
+  seats: Seats,
+  selected: Set<string>,
+  seatSize: number,
+  newId: () => string,
+): { seats: Seats; copies: Set<string> } {
+  const picked = seats.filter((s) => selected.has(s.id));
+  const ys = picked.map((s) => s.y);
+  const dy = Math.max(...ys) - Math.min(...ys) + 1.5 * seatSize;
+  const copies = picked.map((s) => ({ ...s, id: newId(), y: round(s.y + dy) }));
+  return { seats: [...seats, ...copies], copies: new Set(copies.map((s) => s.id)) };
 }
 
 export type Orientation = "horizontal" | "vertical";

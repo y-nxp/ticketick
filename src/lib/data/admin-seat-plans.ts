@@ -46,7 +46,14 @@ export async function getSeatPlan(id: string) {
   });
   const layout = readLayout(plan?.layout);
   if (!plan || !layout) return null;
-  return { ...plan, layout };
+  // Sièges vendus ou retenus sur au moins une séance : leur référence est
+  // imprimée sur des billets, l'éditeur les verrouille.
+  const taken = await prisma.sessionSeat.findMany({
+    where: { session: { seatPlanId: id }, status: "RESERVED" },
+    select: { seatKey: true },
+    distinct: ["seatKey"],
+  });
+  return { ...plan, layout, lockedKeys: taken.map((s) => s.seatKey) };
 }
 
 export async function getPlanVenues() {

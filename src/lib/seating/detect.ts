@@ -12,6 +12,8 @@
  * numéros imprimés dans les sièges, les numéros de rangs et les noms de zones.
  */
 
+import type { Translated } from "@/lib/types";
+
 export interface PlanRaster {
   data: Uint8ClampedArray;
   width: number;
@@ -40,7 +42,12 @@ export interface DraftSeat {
   number: string | null;
 }
 
-export interface DraftZone {
+/** Traductions d'un plan déjà publié, gardées tant que le nom français ne change pas. */
+interface Localized {
+  i18n?: Translated;
+}
+
+export interface DraftZone extends Localized {
   key: string;
   color: string;
   name: string;
@@ -48,16 +55,24 @@ export interface DraftZone {
   declared: number | null;
 }
 
-export interface DraftSection {
+export interface DraftSection extends Localized {
   key: string;
   name: string;
 }
 
-export interface DraftMark {
+export interface DraftMark extends Localized {
   text: string;
   x: number;
   y: number;
   size: number;
+}
+
+export interface DraftArea {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  label?: Translated;
 }
 
 export interface PlanDraft {
@@ -69,6 +84,10 @@ export interface PlanDraft {
   zones: DraftZone[];
   sections: DraftSection[];
   marks: DraftMark[];
+  /** Surfaces sans places (scène, chœur) d'un plan déjà publié. */
+  areas?: DraftArea[];
+  /** Décalage du canevas d'un plan rouvert, rendu à l'enregistrement. */
+  origin?: { x: number; y: number };
   declaredTotal: number | null;
 }
 
