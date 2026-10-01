@@ -860,6 +860,128 @@ async function applyVisuals(organizerId: string): Promise<string> {
   return `Visuels officiels : ${covers} événement(s).`;
 }
 
+/**
+ * Places invités (mécènes, amis, presse, artistes) du fichier d'Illyria du
+ * 1er octobre 2026, plus 12 places pour les concerts de 15 h qu'il ne liste pas.
+ * Clé : date et artiste du concert.
+ */
+const INVITATIONS: Record<string, number> = {
+  "2026-12-26 Grigoryan / Antonyan": 128,
+  "2026-12-27 Ensemble Mare Nostrum": 38,
+  "2026-12-27 Fuchs / Cemin": 88,
+  "2026-12-28 Berry / Pérot / Goimard": 12,
+  "2026-12-28 Edris / Pati / Pordoy": 103,
+  "2026-12-29 Angioloni / Masson": 12,
+  "2026-12-29 Grigolo": 68,
+  "2026-12-30 Spyres / Pordoy": 92,
+  "2027-01-01 Sirolli / Pikulski": 108,
+  "2027-01-02 Oropesa / Tézier / Praticò": 110,
+  "2027-01-03 Bernheim / Matheson": 108,
+  "2027-01-03 Mkhitaryan / Zhilikhovsky": 92,
+  "2027-01-04 Ryan-Dugelay": 12,
+  "2027-01-05 Arderíus": 12,
+  "2027-01-05 Amadi / Belkin": 54,
+  "2027-01-06 Chenaux": 12,
+  "2027-01-06 Schmitt / Reyes": 58,
+  "2027-01-07 Earl Rose": 50,
+  "2027-01-08 Trio Nebelmeer": 12,
+  "2027-01-08 Jany McPherson Trio": 44,
+  "2027-01-09 Martina Meola": 44,
+  "2027-01-10 Alexandros Kapelis": 44,
+};
+
+const INVITATION_NOTE = "Invitations Illyria (liste du 1er octobre 2026)";
+
+type LayoutSeat = (typeof rougemontLayout.seats)[number];
+
+/**
+ * Ordre de blocage : Premium, catégorie 1 de la nef du rang le plus proche de
+ * la scène vers le fond, catégorie 1 des côtés de la scène, puis catégories 2
+ * et 3. Dans un rang de nef, du centre vers l'allée latérale.
+ */
+function seatRank(seat: LayoutSeat, centerX: number): number[] {
+  const nave = seat.section === "NEF";
+  const tier =
+    seat.zone === "PREMIUM" ? 0 : seat.zone === "CAT1" ? (nave ? 1 : 2) : seat.zone === "CAT2" ? 3 : 4;
+  const row = Number(seat.row) || 0;
+  return nave
+    ? [tier, row, Math.abs(seat.x - centerX)]
+    : [tier, row, Number(seat.number) || 0, seat.x < centerX ? 0 : 1];
+}
+
+function compareRanks(a: number[], b: number[]): number {
+  for (let i = 0; i < Math.max(a.length, b.length); i += 1) {
+    const d = (a[i] ?? 0) - (b[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return 0;
+}
+
+/**
+ * Concerts sur plan : bloque les meilleures places libres jusqu'au nombre
+ * demandé (les places déjà bloquées comptent). Les concerts à catégories
+ * s'arrêtent à la catégorie 1. Placement libre : la jauge baisse d'autant.
+ */
+async function applyInvitations(organizerId: string): Promise<string> {
+  const plan = await prisma.seatPlan.findUnique({
+    where: { slug: ROUGEMONT_PLAN_SLUG },
+    select: { layout: true },
+  });
+  const layout = plan?.layout as unknown as typeof rougemontLayout | undefined;
+  if (!layout || !Array.isArray(layout.seats)) return "Invitations : plan de Rougemont introuvable.";
+  const stage = layout.areas?.[0];
+  const centerX = stage ? stage.x + stage.w / 2 : layout.viewBox.x + layout.viewBox.w / 2;
+  const rank = new Map(layout.seats.map((s) => [s.key, seatRank(s, centerX)]));
+
+  const lines: string[] = [];
+  for (const concert of CONCERTS) {
+    const wanted = INVITATIONS[`${concert.date} ${concert.artist}`];
+    if (!wanted) continue;
+    const event = await prisma.event.findFirst({
+      where: { slug: concertSlug(concert), organizerId },
+      select: { sessions: { select: { id: true, seatPlanId: true, capacity: true, sold: true }, take: 1 } },
+    });
+    const session = event?.sessions[0];
+    if (!session) continue;
+
+    if (!session.seatPlanId) {
+      if (session.capacity == null) {
+        lines.push(`${concert.date} ${concert.artist} : jauge absente, rien retiré`);
+        continue;
+      }
+      const capacity = Math.max(session.sold, session.capacity - wanted);
+      await prisma.eventSession.update({ where: { id: session.id }, data: { capacity } });
+      lines.push(`${concert.date} ${concert.artist} : jauge ${session.capacity} → ${capacity}`);
+      continue;
+    }
+
+    const maxTier = concert.pricing.kind === "categories" ? 2 : 4;
+    const seats = await prisma.sessionSeat.findMany({
+      where: { sessionId: session.id },
+      select: { seatKey: true, status: true },
+    });
+    const already = seats.filter((s) => s.status === "BLOCKED").length;
+    const picked = seats
+      .filter((s) => s.status === "AVAILABLE" && (rank.get(s.seatKey)?.[0] ?? 99) <= maxTier)
+      .sort((a, b) => compareRanks(rank.get(a.seatKey)!, rank.get(b.seatKey)!))
+      .slice(0, Math.max(0, wanted - already))
+      .map((s) => s.seatKey);
+    if (picked.length) {
+      await prisma.sessionSeat.updateMany({
+        where: { sessionId: session.id, seatKey: { in: picked }, status: "AVAILABLE" },
+        data: { status: "BLOCKED", blockNote: INVITATION_NOTE },
+      });
+    }
+    const missing = wanted - already - picked.length;
+    lines.push(
+      `${concert.date} ${concert.artist} : ${picked.length} bloquées` +
+        (already ? `, ${already} déjà bloquées` : "") +
+        (missing > 0 ? `, ${missing} manquantes` : ""),
+    );
+  }
+  return `Invitations :\n    ${lines.join("\n    ")}`;
+}
+
 /** Les deux conférences : entrée sur inscription, coordonnées à saisir dans l'admin. */
 async function createTalks(organizerId: string): Promise<string> {
   const venueId = await findOrCreateVenue(prisma, "YACHTCLUB");
@@ -917,6 +1039,7 @@ async function main() {
   await once("gnymf-2026/plan-rougemont", applyRougemontLayout);
   await once("gnymf-2026/visuels-officiels", () => applyVisuals(id));
   const seats = await syncRougemont();
+  await once("gnymf-2026/invitations-1er-octobre", () => applyInvitations(id));
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );
