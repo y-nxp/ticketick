@@ -4,7 +4,7 @@ import { createHash, randomBytes } from "node:crypto";
 import { Prisma, type PaymentMethod } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { claimSeats, releaseOrderSeats, unavailableAmong } from "@/lib/seating/seats";
-import { zoneAllowed } from "@/lib/seating/layout";
+import { companionZoneIssue, zoneAllowed } from "@/lib/seating/layout";
 import { cancelOrderTickets, issueMissingTickets } from "@/lib/tickets/issue";
 import { EVENT_TIME_ZONE } from "@/lib/utils";
 import {
@@ -106,6 +106,7 @@ export type OrderError =
   | "max_per_order"
   | "companion_limit"
   | "companion_requires_paid"
+  | "companion_same_zone"
   | "sold_out"
   | "method_not_allowed"
   | "reference_collision"
@@ -288,6 +289,32 @@ export async function createOrder(
         return { ok: false, error: "companion_limit", ticketTypeId: acc.id };
       }
     }
+  }
+
+  // Sur plan, la place gratuite suit la catégorie d'un billet payant.
+  const seatedSessions = new Set(
+    [...merged.keys()]
+      .map((id) => byId.get(id)!)
+      .filter((tt) => tt.session.seatPlanId && tt.maxPerPaidTicket != null && !tt.companionOfId)
+      .map((tt) => tt.session.id),
+  );
+  for (const sessionId of seatedSessions) {
+    const lines = [...merged].filter(([id]) => byId.get(id)!.session.id === sessionId);
+    const zones = new Map(
+      (
+        await prisma.sessionSeat.findMany({
+          where: { sessionId, seatKey: { in: lines.flatMap(([, l]) => l.seats) } },
+          select: { seatKey: true, zone: true },
+        })
+      ).map((s) => [s.seatKey, s.zone]),
+    );
+    const issue = companionZoneIssue(
+      lines.map(([id]) => byId.get(id)!),
+      lines.flatMap(([ticketTypeId, l]) =>
+        l.seats.map((key) => ({ ticketTypeId, zone: zones.get(key) ?? "" })),
+      ),
+    );
+    if (issue) return { ok: false, error: "companion_same_zone", ticketTypeId: issue.ticketTypeId };
   }
 
   let holders: Map<string, { name: string; birthDate: Date }[]> = new Map();
