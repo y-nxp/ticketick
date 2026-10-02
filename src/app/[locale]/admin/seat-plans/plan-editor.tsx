@@ -15,6 +15,7 @@ import {
   Eye,
   EyeOff,
   FlipHorizontal2,
+  ListOrdered,
   Loader2,
   MousePointer2,
   Plus,
@@ -53,6 +54,7 @@ import {
   tiltSeats,
   type Orientation,
 } from "@/lib/seating/draft";
+import { rowNumberMarks } from "@/lib/seating/layout";
 
 const inputClass =
   "h-9 w-full rounded-lg border border-border bg-background px-2.5 text-sm outline-none transition-colors focus:border-ring";
@@ -174,6 +176,20 @@ export function PlanEditor({
     return lockedKeys.filter((key) => !present.has(key)).length;
   }, [draft, lockedKeys]);
   const s = draft.seatSize;
+  const rowMarks = React.useMemo(
+    () =>
+      draft.rowNumbers
+        ? rowNumberMarks({
+            seatSize: s,
+            seats: draft.seats.flatMap((seat) =>
+              seat.section && seat.row && seat.number
+                ? [{ section: seat.section, row: seat.row, number: seat.number, x: seat.x, y: seat.y }]
+                : [],
+            ),
+          })
+        : [],
+    [draft.rowNumbers, draft.seats, s],
+  );
 
   function commit(next: PlanDraft) {
     setHistory((h) => [...h.slice(-40), draft]);
@@ -490,6 +506,17 @@ export function PlanEditor({
               <Undo2 className="size-4" />
               {t("undo")}
             </Button>
+            <Button
+              type="button"
+              variant={draft.rowNumbers ? "default" : "outline"}
+              size="icon"
+              onClick={() => commit({ ...draft, rowNumbers: !draft.rowNumbers })}
+              aria-pressed={!!draft.rowNumbers}
+              aria-label={t("rowNumbers")}
+              title={t("rowNumbers")}
+            >
+              <ListOrdered className="size-4" />
+            </Button>
             {preview ? (
               <Button
                 type="button"
@@ -574,6 +601,19 @@ export function PlanEditor({
                 ))}
               </g>
             )}
+            {rowMarks.map((r, i) => (
+              <text
+                key={`row-${i}`}
+                x={r.x}
+                y={r.y}
+                textAnchor="middle"
+                dominantBaseline="central"
+                style={{ fontSize: s * 0.6 }}
+                className="pointer-events-none fill-[#6B6E76] font-medium"
+              >
+                {r.text}
+              </text>
+            ))}
             {draft.seats.map((seat) => {
               const isSelected = selected.has(seat.id);
               const broken = isIncomplete(seat) || issues.duplicates.has(seat.id);

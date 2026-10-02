@@ -1,4 +1,4 @@
-import type { SeatDef, SeatLayout } from "../layout";
+import type { SeatDef, SeatLayout, SeatMark } from "../layout";
 
 /**
  * Église de Rougemont — plan « Concert sans AFD » du 08.09.2026.
@@ -110,6 +110,12 @@ function build(): SeatDef[] {
   return seats;
 }
 
+/** Libellés des deux blocs de part et d'autre de la scène. */
+export const SIDE_MARKS: SeatMark[] = [
+  { text: { fr: "Scène gauche", en: "Stage left", de: "Bühne links", it: "Palco sinistro" }, x: 310, y: 372, size: 11 },
+  { text: { fr: "Scène droite", en: "Stage right", de: "Bühne rechts", it: "Palco destro" }, x: 648, y: 377, size: 11 },
+];
+
 export const rougemontLayout: SeatLayout = {
   viewBox: { x: 255, y: 30, w: 450, h: 870 },
   seatSize: 12,
@@ -130,7 +136,9 @@ export const rougemontLayout: SeatLayout = {
     { text: { fr: "Chœur", en: "Choir", de: "Chor", it: "Coro" }, x: 482, y: 50, size: 16 },
     { text: { fr: "Nef", en: "Nave", de: "Schiff", it: "Navata" }, x: 485, y: 870, size: 14 },
     { text: { fr: "Entrée", en: "Entrance", de: "Eingang", it: "Ingresso" }, x: 485, y: 890, size: 10 },
+    ...SIDE_MARKS,
   ],
+  rowNumbers: true,
   areas: [
     {
       x: 372,

@@ -18,6 +18,7 @@ import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import {
   ROUGEMONT_PLAN_SLUG,
+  SIDE_MARKS,
   rougemontLayout,
 } from "../src/lib/seating/plans/rougemont";
 
@@ -607,6 +608,28 @@ async function applyRougemontLayout() {
     data: { layout: rougemontLayout as unknown as Prisma.InputJsonValue },
   });
   return `Plan Rougemont : ${count ? "version du script appliquée" : "absent"}.`;
+}
+
+/**
+ * Libellés « Scène gauche / droite » et numéros de rang, ajoutés au plan tel
+ * qu'il est en base sans toucher aux retouches faites dans l'admin.
+ */
+async function labelRougemontPlan() {
+  const plan = await prisma.seatPlan.findUnique({
+    where: { slug: ROUGEMONT_PLAN_SLUG },
+    select: { id: true, layout: true },
+  });
+  const layout = plan?.layout as unknown as typeof rougemontLayout | undefined;
+  if (!plan || !layout || !Array.isArray(layout.seats)) return "Libellés du plan Rougemont : plan absent.";
+  const marks = layout.marks ?? [];
+  const added = SIDE_MARKS.filter((m) => !marks.some((o) => o.text.fr === m.text.fr));
+  await prisma.seatPlan.update({
+    where: { id: plan.id },
+    data: {
+      layout: { ...layout, marks: [...marks, ...added], rowNumbers: true } as unknown as Prisma.InputJsonValue,
+    },
+  });
+  return `Libellés du plan Rougemont : ${added.length} libellé(s) ajouté(s), numéros de rang affichés.`;
 }
 
 /** Sièges manquants des séances, d'après le plan tel qu'il est en base. */
@@ -1268,6 +1291,7 @@ async function main() {
   const seats = await syncRougemont();
   await once("gnymf-2026/invitations-1er-octobre", () => applyInvitations(id));
   await once("gnymf-2026/conferences-yacht-club", () => publishTalks(id));
+  await once("gnymf-2026/plan-rougemont-libelles", labelRougemontPlan);
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );

@@ -56,6 +56,8 @@ export interface SeatLayout {
   seats: SeatDef[];
   marks: SeatMark[];
   areas: SeatArea[];
+  /** Affiche le numéro de rang au bout de chaque rang. */
+  rowNumbers?: boolean;
 }
 
 const WORDS: Record<string, { row: string; seat: string }> = {
@@ -103,7 +105,48 @@ export function readLayout(value: unknown): SeatLayout | null {
     seats: v.seats,
     marks: v.marks ?? [],
     areas: v.areas ?? [],
+    rowNumbers: v.rowNumbers === true,
   };
+}
+
+/**
+ * Numéros de rang placés dans le prolongement de chaque rang, aux deux bouts.
+ * Un numéro qui tomberait sur une place ou sur un autre numéro est omis.
+ */
+type RowSeat = Pick<SeatDef, "section" | "row" | "number" | "x" | "y">;
+
+export function rowNumberMarks(
+  layout: { seatSize: number; seats: RowSeat[] },
+): { text: string; x: number; y: number }[] {
+  const s = layout.seatSize;
+  const rows = new Map<string, RowSeat[]>();
+  for (const seat of layout.seats) {
+    const k = `${seat.section}\u0000${seat.row}`;
+    rows.set(k, [...(rows.get(k) ?? []), seat]);
+  }
+  const out: { text: string; x: number; y: number }[] = [];
+  const near = (x: number, y: number, px: number, py: number, d: number) =>
+    Math.hypot(x - px, y - py) < d;
+  for (const seats of rows.values()) {
+    if (seats.length < 2) continue;
+    seats.sort((a, b) => Number(a.number) - Number(b.number) || a.number.localeCompare(b.number));
+    const a = seats[0]!;
+    const b = seats[seats.length - 1]!;
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    if (!len) continue;
+    const ux = (b.x - a.x) / len;
+    const uy = (b.y - a.y) / len;
+    const gap = s * 1.3;
+    for (const [x, y] of [
+      [a.x - ux * gap, a.y - uy * gap],
+      [b.x + ux * gap, b.y + uy * gap],
+    ] as const) {
+      if (layout.seats.some((o) => near(x, y, o.x, o.y, s * 1.05))) continue;
+      if (out.some((o) => near(x, y, o.x, o.y, s * 1.3))) continue;
+      out.push({ text: a.row, x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 });
+    }
+  }
+  return out;
 }
 
 /** Zones où un tarif se vend : toutes si la liste est vide. */

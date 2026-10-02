@@ -98,6 +98,7 @@ export function layoutToDraft(layout: SeatLayout): PlanDraft {
     areas: layout.areas.map((a) => ({ ...a, x: a.x - ox, y: a.y - oy })),
     origin: { x: ox, y: oy },
     declaredTotal: null,
+    rowNumbers: layout.rowNumbers,
   };
 }
 
@@ -160,6 +161,7 @@ export function draftToLayout(draft: PlanDraft, { keepUnused = false } = {}): Se
     seats,
     marks,
     areas,
+    ...(draft.rowNumbers ? { rowNumbers: true } : {}),
   };
 }
 

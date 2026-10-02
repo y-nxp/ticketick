@@ -1138,6 +1138,7 @@
       "addZone": "Category of added seats",
       "undo": "Undo",
       "hidePlan": "Hide the original plan",
+      "rowNumbers": "Row numbers at the end of each row",
       "showPlan": "Show the original plan",
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",

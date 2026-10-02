@@ -74,6 +74,7 @@ const layoutSchema = z
         }),
       )
       .max(50),
+    rowNumbers: z.boolean().optional(),
   })
   .superRefine((layout, ctx) => {
     const zones = new Set(layout.zones.map((z) => z.key));

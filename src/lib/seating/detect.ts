@@ -89,6 +89,7 @@ export interface PlanDraft {
   /** Décalage du canevas d'un plan rouvert, rendu à l'enregistrement. */
   origin?: { x: number; y: number };
   declaredTotal: number | null;
+  rowNumbers?: boolean;
 }
 
 interface Blob {

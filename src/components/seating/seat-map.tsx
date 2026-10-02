@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useTranslations } from "next-intl";
 import { ZoomIn, ZoomOut } from "lucide-react";
-import { seatLabel, type SeatLayout } from "@/lib/seating/layout";
+import { rowNumberMarks, seatLabel, type SeatLayout } from "@/lib/seating/layout";
 import { t } from "@/lib/types";
 
 /** `blocked` : place réservée aux invités, affichée et cliquable dans l'admin. */
@@ -34,6 +34,10 @@ export function SeatMap({
   const [zoom, setZoom] = React.useState(0);
   const { viewBox: vb, seatSize: s } = layout;
   const zones = new Map(layout.zones.map((z) => [z.key, z]));
+  const rows = React.useMemo(
+    () => (layout.rowNumbers ? rowNumberMarks(layout) : []),
+    [layout],
+  );
 
   return (
     <div className="relative">
@@ -99,6 +103,20 @@ export function SeatMap({
               className="fill-muted-foreground font-semibold uppercase"
             >
               {t(m.text, locale)}
+            </text>
+          ))}
+          {rows.map((r, i) => (
+            <text
+              key={`row-${i}`}
+              x={r.x}
+              y={r.y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              style={{ fontSize: s * 0.6 }}
+              className="pointer-events-none fill-muted-foreground font-medium"
+              aria-hidden
+            >
+              {r.text}
             </text>
           ))}
           {layout.seats.map((seat) => {
