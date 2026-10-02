@@ -1478,5 +1478,10 @@
       "cardMissing": "Card payment is not available for this organiser. Please contact them.",
       "failed": "The payment could not be opened. Try again in a moment."
     }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "This page doesn’t exist or has moved. The link may be incomplete.",
+    "home": "See events"
   }
 }

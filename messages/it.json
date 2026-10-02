@@ -1478,5 +1478,10 @@
       "cardMissing": "Il pagamento con carta non è disponibile per questo organizzatore. Lo contatti.",
       "failed": "Non è stato possibile aprire il pagamento. Riprovi tra un istante."
     }
+  },
+  "notFound": {
+    "title": "Pagina non trovata",
+    "body": "Questa pagina non esiste o è stata spostata. Il link potrebbe essere incompleto.",
+    "home": "Vedi gli eventi"
   }
 }

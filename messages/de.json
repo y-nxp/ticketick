@@ -1478,5 +1478,10 @@
       "cardMissing": "Kartenzahlung ist für diesen Veranstalter nicht verfügbar. Bitte kontaktieren Sie ihn.",
       "failed": "Die Zahlung konnte nicht geöffnet werden. Versuchen Sie es gleich noch einmal."
     }
+  },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "body": "Diese Seite existiert nicht oder wurde verschoben. Der Link ist vielleicht unvollständig.",
+    "home": "Veranstaltungen ansehen"
   }
 }
