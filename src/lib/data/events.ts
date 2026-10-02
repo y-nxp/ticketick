@@ -147,6 +147,7 @@ function mapEvent(e: RawEvent): EventItem {
     onlineSale: e.onlineSale,
     contactEmail: e.contactEmail?.trim() || undefined,
     contactPhone: e.contactPhone?.trim() || undefined,
+    contactUrl: e.contactUrl?.trim() || undefined,
     organizer: mapOrganizer(e.organizer),
     categories: e.categories.map(mapCategory),
     tags: optionalTranslated(e.tags),

@@ -130,6 +130,8 @@ export interface EventItem {
   onlineSale: boolean;
   contactEmail?: string;
   contactPhone?: string;
+  /** Site où s'inscrire, quand l'inscription ne passe pas par l'organisateur. */
+  contactUrl?: string;
   organizer: Organizer;
   categories: Category[];
   /** Étiquettes de l'organisateur, séparées par des virgules dans chaque langue. */

@@ -106,7 +106,9 @@
       "title": "Inscripción",
       "intro": "No hay entradas que comprar: la inscripción se hace directamente con el organizador.",
       "subject": "Inscripción – {title} – {date}",
-      "pending": "Los datos de inscripción se comunicarán próximamente."
+      "pending": "Los datos de inscripción se comunicarán próximamente.",
+      "introSite": "No hay entrada que comprar: la inscripción se hace directamente en el sitio web de abajo.",
+      "site": "Inscribirse en {site}"
     }
   },
   "portal": {

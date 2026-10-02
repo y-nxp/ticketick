@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Mail, Phone } from "lucide-react";
+import { ExternalLink, Mail, Phone } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn, formatDate } from "@/lib/utils";
 import { t, type EventItem, type SessionItem } from "@/lib/types";
@@ -23,7 +23,8 @@ export function ContactBooking({
   const title = t(event.title, locale);
   const date = formatDate(session.startsAt, `${locale}-CH`);
   const subject = te("subject", { title, date });
-  const { contactEmail: email, contactPhone: phone } = event;
+  const { contactEmail: email, contactPhone: phone, contactUrl: url } = event;
+  const site = url ? hostOf(url) : null;
 
   return (
     <div
@@ -36,14 +37,32 @@ export function ContactBooking({
         {date}
         {session.label ? ` · ${t(session.label, locale)}` : null}
       </p>
-      <p className="mt-4 text-sm leading-relaxed">{te("intro")}</p>
+      <p className="mt-4 text-sm leading-relaxed">
+        {url ? te("introSite") : te("intro")}
+      </p>
 
-      {email || phone ? (
+      {url || email || phone ? (
         <div className="mt-4 flex flex-col gap-2">
+          {url ? (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(buttonVariants(), "h-auto min-h-10 whitespace-normal")}
+            >
+              <ExternalLink aria-hidden />
+              <span className="min-w-0 [overflow-wrap:anywhere]">
+                {te("site", { site: site ?? url })}
+              </span>
+            </a>
+          ) : null}
           {email ? (
             <a
               href={`mailto:${email}?subject=${encodeURIComponent(subject)}`}
-              className={cn(buttonVariants(), "h-auto min-h-10 whitespace-normal")}
+              className={cn(
+                buttonVariants({ variant: url ? "outline" : "default" }),
+                "h-auto min-h-10 whitespace-normal",
+              )}
             >
               <Mail aria-hidden />
               <span className="min-w-0 [overflow-wrap:anywhere]">
@@ -57,7 +76,7 @@ export function ContactBooking({
             <a
               href={`tel:${phone.replace(/[^\d+]/g, "")}`}
               className={cn(
-                buttonVariants({ variant: email ? "outline" : "default" }),
+                buttonVariants({ variant: url || email ? "outline" : "default" }),
                 "h-auto min-h-10",
               )}
             >
@@ -73,4 +92,12 @@ export function ContactBooking({
       )}
     </div>
   );
+}
+
+function hostOf(url: string): string | null {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
 }

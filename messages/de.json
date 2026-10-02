@@ -106,7 +106,9 @@
       "title": "Anmeldung",
       "intro": "Kein Ticketkauf nötig: Die Anmeldung erfolgt direkt beim Veranstalter.",
       "subject": "Anmeldung – {title} – {date}",
-      "pending": "Die Angaben zur Anmeldung werden in Kürze bekannt gegeben."
+      "pending": "Die Angaben zur Anmeldung werden in Kürze bekannt gegeben.",
+      "introSite": "Kein Ticket zu kaufen: Die Anmeldung erfolgt direkt auf der Website unten.",
+      "site": "Anmelden auf {site}"
     }
   },
   "portal": {
@@ -765,7 +767,8 @@
         "discountMinSessionsInvalid": "Die Anzahl Vorstellungen muss eine ganze Zahl von mindestens 1 sein.",
         "validityInvalid": "Ungültiger Gültigkeitszeitraum: Das Ende muss nach dem Beginn liegen.",
         "discountHasOrders": "Dieser Rabatt wurde bereits auf Bestellungen gewährt: stattdessen deaktivieren.",
-        "phoneInvalid": "Ungültige Telefonnummer."
+        "phoneInvalid": "Ungültige Telefonnummer.",
+        "urlInvalid": "Ungültige Website-Adresse: Sie muss mit https:// beginnen."
       }
     },
     "settings": {
@@ -870,7 +873,9 @@
       "onlineSale": "Online-Verkauf auf ticketick",
       "contactHint": "Nicht angekreuzt: kein Ticketverkauf; die Seite lädt zur Anmeldung per E-Mail oder Telefon ein (Vortrag, Begegnung). Diese Angaben ersetzen dann die Tickets.",
       "contactEmail": "E-Mail für Anmeldungen",
-      "contactPhone": "Telefon für Anmeldungen"
+      "contactPhone": "Telefon für Anmeldungen",
+      "contactUrl": "Anmelde-Website",
+      "contactUrlHint": "Optional. Wenn die Anmeldung anderswo erfolgt (zum Beispiel beim Gastgeber), verweist die Seite auf diese Website."
     },
     "embed": {
       "title": "Ticketverkauf einbinden",

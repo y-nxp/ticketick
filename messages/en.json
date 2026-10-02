@@ -106,7 +106,9 @@
       "title": "Registration",
       "intro": "No ticket to buy: please register directly with the organiser.",
       "subject": "Registration – {title} – {date}",
-      "pending": "Registration details will be announced shortly."
+      "pending": "Registration details will be announced shortly.",
+      "introSite": "No ticket to buy: registration is done directly on the website below.",
+      "site": "Register on {site}"
     }
   },
   "portal": {
@@ -765,7 +767,8 @@
         "discountMinSessionsInvalid": "The number of sessions must be a whole number of at least 1.",
         "validityInvalid": "Invalid validity period: the end must come after the start.",
         "discountHasOrders": "This discount has already been granted on orders: deactivate it instead.",
-        "phoneInvalid": "Invalid phone number."
+        "phoneInvalid": "Invalid phone number.",
+        "urlInvalid": "Invalid website address: it must start with https://."
       }
     },
     "settings": {
@@ -870,7 +873,9 @@
       "onlineSale": "Online sales on ticketick",
       "contactHint": "Unticked: no tickets on sale; the page invites visitors to register by email or phone (talk, meet-up). These details then replace the tickets.",
       "contactEmail": "Registration email",
-      "contactPhone": "Registration phone"
+      "contactPhone": "Registration phone",
+      "contactUrl": "Registration website",
+      "contactUrlHint": "Optional. When registration happens elsewhere (for example with the host venue), the page links to this website."
     },
     "embed": {
       "title": "Embed ticketing",

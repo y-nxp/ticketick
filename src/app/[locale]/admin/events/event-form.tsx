@@ -174,6 +174,16 @@ export function EventForm({
               placeholder="+41 33 000 00 00"
             />
           </Field>
+          <div className="sm:col-span-2">
+            <Field label={t("contactUrl")} hint={t("contactUrlHint")}>
+              <TextInput
+                name="contactUrl"
+                type="url"
+                defaultValue={event?.contactUrl}
+                placeholder="https://"
+              />
+            </Field>
+          </div>
         </div>
       </fieldset>
 

@@ -85,7 +85,16 @@ const VENUES: Record<VenueKey, VenueDef> = {
     lng: 7.2605411,
     formerNames: ["Hôtel Landhaus"],
   },
-  YACHTCLUB: { name: "Gstaad Yacht Club", city: "Gstaad", zip: "3780", canton: "BE", capacity: 0 },
+  YACHTCLUB: {
+    name: "Gstaad Yacht Club",
+    city: "Gstaad",
+    zip: "3780",
+    canton: "BE",
+    capacity: 0,
+    address: "Untergstaadstrasse 15",
+    lat: 46.4776188,
+    lng: 7.2841414,
+  },
 };
 /** Nom de la première version du catalogue, corrigé d'après le calendrier officiel. */
 const LEGACY_STJOSEPH = "Kirche St. Joseph";
@@ -1199,6 +1208,43 @@ async function createTalks(organizerId: string): Promise<string> {
   return `Conférences : ${created} créée(s) en brouillon, courriel ou téléphone d'inscription à renseigner.`;
 }
 
+const YACHT_CLUB_SITE = "https://www.gstaadyachtclub.com/";
+
+/** Conférences publiées à titre informatif : inscription sur le site du Gstaad Yacht Club. */
+async function publishTalks(organizerId: string): Promise<string> {
+  const v = VENUES.YACHTCLUB;
+  const { count: venues } = await prisma.venue.updateMany({
+    where: { name: v.name, city: v.city, OR: [{ address: null }, { address: "" }] },
+    data: { address: v.address, zip: v.zip, lat: v.lat, lng: v.lng },
+  });
+  const lines: string[] = [`adresse du lieu : ${venues ? "ajoutée" : "déjà renseignée"}`];
+  for (const talk of TALKS) {
+    const slug = concertSlug({ date: talk.date, artist: talk.slugName });
+    const event = await prisma.event.findFirst({
+      where: { slug, organizerId },
+      select: { id: true, status: true, contactUrl: true, contactEmail: true, contactPhone: true },
+    });
+    if (!event) {
+      lines.push(`${slug} : introuvable`);
+      continue;
+    }
+    const noContact = !event.contactUrl && !event.contactEmail && !event.contactPhone;
+    await prisma.event.update({
+      where: { id: event.id },
+      data: {
+        onlineSale: false,
+        ...(event.status === "DRAFT" ? { status: "PUBLISHED" } : {}),
+        ...(noContact ? { contactUrl: YACHT_CLUB_SITE } : {}),
+      },
+    });
+    lines.push(
+      `${slug} : ${event.status === "DRAFT" ? "publiée" : `déjà ${event.status}`}` +
+        (noContact ? ", lien du Yacht Club" : ", coordonnées de l'admin gardées"),
+    );
+  }
+  return `Conférences au Yacht Club :\n    ${lines.join("\n    ")}`;
+}
+
 async function main() {
   const existing = await prisma.organizer.findUnique({
     where: { slug: ORG_SLUG },
@@ -1221,6 +1267,7 @@ async function main() {
   await once("gnymf-2026/focus", () => applyFocus(id));
   const seats = await syncRougemont();
   await once("gnymf-2026/invitations-1er-octobre", () => applyInvitations(id));
+  await once("gnymf-2026/conferences-yacht-club", () => publishTalks(id));
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );

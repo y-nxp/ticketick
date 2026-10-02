@@ -120,6 +120,10 @@ export async function saveEvent(
   if (contactPhone && !/^\+?[\d\s().\/-]{6,40}$/.test(contactPhone)) {
     return failure("phoneInvalid");
   }
+  const contactUrl = readOptionalText(data, "contactUrl") ?? null;
+  if (contactUrl && (contactUrl.length > 300 || !isWebUrl(contactUrl))) {
+    return failure("urlInvalid");
+  }
 
   if (id && scoped) {
     const current = await prisma.event.findUnique({
@@ -146,6 +150,7 @@ export async function saveEvent(
     onlineSale,
     contactEmail,
     contactPhone,
+    contactUrl,
   };
 
   const liens = categoryIds.map((cid) => ({ id: cid }));
@@ -662,5 +667,14 @@ export async function deleteTicketType(
   } catch (error) {
     console.error("[admin] suppression tarif", error);
     return failure("unavailable");
+  }
+}
+
+function isWebUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:";
+  } catch {
+    return false;
   }
 }

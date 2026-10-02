@@ -434,10 +434,11 @@ model Event {
   acceptPaypal Boolean @default(false)
 
   /// Faux : aucune vente sur ticketick (conférence, entrée sur inscription).
-  /// La fiche renvoie vers le courriel ou le téléphone ci-dessous.
+  /// La fiche renvoie vers le courriel, le téléphone ou le site ci-dessous.
   onlineSale   Boolean @default(true)
   contactEmail String?
   contactPhone String?
+  contactUrl   String?
 
   organizer   Organizer @relation(fields: [organizerId], references: [id])
   organizerId String

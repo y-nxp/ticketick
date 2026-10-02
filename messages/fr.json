@@ -106,7 +106,9 @@
       "title": "Inscription",
       "intro": "Pas de billet à acheter : l’inscription se fait directement auprès de l’organisateur.",
       "subject": "Inscription – {title} – {date}",
-      "pending": "Les coordonnées d’inscription seront communiquées prochainement."
+      "pending": "Les coordonnées d’inscription seront communiquées prochainement.",
+      "introSite": "Pas de billet à acheter : l’inscription se fait directement sur le site ci-dessous.",
+      "site": "S’inscrire sur {site}"
     }
   },
   "portal": {
@@ -765,7 +767,8 @@
         "discountMinSessionsInvalid": "Le nombre de séances doit être un entier d’au moins 1.",
         "validityInvalid": "Période de validité invalide : la fin doit suivre le début.",
         "discountHasOrders": "Ce rabais a déjà été accordé sur des commandes : désactivez-le plutôt.",
-        "phoneInvalid": "Numéro de téléphone invalide."
+        "phoneInvalid": "Numéro de téléphone invalide.",
+        "urlInvalid": "Adresse du site invalide : elle doit commencer par https://."
       }
     },
     "settings": {
@@ -870,7 +873,9 @@
       "onlineSale": "Vente en ligne sur ticketick",
       "contactHint": "Décochée : aucun billet en vente, la fiche invite à s’inscrire par courriel ou par téléphone (conférence, rencontre). Ces coordonnées remplacent alors les billets.",
       "contactEmail": "Courriel d’inscription",
-      "contactPhone": "Téléphone d’inscription"
+      "contactPhone": "Téléphone d’inscription",
+      "contactUrl": "Site d’inscription",
+      "contactUrlHint": "Facultatif. Quand l’inscription se fait ailleurs (par exemple chez le lieu d’accueil), la fiche renvoie vers ce site."
     },
     "embed": {
       "title": "Intégrer la billetterie",

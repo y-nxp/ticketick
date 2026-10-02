@@ -115,6 +115,7 @@ export async function getEventForEdit(id: string) {
       onlineSale: true,
       contactEmail: true,
       contactPhone: true,
+      contactUrl: true,
       organizerId: true,
       organizer: { select: { slug: true, name: true } },
       categories: { select: { id: true } },
