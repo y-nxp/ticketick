@@ -1,0 +1,29 @@
+name: 💳 Paiements carte en suspens (gb10)
+
+# Outil d'exploitation, déclenché à la main. Lecture seule : compte les
+# paiements PostFinance par état de commande, sans aucune donnée personnelle
+# (le dépôt est public, ses logs aussi).
+on:
+  workflow_dispatch:
+
+jobs:
+  compter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GB10_HOST }}
+          username: ${{ secrets.GB10_USER }}
+          key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
+          port: ${{ secrets.GB10_PORT }}
+          script: |
+            set -euo pipefail
+            DB=ticketick-v2-prod-db
+            q() { docker exec "$DB" sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -P pager=off -c "$0"' "$1"; }
+            echo "════ Commandes payées par carte PostFinance, par état ════"
+            q 'SELECT o.status AS commande, p.status AS paiement, (p."providerRef" IS NOT NULL) AS transaction_ouverte, count(*) AS nombre, min(o."createdAt")::date AS du, max(o."createdAt")::date AS au FROM "Payment" p JOIN "Order" o ON o.id = p."orderId" WHERE p.provider = '\''postfinance'\'' GROUP BY 1, 2, 3 ORDER BY 1, 2, 3;'
+            echo "════ Liens de paiement PostFinance, par état ════"
+            q 'SELECT status, count(*) AS nombre FROM "OrderCharge" WHERE provider = '\''postfinance'\'' GROUP BY 1 ORDER BY 1;'
+            echo "════ Messages PostFinance de l'application (72 h) ════"
+            docker logs --since 72h ticketick-v2-prod-app 2>&1 | grep -c '\[postfinance\]' || true
