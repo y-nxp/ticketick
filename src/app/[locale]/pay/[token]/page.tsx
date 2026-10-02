@@ -9,6 +9,7 @@ import {
   confirmLinkReturn,
   linkIsPayable,
 } from "@/lib/orders/charges";
+import { postfinanceAccountForOrder } from "@/lib/payment/postfinance-account";
 import { prisma } from "@/lib/prisma";
 import { ticketPdfPath } from "@/lib/tickets/download";
 import { t as translate, type Translated } from "@/lib/types";
@@ -70,6 +71,10 @@ export default async function PayPage({
   const fmt = intlLocale(locale);
   const amount = formatPrice(charge.amountCents, fmt, charge.currency);
   const payable = linkIsPayable(charge);
+  const provider = payable
+    ? (charge.provider ??
+      ((await postfinanceAccountForOrder(charge.order.reference)) ? "postfinance" : "other"))
+    : "other";
 
   return (
     <div className="container-page py-12">
@@ -172,7 +177,7 @@ export default async function PayPage({
                 </p>
               ) : null}
               <PayButton token={token} locale={locale} amount={amount} />
-              <p className="text-xs text-muted-foreground">{t("secure")}</p>
+              <p className="text-xs text-muted-foreground">{t("secure", { provider })}</p>
             </div>
           ) : organizer?.email ? (
             <p className="mt-6 text-sm">

@@ -1462,7 +1462,7 @@
     "due": "À régler avant le {date}",
     "payButton": "Payer {amount} par carte",
     "opening": "Ouverture du paiement…",
-    "secure": "Paiement sécurisé par PostFinance. Vos données de carte ne transitent pas par ticketick.",
+    "secure": "{provider, select, postfinance {Paiement sécurisé par PostFinance.} paypal {Paiement sécurisé par PayPal.} stripe {Paiement sécurisé par Stripe.} other {Paiement sécurisé chez notre prestataire de paiement.}} Vos données de carte ne transitent pas par ticketick.",
     "download": "Télécharger les billets (PDF)",
     "errors": {
       "unavailable": "Ce lien n'est plus payable. Rechargez la page.",

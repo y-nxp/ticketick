@@ -1462,7 +1462,7 @@
     "due": "To be paid before {date}",
     "payButton": "Pay {amount} by card",
     "opening": "Opening the payment…",
-    "secure": "Payment secured by PostFinance. Your card details never pass through ticketick.",
+    "secure": "{provider, select, postfinance {Payment secured by PostFinance.} paypal {Payment secured by PayPal.} stripe {Payment secured by Stripe.} other {Payment secured by our payment provider.}} Your card details never pass through ticketick.",
     "download": "Download the tickets (PDF)",
     "errors": {
       "unavailable": "This link can no longer be paid. Reload the page.",

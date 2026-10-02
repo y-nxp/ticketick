@@ -383,7 +383,7 @@
     "due": "A pagar antes del {date}",
     "payButton": "Pagar {amount} con tarjeta",
     "opening": "Abriendo el pago…",
-    "secure": "Pago seguro con PostFinance. Los datos de su tarjeta no pasan por ticketick.",
+    "secure": "{provider, select, postfinance {Pago seguro con PostFinance.} paypal {Pago seguro con PayPal.} stripe {Pago seguro con Stripe.} other {Pago seguro con nuestro proveedor de pagos.}} Los datos de su tarjeta no pasan por ticketick.",
     "download": "Descargar las entradas (PDF)",
     "errors": {
       "unavailable": "Este enlace ya no se puede pagar. Recargue la página.",

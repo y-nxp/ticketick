@@ -1462,7 +1462,7 @@
     "due": "Da pagare entro il {date}",
     "payButton": "Paga {amount} con carta",
     "opening": "Apertura del pagamento…",
-    "secure": "Pagamento sicuro tramite PostFinance. I dati della carta non passano da ticketick.",
+    "secure": "{provider, select, postfinance {Pagamento sicuro tramite PostFinance.} paypal {Pagamento sicuro tramite PayPal.} stripe {Pagamento sicuro tramite Stripe.} other {Pagamento sicuro tramite il nostro fornitore di pagamento.}} I dati della carta non passano da ticketick.",
     "download": "Scarica i biglietti (PDF)",
     "errors": {
       "unavailable": "Questo link non è più pagabile. Ricarichi la pagina.",

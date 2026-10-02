@@ -1462,7 +1462,7 @@
     "due": "Zu bezahlen bis {date}",
     "payButton": "{amount} per Karte bezahlen",
     "opening": "Zahlung wird geöffnet…",
-    "secure": "Sichere Zahlung über PostFinance. Ihre Kartendaten laufen nicht über ticketick.",
+    "secure": "{provider, select, postfinance {Sichere Zahlung über PostFinance.} paypal {Sichere Zahlung über PayPal.} stripe {Sichere Zahlung über Stripe.} other {Sichere Zahlung über unseren Zahlungsanbieter.}} Ihre Kartendaten laufen nicht über ticketick.",
     "download": "Tickets herunterladen (PDF)",
     "errors": {
       "unavailable": "Dieser Link kann nicht mehr bezahlt werden. Laden Sie die Seite neu.",
