@@ -423,6 +423,9 @@ model Event {
   featured    Boolean         @default(false)
   coverImage  String?
   gallery     String[]        @default([])
+  /// Étiquettes affichées sur la carte et la fiche (« Grands duos, Bel canto ») :
+  /// traductions { fr, en, de, it, es }, séparées par des virgules.
+  tags        Json?
 
   /// Moyens d'encaissement proposés par défaut à toutes les séances.
   acceptCard   Boolean @default(true)

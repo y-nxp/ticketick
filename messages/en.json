@@ -838,6 +838,8 @@
       "goToSettings": "Create an organizer",
       "title": "Title",
       "description": "Description",
+      "tags": "Tags",
+      "tagsHint": "Comma-separated, shown on the card and the event page: Great duos, Bel canto.",
       "organizer": "Organizer",
       "chooseOrganizer": "Choose…",
       "slug": "Address",

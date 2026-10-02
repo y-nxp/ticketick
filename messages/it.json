@@ -838,6 +838,8 @@
       "goToSettings": "Crea un organizzatore",
       "title": "Titolo",
       "description": "Descrizione",
+      "tags": "Etichette",
+      "tagsHint": "Separate da virgole, mostrate sulla scheda e sulla pagina: Grandi duetti, Belcanto.",
       "organizer": "Organizzatore",
       "chooseOrganizer": "Scegli…",
       "slug": "Indirizzo",

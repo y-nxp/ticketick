@@ -132,7 +132,17 @@ export interface EventItem {
   contactPhone?: string;
   organizer: Organizer;
   categories: Category[];
+  /** Étiquettes de l'organisateur, séparées par des virgules dans chaque langue. */
+  tags?: Translated;
   sessions: SessionItem[];
+}
+
+export function eventTags(event: EventItem, locale: string): string[] {
+  if (!event.tags) return [];
+  return t(event.tags, locale)
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
 }
 
 // ── Dérivations

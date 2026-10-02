@@ -104,6 +104,7 @@ export async function getEventForEdit(id: string) {
       slug: true,
       title: true,
       description: true,
+      tags: true,
       status: true,
       visibility: true,
       featured: true,

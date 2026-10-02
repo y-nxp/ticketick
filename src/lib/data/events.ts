@@ -149,6 +149,7 @@ function mapEvent(e: RawEvent): EventItem {
     contactPhone: e.contactPhone?.trim() || undefined,
     organizer: mapOrganizer(e.organizer),
     categories: e.categories.map(mapCategory),
+    tags: optionalTranslated(e.tags),
     sessions: e.sessions.map(mapSession),
   };
 }

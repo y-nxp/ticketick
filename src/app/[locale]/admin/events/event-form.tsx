@@ -67,6 +67,13 @@ export function EventForm({
         multiline
         required={false}
       />
+      <TranslatedField
+        name="tags"
+        label={t("tags")}
+        hint={t("tagsHint")}
+        value={event?.tags as Record<string, unknown> | undefined}
+        required={false}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t("organizer")}>

@@ -838,6 +838,8 @@
       "goToSettings": "Veranstalter anlegen",
       "title": "Titel",
       "description": "Beschreibung",
+      "tags": "Schlagwörter",
+      "tagsHint": "Durch Kommas getrennt, auf der Karte und der Veranstaltungsseite angezeigt: Grosse Duos, Belcanto.",
       "organizer": "Veranstalter",
       "chooseOrganizer": "Wählen…",
       "slug": "Adresse",

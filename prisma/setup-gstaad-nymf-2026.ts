@@ -203,6 +203,8 @@ const GENRES = {
   literary: { fr: "Spectacle littéraire", en: "Literary performance", de: "Literarische Aufführung", it: "Spettacolo letterario", es: "Espectáculo literario" },
   jazz: same("Jazz Session"),
   talk: { fr: "Conférence", en: "Talk", de: "Vortrag", it: "Conferenza", es: "Conferencia" },
+  pianoSeries: { fr: "Série piano", en: "Piano series", de: "Klavierreihe", it: "Serie pianoforte", es: "Serie piano" },
+  celloSeries: { fr: "Série violoncelle", en: "Cello series", de: "Cello-Reihe", it: "Serie violoncello", es: "Serie violonchelo" },
 } satisfies Record<string, Tr>;
 type Genre = keyof typeof GENRES;
 
@@ -821,6 +823,183 @@ const VISUALS: Record<string, string> = {
   "2027-01-10 Alexandros Kapelis": "2027-01-10-kapelis",
 };
 
+/** Types d'événement de l'agenda du festival, dans son ordre. */
+const AGENDA_TAGS: Record<string, Genre[]> = {
+  "2026-12-26 Grigoryan / Antonyan": ["belcanto"],
+  "2026-12-27 Ensemble Mare Nostrum": ["baroque"],
+  "2026-12-27 Fuchs / Cemin": ["belcanto"],
+  "2026-12-28 Berry / Pérot / Goimard": ["belcanto", "young"],
+  "2026-12-28 Edris / Pati / Pordoy": ["duos", "belcanto"],
+  "2026-12-29 Angioloni / Masson": ["young"],
+  "2026-12-29 Grigolo": ["belcanto"],
+  "2026-12-30 Nelson Monfort": ["talk"],
+  "2026-12-30 Spyres / Pordoy": ["duos", "belcanto"],
+  "2027-01-01 Sirolli / Pikulski": ["belcanto", "broadway"],
+  "2027-01-02 Michèle Larivière": ["talk"],
+  "2027-01-02 Oropesa / Tézier / Praticò": ["duos", "belcanto"],
+  "2027-01-03 Bernheim / Matheson": ["belcanto"],
+  "2027-01-03 Mkhitaryan / Zhilikhovsky": ["duos", "belcanto"],
+  "2027-01-04 Ryan-Dugelay": ["young", "pianoSeries"],
+  "2027-01-04 Pagano": ["young", "celloSeries"],
+  "2027-01-05 Arderíus": ["young", "celloSeries"],
+  "2027-01-05 Amadi / Belkin": ["masters", "celloSeries"],
+  "2027-01-06 Chenaux": ["young", "celloSeries"],
+  "2027-01-06 Schmitt / Reyes": ["literary"],
+  "2027-01-07 Earl Rose": ["jazz"],
+  "2027-01-08 Trio Nebelmeer": ["young"],
+  "2027-01-08 Jany McPherson Trio": ["jazz"],
+  "2027-01-09 Martina Meola": ["young", "pianoSeries"],
+  "2027-01-10 Alexandros Kapelis": ["masters", "pianoSeries"],
+};
+
+/**
+ * Page « Focus » du festival : présentation traduite, citation de presse en
+ * français seulement (langue d'origine, pas de traduction d'un critique).
+ */
+const FOCUS: Record<string, Tr> = {
+  grigoryan: {
+    fr: "Juliana Grigoryan, soprano — Liù dans Turandot au Metropolitan Opera de New York et Mimì au Royal Opera House de Londres. Lauréate de plusieurs concours internationaux, dont Operalia en 2022.\n« La jeune soprano arménienne Juliana Grigoryan est une Mimì de rêve, éblouissante, se hissant d’emblée au niveau des grandes interprètes du rôle. » (Résonances lyriques, novembre 2025)",
+    en: "Juliana Grigoryan, soprano — Liù in Turandot at the Metropolitan Opera in New York and Mimì at the Royal Opera House in London. Winner of several international competitions, including Operalia in 2022.",
+    de: "Juliana Grigoryan, Sopran — Liù in Turandot an der Metropolitan Opera in New York und Mimì am Royal Opera House in London. Preisträgerin mehrerer internationaler Wettbewerbe, darunter Operalia 2022.",
+    it: "Juliana Grigoryan, soprano — Liù in Turandot al Metropolitan Opera di New York e Mimì alla Royal Opera House di Londra. Vincitrice di diversi concorsi internazionali, tra cui Operalia nel 2022.",
+    es: "Juliana Grigoryan, soprano — Liù en Turandot en el Metropolitan Opera de Nueva York y Mimì en la Royal Opera House de Londres. Ganadora de varios concursos internacionales, entre ellos Operalia en 2022.",
+  },
+  fuchs: {
+    fr: "Julie Fuchs, soprano — Junon dans Ercole amante d’Antonia Bembo à l’Opéra Bastille ; Adina dans L’Elisir d’amore au Staatsoper de Berlin en septembre 2026.\n« La déesse Junon est interprétée par Julie Fuchs, resplendissante. La voix ronde et résonnante emplit la salle d’une couleur dorée. » (Olga Szymczyk, Olyrix, mai 2026)",
+    en: "Julie Fuchs, soprano — Juno in Antonia Bembo’s Ercole amante at the Opéra Bastille; Adina in L’elisir d’amore at the Berlin Staatsoper in September 2026.",
+    de: "Julie Fuchs, Sopran — Juno in Antonia Bembos Ercole amante an der Opéra Bastille; Adina in L’elisir d’amore an der Staatsoper Berlin im September 2026.",
+    it: "Julie Fuchs, soprano — Giunone nell’Ercole amante di Antonia Bembo all’Opéra Bastille; Adina nell’Elisir d’amore alla Staatsoper di Berlino nel settembre 2026.",
+    es: "Julie Fuchs, soprano — Juno en Ercole amante de Antonia Bembo en la Opéra Bastille; Adina en L’elisir d’amore en la Staatsoper de Berlín en septiembre de 2026.",
+  },
+  edris: {
+    fr: "Amina Edris, soprano — sensible Micaëla dans Carmen à l’Opéra Bastille en février 2026. Prochainement Manon de Massenet à Wellington puis à San Francisco, face au Des Grieux de son mari, Pene Pati.\n« Amina Edris s’affirme comme un des talents les plus singuliers de la planète lyrique, qu’elle ne cesse d’enflammer par ses charmes vocaux et un don d’actrice qui n’appartient qu’aux plus grandes. » (Emmanuel Dupuy, Diapason, 2026)",
+    en: "Amina Edris, soprano — a sensitive Micaëla in Carmen at the Opéra Bastille in February 2026. Coming up: Massenet’s Manon in Wellington, then in San Francisco opposite her husband Pene Pati as Des Grieux.",
+    de: "Amina Edris, Sopran — eine feinfühlige Micaëla in Carmen an der Opéra Bastille im Februar 2026. Demnächst Massenets Manon in Wellington und in San Francisco, an der Seite ihres Mannes Pene Pati als Des Grieux.",
+    it: "Amina Edris, soprano — una sensibile Micaëla in Carmen all’Opéra Bastille nel febbraio 2026. Prossimamente Manon di Massenet a Wellington e poi a San Francisco, accanto al marito Pene Pati nel ruolo di Des Grieux.",
+    es: "Amina Edris, soprano — una sensible Micaëla en Carmen en la Opéra Bastille en febrero de 2026. Próximamente, Manon de Massenet en Wellington y luego en San Francisco, junto a su marido Pene Pati como Des Grieux.",
+  },
+  pati: {
+    fr: "Pene Pati, ténor — un Werther triomphal à l’Opéra-Comique. L’un des ténors lyriques les plus remarquables de sa génération, salué dans le répertoire français (Gounod, Massenet) et le bel canto italien (Donizetti, Bellini).\n« Le ténor samoan, qui triomphe dans la nouvelle production du metteur en scène Ted Huffman, confirme qu’il est aujourd’hui l’un des interprètes majeurs de l’opéra français. » (Marie-Aude Roux, Le Monde, janvier 2026)",
+    en: "Pene Pati, tenor — a triumphant Werther at the Opéra-Comique in Paris. One of the most remarkable lyric tenors of his generation, acclaimed in the French repertoire (Gounod, Massenet) and Italian bel canto (Donizetti, Bellini).",
+    de: "Pene Pati, Tenor — ein umjubelter Werther an der Opéra-Comique in Paris. Einer der bemerkenswertesten lyrischen Tenöre seiner Generation, gefeiert im französischen Repertoire (Gounod, Massenet) und im italienischen Belcanto (Donizetti, Bellini).",
+    it: "Pene Pati, tenore — un Werther trionfale all’Opéra-Comique di Parigi. Uno dei tenori lirici più notevoli della sua generazione, acclamato nel repertorio francese (Gounod, Massenet) e nel belcanto italiano (Donizetti, Bellini).",
+    es: "Pene Pati, tenor — un Werther triunfal en la Opéra-Comique de París. Uno de los tenores líricos más notables de su generación, aclamado en el repertorio francés (Gounod, Massenet) y el bel canto italiano (Donizetti, Bellini).",
+  },
+  oropesa: {
+    fr: "Lisette Oropesa, soprano — reine du bel canto. Cette saison : Maria Stuarda au Metropolitan Opera (novembre-décembre 2026), puis Gilda dans Rigoletto aux côtés de Ludovic Tézier à l’Opéra de Monte-Carlo (février 2027).\n« Lisette Oropesa triomphe sur les plus grandes scènes grâce à son timbre tout en rondeur et des suraigus lumineux : la soprano est aujourd’hui l’interprète idéale du bel canto. » (Aurélie Moreau, France Musique, avril 2025)",
+    en: "Lisette Oropesa, soprano — queen of bel canto. This season: Maria Stuarda at the Metropolitan Opera (November–December 2026), then Gilda in Rigoletto alongside Ludovic Tézier at the Opéra de Monte-Carlo (February 2027).",
+    de: "Lisette Oropesa, Sopran — Königin des Belcanto. In dieser Saison: Maria Stuarda an der Metropolitan Opera (November–Dezember 2026), dann Gilda in Rigoletto an der Seite von Ludovic Tézier an der Opéra de Monte-Carlo (Februar 2027).",
+    it: "Lisette Oropesa, soprano — regina del belcanto. In questa stagione: Maria Stuarda al Metropolitan Opera (novembre-dicembre 2026), poi Gilda in Rigoletto accanto a Ludovic Tézier all’Opéra de Monte-Carlo (febbraio 2027).",
+    es: "Lisette Oropesa, soprano — reina del bel canto. Esta temporada: Maria Stuarda en el Metropolitan Opera (noviembre-diciembre de 2026) y después Gilda en Rigoletto junto a Ludovic Tézier en la Ópera de Montecarlo (febrero de 2027).",
+  },
+  tezier: {
+    fr: "Ludovic Tézier, baryton — l’orfèvre du chant, considéré par de nombreux critiques comme l’héritier du grand baryton français Gabriel Bacquier.\n« Baryton exceptionnel, immense interprète de Verdi, Ludovic Tézier sait tout sublimer et transformer en or tout ce qu’il chante, de Mozart à Verdi, et maintenant Wagner. » (Marie-Thérèse Werling, Résonances lyriques, octobre 2025)",
+    en: "Ludovic Tézier, baritone — the goldsmith of song, seen by many critics as the heir of the great French baritone Gabriel Bacquier.",
+    de: "Ludovic Tézier, Bariton — der Goldschmied des Gesangs, für viele Kritiker der Erbe des grossen französischen Baritons Gabriel Bacquier.",
+    it: "Ludovic Tézier, baritono — l’orafo del canto, per molti critici l’erede del grande baritono francese Gabriel Bacquier.",
+    es: "Ludovic Tézier, barítono — el orfebre del canto, para muchos críticos el heredero del gran barítono francés Gabriel Bacquier.",
+  },
+  bernheim: {
+    fr: "Benjamin Bernheim, ténor — deux prises de rôle en 2026-2027 : Cavaradossi dans Tosca au Staatsoper Unter den Linden de Berlin (octobre 2026) et Don José dans Carmen à la Bayerische Staatsoper (avril 2027).\n« La beauté du timbre, la clarté lumineuse du chant et de la diction, la fluidité du phrasé, l’usage si fin de la nuance et de la demi-teinte, et la puissance éclatante de la projection sont autant de qualités qui laissent béat. » (Christophe Candoni, Sceneweb, mars 2025, à propos de Werther)",
+    en: "Benjamin Bernheim, tenor — two role debuts in 2026–2027: Cavaradossi in Tosca at the Staatsoper Unter den Linden in Berlin (October 2026) and Don José in Carmen at the Bayerische Staatsoper (April 2027).",
+    de: "Benjamin Bernheim, Tenor — zwei Rollendebüts 2026–2027: Cavaradossi in Tosca an der Staatsoper Unter den Linden in Berlin (Oktober 2026) und Don José in Carmen an der Bayerischen Staatsoper (April 2027).",
+    it: "Benjamin Bernheim, tenore — due debutti nel 2026-2027: Cavaradossi in Tosca alla Staatsoper Unter den Linden di Berlino (ottobre 2026) e Don José in Carmen alla Bayerische Staatsoper (aprile 2027).",
+    es: "Benjamin Bernheim, tenor — dos debuts en 2026-2027: Cavaradossi en Tosca en la Staatsoper Unter den Linden de Berlín (octubre de 2026) y Don José en Carmen en la Bayerische Staatsoper (abril de 2027).",
+  },
+  mkhitaryan: {
+    fr: "Kristina Mkhitaryan, soprano — une Micaëla ovationnée au Metropolitan Opera, une Leïla bouleversante au Wiener Staatsoper. Micaëla au Festival de Salzbourg à l’été 2026, Mimì au Metropolitan Opera en octobre 2026.\n« Une Leïla tendre, rapidement bouleversante, avec de beaux aigus et un legato impeccablement maîtrisé. » (ConcertClassic, juin 2026)",
+    en: "Kristina Mkhitaryan, soprano — an acclaimed Micaëla at the Metropolitan Opera, a moving Leïla at the Wiener Staatsoper. Micaëla at the Salzburg Festival in summer 2026, Mimì at the Met in October 2026.",
+    de: "Kristina Mkhitaryan, Sopran — eine umjubelte Micaëla an der Metropolitan Opera, eine bewegende Leïla an der Wiener Staatsoper. Micaëla bei den Salzburger Festspielen im Sommer 2026, Mimì an der Met im Oktober 2026.",
+    it: "Kristina Mkhitaryan, soprano — una Micaëla acclamata al Metropolitan Opera, una Leïla commovente alla Wiener Staatsoper. Micaëla al Festival di Salisburgo nell’estate 2026, Mimì al Met nell’ottobre 2026.",
+    es: "Kristina Mkhitaryan, soprano — una Micaëla ovacionada en el Metropolitan Opera, una Leïla conmovedora en la Wiener Staatsoper. Micaëla en el Festival de Salzburgo en el verano de 2026, Mimì en el Met en octubre de 2026.",
+  },
+  zhilikhovsky: {
+    fr: "Andrey Zhilikhovsky, baryton — Sharpless très remarqué dans Madama Butterfly au Grand Théâtre de Genève, Comte Almaviva dans Le Mariage de Figaro au Royal Opera House de Londres.\n« Andrey Zhilikhovsky prête à son magnifique Sharpless une humanité grave. » (André Peyrègne, ClassiqueNews, avril 2026)",
+    en: "Andrey Zhilikhovsky, baritone — a much-noticed Sharpless in Madama Butterfly at the Grand Théâtre de Genève, Count Almaviva in The Marriage of Figaro at the Royal Opera House in London.",
+    de: "Andrey Zhilikhovsky, Bariton — ein vielbeachteter Sharpless in Madama Butterfly am Grand Théâtre de Genève, Graf Almaviva in Die Hochzeit des Figaro am Royal Opera House in London.",
+    it: "Andrey Zhilikhovsky, baritono — uno Sharpless molto apprezzato in Madama Butterfly al Grand Théâtre de Genève, il Conte d’Almaviva nelle Nozze di Figaro alla Royal Opera House di Londra.",
+    es: "Andrey Zhilikhovsky, barítono — un Sharpless muy destacado en Madama Butterfly en el Grand Théâtre de Genève, el Conde de Almaviva en Las bodas de Fígaro en la Royal Opera House de Londres.",
+  },
+  rose: {
+    fr: "Earl Rose, piano — l’élégance harmonique. Compositeur, pianiste, arrangeur et chef d’orchestre américain, lauréat d’un Emmy Award (14 nominations) et de trois ASCAP Awards ; son jeu réunit le jazz, les standards américains et la musique de film.\n« Earl Rose appartient à cette catégorie de musiciens capables de faire dialoguer la tradition classique et l’esprit du jazz avec une élégance naturelle. Son piano chante, respire et raconte. » (Steinway)",
+    en: "Earl Rose, piano — harmonic elegance. American composer, pianist, arranger and conductor, winner of an Emmy Award (14 nominations) and three ASCAP Awards; his playing brings together jazz, American standards and film music.",
+    de: "Earl Rose, Klavier — harmonische Eleganz. Amerikanischer Komponist, Pianist, Arrangeur und Dirigent, Gewinner eines Emmy Award (14 Nominierungen) und dreier ASCAP Awards; sein Spiel verbindet Jazz, amerikanische Standards und Filmmusik.",
+    it: "Earl Rose, pianoforte — l’eleganza armonica. Compositore, pianista, arrangiatore e direttore d’orchestra americano, vincitore di un Emmy Award (14 candidature) e di tre ASCAP Awards; il suo pianismo unisce jazz, standard americani e musica da film.",
+    es: "Earl Rose, piano — la elegancia armónica. Compositor, pianista, arreglista y director de orquesta estadounidense, ganador de un Emmy (14 nominaciones) y de tres premios ASCAP; su piano une jazz, estándares estadounidenses y música de cine.",
+  },
+  meola: {
+    fr: "Martina Meola, piano — la très jeune pianiste italienne adoubée par Martha Argerich. Lauréate du 4e Concours Jeune Chopin en Suisse, soutenue par Martha Argerich, marraine du concours et présidente du jury. D’origine italo-moldave, elle a commencé le piano à six ans à Chișinău et étudie aujourd’hui au Conservatoire de Milan.\n« Sa jeunesse s’exprime à la fois dans ses doigts et dans son cœur. » (Institut Chopin, 2026)",
+    en: "Martina Meola, piano — the very young Italian pianist endorsed by Martha Argerich. Winner of the 4th Young Chopin Competition in Switzerland, supported by Martha Argerich, the competition’s patron and jury president. Of Italian-Moldovan origin, she began the piano aged six in Chișinău and now studies at the Milan Conservatory.",
+    de: "Martina Meola, Klavier — die sehr junge italienische Pianistin, gefördert von Martha Argerich. Preisträgerin des 4. Concours Jeune Chopin in der Schweiz, unterstützt von Martha Argerich, Patin des Wettbewerbs und Jurypräsidentin. Italienisch-moldauischer Herkunft, begann sie mit sechs Jahren in Chișinău mit dem Klavierspiel und studiert heute am Konservatorium Mailand.",
+    it: "Martina Meola, pianoforte — la giovanissima pianista italiana sostenuta da Martha Argerich. Vincitrice del 4° Concorso Giovane Chopin in Svizzera, sostenuta da Martha Argerich, madrina del concorso e presidente della giuria. Di origine italo-moldava, ha iniziato il pianoforte a sei anni a Chișinău e studia oggi al Conservatorio di Milano.",
+    es: "Martina Meola, piano — la jovencísima pianista italiana respaldada por Martha Argerich. Ganadora del 4.º Concurso Joven Chopin en Suiza, apoyada por Martha Argerich, madrina del concurso y presidenta del jurado. De origen italo-moldavo, empezó el piano a los seis años en Chișinău y estudia hoy en el Conservatorio de Milán.",
+  },
+};
+
+const FOCUS_BY_CONCERT: Record<string, (keyof typeof FOCUS)[]> = {
+  "2026-12-26 Grigoryan / Antonyan": ["grigoryan"],
+  "2026-12-27 Fuchs / Cemin": ["fuchs"],
+  "2026-12-28 Edris / Pati / Pordoy": ["edris", "pati"],
+  "2027-01-02 Oropesa / Tézier / Praticò": ["oropesa", "tezier"],
+  "2027-01-03 Bernheim / Matheson": ["bernheim"],
+  "2027-01-03 Mkhitaryan / Zhilikhovsky": ["mkhitaryan", "zhilikhovsky"],
+  "2027-01-07 Earl Rose": ["rose"],
+  "2027-01-09 Martina Meola": ["meola"],
+};
+
+/** Étiquettes de l'agenda, là où l'admin n'en a pas encore saisi. */
+async function applyTags(organizerId: string): Promise<string> {
+  const keyed = [
+    ...CONCERTS.map((c) => ({ key: `${c.date} ${c.artist}`, slug: concertSlug(c) })),
+    ...TALKS.map((t) => ({ key: `${t.date} ${t.slugName}`, slug: concertSlug({ date: t.date, artist: t.slugName }) })),
+  ];
+  let count = 0;
+  for (const { key, slug } of keyed) {
+    const genres = AGENDA_TAGS[key];
+    if (!genres) continue;
+    const tags = {} as Tr;
+    for (const lang of LANGS) tags[lang] = genres.map((g) => GENRES[g][lang]).join(", ");
+    const { count: n } = await prisma.event.updateMany({
+      where: { slug, organizerId, tags: { equals: Prisma.DbNull } },
+      data: { tags },
+    });
+    count += n;
+  }
+  return `Étiquettes : ${count} événement(s).`;
+}
+
+/** Bloc « Focus » inséré avant le pied de la description, une seule fois. */
+async function applyFocus(organizerId: string): Promise<string> {
+  let count = 0;
+  for (const concert of CONCERTS) {
+    const artists = FOCUS_BY_CONCERT[`${concert.date} ${concert.artist}`];
+    if (!artists) continue;
+    const event = await prisma.event.findFirst({
+      where: { slug: concertSlug(concert), organizerId },
+      select: { id: true, description: true },
+    });
+    if (!event) continue;
+    const text = { ...((event.description as Partial<Tr> | null) ?? {}) };
+    let changed = false;
+    for (const lang of LANGS) {
+      const current = text[lang];
+      if (current == null) continue;
+      const block = ["Focus", ...artists.map((a) => FOCUS[a][lang])].join("\n\n");
+      if (current.includes(FOCUS[artists[0]][lang].slice(0, 40))) continue;
+      const footer = current.lastIndexOf("Gstaad New Year Music Festival, 21");
+      text[lang] =
+        footer > 0
+          ? `${current.slice(0, footer)}${block}\n\n${current.slice(footer)}`
+          : `${current}\n\n${block}`;
+      changed = true;
+    }
+    if (!changed) continue;
+    await prisma.event.update({ where: { id: event.id }, data: { description: text } });
+    count += 1;
+  }
+  return `Focus : ${count} description(s) enrichie(s).`;
+}
+
 /** Ligne de crédit ajoutée par la première reprise des portraits, désormais dans l'image. */
 const PORTRAIT_CREDIT = /\n\n(Photos?|Fotos?) ?: [^\n]*$/;
 
@@ -1038,6 +1217,8 @@ async function main() {
   await once("gnymf-2026/adresses", () => applyAddresses(id));
   await once("gnymf-2026/plan-rougemont", applyRougemontLayout);
   await once("gnymf-2026/visuels-officiels", () => applyVisuals(id));
+  await once("gnymf-2026/etiquettes", () => applyTags(id));
+  await once("gnymf-2026/focus", () => applyFocus(id));
   const seats = await syncRougemont();
   await once("gnymf-2026/invitations-1er-octobre", () => applyInvitations(id));
   console.log(

@@ -838,6 +838,8 @@
       "goToSettings": "Créer un organisateur",
       "title": "Titre",
       "description": "Description",
+      "tags": "Étiquettes",
+      "tagsHint": "Séparées par des virgules, affichées sur la carte et la fiche : Grands duos, Bel canto.",
       "organizer": "Organisateur",
       "chooseOrganizer": "Choisir…",
       "slug": "Adresse",

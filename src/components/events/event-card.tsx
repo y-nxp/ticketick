@@ -2,8 +2,10 @@ import Image from "next/image";
 import { CalendarDays, MapPin, Ticket } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Badge } from "@/components/ui/badge";
+import { EventTags } from "@/components/events/event-tags";
 import { formatDate, formatPrice } from "@/lib/utils";
 import {
+  eventTags,
   isSoldOut,
   minPriceCents,
   nextSession,
@@ -35,6 +37,19 @@ export function EventCard({
   // signale les spectacles joués plusieurs fois.
   const session = nextSession(event);
   const upcomingCount = upcomingSessions(event).length;
+  const tags = eventTags(event, locale);
+  const fmt = (options: Intl.DateTimeFormatOptions) =>
+    session
+      ? formatDate(session.startsAt, `${locale}-CH`, {
+          weekday: undefined,
+          day: undefined,
+          month: undefined,
+          year: undefined,
+          hour: undefined,
+          minute: undefined,
+          ...options,
+        })
+      : "";
 
   return (
     <Link
@@ -57,7 +72,28 @@ export function EventCard({
             <Ticket className="size-10" aria-hidden />
           </div>
         )}
-        <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+        {session ? (
+          // La date lisible reste sous le titre ; ce bloc la répète en grand.
+          <div
+            aria-hidden
+            className="absolute left-0 top-0 flex min-w-[4.5rem] flex-col items-center rounded-br-2xl px-3 pb-2 pt-1.5 leading-none shadow-md"
+            style={{
+              backgroundColor: "var(--brand-accent, var(--foreground))",
+              color: "var(--background)",
+            }}
+          >
+            <span className="text-[11px] font-medium uppercase tracking-wider">
+              {fmt({ month: "short" })}
+            </span>
+            <span className="mt-0.5 text-3xl font-extrabold tabular-nums">
+              {fmt({ day: "numeric" }).replace(/\.$/, "")}
+            </span>
+            <span className="mt-1 text-[11px] font-medium uppercase tracking-wider">
+              {fmt({ weekday: "short" })}
+            </span>
+          </div>
+        ) : null}
+        <div className="absolute bottom-3 left-3 flex flex-wrap gap-1.5">
           {event.categories.slice(0, 2).map((c) => (
             <span
               key={c.id}
@@ -76,6 +112,7 @@ export function EventCard({
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-4">
+        <EventTags tags={tags} />
         <h3 className="line-clamp-2 text-base font-semibold leading-snug group-hover:text-primary transition-colors">
           {t(event.title, locale)}
         </h3>

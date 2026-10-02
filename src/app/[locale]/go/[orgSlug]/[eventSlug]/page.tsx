@@ -4,9 +4,10 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { OrganizerShell } from "@/components/branding/organizer-shell";
 import { EventBooking } from "@/components/events/event-booking";
+import { EventTags } from "@/components/events/event-tags";
 import { Link } from "@/i18n/navigation";
 import { getEventBySlug } from "@/lib/data/events";
-import { t } from "@/lib/types";
+import { eventTags, t } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,7 @@ export default async function OrganizerEventPage({
           locale={locale}
           heading={
             <div>
+              <EventTags tags={eventTags(event, locale)} large className="mb-3" />
               <h1 className="organizer-title">{t(event.title, locale)}</h1>
               <p className="mt-2 text-sm text-neutral-600">
                 {event.organizer.name}

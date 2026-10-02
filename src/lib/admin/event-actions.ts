@@ -76,6 +76,7 @@ export async function saveEvent(
   const id = readOptionalText(data, "id");
   const title = readTranslated(data, "title");
   const description = readTranslated(data, "description");
+  const tags = readTranslated(data, "tags");
   const organizerId = scoped ?? readText(data, "organizerId");
   const status = readStatus(data, "status");
 
@@ -133,6 +134,7 @@ export async function saveEvent(
   const fields = {
     title,
     description,
+    tags: tags.fr ? tags : Prisma.DbNull,
     organizerId,
     status,
     visibility,

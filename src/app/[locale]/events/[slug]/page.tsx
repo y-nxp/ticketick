@@ -5,8 +5,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import { Link, redirect } from "@/i18n/navigation";
 import { EventBooking } from "@/components/events/event-booking";
+import { EventTags } from "@/components/events/event-tags";
 import { getEventBySlug } from "@/lib/data/events";
-import { t } from "@/lib/types";
+import { eventTags, t } from "@/lib/types";
 
 // Le stock évolue en continu : la page est rendue à la demande plutôt que
 // figée au build, où la base n'est de toute façon pas joignable.
@@ -83,6 +84,7 @@ export default async function EventPage({
               </span>
             ))}
           </div>
+          <EventTags tags={eventTags(event, locale)} large className="mb-3" />
           <h1 className="max-w-3xl text-3xl font-bold text-white drop-shadow sm:text-5xl">
             {t(event.title, locale)}
           </h1>
