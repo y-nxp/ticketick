@@ -83,13 +83,13 @@ export function EventCard({
             }}
           >
             <span className="text-[11px] font-medium uppercase tracking-wider">
-              {fmt({ month: "short" })}
+              {fmt({ weekday: "short" })}
             </span>
             <span className="mt-0.5 text-3xl font-extrabold tabular-nums">
               {fmt({ day: "numeric" }).replace(/\.$/, "")}
             </span>
             <span className="mt-1 text-[11px] font-medium uppercase tracking-wider">
-              {fmt({ weekday: "short" })}
+              {fmt({ month: "short" })}
             </span>
           </div>
         ) : null}
