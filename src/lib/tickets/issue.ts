@@ -26,19 +26,25 @@ export function generateTicketCode(): string {
   return `${out.slice(0, 4)}-${out.slice(4, 8)}-${out.slice(8)}`;
 }
 
-/** Crée les billets manquants d'une commande, sans toucher à ceux déjà émis. */
+/**
+ * Crée les billets manquants d'une commande, sans toucher à ceux déjà émis.
+ * Les billets annulés (retirés d'une réservation) ne comptent pas, et chaque
+ * nouveau billet prend un siège de la ligne qu'aucun billet n'occupe encore.
+ */
 export async function issueMissingTickets(
   tx: Prisma.TransactionClient,
   order: { id: string; items: TicketLine[] },
   status: TicketStatus,
 ): Promise<string[]> {
   const existing = await tx.ticket.findMany({
-    where: { orderId: order.id },
-    select: { ticketTypeId: true },
+    where: { orderId: order.id, status: { not: "CANCELLED" } },
+    select: { ticketTypeId: true, seatKey: true },
   });
   const already = new Map<string, number>();
+  const seated = new Set<string>();
   for (const ticket of existing) {
     already.set(ticket.ticketTypeId, (already.get(ticket.ticketTypeId) ?? 0) + 1);
+    if (ticket.seatKey) seated.add(ticket.seatKey);
   }
 
   const labels = await seatLabelsFor(tx, order);
@@ -46,10 +52,11 @@ export async function issueMissingTickets(
   const codes: string[] = [];
   for (const item of order.items) {
     const have = already.get(item.ticketTypeId) ?? 0;
+    const freeSeats = (item.seatKeys ?? []).filter((key) => !seated.has(key));
     for (let i = have; i < item.quantity; i++) {
       const code = generateTicketCode();
       codes.push(code);
-      const seatKey = item.seatKeys?.[i];
+      const seatKey = freeSeats.shift();
       await tx.ticket.create({
         data: {
           code,

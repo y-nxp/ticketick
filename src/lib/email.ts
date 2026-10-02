@@ -72,6 +72,16 @@ export interface MailAttachment {
   contentType?: string;
 }
 
+/**
+ * Expéditeur affiché au nom d'un organisateur, sur l'adresse de ticketick :
+ * l'envoi reste authentifié (SPF, DKIM) et les réponses vont à l'organisateur.
+ */
+function expediteurAuNomDe(nom: string): string {
+  const adresse = /<([^>]+)>/.exec(expediteur())?.[1] ?? expediteur();
+  const propre = nom.replace(/["<>\r\n]/g, "").trim().slice(0, 80);
+  return propre ? `"${propre}" <${adresse}>` : expediteur();
+}
+
 async function envoyer(options: {
   to: string;
   bcc?: string[];
@@ -80,6 +90,9 @@ async function envoyer(options: {
   html: string;
   attachments?: MailAttachment[];
   etiquette: string;
+  /** Nom affiché comme expéditeur (organisateur), adresse ticketick. */
+  fromName?: string;
+  replyTo?: string;
 }): Promise<{ sent: boolean; mock: boolean }> {
   if (!isMailConfigured()) {
     console.info(
@@ -93,7 +106,8 @@ async function envoyer(options: {
 
   try {
     const info = await getTransport().sendMail({
-      from: expediteur(),
+      from: options.fromName ? expediteurAuNomDe(options.fromName) : expediteur(),
+      replyTo: options.replyTo || undefined,
       to: options.to,
       bcc: options.bcc?.length ? options.bcc : undefined,
       subject: options.subject,

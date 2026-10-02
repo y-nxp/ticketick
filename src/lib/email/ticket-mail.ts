@@ -163,13 +163,22 @@ export async function sendTicketCards(input: {
   });
 }
 
-/** Envoie les billets d'une commande payée, avec copie à l'organisateur. */
-export async function sendPaidOrderTickets(orderId: string) {
+/**
+ * Envoie les billets valables d'une commande payée, avec copie à
+ * l'organisateur sauf au renvoi depuis l'admin.
+ */
+export async function sendPaidOrderTickets(
+  orderId: string,
+  options: { copyOrganizer?: boolean } = {},
+) {
   const order = await paidOrderForMail(orderId);
-  if (!order) return;
-  await sendTicketCards({
+  if (!order) return { sent: false, mock: false };
+  return sendTicketCards({
     to: order.email,
-    bcc: order.notifyEmails.filter((adresse) => adresse !== order.email),
+    bcc:
+      options.copyOrganizer === false
+        ? undefined
+        : order.notifyEmails.filter((adresse) => adresse !== order.email),
     buyerName: order.buyerName,
     reference: order.reference,
     locale: order.locale,

@@ -278,8 +278,13 @@ const adminOrderSelect = {
   lastName: true,
   phone: true,
   ticketNote: true,
+  locale: true,
   createdAt: true,
   reseller: { select: { name: true } },
+  charges: {
+    where: { kind: "PAYMENT" as const, status: "OPEN" as const },
+    select: { method: true, amountCents: true },
+  },
   payment: {
     select: {
       provider: true,

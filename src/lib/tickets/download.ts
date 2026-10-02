@@ -126,11 +126,23 @@ export async function ticketsForPdf(
   if (!order || order.tickets.length === 0) return null;
   if (options.requirePaid && order.status !== "PAID") return null;
 
+  // Commande en cours : les billets retirés n'y figurent plus, et le client
+  // ne reçoit pas ceux d'un lien de paiement encore ouvert.
+  const tickets =
+    order.status === "PAID"
+      ? order.tickets.filter(
+          (t) =>
+            t.status !== "CANCELLED" &&
+            !(options.requirePaid && t.status === "PENDING"),
+        )
+      : order.tickets;
+  if (tickets.length === 0) return null;
+
   const holder = `${order.firstName} ${order.lastName}`.trim();
   return {
     locale: order.locale,
     cards: mapTickets(
-      order.tickets,
+      tickets,
       holder,
       order.reference,
       order.locale,
@@ -152,12 +164,13 @@ export async function paidOrderForMail(orderId: string) {
       reference: true,
       options: { select: orderOptionSelect },
       tickets: {
+        where: { status: { in: ["VALID", "USED"] } },
         orderBy: { createdAt: "asc" },
         select: ticketOrderSelect,
       },
     },
   });
-  if (!order || order.tickets.length === 0) return null;
+  if (!order || order.tickets.length === 0 || !order.email) return null;
   const holder = `${order.firstName} ${order.lastName}`.trim();
   return {
     email: order.email,

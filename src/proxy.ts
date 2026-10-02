@@ -8,6 +8,7 @@ const detectLocale = createMiddleware(routing);
 /**
  * Pages destinées au site du client : le lien partagé s'ouvre en français
  * quelle que soit la langue du navigateur, puis le visiteur peut en changer.
+ * Le lien de paiement porte déjà la langue de la commande.
  */
 const hostedLocale = createMiddleware({
   ...routing,
@@ -18,7 +19,7 @@ const prefixes = routing.locales
   .filter((l) => l !== routing.defaultLocale)
   .join("|");
 const localePrefix = new RegExp(`^/(?:${prefixes})(?=/|$)`);
-const hostedPath = new RegExp(`^(?:/(?:${prefixes}))?/(?:go|embed)(?:/|$)`);
+const hostedPath = new RegExp(`^(?:/(?:${prefixes}))?/(?:go|embed|pay)(?:/|$)`);
 
 function withShopOriginCookie(
   request: NextRequest,

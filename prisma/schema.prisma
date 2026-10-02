@@ -754,6 +754,7 @@ model Order {
   options   OrderOption[]
   tickets   Ticket[]
   payment   Payment?
+  charges   OrderCharge[]
   ledger    ResellerLedgerEntry[]
   seats     SessionSeat[]
 
@@ -886,6 +887,68 @@ model Payment {
   currency    String        @default("CHF")
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+}
+
+enum ChargeKind {
+  /// Places ajoutées : le client doit la différence.
+  PAYMENT
+  /// Places retirées : l'organisateur rend la différence.
+  REFUND
+}
+
+enum ChargeMethod {
+  /// Espèces, encaissées ou rendues de la main à la main.
+  CASH
+  /// Lien de paiement par carte envoyé au client, valable jusqu'à l'échéance.
+  LINK
+  /// Payé le soir du spectacle ; l'organisateur imprime et remet les billets.
+  DOOR
+  /// Note de crédit : l'organisateur rembourse par virement.
+  CREDIT_NOTE
+  /// Remboursé chez le prestataire du paiement d'origine (PostFinance, PayPal, Stripe).
+  PROVIDER
+}
+
+enum ChargeStatus {
+  OPEN
+  DONE
+  /// Lien non payé à l'échéance : les places sont reparties.
+  EXPIRED
+  CANCELLED
+  /// Refusé par le prestataire : à relancer ou à régler autrement.
+  FAILED
+}
+
+/// Règlement d'une modification faite depuis l'admin. `Order.totalCents`
+/// suit l'encaissé net : il ne bouge qu'au règlement effectif.
+model OrderCharge {
+  id          String       @id @default(cuid())
+  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String
+  /// Référence donnée au client et au prestataire : TT-ABCD-EFGH-2.
+  number      String       @unique
+  kind        ChargeKind
+  method      ChargeMethod
+  status      ChargeStatus @default(OPEN)
+  amountCents Int
+  currency    String       @default("CHF")
+  /// Lien de paiement : passé ce délai, les places sont rendues.
+  dueAt       DateTime?
+  /// Empreinte SHA-256 du jeton du lien : le lien seul ouvre le paiement.
+  tokenHash   String?      @unique
+  provider    String?
+  providerRef String?
+  /// Billets ajoutés ou retirés par ce règlement.
+  ticketIds   String[]     @default([])
+  /// Places prises sur les invitations : y retournent si le lien expire.
+  fromInvites Boolean      @default(false)
+  createdById String?
+  createdAt   DateTime     @default(now())
+  settledAt   DateTime?
+
+  @@index([orderId])
+  @@index([status, dueAt])
+  @@index([provider, providerRef])
 }
 
 /// Reprises de données déjà passées (scripts lancés à chaque déploiement) :

@@ -271,14 +271,30 @@ export async function capturePaypalOrder(
   };
 }
 
-/** Rembourse intégralement une capture. */
+/**
+ * Rembourse une capture : intégralement sans `partial`, sinon le montant
+ * donné. `partial.requestId` distingue deux remboursements partiels d'une
+ * même capture, qu'un identifiant commun ferait passer pour un rejeu.
+ */
 export async function refundPaypalCapture(
   account: PaypalAccount,
   captureId: string,
+  partial?: { amountCents: number; currency: string; requestId: string },
 ): Promise<{ id: string; status: string }> {
   return call<{ id: string; status: string }>(
     account,
     `/v2/payments/captures/${encodeURIComponent(captureId)}/refund`,
-    { method: "POST", body: {}, requestId: `refund-${captureId}` },
+    {
+      method: "POST",
+      body: partial
+        ? {
+            amount: {
+              value: toValue(partial.amountCents),
+              currency_code: partial.currency.toUpperCase(),
+            },
+          }
+        : {},
+      requestId: partial?.requestId ?? `refund-${captureId}`,
+    },
   );
 }

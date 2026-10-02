@@ -1,5 +1,6 @@
 import "server-only";
 
+import { expireOverdueCharges } from "./charges";
 import {
   releaseStaleUnpaidCardOrders,
   STALE_RELEASE_BATCH,
@@ -19,6 +20,8 @@ async function balayer(): Promise<void> {
   if (enCours) return;
   enCours = true;
   try {
+    const echus = await expireOverdueCharges();
+    if (echus > 0) console.log(`[rétentions] ${echus} lien(s) de paiement échu(s)`);
     for (let passe = 0; passe < PASSES_MAX; passe += 1) {
       const rendues = await releaseStaleUnpaidCardOrders();
       if (rendues === 0) return;

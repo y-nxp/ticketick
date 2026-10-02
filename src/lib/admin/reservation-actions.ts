@@ -4,9 +4,12 @@ import { revalidatePath } from "next/cache";
 import * as z from "zod";
 import { locales } from "@/i18n/routing";
 import { catalogActor, forbidIfForeignEvent } from "@/lib/admin/access";
-import { failure, readText, success, type FormState } from "@/lib/admin/form";
+import { deliverCharge, hasEmail, readPaymentSettle } from "@/lib/admin/charge-input";
+import { failure, readBoolean, readText, success, type FormState } from "@/lib/admin/form";
 import { createReservation } from "@/lib/orders/admin-reservation";
 import { cancelReservation } from "@/lib/orders/create-order";
+import { mockPaymentsAllowed } from "@/lib/payment/config";
+import { postfinanceAccountFor } from "@/lib/payment/postfinance-account";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
@@ -15,6 +18,8 @@ const schema = z.object({
   holderName: z.string().max(120),
   ticketNote: z.string().max(80),
   locale: z.enum(locales),
+  email: z.union([z.literal(""), z.email().max(200)]),
+  phone: z.string().max(40),
 });
 
 /** Réserve des places sans paiement ; renvoie l'identifiant de la commande. */
@@ -29,6 +34,8 @@ export async function reserveSeats(
     holderName: readText(formData, "holderName"),
     ticketNote: readText(formData, "ticketNote"),
     locale: readText(formData, "locale"),
+    email: readText(formData, "email"),
+    phone: readText(formData, "phone"),
   });
   if (!parsed.success) return failure("invalid");
   const data = parsed.data;
@@ -36,7 +43,12 @@ export async function reserveSeats(
   await forbidIfForeignEvent(data.eventId, organizerId);
   const session = await prisma.eventSession.findFirst({
     where: { id: data.sessionId, eventId: data.eventId },
-    select: { id: true, ticketTypes: { select: { id: true } } },
+    select: {
+      id: true,
+      startsAt: true,
+      event: { select: { organizerId: true } },
+      ticketTypes: { select: { id: true, priceCents: true } },
+    },
   });
   if (!session) return failure("notFound");
 
@@ -51,6 +63,21 @@ export async function reserveSeats(
     if (quantity > 0) lines.push({ ticketTypeId: tt.id, quantity });
   }
 
+  const price = new Map(session.ticketTypes.map((tt) => [tt.id, tt.priceCents]));
+  const settle = readPaymentSettle(
+    formData,
+    lines.reduce((sum, l) => sum + (price.get(l.ticketTypeId) ?? 0) * l.quantity, 0),
+    session.startsAt,
+  );
+  if (typeof settle === "string") return failure(settle);
+  if (settle.method === "LINK") {
+    if (!hasEmail(data.email)) return failure("emailMissing");
+    const card =
+      mockPaymentsAllowed() ||
+      (await postfinanceAccountFor([session.event.organizerId])) !== null;
+    if (!card) return failure("cardMissing");
+  }
+
   const result = await createReservation({
     sessionId: session.id,
     lines,
@@ -58,8 +85,21 @@ export async function reserveSeats(
     ticketNote: data.ticketNote,
     locale: data.locale,
     soldByUserId: user.id,
+    fromInvites: readBoolean(formData, "fromInvites"),
+    email: data.email,
+    phone: data.phone,
+    settle,
   });
   if (!result.ok) return failure(result.error);
+
+  await deliverCharge({
+    orderId: result.orderId,
+    locale: data.locale,
+    chargeId: result.chargeId,
+    token: result.token,
+    sendTickets: readBoolean(formData, "sendTickets"),
+    email: data.email,
+  });
 
   revalidatePath("/admin");
   revalidatePath("/admin/orders");

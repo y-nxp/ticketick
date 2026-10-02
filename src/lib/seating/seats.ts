@@ -35,20 +35,48 @@ export async function syncSessionSeats(sessionId: string, db: Db = prisma) {
 
 /**
  * Retient des sièges pour une commande. Renvoie le nombre obtenu : l'appelant
- * annule la transaction s'il n'a pas tout.
+ * annule la transaction s'il n'a pas tout. `from` : états acceptés, les places
+ * bloquées (invités) ne se prennent que depuis l'admin.
  */
 export async function claimSeats(
   tx: Prisma.TransactionClient,
-  input: { orderId: string; sessionId: string; keys: string[]; zones: string[] },
+  input: {
+    orderId: string;
+    sessionId: string;
+    keys: string[];
+    zones: string[];
+    from?: ("AVAILABLE" | "BLOCKED")[];
+  },
 ): Promise<number> {
   if (input.keys.length === 0) return 0;
+  const from = input.from ?? ["AVAILABLE"];
   return tx.$executeRaw`
     UPDATE "SessionSeat"
-    SET status = 'RESERVED', "orderId" = ${input.orderId}, "updatedAt" = NOW()
+    SET status = 'RESERVED', "orderId" = ${input.orderId}, "blockNote" = NULL, "updatedAt" = NOW()
     WHERE "sessionId" = ${input.sessionId}
       AND "seatKey" = ANY(${input.keys}::text[])
-      AND status = 'AVAILABLE'
+      AND status::text = ANY(${from}::text[])
       AND (cardinality(${input.zones}::text[]) = 0 OR zone = ANY(${input.zones}::text[]))
+  `;
+}
+
+/**
+ * Libère des sièges d'une commande : remis en vente, ou rendus aux invités
+ * (bloqués, avec un motif).
+ */
+export async function releaseSeats(
+  tx: Prisma.TransactionClient,
+  input: { orderId: string; sessionId: string; keys: string[]; blockNote?: string | null },
+): Promise<void> {
+  if (input.keys.length === 0) return;
+  const status = input.blockNote != null ? "BLOCKED" : "AVAILABLE";
+  await tx.$executeRaw`
+    UPDATE "SessionSeat"
+    SET status = ${status}::"SeatStatus", "orderId" = NULL,
+        "blockNote" = ${input.blockNote ?? null}, "updatedAt" = NOW()
+    WHERE "sessionId" = ${input.sessionId}
+      AND "seatKey" = ANY(${input.keys}::text[])
+      AND "orderId" = ${input.orderId}
   `;
 }
 

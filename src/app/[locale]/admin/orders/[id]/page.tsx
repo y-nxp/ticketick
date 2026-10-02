@@ -5,11 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { getAdminOrder } from "@/lib/data/admin";
+import { getOrderEditContext } from "@/lib/data/admin-order-edit";
 import { isCheckoutHoldEmail } from "@/lib/orders/create-order";
 import { isAbandonedCardHold, isRefundDue } from "@/lib/orders/reservation";
 import { t as translate, type Translated } from "@/lib/types";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { OrderActions } from "../order-actions";
+import { OrderEditor } from "./order-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +43,14 @@ export default async function AdminOrderDetailPage({
     order.payment.status === "COMPLETED";
   const canCancelReservation =
     order.status === "PAID" && order.paymentMethod === "RESERVATION";
+  const editable = order.status === "PAID";
+  const edit =
+    !readOnly && !hold && (editable || canMarkCash)
+      ? await getOrderEditContext(order.id, locale)
+      : null;
+  const fmt = `${locale}-CH`;
+  const short = { weekday: undefined, year: undefined } as const;
+  const openCharge = order.charges[0];
 
   return (
     <div>
@@ -71,6 +81,10 @@ export default async function AdminOrderDetailPage({
         ) : abandoned ? (
           <Badge variant="outline" className="text-muted-foreground">
             {t("orders.abandoned")}
+          </Badge>
+        ) : openCharge ? (
+          <Badge variant="outline">
+            {t(`orders.chargeOpen.${openCharge.method}`)}
           </Badge>
         ) : (
           <Badge variant={order.status === "PAID" ? "default" : "secondary"}>
@@ -154,7 +168,7 @@ export default async function AdminOrderDetailPage({
       <section className="mt-6">
         <h2 className="text-sm font-semibold">{t("orders.items")}</h2>
         <ul className="mt-2 divide-y divide-border rounded-2xl border border-border">
-          {order.items.map((item, index) => (
+          {order.items.filter((item) => item.quantity > 0).map((item, index) => (
             <li
               key={`${item.ticketType.session.event.title}-${index}`}
               className="flex items-start justify-between gap-4 px-4 py-3 text-sm"
@@ -220,7 +234,7 @@ export default async function AdminOrderDetailPage({
         </ul>
       </section>
 
-      {order.tickets.length > 0 ? (
+      {order.tickets.length > 0 && !(edit && editable && !order.reseller) ? (
         <section className="mt-6">
           <h2 className="text-sm font-semibold">{t("orders.tickets")}</h2>
           <ul className="mt-2 divide-y divide-border rounded-2xl border border-border">
@@ -261,7 +275,7 @@ export default async function AdminOrderDetailPage({
           {t("orders.payment")}: {t(`paymentMethod.${order.payment.method}`)} ·{" "}
           {order.payment.provider} · {order.payment.status}
         </p>
-      ) : (
+      ) : edit?.order.charges.length ? null : (
         <p className="mt-6 text-sm text-muted-foreground">
           {t("orders.noPayment")}
         </p>
@@ -278,6 +292,58 @@ export default async function AdminOrderDetailPage({
           paid={order.status === "PAID"}
         />
       )}
+
+      {edit ? (
+        <OrderEditor
+          orderId={order.id}
+          locale={locale}
+          editable={editable}
+          reseller={Boolean(edit.order.resellerId)}
+          details={{
+            firstName: edit.order.firstName,
+            lastName: edit.order.lastName,
+            email: edit.order.email,
+            phone: edit.order.phone ?? "",
+            ticketNote: edit.order.ticketNote ?? "",
+            locale: edit.order.locale,
+          }}
+          tickets={edit.tickets}
+          tariffs={edit.tariffs.map((tt) => ({
+            id: tt.id,
+            session: `${tt.event} · ${formatDate(tt.startsAt, fmt, short)}`,
+            name: tt.name,
+            priceCents: tt.priceCents,
+            available: tt.available,
+            invites: tt.invites,
+          }))}
+          charges={edit.order.charges.map((c) => ({
+            id: c.id,
+            number: c.number,
+            kind: c.kind,
+            method: c.method,
+            status: c.status,
+            amountCents: c.amountCents,
+            due: c.dueAt ? formatDate(c.dueAt, fmt, short) : null,
+            when: formatDate(c.settledAt ?? c.createdAt, fmt, short),
+          }))}
+          refundableCents={Math.max(
+            0,
+            edit.order.totalCents -
+              edit.order.charges
+                .filter(
+                  (c) =>
+                    c.kind === "REFUND" && (c.status === "OPEN" || c.status === "FAILED"),
+                )
+                .reduce((sum, c) => sum + c.amountCents, 0),
+          )}
+          providerRefund={edit.providerRefund}
+          linkAvailable={edit.linkAvailable}
+          seatedSessions={edit.seatedSessions.map((s) => ({
+            id: s.id,
+            label: `${s.label} · ${formatDate(s.startsAt, fmt, short)}`,
+          }))}
+        />
+      ) : null}
     </div>
   );
 }

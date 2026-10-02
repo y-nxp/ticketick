@@ -130,6 +130,10 @@ export default async function AdminOrdersPage({
                         >
                           {t("orders.abandoned")}
                         </Badge>
+                      ) : order.charges[0] ? (
+                        <Badge variant="outline">
+                          {t(`orders.chargeOpen.${order.charges[0].method}`)}
+                        </Badge>
                       ) : (
                         <Badge
                           variant={

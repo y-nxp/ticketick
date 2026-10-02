@@ -4,6 +4,8 @@ import { Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { getSessionForReservation } from "@/lib/data/admin-catalog";
+import { mockPaymentsAllowed } from "@/lib/payment/config";
+import { postfinanceAccountFor } from "@/lib/payment/postfinance-account";
 import { t as translate, type Translated } from "@/lib/types";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { ReservationForm } from "./reservation-form";
@@ -22,17 +24,22 @@ export default async function ReserveSessionPage({
 
   const data = await getSessionForReservation(id, sessionId);
   if (!data) notFound();
-  const { session, layout, freeByZone, reservations } = data;
+  const { session, layout, freeByZone, invitesByZone, reservations } = data;
   const past = session.startsAt <= new Date();
+  const linkAvailable =
+    mockPaymentsAllowed() ||
+    (await postfinanceAccountFor([session.event.organizerId])) !== null;
 
   const zones = new Map(layout?.zones.map((z) => [z.key, z]) ?? []);
   const rows = session.ticketTypes.map((tt) => {
     let available = Math.max(0, tt.quantity - tt.sold);
     let zoneLabel: string | null = null;
+    let invites: number | null = null;
     if (freeByZone) {
       const keys = tt.seatZones.length ? tt.seatZones : [...zones.keys()];
       const free = keys.reduce((n, key) => n + (freeByZone[key] ?? 0), 0);
       available = Math.min(available, free);
+      invites = keys.reduce((n, key) => n + (invitesByZone?.[key] ?? 0), 0);
       zoneLabel = keys
         .map((key) => zones.get(key))
         .filter((z) => z != null)
@@ -43,8 +50,10 @@ export default async function ReserveSessionPage({
     return {
       id: tt.id,
       name,
-      price: formatPrice(tt.priceCents, locale),
+      price: formatPrice(tt.priceCents, `${locale}-CH`),
+      priceCents: tt.priceCents,
       available,
+      invites,
       zoneLabel: zoneLabel === name ? null : zoneLabel,
     };
   });
@@ -83,6 +92,8 @@ export default async function ReserveSessionPage({
           sessionId={session.id}
           locale={locale}
           rows={rows}
+          seated={layout != null}
+          linkAvailable={linkAvailable}
         />
       )}
 
@@ -112,6 +123,11 @@ export default async function ReserveSessionPage({
                 <span className="text-muted-foreground">
                   {t("ticketCount", { count: r._count.tickets })}
                 </span>
+                {r.charges[0] ? (
+                  <Badge variant="outline">
+                    {ta(`orders.chargeOpen.${r.charges[0].method}`)}
+                  </Badge>
+                ) : null}
                 {r.status === "PAID" ? (
                   <a
                     href={`/api/tickets/pdf?ref=${encodeURIComponent(r.reference)}`}

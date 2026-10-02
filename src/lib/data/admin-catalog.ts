@@ -219,7 +219,7 @@ export async function getSessionSeats(eventId: string, sessionId: string) {
   return { session, layout, seats };
 }
 
-/** Séance, tarifs et réservations déjà saisies, pour réserver sans paiement. */
+/** Séance, tarifs et réservations déjà saisies, pour réserver depuis l'admin. */
 export async function getSessionForReservation(eventId: string, sessionId: string) {
   const { organizerId } = await catalogActor();
   await forbidIfForeignEvent(eventId, organizerId);
@@ -235,7 +235,7 @@ export async function getSessionForReservation(eventId: string, sessionId: strin
       seatPlanId: true,
       seatPlan: { select: { layout: true } },
       venue: { select: { name: true, city: true } },
-      event: { select: { id: true, title: true } },
+      event: { select: { id: true, title: true, organizerId: true } },
       ticketTypes: {
         orderBy: { priceCents: "desc" },
         select: {
@@ -253,19 +253,26 @@ export async function getSessionForReservation(eventId: string, sessionId: strin
 
   const layout = readLayout(session.seatPlan?.layout);
   let freeByZone: Record<string, number> | null = null;
+  let invitesByZone: Record<string, number> | null = null;
   if (layout) {
     await syncSessionSeats(session.id);
     const rows = await prisma.sessionSeat.groupBy({
-      by: ["zone"],
-      where: { sessionId: session.id, status: "AVAILABLE" },
+      by: ["zone", "status"],
+      where: { sessionId: session.id, status: { in: ["AVAILABLE", "BLOCKED"] } },
       _count: { _all: true },
     });
-    freeByZone = Object.fromEntries(rows.map((r) => [r.zone, r._count._all]));
+    const count = (status: string) =>
+      Object.fromEntries(
+        rows.filter((r) => r.status === status).map((r) => [r.zone, r._count._all]),
+      );
+    freeByZone = count("AVAILABLE");
+    invitesByZone = count("BLOCKED");
   }
 
+  // Saisies à l'admin, offertes ou payantes : seul ce canal les distingue.
   const reservations = await prisma.order.findMany({
     where: {
-      paymentMethod: "RESERVATION",
+      channel: "BOX_OFFICE",
       items: { some: { ticketType: { sessionId: session.id } } },
     },
     orderBy: { createdAt: "desc" },
@@ -276,11 +283,15 @@ export async function getSessionForReservation(eventId: string, sessionId: strin
       lastName: true,
       ticketNote: true,
       createdAt: true,
-      _count: { select: { tickets: true } },
+      charges: {
+        where: { kind: "PAYMENT", status: "OPEN" },
+        select: { method: true },
+      },
+      _count: { select: { tickets: { where: { status: { not: "CANCELLED" } } } } },
     },
   });
 
-  return { session, layout, freeByZone, reservations };
+  return { session, layout, freeByZone, invitesByZone, reservations };
 }
 
 /**

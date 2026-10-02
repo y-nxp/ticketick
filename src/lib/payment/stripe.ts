@@ -20,6 +20,29 @@ export function getStripe(): Stripe {
   return client;
 }
 
+/**
+ * Rembourse tout ou partie d'un ancien paiement de billets passé par Stripe
+ * (`providerRef` : identifiant de la session Checkout).
+ */
+export async function refundStripeSession(input: {
+  sessionId: string;
+  amountCents: number;
+  idempotencyKey: string;
+}): Promise<{ id: string; status: string | null }> {
+  const stripe = getStripe();
+  const session = await stripe.checkout.sessions.retrieve(input.sessionId);
+  const intent =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : session.payment_intent?.id;
+  if (!intent) throw new Error("Stripe : session sans paiement");
+  const refund = await stripe.refunds.create(
+    { payment_intent: intent, amount: input.amountCents },
+    { idempotencyKey: input.idempotencyKey },
+  );
+  return { id: refund.id, status: refund.status };
+}
+
 export interface CheckoutLineItem {
   name: string;
   quantity: number;

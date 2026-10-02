@@ -1,6 +1,10 @@
 import "server-only";
 
 import { sendPaidOrderTickets } from "@/lib/email/ticket-mail";
+import {
+  chargeForPostfinanceTransaction,
+  settleChargePostfinance,
+} from "@/lib/orders/charges";
 import { markOrderPaid } from "@/lib/orders/mark-paid";
 import { prisma } from "@/lib/prisma";
 import {
@@ -77,6 +81,11 @@ export async function settlePostfinanceById(transactionId: number): Promise<void
     select: { status: true, order: { select: { reference: true } } },
   });
   if (!payment) {
+    const chargeId = await chargeForPostfinanceTransaction(transactionId);
+    if (chargeId) {
+      await settleChargePostfinance(chargeId);
+      return;
+    }
     console.warn("[postfinance] transaction sans commande", { transactionId });
     return;
   }

@@ -213,6 +213,41 @@ export async function fetchPostfinanceTransaction(
   );
 }
 
+export interface PostfinanceRefund {
+  id?: number;
+  state?: string;
+}
+
+/**
+ * Rembourse tout ou partie d'une transaction payée. `externalId` rend
+ * l'appel rejouable : PostFinance n'exécute qu'une fois un même identifiant.
+ */
+export async function refundPostfinanceTransaction(
+  creds: PostfinanceCredentials,
+  input: {
+    transactionId: number;
+    amountCents: number;
+    externalId: string;
+    merchantReference: string;
+  },
+): Promise<PostfinanceRefund> {
+  return pfFetch<PostfinanceRefund>(creds, "/payment/refunds", {
+    method: "POST",
+    body: {
+      externalId: input.externalId.slice(0, 100),
+      transaction: input.transactionId,
+      amount: francs(input.amountCents),
+      type: "MERCHANT_INITIATED_ONLINE",
+      merchantReference: input.merchantReference.slice(0, 100),
+    },
+  });
+}
+
+/** `FAILED` seul est un refus ; en attente ou à vérifier, l'ordre est passé. */
+export function isRefusedRefundState(state: string | undefined): boolean {
+  return state === "FAILED";
+}
+
 /**
  * Accès acceptés par PostFinance. Seul un refus d'authentification les
  * invalide : une autre erreur ne dit rien de la paire saisie.

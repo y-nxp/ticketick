@@ -370,5 +370,25 @@
       "CANCELLED": "Cancelado",
       "REFUNDED": "Reembolsado"
     }
+  },
+  "pay": {
+    "title": "Pago de sus entradas",
+    "intro": "{organizer} le ha reservado estas plazas. Pague con tarjeta para recibir sus entradas.",
+    "paidTitle": "Pago recibido, ¡gracias!",
+    "paidText": "Sus entradas son válidas. Las hemos enviado a {email}; también puede descargarlas abajo.",
+    "closedTitle": "Este enlace ya no es válido",
+    "closedText": "El plazo de pago ha vencido o la reserva se ha cancelado. Contacte con {organizer} si aún desea estas plazas.",
+    "total": "Total",
+    "reference": "Referencia {reference}",
+    "due": "A pagar antes del {date}",
+    "payButton": "Pagar {amount} con tarjeta",
+    "opening": "Abriendo el pago…",
+    "secure": "Pago seguro con PostFinance. Los datos de su tarjeta no pasan por ticketick.",
+    "download": "Descargar las entradas (PDF)",
+    "errors": {
+      "unavailable": "Este enlace ya no se puede pagar. Recargue la página.",
+      "cardMissing": "El pago con tarjeta no está disponible para este organizador. Contacte con él.",
+      "failed": "No se ha podido abrir el pago. Vuelva a intentarlo en un momento."
+    }
   }
 }
