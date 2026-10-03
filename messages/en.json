@@ -94,7 +94,6 @@
     "seatZoneNote": "*{tariff} valid only in {zones}.",
     "seatZoneNoteAge": "*Free admission for under-{age}s valid only in {zones}.",
     "seatZonesNumbered": "{count, plural, one {category {list}} other {categories {list}}}",
-    "idRequired": "ID required at the entrance.",
     "seatSelected": "Your selection",
     "seatTaken": "Taken",
     "seatFree": "Free seat",

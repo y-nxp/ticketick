@@ -94,7 +94,6 @@
     "seatZoneNote": "*{tariff} válido solo en {zones}.",
     "seatZoneNoteAge": "*Gratuidad para menores de {age} años válida solo en {zones}.",
     "seatZonesNumbered": "{count, plural, one {categoría {list}} other {categorías {list}}}",
-    "idRequired": "Documento de identidad obligatorio en la entrada.",
     "seatSelected": "Tu selección",
     "seatTaken": "Ocupado",
     "seatFree": "Asiento libre",
