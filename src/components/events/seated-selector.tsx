@@ -200,12 +200,34 @@ export function SeatedSelector({
         : [];
     }),
   );
+  /** Gratuités limitées à certaines catégories, rappelées sous la légende. */
+  const zoneNotes = new Map(
+    companions.flatMap((tt) => {
+      const zones = (layout?.zones ?? []).filter((z) =>
+        (tt.seatZones ?? []).includes(z.key),
+      );
+      if (zones.length === 0 || zones.length === layout?.zones.length) return [];
+      const names = zones.map((z) => t(z.name, locale));
+      const list = new Intl.ListFormat(locale, { type: "conjunction" });
+      const numbered = names.map((n) => /^(?:cat|kat)\S*\s+(\d+)$/i.exec(n)?.[1]);
+      const where = numbered.every(Boolean)
+        ? te("seatZonesNumbered", { count: names.length, list: list.format(numbered as string[]) })
+        : list.format(names);
+      const note = [
+        te("seatZoneNote", { tariff: t(tt.name, locale), zones: where }),
+        tt.maxAgeYears ? te("idRequired") : null,
+      ]
+        .filter(Boolean)
+        .join(" ");
+      return [[tt.id, note] as const];
+    }),
+  );
   const companionInfo = (tt: TicketType) =>
     [
       tt.maxPerOrder <= (tt.maxPerPaidTicket ?? 0)
         ? te("companionRuleOrder", { n: tt.maxPerOrder })
         : te("companionRule", { n: tt.maxPerPaidTicket ?? 0 }),
-      tt.requiresAttendee
+      tt.requiresAttendee && !(tt.maxAgeYears && zoneNotes.has(tt.id))
         ? tt.maxAgeYears
           ? te("attendeeNoteAge", { age: tt.maxAgeYears })
           : te("attendeeNote")
@@ -261,6 +283,11 @@ export function SeatedSelector({
                   uniform && mainTariffs[0] ? price(mainTariffs[0].priceCents) : undefined
                 }
               />
+              {[...zoneNotes.values()].map((note) => (
+                <p key={note} className="mt-2 text-xs text-muted-foreground">
+                  {note}
+                </p>
+              ))}
             </div>
           ) : null}
 
@@ -313,12 +340,9 @@ export function SeatedSelector({
                                 <span className={cn("font-medium", !fits && "text-muted-foreground")}>
                                   {t(tt.name, locale)} · {price(tt.priceCents)}
                                 </span>
-                                {isCompanion(tt) ? (
+                                {isCompanion(tt) && !fits ? (
                                   <span className="mt-0.5 block text-xs text-muted-foreground">
-                                    {companionInfo(tt)}
-                                    {fits
-                                      ? null
-                                      : ` ${te(otherPaid ? "companionMaxReached" : "companionNeedsPaid")}`}
+                                    {te(otherPaid ? "companionMaxReached" : "companionNeedsPaid")}
                                   </span>
                                 ) : null}
                               </span>

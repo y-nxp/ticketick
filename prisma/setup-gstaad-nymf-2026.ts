@@ -162,12 +162,13 @@ const CONCERTS: Concert[] = [
 ];
 
 const YOUTH_NAME: Tr = {
-  fr: "Gratuité moins de 25 ans",
-  en: "Free – under 25",
-  de: "Gratis – unter 25",
-  it: "Gratuito – under 25",
-  es: "Gratis – menores de 25",
+  fr: "Moins de 25 ans",
+  en: "Under 25",
+  de: "Unter 25 Jahren",
+  it: "Under 25",
+  es: "Menores de 25 años",
 };
+const OLD_YOUTH_NAME_FR = "Gratuité moins de 25 ans";
 const ZONE_NAMES: Record<string, Tr> = {
   PREMIUM: same("Premium"),
   CAT1: { fr: "Catégorie 1", en: "Category 1", de: "Kategorie 1", it: "Categoria 1", es: "Categoría 1" },
@@ -1276,6 +1277,18 @@ const YACHT_CLUB_NOTE = {
   es: "Entradas en el Gstaad Yacht Club.",
 };
 
+/** Nom court du tarif jeunes, le prix « Gratuit » s'affichant à côté. Un nom retouché dans l'admin est gardé. */
+async function renameYouthTariff(organizerId: string): Promise<string> {
+  const { count } = await prisma.ticketType.updateMany({
+    where: {
+      session: { event: { organizerId } },
+      name: { path: ["fr"], equals: OLD_YOUTH_NAME_FR },
+    },
+    data: { name: YOUTH_NAME },
+  });
+  return `Tarif jeunes renommé « ${YOUTH_NAME.fr} » sur ${count} séance(s).`;
+}
+
 /** Texte d'introduction des conférences, sans écraser celui saisi dans l'admin. */
 async function noteTalks(organizerId: string): Promise<string> {
   const slugs = TALKS.map((t) => concertSlug({ date: t.date, artist: t.slugName }));
@@ -1311,6 +1324,7 @@ async function main() {
   await once("gnymf-2026/conferences-yacht-club", () => publishTalks(id));
   await once("gnymf-2026/plan-rougemont-libelles", labelRougemontPlan);
   await once("gnymf-2026/conferences-billetterie", () => noteTalks(id));
+  await once("gnymf-2026/tarif-moins-25-nom", () => renameYouthTariff(id));
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );
