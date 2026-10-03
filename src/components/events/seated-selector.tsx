@@ -214,7 +214,9 @@ export function SeatedSelector({
         ? te("seatZonesNumbered", { count: names.length, list: list.format(numbered as string[]) })
         : list.format(names);
       const note = [
-        te("seatZoneNote", { tariff: t(tt.name, locale), zones: where }),
+        tt.maxAgeYears
+          ? te("seatZoneNoteAge", { age: tt.maxAgeYears, zones: where })
+          : te("seatZoneNote", { tariff: t(tt.name, locale), zones: where }),
         tt.maxAgeYears ? te("idRequired") : null,
       ]
         .filter(Boolean)
