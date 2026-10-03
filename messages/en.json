@@ -86,6 +86,8 @@
     "companionRule": "{n, plural, =1 {One free seat max} other {# free seats max}} per paying ticket.",
     "companionRuleNamed": "{n, plural, =1 {One free seat max} other {# free seats max}} per “{ticket}” ticket.",
     "companionRuleOrder": "{n, plural, =1 {One free seat} other {Up to # free seats}} per order, with at least one paying ticket.",
+    "companionNeedsPaid": "Available with at least one other paying seat.",
+    "companionMaxReached": "Maximum number of free seats reached.",
     "seatPickTitle": "Choose your seats",
     "seatPickHint": "Tap a free seat on the plan to add it. You can then choose the rate for each seat.",
     "seatSelected": "Your selection",

@@ -86,6 +86,8 @@
     "companionRule": "{n, plural, =1 {Max. eine Freikarte} other {Max. # Freikarten}} pro bezahltes Ticket.",
     "companionRuleNamed": "{n, plural, =1 {Max. eine Freikarte} other {Max. # Freikarten}} pro Ticket „{ticket}“.",
     "companionRuleOrder": "{n, plural, =1 {Eine Freikarte} other {Bis zu # Freikarten}} pro Bestellung, mit mindestens einem bezahlten Ticket.",
+    "companionNeedsPaid": "Möglich mit mindestens einem weiteren bezahlten Platz.",
+    "companionMaxReached": "Höchstzahl an Freikarten erreicht.",
     "seatPickTitle": "Wählen Sie Ihre Plätze",
     "seatPickHint": "Tippen Sie auf einen freien Platz im Plan, um ihn hinzuzufügen. Der Tarif wird danach pro Platz gewählt.",
     "seatSelected": "Ihre Auswahl",

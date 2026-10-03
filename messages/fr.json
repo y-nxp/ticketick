@@ -86,6 +86,8 @@
     "companionRule": "{n, plural, =1 {Une place gratuite max} other {# places gratuites max}} par billet payant.",
     "companionRuleNamed": "{n, plural, =1 {Une place gratuite max} other {# places gratuites max}} par billet « {ticket} ».",
     "companionRuleOrder": "{n, plural, =1 {Une place gratuite} other {Jusqu’à # places gratuites}} par commande, avec au moins un billet payant.",
+    "companionNeedsPaid": "Possible avec au moins une autre place au tarif payant.",
+    "companionMaxReached": "Maximum de places gratuites atteint.",
     "seatPickTitle": "Choisissez vos places",
     "seatPickHint": "Touchez une place libre sur le plan pour l'ajouter. Le tarif se choisit ensuite pour chaque place.",
     "seatSelected": "Votre sélection",

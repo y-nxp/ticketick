@@ -10,7 +10,7 @@ import { SeatLegend, SeatMap, type SeatState } from "@/components/seating/seat-m
 import { seatLabel, zoneAllowed, type SeatLayout } from "@/lib/seating/layout";
 import { getSeatState } from "@/lib/seating/public-actions";
 import { rememberShopOrigin } from "@/lib/shop-origin";
-import { formatDate, formatPrice } from "@/lib/utils";
+import { cn, formatDate, formatPrice } from "@/lib/utils";
 import { t, type EventItem, type SessionItem, type TicketType } from "@/lib/types";
 import { maxFor, type Counts } from "./ticket-limits";
 
@@ -191,6 +191,28 @@ export function SeatedSelector({
     0,
   );
   const companions = tariffs.filter(isCompanion);
+  /** Gratuités proposées sur une place choisie : leur règle s'affiche sous l'option. */
+  const offered = new Set(
+    picks.flatMap((p) => {
+      const seat = seatByKey.get(p.key);
+      return seat && allowedIn(seat.zone).length > 1
+        ? allowedIn(seat.zone).filter(isCompanion).map((tt) => tt.id)
+        : [];
+    }),
+  );
+  const companionInfo = (tt: TicketType) =>
+    [
+      tt.maxPerOrder <= (tt.maxPerPaidTicket ?? 0)
+        ? te("companionRuleOrder", { n: tt.maxPerOrder })
+        : te("companionRule", { n: tt.maxPerPaidTicket ?? 0 }),
+      tt.requiresAttendee
+        ? tt.maxAgeYears
+          ? te("attendeeNoteAge", { age: tt.maxAgeYears })
+          : te("attendeeNote")
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" ");
 
   return (
     <div
@@ -258,18 +280,52 @@ export function SeatedSelector({
                       {layout ? seatLabel(layout, pick.key, locale) : pick.key}
                     </p>
                     {options.length > 1 ? (
-                      <select
-                        value={pick.ticketTypeId}
-                        onChange={(e) => changeTariff(pick.key, e.target.value)}
-                        aria-label={te("seatTariff")}
-                        className="mt-1 h-9 w-full rounded-lg border border-border bg-background px-2 text-sm"
-                      >
-                        {options.map((tt) => (
-                          <option key={tt.id} value={tt.id} disabled={!tariffFits(pick, tt)}>
-                            {t(tt.name, locale)} · {price(tt.priceCents)}
-                          </option>
-                        ))}
-                      </select>
+                      <fieldset className="mt-2 space-y-1.5">
+                        <legend className="sr-only">{te("seatTariff")}</legend>
+                        {options.map((tt) => {
+                          const fits = tariffFits(pick, tt);
+                          const checked = tt.id === pick.ticketTypeId;
+                          const otherPaid = picks.some(
+                            (p) =>
+                              p.key !== pick.key &&
+                              !isCompanion(byId.get(p.ticketTypeId)!) &&
+                              byId.get(p.ticketTypeId)!.priceCents > 0,
+                          );
+                          return (
+                            <label
+                              key={tt.id}
+                              className={cn(
+                                "flex items-start gap-2.5 rounded-lg border px-2.5 py-2 text-sm transition-colors",
+                                checked ? "border-primary bg-primary/5" : "border-border",
+                                fits ? "cursor-pointer hover:bg-secondary/60" : "cursor-not-allowed",
+                              )}
+                            >
+                              <input
+                                type="radio"
+                                name={`tariff-${pick.key}`}
+                                value={tt.id}
+                                checked={checked}
+                                disabled={!fits}
+                                onChange={() => changeTariff(pick.key, tt.id)}
+                                className="mt-0.5 size-4 shrink-0 accent-[var(--primary)]"
+                              />
+                              <span className="min-w-0">
+                                <span className={cn("font-medium", !fits && "text-muted-foreground")}>
+                                  {t(tt.name, locale)} · {price(tt.priceCents)}
+                                </span>
+                                {isCompanion(tt) ? (
+                                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                                    {companionInfo(tt)}
+                                    {fits
+                                      ? null
+                                      : ` ${te(otherPaid ? "companionMaxReached" : "companionNeedsPaid")}`}
+                                  </span>
+                                ) : null}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </fieldset>
                     ) : (
                       <p className="text-xs text-muted-foreground">
                         {byId.get(pick.ticketTypeId)
@@ -294,18 +350,15 @@ export function SeatedSelector({
             <p className="mt-1 text-sm text-muted-foreground">{te("seatNone")}</p>
           ) : null}
 
-          {companions.map((tt) => (
-            <p key={tt.id} className="mt-3 text-xs text-muted-foreground">
-              <span className="font-medium text-foreground">{t(tt.name, locale)}</span>
-              {" — "}
-              {tt.maxPerOrder <= (tt.maxPerPaidTicket ?? 0)
-                ? te("companionRuleOrder", { n: tt.maxPerOrder })
-                : te("companionRule", { n: tt.maxPerPaidTicket ?? 0 })}
-              {tt.requiresAttendee
-                ? ` ${tt.maxAgeYears ? te("attendeeNoteAge", { age: tt.maxAgeYears }) : te("attendeeNote")}`
-                : null}
-            </p>
-          ))}
+          {companions
+            .filter((tt) => !offered.has(tt.id))
+            .map((tt) => (
+              <p key={tt.id} className="mt-3 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">{t(tt.name, locale)}</span>
+                {" — "}
+                {companionInfo(tt)}
+              </p>
+            ))}
 
           {notice ? (
             <p role="alert" className="mt-3 text-sm text-destructive">

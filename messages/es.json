@@ -86,6 +86,8 @@
     "companionRule": "{n, plural, =1 {Una entrada gratuita como máximo} other {# entradas gratuitas como máximo}} por entrada de pago.",
     "companionRuleNamed": "{n, plural, =1 {Una entrada gratuita como máximo} other {# entradas gratuitas como máximo}} por entrada «{ticket}».",
     "companionRuleOrder": "{n, plural, =1 {Una entrada gratuita} other {Hasta # entradas gratuitas}} por pedido, con al menos una entrada de pago.",
+    "companionNeedsPaid": "Disponible con al menos otra entrada de pago.",
+    "companionMaxReached": "Número máximo de entradas gratuitas alcanzado.",
     "seatPickTitle": "Elige tus asientos",
     "seatPickHint": "Toca un asiento libre en el plano para añadirlo. Después eliges la tarifa de cada asiento.",
     "seatSelected": "Tu selección",

@@ -86,6 +86,8 @@
     "companionRule": "{n, plural, =1 {Un posto gratuito max} other {# posti gratuiti max}} per biglietto a pagamento.",
     "companionRuleNamed": "{n, plural, =1 {Un posto gratuito max} other {# posti gratuiti max}} per biglietto « {ticket} ».",
     "companionRuleOrder": "{n, plural, =1 {Un posto gratuito} other {Fino a # posti gratuiti}} per ordine, con almeno un biglietto a pagamento.",
+    "companionNeedsPaid": "Possibile con almeno un altro posto a pagamento.",
+    "companionMaxReached": "Numero massimo di posti gratuiti raggiunto.",
     "seatPickTitle": "Scegliete i vostri posti",
     "seatPickHint": "Toccate un posto libero sulla pianta per aggiungerlo. La tariffa si sceglie poi per ogni posto.",
     "seatSelected": "La vostra selezione",
