@@ -25,6 +25,7 @@ export function ContactBooking({
   const subject = te("subject", { title, date });
   const { contactEmail: email, contactPhone: phone, contactUrl: url } = event;
   const site = url ? hostOf(url) : null;
+  const note = event.contactNote ? t(event.contactNote, locale) : "";
 
   return (
     <div
@@ -38,7 +39,7 @@ export function ContactBooking({
         {session.label ? ` · ${t(session.label, locale)}` : null}
       </p>
       <p className="mt-4 text-sm leading-relaxed">
-        {url ? te("introSite") : te("intro")}
+        {note || (url ? te("introSite") : te("intro"))}
       </p>
 
       {url || email || phone ? (

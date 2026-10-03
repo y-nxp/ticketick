@@ -877,7 +877,9 @@
       "contactEmail": "Courriel d’inscription",
       "contactPhone": "Téléphone d’inscription",
       "contactUrl": "Site d’inscription",
-      "contactUrlHint": "Facultatif. Quand l’inscription se fait ailleurs (par exemple chez le lieu d’accueil), la fiche renvoie vers ce site."
+      "contactUrlHint": "Facultatif. Quand l’inscription se fait ailleurs (par exemple chez le lieu d’accueil), la fiche renvoie vers ce site.",
+      "contactNote": "Texte d’introduction",
+      "contactNoteHint": "Facultatif. Remplace « Pas de billet à acheter… » au-dessus des boutons, par exemple « Billetterie auprès du Gstaad Yacht Club »."
     },
     "embed": {
       "title": "Intégrer la billetterie",

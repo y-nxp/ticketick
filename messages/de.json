@@ -877,7 +877,9 @@
       "contactEmail": "E-Mail für Anmeldungen",
       "contactPhone": "Telefon für Anmeldungen",
       "contactUrl": "Anmelde-Website",
-      "contactUrlHint": "Optional. Wenn die Anmeldung anderswo erfolgt (zum Beispiel beim Gastgeber), verweist die Seite auf diese Website."
+      "contactUrlHint": "Optional. Wenn die Anmeldung anderswo erfolgt (zum Beispiel beim Gastgeber), verweist die Seite auf diese Website.",
+      "contactNote": "Einleitungstext",
+      "contactNoteHint": "Optional. Ersetzt «Kein Ticket zu kaufen…» über den Schaltflächen, zum Beispiel «Tickets beim Gstaad Yacht Club»."
     },
     "embed": {
       "title": "Ticketverkauf einbinden",

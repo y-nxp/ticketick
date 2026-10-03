@@ -184,6 +184,15 @@ export function EventForm({
               />
             </Field>
           </div>
+          <div className="sm:col-span-2">
+            <TranslatedField
+              name="contactNote"
+              label={t("contactNote")}
+              hint={t("contactNoteHint")}
+              value={event?.contactNote as Record<string, unknown> | undefined}
+              required={false}
+            />
+          </div>
         </div>
       </fieldset>
 

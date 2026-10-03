@@ -132,6 +132,8 @@ export interface EventItem {
   contactPhone?: string;
   /** Site où s'inscrire, quand l'inscription ne passe pas par l'organisateur. */
   contactUrl?: string;
+  /** Remplace la phrase d'introduction du bloc d'inscription. */
+  contactNote?: Translated;
   organizer: Organizer;
   categories: Category[];
   /** Étiquettes de l'organisateur, séparées par des virgules dans chaque langue. */

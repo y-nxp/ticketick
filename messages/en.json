@@ -877,7 +877,9 @@
       "contactEmail": "Registration email",
       "contactPhone": "Registration phone",
       "contactUrl": "Registration website",
-      "contactUrlHint": "Optional. When registration happens elsewhere (for example with the host venue), the page links to this website."
+      "contactUrlHint": "Optional. When registration happens elsewhere (for example with the host venue), the page links to this website.",
+      "contactNote": "Introduction text",
+      "contactNoteHint": "Optional. Replaces “No ticket to buy…” above the buttons, for example “Tickets from the Gstaad Yacht Club”."
     },
     "embed": {
       "title": "Embed ticketing",

@@ -1268,6 +1268,24 @@ async function publishTalks(organizerId: string): Promise<string> {
   return `Conférences au Yacht Club :\n    ${lines.join("\n    ")}`;
 }
 
+const YACHT_CLUB_NOTE = {
+  fr: "Billetterie auprès du Gstaad Yacht Club.",
+  en: "Tickets from the Gstaad Yacht Club.",
+  de: "Tickets beim Gstaad Yacht Club.",
+  it: "Biglietteria presso il Gstaad Yacht Club.",
+  es: "Entradas en el Gstaad Yacht Club.",
+};
+
+/** Texte d'introduction des conférences, sans écraser celui saisi dans l'admin. */
+async function noteTalks(organizerId: string): Promise<string> {
+  const slugs = TALKS.map((t) => concertSlug({ date: t.date, artist: t.slugName }));
+  const { count } = await prisma.event.updateMany({
+    where: { slug: { in: slugs }, organizerId, contactNote: { equals: Prisma.DbNull } },
+    data: { contactNote: YACHT_CLUB_NOTE },
+  });
+  return `Conférences au Yacht Club : texte « Billetterie » ajouté à ${count} fiche(s).`;
+}
+
 async function main() {
   const existing = await prisma.organizer.findUnique({
     where: { slug: ORG_SLUG },
@@ -1292,6 +1310,7 @@ async function main() {
   await once("gnymf-2026/invitations-1er-octobre", () => applyInvitations(id));
   await once("gnymf-2026/conferences-yacht-club", () => publishTalks(id));
   await once("gnymf-2026/plan-rougemont-libelles", labelRougemontPlan);
+  await once("gnymf-2026/conferences-billetterie", () => noteTalks(id));
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );

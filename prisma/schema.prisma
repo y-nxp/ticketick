@@ -439,6 +439,8 @@ model Event {
   contactEmail String?
   contactPhone String?
   contactUrl   String?
+  /// Remplace la phrase d'introduction, ex. « Billetterie auprès du Gstaad Yacht Club ».
+  contactNote  Json?
 
   organizer   Organizer @relation(fields: [organizerId], references: [id])
   organizerId String

@@ -77,6 +77,7 @@ export async function saveEvent(
   const title = readTranslated(data, "title");
   const description = readTranslated(data, "description");
   const tags = readTranslated(data, "tags");
+  const contactNote = readTranslated(data, "contactNote");
   const organizerId = scoped ?? readText(data, "organizerId");
   const status = readStatus(data, "status");
 
@@ -151,6 +152,7 @@ export async function saveEvent(
     contactEmail,
     contactPhone,
     contactUrl,
+    contactNote: contactNote.fr ? contactNote : Prisma.DbNull,
   };
 
   const liens = categoryIds.map((cid) => ({ id: cid }));
