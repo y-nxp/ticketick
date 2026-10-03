@@ -7,7 +7,7 @@ import { usePathname } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
 import { SeatLegend, SeatMap, type SeatState } from "@/components/seating/seat-map";
-import { companionZoneIssue, seatLabel, zoneAllowed, type SeatLayout } from "@/lib/seating/layout";
+import { seatLabel, zoneAllowed, type SeatLayout } from "@/lib/seating/layout";
 import { getSeatState } from "@/lib/seating/public-actions";
 import { rememberShopOrigin } from "@/lib/shop-origin";
 import { formatDate, formatPrice } from "@/lib/utils";
@@ -89,34 +89,19 @@ export function SeatedSelector({
     lines.filter((l) => l.sessionId === session.id).flatMap((l) => l.seats ?? []),
   );
 
-  const zoneOf = (key: string) => seatByKey.get(key)?.zone ?? "";
-
-  /** Première gratuité hors plafond ou hors catégorie des billets payants. */
-  function limitIssue(list: Pick[]): { ticketTypeId: string; zone?: string } | null {
-    const counts = countsOf(list);
-    const over = tariffs.find(
-      (tt) => isCompanion(tt) && (counts[tt.id] ?? 0) > maxFor(session, tt, counts),
-    );
-    if (over) return { ticketTypeId: over.id };
-    return companionZoneIssue(
-      tariffs,
-      list.map((p) => ({ zone: zoneOf(p.key), ticketTypeId: p.ticketTypeId })),
-    );
-  }
-
-  /** Les gratuités qui ne tiennent plus reprennent le tarif de la place. */
+  /** Les gratuités au-delà de leur plafond reprennent le tarif de la place. */
   function normalize(list: Pick[]): Pick[] {
     const out = [...list];
-    for (let issue = limitIssue(out); issue; issue = limitIssue(out)) {
-      const { ticketTypeId, zone } = issue;
-      const idx = out.findLastIndex(
-        (p) => p.ticketTypeId === ticketTypeId && (zone == null || zoneOf(p.key) === zone),
-      );
-      if (idx < 0) break;
-      const seat = seatByKey.get(out[idx].key);
-      const fallback = seat ? defaultFor(seat.zone) : undefined;
-      if (fallback) out[idx] = { ...out[idx], ticketTypeId: fallback.id };
-      else out.splice(idx, 1);
+    for (const tt of tariffs.filter(isCompanion)) {
+      let counts = countsOf(out);
+      while ((counts[tt.id] ?? 0) > maxFor(session, tt, counts)) {
+        const idx = out.map((p) => p.ticketTypeId).lastIndexOf(tt.id);
+        const seat = seatByKey.get(out[idx].key);
+        const fallback = seat ? defaultFor(seat.zone) : undefined;
+        if (fallback) out[idx] = { ...out[idx], ticketTypeId: fallback.id };
+        else out.splice(idx, 1);
+        counts = countsOf(out);
+      }
     }
     return out;
   }
@@ -148,7 +133,10 @@ export function SeatedSelector({
   /** Le tarif est-il possible pour cette place, la sélection restant valide ? */
   function tariffFits(pick: Pick, tt: TicketType): boolean {
     if (tt.id === pick.ticketTypeId) return true;
-    return !limitIssue(picks.map((p) => (p.key === pick.key ? { ...p, ticketTypeId: tt.id } : p)));
+    const counts = countsOf(picks);
+    counts[pick.ticketTypeId] -= 1;
+    counts[tt.id] = (counts[tt.id] ?? 0) + 1;
+    return counts[tt.id] <= maxFor(session, tt, counts);
   }
 
   function stateOf(key: string): SeatState {
@@ -203,7 +191,6 @@ export function SeatedSelector({
     0,
   );
   const companions = tariffs.filter(isCompanion);
-  const sameZone = (tt: TicketType) => !uniform && !tt.companionOfId;
 
   return (
     <div
@@ -312,8 +299,8 @@ export function SeatedSelector({
               <span className="font-medium text-foreground">{t(tt.name, locale)}</span>
               {" — "}
               {tt.maxPerOrder <= (tt.maxPerPaidTicket ?? 0)
-                ? te(sameZone(tt) ? "companionRuleOrderZone" : "companionRuleOrder", { n: tt.maxPerOrder })
-                : te(sameZone(tt) ? "companionRuleZone" : "companionRule", { n: tt.maxPerPaidTicket ?? 0 })}
+                ? te("companionRuleOrder", { n: tt.maxPerOrder })
+                : te("companionRule", { n: tt.maxPerPaidTicket ?? 0 })}
               {tt.requiresAttendee
                 ? ` ${tt.maxAgeYears ? te("attendeeNoteAge", { age: tt.maxAgeYears }) : te("attendeeNote")}`
                 : null}

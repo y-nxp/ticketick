@@ -153,38 +153,3 @@ export function rowNumberMarks(
 export function zoneAllowed(seatZones: string[], zone: string): boolean {
   return seatZones.length === 0 || seatZones.includes(zone);
 }
-
-interface CompanionTariff {
-  id: string;
-  priceCents: number;
-  maxPerPaidTicket?: number | null;
-  companionOfId?: string | null;
-  seatZones?: string[];
-}
-
-/**
- * Gratuité sur plan sans tarif source désigné : chaque place gratuite doit
- * être dans la catégorie d'un billet payant de la sélection, c'est-à-dire
- * d'un tarif payant vendable sur cette zone. Renvoie la première infraction.
- */
-export function companionZoneIssue(
-  tariffs: CompanionTariff[],
-  picks: { zone: string; ticketTypeId: string }[],
-): { ticketTypeId: string; zone: string } | null {
-  const byId = new Map(tariffs.map((tt) => [tt.id, tt]));
-  const paid = picks.flatMap((p) => {
-    const tt = byId.get(p.ticketTypeId);
-    return tt && tt.maxPerPaidTicket == null && tt.priceCents > 0 ? [tt] : [];
-  });
-  const perZone = new Map<string, number>();
-  for (const p of picks) {
-    const tt = byId.get(p.ticketTypeId);
-    if (!tt || tt.maxPerPaidTicket == null || tt.companionOfId) continue;
-    const k = `${tt.id}\u0000${p.zone}`;
-    const n = (perZone.get(k) ?? 0) + 1;
-    perZone.set(k, n);
-    const unlocking = paid.filter((x) => zoneAllowed(x.seatZones ?? [], p.zone)).length;
-    if (n > unlocking * tt.maxPerPaidTicket) return { ticketTypeId: tt.id, zone: p.zone };
-  }
-  return null;
-}
