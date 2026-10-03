@@ -90,6 +90,7 @@
     "companionMaxReached": "Número máximo de entradas gratuitas alcanzado.",
     "seatPickTitle": "Elige tus asientos",
     "seatPickHint": "Toca un asiento libre en el plano para añadirlo. Después eliges la tarifa de cada asiento.",
+    "seatGoToSummary": "Mi selección · {count, plural, one {# asiento} other {# asientos}} · {total}",
     "seatZoneNote": "*{tariff} válido solo en {zones}.",
     "seatZoneNoteAge": "*Gratuidad para menores de {age} años válida solo en {zones}.",
     "seatZonesNumbered": "{count, plural, one {categoría {list}} other {categorías {list}}}",

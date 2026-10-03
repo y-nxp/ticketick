@@ -90,6 +90,7 @@
     "companionMaxReached": "Numero massimo di posti gratuiti raggiunto.",
     "seatPickTitle": "Scegliete i vostri posti",
     "seatPickHint": "Toccate un posto libero sulla pianta per aggiungerlo. La tariffa si sceglie poi per ogni posto.",
+    "seatGoToSummary": "La mia selezione · {count, plural, one {# posto} other {# posti}} · {total}",
     "seatZoneNote": "*{tariff} valido solo in {zones}.",
     "seatZoneNoteAge": "*Gratuità under {age} valida solo in {zones}.",
     "seatZonesNumbered": "{count, plural, one {categoria {list}} other {categorie {list}}}",

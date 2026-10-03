@@ -90,6 +90,7 @@
     "companionMaxReached": "Höchstzahl an Freikarten erreicht.",
     "seatPickTitle": "Wählen Sie Ihre Plätze",
     "seatPickHint": "Tippen Sie auf einen freien Platz im Plan, um ihn hinzuzufügen. Der Tarif wird danach pro Platz gewählt.",
+    "seatGoToSummary": "Meine Auswahl · {count, plural, one {# Platz} other {# Plätze}} · {total}",
     "seatZoneNote": "*{tariff} nur in {zones} gültig.",
     "seatZoneNoteAge": "*Gratis unter {age} Jahren nur in {zones} gültig.",
     "seatZonesNumbered": "{count, plural, one {Kategorie {list}} other {den Kategorien {list}}}",

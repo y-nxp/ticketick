@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { Loader2, ShoppingBag, X } from "lucide-react";
+import { ArrowDown, Loader2, ShoppingBag, X } from "lucide-react";
 import { usePathname } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
@@ -39,6 +39,7 @@ export function SeatedSelector({
   event,
   session,
   locale,
+  embed,
 }: {
   event: EventItem;
   session: SessionItem;
@@ -52,6 +53,18 @@ export function SeatedSelector({
   const [revision, setRevision] = React.useState(0);
   const [picks, setPicks] = React.useState<Pick[]>([]);
   const [notice, setNotice] = React.useState<string | null>(null);
+  /** Sur mobile, le récapitulatif est sous le plan : un bouton y mène tant qu'il n'est pas à l'écran. */
+  const summaryRef = React.useRef<HTMLDivElement>(null);
+  const [summaryInView, setSummaryInView] = React.useState(false);
+  React.useEffect(() => {
+    const el = summaryRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) =>
+      setSummaryInView(entry.isIntersecting),
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   React.useEffect(() => {
     let ignore = false;
@@ -191,15 +204,6 @@ export function SeatedSelector({
     0,
   );
   const companions = tariffs.filter(isCompanion);
-  /** Gratuités proposées sur une place choisie : leur règle s'affiche sous l'option. */
-  const offered = new Set(
-    picks.flatMap((p) => {
-      const seat = seatByKey.get(p.key);
-      return seat && allowedIn(seat.zone).length > 1
-        ? allowedIn(seat.zone).filter(isCompanion).map((tt) => tt.id)
-        : [];
-    }),
-  );
   /** Gratuités limitées à certaines catégories, rappelées sous la légende. */
   const zoneNotes = new Map(
     companions.flatMap((tt) => {
@@ -224,20 +228,6 @@ export function SeatedSelector({
       return [[tt.id, note] as const];
     }),
   );
-  const companionInfo = (tt: TicketType) =>
-    [
-      tt.maxPerOrder <= (tt.maxPerPaidTicket ?? 0)
-        ? te("companionRuleOrder", { n: tt.maxPerOrder })
-        : te("companionRule", { n: tt.maxPerPaidTicket ?? 0 }),
-      tt.requiresAttendee && !(tt.maxAgeYears && zoneNotes.has(tt.id))
-        ? tt.maxAgeYears
-          ? te("attendeeNoteAge", { age: tt.maxAgeYears })
-          : te("attendeeNote")
-        : null,
-    ]
-      .filter(Boolean)
-      .join(" ");
-
   return (
     <div
       id="ticket-selector"
@@ -295,120 +285,130 @@ export function SeatedSelector({
 
           <p className="mt-4 text-sm text-muted-foreground">{te("seatPickHint")}</p>
 
-          <ul className="mt-3 space-y-2">
-            {picks.map((pick) => {
-              const seat = seatByKey.get(pick.key);
-              const options = seat ? allowedIn(seat.zone) : [];
-              return (
-                <li
-                  key={pick.key}
-                  className="flex items-center gap-2 rounded-xl border border-border p-2.5"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">
-                      {layout ? seatLabel(layout, pick.key, locale) : pick.key}
-                    </p>
-                    {options.length > 1 ? (
-                      <fieldset className="mt-2 space-y-1.5">
-                        <legend className="sr-only">{te("seatTariff")}</legend>
-                        {options.map((tt) => {
-                          const fits = tariffFits(pick, tt);
-                          const checked = tt.id === pick.ticketTypeId;
-                          const otherPaid = picks.some(
-                            (p) =>
-                              p.key !== pick.key &&
-                              !isCompanion(byId.get(p.ticketTypeId)!) &&
-                              byId.get(p.ticketTypeId)!.priceCents > 0,
-                          );
-                          return (
-                            <label
-                              key={tt.id}
-                              className={cn(
-                                "flex items-start gap-2.5 rounded-lg border px-2.5 py-2 text-sm transition-colors",
-                                checked ? "border-primary bg-primary/5" : "border-border",
-                                fits ? "cursor-pointer hover:bg-secondary/60" : "cursor-not-allowed",
-                              )}
-                            >
-                              <input
-                                type="radio"
-                                name={`tariff-${pick.key}`}
-                                value={tt.id}
-                                checked={checked}
-                                disabled={!fits}
-                                onChange={() => changeTariff(pick.key, tt.id)}
-                                className="mt-0.5 size-4 shrink-0 accent-[var(--primary)]"
-                              />
-                              <span className="min-w-0">
-                                <span className={cn("font-medium", !fits && "text-muted-foreground")}>
-                                  {t(tt.name, locale)} · {price(tt.priceCents)}
-                                </span>
-                                {isCompanion(tt) && !fits ? (
-                                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                                    {te(otherPaid ? "companionMaxReached" : "companionNeedsPaid")}
-                                  </span>
-                                ) : null}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </fieldset>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">
-                        {byId.get(pick.ticketTypeId)
-                          ? `${t(byId.get(pick.ticketTypeId)!.name, locale)} · ${price(byId.get(pick.ticketTypeId)!.priceCents)}`
-                          : null}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => toggle(pick.key)}
-                    aria-label={te("seatRemove")}
-                    className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+          <div ref={summaryRef} className="scroll-mt-24">
+            <ul className="mt-3 space-y-2">
+              {picks.map((pick) => {
+                const seat = seatByKey.get(pick.key);
+                const options = seat ? allowedIn(seat.zone) : [];
+                return (
+                  <li
+                    key={pick.key}
+                    className="flex items-center gap-2 rounded-xl border border-border p-2.5"
                   >
-                    <X className="size-4" />
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-          {picks.length === 0 ? (
-            <p className="mt-1 text-sm text-muted-foreground">{te("seatNone")}</p>
-          ) : null}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">
+                        {layout ? seatLabel(layout, pick.key, locale) : pick.key}
+                      </p>
+                      {options.length > 1 ? (
+                        <fieldset className="mt-2 space-y-1.5">
+                          <legend className="sr-only">{te("seatTariff")}</legend>
+                          {options.map((tt) => {
+                            const fits = tariffFits(pick, tt);
+                            const checked = tt.id === pick.ticketTypeId;
+                            const otherPaid = picks.some(
+                              (p) =>
+                                p.key !== pick.key &&
+                                !isCompanion(byId.get(p.ticketTypeId)!) &&
+                                byId.get(p.ticketTypeId)!.priceCents > 0,
+                            );
+                            return (
+                              <label
+                                key={tt.id}
+                                className={cn(
+                                  "flex items-start gap-2.5 rounded-lg border px-2.5 py-2 text-sm transition-colors",
+                                  checked ? "border-primary bg-primary/5" : "border-border",
+                                  fits ? "cursor-pointer hover:bg-secondary/60" : "cursor-not-allowed",
+                                )}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`tariff-${pick.key}`}
+                                  value={tt.id}
+                                  checked={checked}
+                                  disabled={!fits}
+                                  onChange={() => changeTariff(pick.key, tt.id)}
+                                  className="mt-0.5 size-4 shrink-0 accent-[var(--primary)]"
+                                />
+                                <span className="min-w-0">
+                                  <span className={cn("font-medium", !fits && "text-muted-foreground")}>
+                                    {t(tt.name, locale)} · {price(tt.priceCents)}
+                                  </span>
+                                  {isCompanion(tt) && !fits ? (
+                                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                                      {te(otherPaid ? "companionMaxReached" : "companionNeedsPaid")}
+                                    </span>
+                                  ) : null}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </fieldset>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          {byId.get(pick.ticketTypeId)
+                            ? `${t(byId.get(pick.ticketTypeId)!.name, locale)} · ${price(byId.get(pick.ticketTypeId)!.priceCents)}`
+                            : null}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggle(pick.key)}
+                      aria-label={te("seatRemove")}
+                      className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            {picks.length === 0 ? (
+              <p className="mt-1 text-sm text-muted-foreground">{te("seatNone")}</p>
+            ) : null}
 
-          {companions
-            .filter((tt) => !offered.has(tt.id))
-            .map((tt) => (
-              <p key={tt.id} className="mt-3 text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">{t(tt.name, locale)}</span>
-                {" — "}
-                {companionInfo(tt)}
+            {notice ? (
+              <p role="alert" className="mt-3 text-sm text-destructive">
+                {notice}
               </p>
-            ))}
+            ) : null}
 
-          {notice ? (
-            <p role="alert" className="mt-3 text-sm text-destructive">
-              {notice}
-            </p>
-          ) : null}
-
-          <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
-            <span className="text-sm text-muted-foreground">{te("tickets")}</span>
-            <span className="text-xl font-bold">
-              {formatPrice(totalCents, `${locale}-CH`)}
-            </span>
+            <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+              <span className="text-sm text-muted-foreground">{te("tickets")}</span>
+              <span className="text-xl font-bold">
+                {formatPrice(totalCents, `${locale}-CH`)}
+              </span>
+            </div>
+            <Button
+              className="mt-4 w-full"
+              size="lg"
+              disabled={picks.length === 0 || previewOpen}
+              onClick={addToCart}
+            >
+              <ShoppingBag className="size-4" />
+              {te("addToCart")}
+            </Button>
           </div>
-          <Button
-            className="mt-4 w-full"
-            size="lg"
-            disabled={picks.length === 0 || previewOpen}
-            onClick={addToCart}
-          >
-            <ShoppingBag className="size-4" />
-            {te("addToCart")}
-          </Button>
         </div>
       </div>
+
+      {!embed && picks.length > 0 && !summaryInView && !previewOpen ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden">
+          <Button
+            className="w-full"
+            size="lg"
+            onClick={() =>
+              summaryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+            }
+          >
+            <ArrowDown className="size-4" />
+            {te("seatGoToSummary", {
+              count: picks.length,
+              total: formatPrice(totalCents, `${locale}-CH`),
+            })}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
