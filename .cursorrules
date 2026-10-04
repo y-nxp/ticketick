@@ -8,8 +8,6 @@ picto autonome.
 
 ## 1. Identité Visuelle & Colors
 - **Primary / Brand (Violet) :** `#6C5CE7` — hsl(247, 74%, 63%)
-- **Logo uniquement :** nuit `#15122b` et ivoire `#f5f0e6` (lettres du logo) ;
-  le reste du site garde l'anthracite ci-dessous.
 - **Text / Neutral (Anthracite) :** `#2A2C30` — hsl(220, 7%, 18%)
 - **Background Dark :** `#1E1F23` — hsl(228, 8%, 13%)
 - **Background Light :** `#FFFFFF` ou `#F8F9FA`
@@ -33,9 +31,10 @@ Utiliser les tokens CSS de `src/app/globals.css` (`--primary`, `--foreground`,
   de la hauteur des capitales, **barre du milieu plus courte** (lecture « Ξ »,
   pas d'icône hamburger ni de « TICK TICK »). L'axe est exactement centré, même
   espace à gauche et à droite.
-- Couleurs : E toujours en violet `#6c5ce7` ; lettres en nuit `#15122b` sur fond
-  clair, en ivoire `#f5f0e6` sur fond sombre. Ne pas déformer, recolorer les
-  lettres, ni ajouter ombre ou dégradé.
+- Couleurs, celles du site : E toujours en violet `#6C5CE7` ; lettres en
+  anthracite `#2A2C30` sur fond clair, en blanc sur fond sombre. Ne pas déformer,
+  recolorer les lettres, ni ajouter ombre ou dégradé. Ne pas poser le logo couleur
+  sur une carte `#2A2C30` (E violet à 2,9:1) : fond de page `#1E1F23` au minimum.
 - **Deux versions selon la taille** (même dessin, mêmes couleurs) :
   - **`ticketick-logo-small`, sous 24 px de haut** : Jost Medium, fût et barres
     de 120 unités (≈ 3 px à 18 px de haut), interlettrage resserré de 20 % ;
@@ -53,11 +52,12 @@ Utiliser les tokens CSS de `src/app/globals.css` (`--primary`, `--foreground`,
 - **Courriels :** les clients mail ne lisent pas le SVG →
   `/brand/ticketick-logo-small.png` avec `width` et `height` explicites
   (Outlook ignore `width:auto`).
-- **Avec fond et marges :** `ticketick-logo-fond-nuit.svg` (+ `.png`) /
-  `-fond-ivoire.svg`, dessin standard.
-- **Une couleur :** `ticketick-logo-mono-nuit.svg` / `-mono-blanc.svg`
+- **Avec fond et marges :** `ticketick-logo-fond-nuit.svg` (+ `.png`, fond `#1E1F23`) /
+  `-fond-ivoire.svg` (fond `#F8F9FA`), dessin standard ; noms historiques, couleurs
+  du site.
+- **Une couleur :** `ticketick-logo-mono-anthracite.svg` / `-mono-blanc.svg`
   (gravure, tampon, impression une couleur), dessin standard.
-- **Icône seule :** `ticketick-icone.svg` / `-512.png` (trois barres sur fond nuit,
+- **Icône seule :** `ticketick-icone.svg` / `-512.png` (trois barres sur `#1E1F23`,
   plus épaisses que dans le logo pour rester visibles à 16 px) ;
   `ticketick-icone-violet.svg` sur fond violet. Réservée aux espaces restreints.
 - **Favicons :** conventions Next.js — `src/app/icon.svg`, `src/app/favicon.ico`,
