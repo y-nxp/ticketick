@@ -42,7 +42,7 @@ export async function sendTicketCards(input: {
     });
   }
 
-  const brandLogo = await readPublicFile("/brand/logo_standard.png");
+  const brandLogo = await readPublicFile("/brand/ticketick-logo.png");
   if (brandLogo) {
     attachments.push({
       filename: "ticketick.png",
@@ -314,7 +314,7 @@ function footerLogosHtml(
   hasProducer: boolean,
 ): string {
   const brand = hasBrand
-    ? `<img src="cid:ticketick-logo" alt="ticketick" height="16" style="height:16px;width:auto;border:0;vertical-align:middle;margin:0 12px"/>`
+    ? `<img src="cid:ticketick-logo" alt="ticketick" width="177" height="18" style="height:18px;width:177px;border:0;vertical-align:middle;margin:0 12px"/>`
     : "";
   const href = ticket?.producerUrl ?? "https://illyria.ch";
   const producer =

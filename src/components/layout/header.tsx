@@ -61,14 +61,14 @@ export function Header({ accountSlot }: { accountSlot?: React.ReactNode }) {
         </form>
 
         <div className="ml-auto flex items-center gap-1 md:ml-2">
-          <Link href="/organizer" className="hidden sm:block">
+          <Link href="/organizer" className="hidden lg:block">
             <Button variant="outline" size="sm" className="gap-1.5">
               <Sparkles className="size-4 text-primary" />
               {t("organizer")}
             </Button>
           </Link>
 
-          <ThemeSwitcher />
+          <ThemeSwitcher className="hidden sm:inline-flex" />
 
           <div className="hidden sm:block">
             <LanguageSwitcher />
@@ -114,8 +114,9 @@ export function Header({ accountSlot }: { accountSlot?: React.ReactNode }) {
           <Link onClick={() => setMobileOpen(false)} href="/organizer" className="rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-secondary">
             {t("organizer")}
           </Link>
-          <div className="pt-2">
+          <div className="flex items-center gap-1 pt-2">
             <LanguageSwitcher />
+            <ThemeSwitcher className="sm:hidden" />
           </div>
         </div>
       </div>

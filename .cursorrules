@@ -2,11 +2,14 @@
 
 ## 0. Philosophie
 L'identité repose sur le **contraste**, la **lisibilité** et un **symbole fort** :
-le « E » central à trois barres horizontales arrondies sert de pont visuel au sein
-du nom (TICK + E + TICK) tout en constituant un picto autonome moderne.
+le « E » central à trois barres horizontales sert d'axe de symétrie au sein du nom
+(TICK + E + TICK), comme un billet plié en son milieu, tout en constituant un
+picto autonome.
 
 ## 1. Identité Visuelle & Colors
 - **Primary / Brand (Violet) :** `#6C5CE7` — hsl(247, 74%, 63%)
+- **Logo uniquement :** nuit `#15122b` et ivoire `#f5f0e6` (lettres du logo) ;
+  le reste du site garde l'anthracite ci-dessous.
 - **Text / Neutral (Anthracite) :** `#2A2C30` — hsl(220, 7%, 18%)
 - **Background Dark :** `#1E1F23` — hsl(228, 8%, 13%)
 - **Background Light :** `#FFFFFF` ou `#F8F9FA`
@@ -18,23 +21,46 @@ Utiliser les tokens CSS de `src/app/globals.css` (`--primary`, `--foreground`,
 - **Font Family :** 'Inter', system-ui, sans-serif
 - **Headings :** Font-weight 800 (ExtraBold), UPPERCASE pour les titres de marque.
 - **Body :** Font-weight 400 (Regular) ou 500 (Medium).
-- Kerning régulier sur le logo en capitales.
+- Le site reste en Inter (titres ExtraBold compris) ; seul le logo est en Jost.
 
-## 3. Usage des Logos (`/public/brand/`)
-- **Header Light Mode :** `/brand/logo_standard.svg` (texte anthracite + E violet)
-- **Header Dark Mode / Footer :** `/brand/logo_white_purple.svg` (texte blanc + E violet)
-- **Favicon & Web App Icon :** `src/app/icon.svg` et `src/app/apple-icon.svg`
-  (source : `/brand/icon_purple_transparent.svg`)
-- **Variantes Monochromes :** `/brand/logo_monochrome_black.svg` (impression N&B,
-  documents administratifs) et `/brand/logo_monochrome_white.svg` (overlay
-  photo/vidéo)
-- **Symbole seul (`icon_*`) :** réservé aux espaces restreints — favicon, avatar
-  réseaux sociaux, bouton de menu.
+## 3. Logo (`/public/brand/`, détails dans `docs/brand/LISEZMOI.md`)
+
+### Dessin
+- TICK + E + TICK en **Jost Regular**, capitales, interlettrage large : élégance
+  géométrique et retenue d'une billetterie haut de gamme. Regular plutôt que Light
+  pour tenir en petit (billets sur téléphone). Texte vectorisé : aucune police à charger.
+- Le **E** : trois barres à bouts droits, de l'épaisseur des fûts des lettres et
+  de la hauteur des capitales, **barre du milieu plus courte** (lecture « Ξ »,
+  pas d'icône hamburger ni de « TICK TICK »). L'axe est exactement centré, même
+  espace à gauche et à droite.
+- Couleurs : E toujours en violet `#6c5ce7` ; lettres en nuit `#15122b` sur fond
+  clair, en ivoire `#f5f0e6` sur fond sombre. Ne pas déformer, recolorer les
+  lettres, ni ajouter ombre ou dégradé.
+
+### Fichiers
+- **Fond clair :** `/brand/ticketick-logo.svg` ; **fond sombre :**
+  `/brand/ticketick-logo-inverse.svg`. Dans le site : composant `Logo` de
+  `src/components/layout/logo.tsx`, qui permute les deux selon la classe `dark`.
+- **Courriels :** les clients mail ne lisent pas le SVG → `/brand/ticketick-logo.png`
+  avec `width` et `height` explicites (Outlook ignore `width:auto`).
+- **Avec fond et marges :** `ticketick-logo-fond-nuit.svg` / `-fond-ivoire.svg`.
+- **Une couleur :** `ticketick-logo-mono-nuit.svg` / `-mono-blanc.svg`
+  (gravure, tampon, impression une couleur).
+- **Icône seule :** `ticketick-icone.svg` / `-512.png` (trois barres sur fond nuit,
+  plus épaisses que dans le logo pour rester visibles à 16 px) ;
+  `ticketick-icone-violet.svg` sur fond violet. Réservée aux espaces restreints.
+- **Favicons :** conventions Next.js — `src/app/icon.svg`, `src/app/favicon.ico`,
+  `src/app/apple-icon.png` (copies de `/brand/favicon.*` et `apple-touch-icon.png`).
+  Appli de contrôle : `public/door.webmanifest`.
+- **Ne jamais recomposer le logo** en texte HTML ni en tracés copiés dans le code :
+  toujours les fichiers.
+- Billets PDF : encore l'ancien `/brand/logo_standard.png`, volontairement, en
+  attendant leur refonte.
 
 ### Zone d'exclusion & tailles minimales
-- Conserver autour du logo un espace vide équivalent à la **hauteur d'une barre du « E »**.
-- Logo complet : **120 px** de large minimum en digital / 30 mm en impression.
-- Symbole seul : **16 px** de large minimum en digital.
+- Marge vide autour du logo au moins égale à la **hauteur des lettres**.
+- Logo complet : **18 px de haut** minimum en digital (≈ 177 px de large).
+- Icône seule : **16 px** minimum en digital.
 
 ## 4. Design System & UI Components
 - **Style :** épuré, moderne, orienté SaaS & Ticketing / Event management.
