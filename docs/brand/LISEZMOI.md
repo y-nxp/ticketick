@@ -12,8 +12,10 @@
 - Texte, interface, prix, formulaires : Inter (licence OFL)
 
 ## Fichiers
-- ticketick-logo.svg / .png — version principale pour fond clair (transparent)
-- ticketick-logo-inverse.svg / .png — pour fond sombre (transparent)
+- ticketick-logo.svg — version principale pour fond clair (transparent), à partir de 24 px de haut
+- ticketick-logo-inverse.svg — pour fond sombre (transparent), à partir de 24 px de haut
+- ticketick-logo-small.svg / -small-inverse.svg — sous 24 px de haut (Jost Medium, interlettrage resserré)
+- ticketick-logo-small.png — courriels (les clients mail ne lisent pas le SVG)
 - ticketick-logo-fond-nuit.svg / -fond-ivoire.svg — avec fond et marges
 - ticketick-logo-mono-nuit.svg / -mono-blanc.svg — une couleur (gravure, tampon, impression 1 couleur)
 - ticketick-icone.svg / -512.png — icône d'app ; ticketick-icone-violet.svg — variante sur violet

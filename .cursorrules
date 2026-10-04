@@ -36,16 +36,28 @@ Utiliser les tokens CSS de `src/app/globals.css` (`--primary`, `--foreground`,
 - Couleurs : E toujours en violet `#6c5ce7` ; lettres en nuit `#15122b` sur fond
   clair, en ivoire `#f5f0e6` sur fond sombre. Ne pas déformer, recolorer les
   lettres, ni ajouter ombre ou dégradé.
+- **Deux versions selon la taille** (même dessin, mêmes couleurs) :
+  - **`ticketick-logo-small`, sous 24 px de haut** : Jost Medium, fût et barres
+    de 120 unités (≈ 3 px à 18 px de haut), interlettrage resserré de 20 % ;
+    ratio 9,55 (172 px de large à 18 px de haut).
+  - **`ticketick-logo`, à partir de 24 px de haut** : Jost Regular, fût et barres
+    de 85 unités, interlettrage large ; ratio 9,84.
 
 ### Fichiers
-- **Fond clair :** `/brand/ticketick-logo.svg` ; **fond sombre :**
-  `/brand/ticketick-logo-inverse.svg`. Dans le site : composant `Logo` de
-  `src/components/layout/logo.tsx`, qui permute les deux selon la classe `dark`.
-- **Courriels :** les clients mail ne lisent pas le SVG → `/brand/ticketick-logo.png`
-  avec `width` et `height` explicites (Outlook ignore `width:auto`).
+- **Site :** composant `Logo` de `src/components/layout/logo.tsx` (en-tête et pied
+  de page, 18 puis 22 px → version small), qui permute la version claire et la
+  version `-inverse` selon la classe `dark`.
+- **Fond clair :** `/brand/ticketick-logo-small.svg` · `/brand/ticketick-logo.svg` ;
+  **fond sombre :** `/brand/ticketick-logo-small-inverse.svg` ·
+  `/brand/ticketick-logo-inverse.svg`.
+- **Courriels :** les clients mail ne lisent pas le SVG →
+  `/brand/ticketick-logo-small.png` avec `width` et `height` explicites
+  (Outlook ignore `width:auto`).
 - **Avec fond et marges :** `ticketick-logo-fond-nuit.svg` / `-fond-ivoire.svg`.
 - **Une couleur :** `ticketick-logo-mono-nuit.svg` / `-mono-blanc.svg`
   (gravure, tampon, impression une couleur).
+  ⚠ Ces quatre variantes ont encore les barres du premier dessin (600/420) :
+  ne pas les utiliser avant leur mise à jour.
 - **Icône seule :** `ticketick-icone.svg` / `-512.png` (trois barres sur fond nuit,
   plus épaisses que dans le logo pour rester visibles à 16 px) ;
   `ticketick-icone-violet.svg` sur fond violet. Réservée aux espaces restreints.
@@ -59,7 +71,8 @@ Utiliser les tokens CSS de `src/app/globals.css` (`--primary`, `--foreground`,
 
 ### Zone d'exclusion & tailles minimales
 - Marge vide autour du logo au moins égale à la **hauteur des lettres**.
-- Logo complet : **18 px de haut** minimum en digital (≈ 177 px de large).
+- Logo complet : **18 px de haut** minimum en digital, en version small
+  (≈ 172 px de large).
 - Icône seule : **16 px** minimum en digital.
 
 ## 4. Design System & UI Components
