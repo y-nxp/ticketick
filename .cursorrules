@@ -53,11 +53,10 @@ Utiliser les tokens CSS de `src/app/globals.css` (`--primary`, `--foreground`,
 - **Courriels :** les clients mail ne lisent pas le SVG →
   `/brand/ticketick-logo-small.png` avec `width` et `height` explicites
   (Outlook ignore `width:auto`).
-- **Avec fond et marges :** `ticketick-logo-fond-nuit.svg` / `-fond-ivoire.svg`.
+- **Avec fond et marges :** `ticketick-logo-fond-nuit.svg` (+ `.png`) /
+  `-fond-ivoire.svg`, dessin standard.
 - **Une couleur :** `ticketick-logo-mono-nuit.svg` / `-mono-blanc.svg`
-  (gravure, tampon, impression une couleur).
-  ⚠ Ces quatre variantes ont encore les barres du premier dessin (600/420) :
-  ne pas les utiliser avant leur mise à jour.
+  (gravure, tampon, impression une couleur), dessin standard.
 - **Icône seule :** `ticketick-icone.svg` / `-512.png` (trois barres sur fond nuit,
   plus épaisses que dans le logo pour rester visibles à 16 px) ;
   `ticketick-icone-violet.svg` sur fond violet. Réservée aux espaces restreints.
