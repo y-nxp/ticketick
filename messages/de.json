@@ -1249,11 +1249,27 @@
       "subtitle": "Jeder Veranstalter kassiert auf seine eigenen Konten. Ohne aktivierte Zahlungsart bleiben seine Tickets sichtbar, können aber nicht bezahlt werden.",
       "organizer": "Veranstalter",
       "methods": "Aktive Zahlungsarten",
-      "card": "Karte (PostFinance)",
+      "card": "Karte",
       "paypal": "PayPal",
       "iban": "Überweisung",
       "pending": "Ausstehend",
       "pendingHint": "Keine Zahlungsart aktiviert: Käufer können ihre Bestellung ausfüllen, sehen im letzten Schritt aber «Zahlung noch nicht aktiviert» und können nicht bezahlen.",
+      "cardProvider": {
+        "title": "Karte: Standardanbieter",
+        "hint": "Sind PostFinance und Stripe beide aktiv, laufen Karten über diesen Anbieter. Ist er deaktiviert, übernimmt der andere.",
+        "postfinance": "PostFinance",
+        "stripe": "Stripe",
+        "notConfigured": "{provider} (nicht eingerichtet)",
+        "current": "Karten werden über {provider} eingezogen.",
+        "none": "Kein aktives Kartenkonto: Kartenzahlung wird nicht angeboten.",
+        "save": "Speichern",
+        "saving": "Wird gespeichert…",
+        "saved": "Standardanbieter gespeichert.",
+        "errors": {
+          "invalid": "Wählen Sie PostFinance oder Stripe.",
+          "notFound": "Veranstalter nicht gefunden."
+        }
+      },
       "postfinance": {
         "title": "PostFinance Checkout",
         "hint": "Space des Veranstalters auf checkout.postfinance.ch › Konto › Applikationsbenutzer: Space-ID, Benutzer-ID und Authentifizierungsschlüssel. Im Space auch den Webhook https://ticketick.ch/api/webhooks/postfinance eintragen.",
@@ -1271,6 +1287,29 @@
           "notFound": "Veranstalter nicht gefunden.",
           "secretRequired": "Der Authentifizierungsschlüssel ist erforderlich.",
           "credentials": "PostFinance lehnt diese Zugangsdaten ab. Prüfen Sie Space-ID, Benutzer und Schlüssel."
+        }
+      },
+      "stripe": {
+        "title": "Stripe",
+        "hint": "Geheimer Schlüssel des Stripe-Kontos des Veranstalters: dashboard.stripe.com › Entwickler › API-Schlüssel (sk_live_…). ticketick legt in diesem Konto selbst den Webhook an, der Zahlungen bestätigt. Ein eingeschränkter Schlüssel (rk_live_…) braucht Schreibrechte für Checkout Sessions, Rückerstattungen und Webhook Endpoints.",
+        "account": "Konto {name}",
+        "test": "Testmodus",
+        "webhookOn": "Webhook verbunden",
+        "webhookOff": "Webhook nicht verbunden",
+        "webhookOffHint": "Zahlungen werden nur bestätigt, wenn der Käufer nach der Zahlung zu ticketick zurückkehrt. Speichern Sie das Konto auf der Beta oder in Produktion erneut, um den Webhook anzulegen.",
+        "secretKey": "Geheimer Schlüssel",
+        "secretKeep": "Leer lassen zum Beibehalten",
+        "enabledLabel": "Karten mit Stripe einziehen",
+        "save": "Speichern",
+        "saving": "Prüfung bei Stripe…",
+        "saved": "Stripe-Konto gespeichert und geprüft, Webhook verbunden.",
+        "savedNoWebhook": "Stripe-Konto gespeichert und geprüft, aber der Webhook konnte nicht angelegt werden (Entwicklungsrechner oder eingeschränkter Schlüssel ohne Webhook-Rechte).",
+        "errors": {
+          "invalid": "Ungültige Felder.",
+          "notFound": "Veranstalter nicht gefunden.",
+          "secretRequired": "Der geheime Schlüssel ist erforderlich.",
+          "keyFormat": "Das ist kein geheimer Stripe-Schlüssel (sk_live_…, sk_test_…, rk_live_… oder rk_test_…). Der veröffentlichbare Schlüssel pk_… passt nicht.",
+          "credentials": "Stripe lehnt diesen Schlüssel ab. Prüfen Sie, ob er aktiv und vollständig ist."
         }
       },
       "bank": {

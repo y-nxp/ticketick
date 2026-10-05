@@ -3,6 +3,7 @@ import "server-only";
 import { sendRefundAlertEmail } from "@/lib/email";
 import { sendPaidOrderTickets } from "@/lib/email/ticket-mail";
 import { createCardCheckout, PaymentNotConfiguredError } from "@/lib/payment/card";
+import { cardAccountForOrder, organizerOfOrder } from "@/lib/payment/card-account";
 import { mockPaymentsAllowed } from "@/lib/payment/config";
 import { refundPaypalCapture, paypalAccountFor } from "@/lib/payment/paypal";
 import {
@@ -14,7 +15,13 @@ import {
   refundPostfinanceTransaction,
 } from "@/lib/payment/postfinance";
 import { postfinanceAccountForOrder } from "@/lib/payment/postfinance-account";
-import { refundStripeSession } from "@/lib/payment/stripe";
+import {
+  getStripe,
+  isStripeConfigured,
+  readPaidStripeSession,
+  refundStripeSession,
+} from "@/lib/payment/stripe";
+import { anyStripeAccountForOrganizer, stripeClient } from "@/lib/payment/stripe-account";
 import { prisma } from "@/lib/prisma";
 import { hashHoldToken } from "./create-order";
 import { lockOrder, newPayToken, releaseTickets } from "./edit-order";
@@ -97,7 +104,7 @@ async function settlePayment(input: {
   });
 }
 
-/** Paiement arrivé par le lien (PostFinance ou simulation). */
+/** Paiement arrivé par le lien (PostFinance, Stripe ou simulation). */
 async function settleLinkPayment(input: {
   chargeId: string;
   provider: string;
@@ -291,8 +298,8 @@ export type StartPayError = "unavailable" | "cardMissing" | "failed";
 
 /**
  * Ouvre le paiement au moment où le client clique : la transaction
- * PostFinance ne commence qu'alors, son délai ne court pas pendant que le
- * courriel attend d'être lu.
+ * PostFinance ou Stripe ne commence qu'alors, son délai ne court pas pendant
+ * que le courriel attend d'être lu.
  */
 export async function startLinkPayment(input: {
   token: string;
@@ -314,7 +321,7 @@ export async function startLinkPayment(input: {
       },
     },
   });
-  const account = await postfinanceAccountForOrder(charge.order.reference);
+  const account = await cardAccountForOrder(charge.order.reference);
   const back = `${input.origin}${payPath(input.token, input.locale)}`;
   try {
     const session = await createCardCheckout(account, {
@@ -327,6 +334,7 @@ export async function startLinkPayment(input: {
       successUrl: `${back}?done=1`,
       cancelUrl: back,
       lineItems: [{ name: charge.number, quantity: 1, unitPriceCents: charge.amountCents }],
+      totalCents: charge.amountCents,
       project: event?.ticketType.session.event.slug ?? "ticketick",
       organizerName: event?.ticketType.session.event.organizer.name,
     });
@@ -362,6 +370,52 @@ export async function confirmLinkReturn(token: string, mock: boolean): Promise<v
     return;
   }
   if (charge.provider === "postfinance") await settleChargePostfinance(charge.id);
+  if (charge.provider === "stripe") await settleChargeStripe(charge.id);
+}
+
+/** Lien payé par Stripe : la session est relue dans le compte de l'organisateur. */
+export async function settleChargeStripe(chargeId: string): Promise<void> {
+  const charge = await prisma.orderCharge.findUnique({
+    where: { id: chargeId },
+    select: {
+      id: true,
+      number: true,
+      status: true,
+      provider: true,
+      providerRef: true,
+      order: { select: { reference: true } },
+    },
+  });
+  if (!charge || charge.provider !== "stripe" || !charge.providerRef) return;
+  if (charge.status === "DONE") return;
+
+  const organizerId = await organizerOfOrder(charge.order.reference);
+  const account = organizerId ? await anyStripeAccountForOrganizer(organizerId) : null;
+  if (!account) {
+    console.error("[lien] compte Stripe introuvable", charge.number);
+    return;
+  }
+  const session = await readPaidStripeSession(stripeClient(account.secretKey), charge.providerRef);
+  if (!session) return;
+  if (session.reference !== charge.number) {
+    console.error("[lien] session d'un autre règlement", { chargeId });
+    return;
+  }
+  await settleLinkPayment({
+    chargeId: charge.id,
+    provider: "stripe",
+    providerRef: session.sessionId,
+    amountCents: session.amountCents,
+    currency: session.currency,
+  });
+}
+
+export async function chargeForStripeSession(sessionId: string): Promise<string | null> {
+  const charge = await prisma.orderCharge.findFirst({
+    where: { provider: "stripe", providerRef: sessionId },
+    select: { id: true },
+  });
+  return charge?.id ?? null;
 }
 
 /** Webhook PostFinance : la transaction appartient à un lien de paiement. */
@@ -495,7 +549,16 @@ export async function executeProviderRefund(chargeId: string): Promise<boolean> 
       }
       ref = refund.id;
     } else if (payment.provider === "stripe") {
-      const refund = await refundStripeSession({
+      const organizerId = charge.order.items[0]?.ticketType.session.event.organizerId;
+      const account = organizerId ? await anyStripeAccountForOrganizer(organizerId) : null;
+      // Sans compte de l'organisateur : ancien paiement passé par le Stripe de ticketick.
+      const stripe = account
+        ? stripeClient(account.secretKey)
+        : isStripeConfigured()
+          ? getStripe()
+          : null;
+      if (!stripe) throw new Error("compte Stripe introuvable");
+      const refund = await refundStripeSession(stripe, {
         sessionId: payment.providerRef,
         amountCents: charge.amountCents,
         idempotencyKey: `refund-${charge.id}`,

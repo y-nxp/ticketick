@@ -9,7 +9,7 @@ import {
   confirmLinkReturn,
   linkIsPayable,
 } from "@/lib/orders/charges";
-import { postfinanceAccountForOrder } from "@/lib/payment/postfinance-account";
+import { cardAccountForOrder } from "@/lib/payment/card-account";
 import { prisma } from "@/lib/prisma";
 import { ticketPdfPath } from "@/lib/tickets/download";
 import { t as translate, type Translated } from "@/lib/types";
@@ -72,8 +72,7 @@ export default async function PayPage({
   const amount = formatPrice(charge.amountCents, fmt, charge.currency);
   const payable = linkIsPayable(charge);
   const provider = payable
-    ? (charge.provider ??
-      ((await postfinanceAccountForOrder(charge.order.reference)) ? "postfinance" : "other"))
+    ? ((await cardAccountForOrder(charge.order.reference))?.provider ?? "other")
     : "other";
 
   return (

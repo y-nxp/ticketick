@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { getSessionForReservation } from "@/lib/data/admin-catalog";
 import { mockPaymentsAllowed } from "@/lib/payment/config";
-import { postfinanceAccountFor } from "@/lib/payment/postfinance-account";
+import { cardAccountForOrganizer } from "@/lib/payment/card-account";
 import { t as translate, type Translated } from "@/lib/types";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { ReservationForm } from "./reservation-form";
@@ -28,7 +28,7 @@ export default async function ReserveSessionPage({
   const past = session.startsAt <= new Date();
   const linkAvailable =
     mockPaymentsAllowed() ||
-    (await postfinanceAccountFor([session.event.organizerId])) !== null;
+    (await cardAccountForOrganizer(session.event.organizerId)) !== null;
 
   const zones = new Map(layout?.zones.map((z) => [z.key, z]) ?? []);
   const rows = session.ticketTypes.map((tt) => {

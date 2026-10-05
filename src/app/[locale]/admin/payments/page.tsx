@@ -3,11 +3,14 @@ import { CreditCard, Landmark, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { getPaymentSettings } from "@/lib/data/admin";
+import { pickCardProvider } from "@/lib/payment/card-account";
 import { formatDate } from "@/lib/utils";
 import { OrganizerPicker } from "../team/team-forms";
 import { BankForm } from "./bank-form";
+import { CardProviderForm } from "./card-provider-form";
 import { PaypalForm } from "./paypal-form";
 import { PostfinanceForm } from "./postfinance-form";
+import { StripeForm } from "./stripe-form";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +28,13 @@ export default async function AdminPaymentsPage({
   const settings = await getPaymentSettings(o);
   const t = await getTranslations("admin.payments");
   const tp = await getTranslations("admin.paypal");
-  const { postfinance, paypal, bank, organizerId } = settings;
+  const { postfinance, stripe, cardProvider, paypal, bank, organizerId } = settings;
   const selected = settings.organizers.find((org) => org.id === organizerId);
+  const activeCard = pickCardProvider({
+    preferred: cardProvider,
+    postfinance: Boolean(postfinance?.enabled),
+    stripe: Boolean(stripe?.enabled),
+  });
 
   return (
     <div>
@@ -88,6 +96,25 @@ export default async function AdminPaymentsPage({
       {organizerId ? (
         <>
           <section className="mt-6 rounded-card border border-border bg-card p-5">
+            <h2 className="flex items-center gap-2 text-lg font-semibold">
+              <CreditCard className="size-5 text-primary" />
+              {t("cardProvider.title")}
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("cardProvider.hint")}</p>
+            <p className="mt-2 text-sm font-medium">
+              {activeCard
+                ? t("cardProvider.current", { provider: t(`cardProvider.${activeCard}`) })
+                : t("cardProvider.none")}
+            </p>
+            <CardProviderForm
+              key={organizerId}
+              organizerId={organizerId}
+              preferred={cardProvider === "stripe" ? "stripe" : "postfinance"}
+              configured={{ postfinance: Boolean(postfinance), stripe: Boolean(stripe) }}
+            />
+          </section>
+
+          <section className="mt-6 rounded-card border border-border bg-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 text-lg font-semibold">
                 <CreditCard className="size-5 text-primary" />
@@ -120,6 +147,51 @@ export default async function AdminPaymentsPage({
                     }
                   : null
               }
+            />
+          </section>
+
+          <section className="mt-6 rounded-card border border-border bg-card p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="flex items-center gap-2 text-lg font-semibold">
+                <CreditCard className="size-5 text-primary" />
+                {t("stripe.title")}
+              </h2>
+              {stripe ? (
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant={stripe.enabled ? "default" : "secondary"}>
+                    {tp(stripe.enabled ? "enabled" : "disabled")}
+                  </Badge>
+                  <Badge variant="outline">{stripe.live ? tp("live") : t("stripe.test")}</Badge>
+                  <Badge variant={stripe.webhookEndpointId ? "success" : "secondary"}>
+                    {t(stripe.webhookEndpointId ? "stripe.webhookOn" : "stripe.webhookOff")}
+                  </Badge>
+                </div>
+              ) : (
+                <Badge variant="secondary">{tp("none")}</Badge>
+              )}
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">{t("stripe.hint")}</p>
+            {stripe ? (
+              <>
+                <p className="mt-2 text-sm">
+                  {t("stripe.account", {
+                    name: stripe.accountName
+                      ? `${stripe.accountName} (${stripe.accountId})`
+                      : stripe.accountId,
+                  })}
+                </p>
+                {!stripe.webhookEndpointId ? (
+                  <p className="mt-1 text-xs text-[var(--warning)]">{t("stripe.webhookOffHint")}</p>
+                ) : null}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {tp("updated", { date: formatDate(stripe.updatedAt, `${locale}-CH`) })}
+                </p>
+              </>
+            ) : null}
+            <StripeForm
+              key={organizerId}
+              organizerId={organizerId}
+              account={stripe ? { enabled: stripe.enabled } : null}
             />
           </section>
 

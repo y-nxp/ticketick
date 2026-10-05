@@ -319,6 +319,10 @@ model Organizer {
   bankIban        String?
   bankBeneficiary String?
 
+  /// Prestataire qui encaisse la carte quand PostFinance et Stripe sont
+  /// tous deux actifs : "postfinance" | "stripe". Vide : PostFinance.
+  cardProvider String?
+
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @unique
 
@@ -329,6 +333,7 @@ model Organizer {
   discounts    Discount[]
   paypal       OrganizerPaypalAccount?
   postfinance  OrganizerPostfinanceAccount?
+  stripe       OrganizerStripeAccount?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -349,6 +354,28 @@ model OrganizerPostfinanceAccount {
   enabled     Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+/// Compte Stripe sur lequel l'organisateur encaisse les cartes (paiement
+/// direct sur son compte, sans Stripe Connect). Clé secrète et secret du
+/// webhook ne sont stockés que chiffrés.
+model OrganizerStripeAccount {
+  id                String    @id @default(cuid())
+  organizer         Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  organizerId       String    @unique
+  /// Identifiant du compte (acct_…) lu avec la clé.
+  accountId         String
+  accountName       String?
+  secretEnc         String
+  /// Déduit de la clé : sk_live_/rk_live_ ou clé de test.
+  live              Boolean
+  /// Webhook créé par ticketick dans le compte Stripe. Vide : le paiement
+  /// n'est constaté qu'au retour de l'acheteur.
+  webhookEndpointId String?
+  webhookSecretEnc  String?
+  enabled           Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 }
 
 /// Compte PayPal Business sur lequel l'organisateur encaisse.

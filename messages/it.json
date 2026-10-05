@@ -1249,11 +1249,27 @@
       "subtitle": "Ogni organizzatore incassa sui propri conti. Senza alcun mezzo attivato, i suoi biglietti restano visibili ma non possono essere pagati.",
       "organizer": "Organizzatore",
       "methods": "Mezzi attivi",
-      "card": "Carta (PostFinance)",
+      "card": "Carta",
       "paypal": "PayPal",
       "iban": "Bonifico",
       "pending": "In attesa",
       "pendingHint": "Nessun incasso attivato: gli acquirenti possono compilare l’ordine, ma all’ultimo passaggio vedono «Pagamento non ancora attivato» e non possono pagare.",
+      "cardProvider": {
+        "title": "Carta: prestatore predefinito",
+        "hint": "Quando PostFinance e Stripe sono entrambi attivi, le carte passano da questo. Se è disattivato, subentra l’altro.",
+        "postfinance": "PostFinance",
+        "stripe": "Stripe",
+        "notConfigured": "{provider} (non configurato)",
+        "current": "Le carte sono incassate da {provider}.",
+        "none": "Nessun conto carta attivo: la carta non è proposta.",
+        "save": "Salva",
+        "saving": "Salvataggio…",
+        "saved": "Prestatore predefinito salvato.",
+        "errors": {
+          "invalid": "Scegliete PostFinance o Stripe.",
+          "notFound": "Organizzatore non trovato."
+        }
+      },
       "postfinance": {
         "title": "PostFinance Checkout",
         "hint": "Spazio dell’organizzatore su checkout.postfinance.ch › Conto › Utenti applicazione: ID dello spazio, ID utente e chiave di autenticazione. Registrare anche il webhook https://ticketick.ch/api/webhooks/postfinance nello spazio.",
@@ -1271,6 +1287,29 @@
           "notFound": "Organizzatore non trovato.",
           "secretRequired": "La chiave di autenticazione è obbligatoria.",
           "credentials": "PostFinance rifiuta questi accessi. Verifichi ID dello spazio, utente e chiave."
+        }
+      },
+      "stripe": {
+        "title": "Stripe",
+        "hint": "Chiave segreta del conto Stripe dell’organizzatore: dashboard.stripe.com › Sviluppatori › Chiavi API (sk_live_…). ticketick crea da sé in quel conto il webhook che conferma i pagamenti. Una chiave limitata (rk_live_…) deve poter scrivere Checkout Sessions, rimborsi e Webhook Endpoints.",
+        "account": "Conto {name}",
+        "test": "Modalità test",
+        "webhookOn": "Webhook collegato",
+        "webhookOff": "Webhook non collegato",
+        "webhookOffHint": "I pagamenti sono confermati solo se l’acquirente torna su ticketick dopo aver pagato. Salvate di nuovo il conto sulla beta o in produzione per creare il webhook.",
+        "secretKey": "Chiave segreta",
+        "secretKeep": "Lasciare vuoto per conservare",
+        "enabledLabel": "Incassare le carte con Stripe",
+        "save": "Salva",
+        "saving": "Verifica presso Stripe…",
+        "saved": "Conto Stripe salvato e verificato, webhook collegato.",
+        "savedNoWebhook": "Conto Stripe salvato e verificato, ma il webhook non ha potuto essere creato (postazione di sviluppo, o chiave limitata senza diritti sui webhook).",
+        "errors": {
+          "invalid": "Campi non validi.",
+          "notFound": "Organizzatore non trovato.",
+          "secretRequired": "La chiave segreta è obbligatoria.",
+          "keyFormat": "Non è una chiave segreta Stripe (sk_live_…, sk_test_…, rk_live_… o rk_test_…). La chiave pubblicabile pk_… non va bene.",
+          "credentials": "Stripe rifiuta questa chiave. Verificate che sia attiva e completa."
         }
       },
       "bank": {

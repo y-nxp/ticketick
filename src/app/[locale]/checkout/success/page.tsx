@@ -5,7 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { CartClearer } from "@/components/cart/cart-clearer";
 import { isRefundDue } from "@/lib/orders/reservation";
-import { settlePostfinanceOrder } from "@/lib/orders/settle-card";
+import { settlePostfinanceOrder, settleStripeOrder } from "@/lib/orders/settle-card";
 import { prisma } from "@/lib/prisma";
 import { parseGoOrigin, SHOP_ORIGIN_COOKIE } from "@/lib/shop-origin";
 import { ticketPdfPath } from "@/lib/tickets/download";
@@ -25,6 +25,9 @@ export default async function CheckoutSuccessPage({
   if (ref) {
     await settlePostfinanceOrder(ref).catch((error) => {
       console.error("[checkout/success] confirmation PostFinance", error);
+    });
+    await settleStripeOrder(ref).catch((error) => {
+      console.error("[checkout/success] confirmation Stripe", error);
     });
   }
 

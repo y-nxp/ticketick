@@ -228,8 +228,19 @@ export async function getPaymentSettings(requestedOrganizerId?: string) {
       name: true,
       bankIban: true,
       bankBeneficiary: true,
+      cardProvider: true,
       postfinance: {
         select: { spaceId: true, userId: true, spaceViewId: true, enabled: true, updatedAt: true },
+      },
+      stripe: {
+        select: {
+          accountId: true,
+          accountName: true,
+          live: true,
+          webhookEndpointId: true,
+          enabled: true,
+          updatedAt: true,
+        },
       },
       paypal: {
         select: { payeeEmail: true, clientId: true, live: true, enabled: true, updatedAt: true },
@@ -239,7 +250,7 @@ export async function getPaymentSettings(requestedOrganizerId?: string) {
   const organizers = rows.map((o) => ({
     id: o.id,
     name: o.name,
-    card: Boolean(o.postfinance?.enabled),
+    card: Boolean(o.postfinance?.enabled || o.stripe?.enabled),
     paypal: Boolean(o.paypal?.enabled),
     iban: Boolean(o.bankIban && o.bankBeneficiary),
   }));
@@ -248,6 +259,8 @@ export async function getPaymentSettings(requestedOrganizerId?: string) {
     organizers,
     organizerId: selected?.id ?? null,
     postfinance: selected?.postfinance ?? null,
+    stripe: selected?.stripe ?? null,
+    cardProvider: selected?.cardProvider ?? null,
     paypal: selected?.paypal ?? null,
     bank: selected
       ? { iban: selected.bankIban ?? "", beneficiary: selected.bankBeneficiary ?? "" }

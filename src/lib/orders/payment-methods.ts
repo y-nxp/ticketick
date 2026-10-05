@@ -8,8 +8,8 @@ import { prisma } from "@/lib/prisma";
  * peut les restreindre. Un panier mélangeant plusieurs séances ne propose
  * que l'intersection : on n'offre pas un IBAN qu'une des lignes refuse.
  *
- * Chaque organisateur encaisse sur ses propres comptes (PostFinance, PayPal,
- * IBAN) : un moyen n'est proposé que si tout le panier relève d'un seul
+ * Chaque organisateur encaisse sur ses propres comptes (PostFinance ou
+ * Stripe, PayPal, IBAN) : un moyen n'est proposé que si tout le panier relève d'un seul
  * organisateur qui l'a activé.
  */
 
@@ -106,12 +106,14 @@ export async function organizerPayments(organizerId: string): Promise<PaymentOff
       bankIban: true,
       bankBeneficiary: true,
       postfinance: { select: { enabled: true } },
+      stripe: { select: { enabled: true } },
       paypal: { select: { enabled: true } },
     },
   });
   const mock = mockPaymentsAllowed();
   return {
-    card: Boolean(organizer?.postfinance?.enabled) || mock,
+    card:
+      Boolean(organizer?.postfinance?.enabled) || Boolean(organizer?.stripe?.enabled) || mock,
     iban: Boolean(organizer?.bankIban && organizer.bankBeneficiary) || mock,
     paypal: Boolean(organizer?.paypal?.enabled),
   };

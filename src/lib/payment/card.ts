@@ -4,8 +4,10 @@ import {
   mockPaymentsAllowed,
   PaymentNotConfiguredError,
 } from "@/lib/payment/config";
-import { createPostfinanceCheckout } from "@/lib/payment/postfinance";
-import type { PostfinanceAccount } from "@/lib/payment/postfinance-account";
+import type { CardAccount } from "@/lib/payment/card-account";
+import { createPostfinanceCheckout, feeLabel } from "@/lib/payment/postfinance";
+import { createStripeCheckout } from "@/lib/payment/stripe";
+import { stripeClient } from "@/lib/payment/stripe-account";
 
 export { mockPaymentsAllowed, PaymentNotConfiguredError };
 
@@ -25,6 +27,8 @@ export interface CreateCardCheckoutInput {
   successUrl: string;
   cancelUrl: string;
   lineItems: CardCheckoutLineItem[];
+  /** Montant exact à encaisser, frais compris et rabais déduit. */
+  totalCents: number;
   project: string;
   organizerName?: string;
   customerId?: string;
@@ -34,19 +38,37 @@ export interface CreateCardCheckoutInput {
 }
 
 export interface CreateCardCheckoutResult {
-  provider: "postfinance" | "mock";
+  provider: "postfinance" | "stripe" | "mock";
   sessionId: string;
   checkoutUrl: string;
   mock: boolean;
 }
 
-/** Encaisse sur l'espace PostFinance de l'organisateur, jamais sur un autre. */
+/** Encaisse sur le compte carte de l'organisateur, jamais sur un autre. */
 export async function createCardCheckout(
-  account: PostfinanceAccount | null,
+  account: CardAccount | null,
   input: CreateCardCheckoutInput,
 ): Promise<CreateCardCheckoutResult> {
-  if (account) {
-    return createPostfinanceCheckout(account, input);
+  if (account?.provider === "postfinance") {
+    return createPostfinanceCheckout(account.account, input);
+  }
+  if (account?.provider === "stripe") {
+    return createStripeCheckout(stripeClient(account.account.secretKey), {
+      reference: input.reference,
+      currency: input.currency,
+      customerEmail: input.customerEmail,
+      locale: input.locale,
+      successUrl: input.successUrl,
+      cancelUrl: input.cancelUrl,
+      lineItems: input.lineItems,
+      totalCents: input.totalCents,
+      description: input.organizerName
+        ? `${input.organizerName} — ${input.reference}`
+        : input.reference,
+      feeCents: input.feeCents,
+      feeLabel: feeLabel(input.locale),
+      metadata: input.metadata,
+    });
   }
 
   if (!mockPaymentsAllowed()) throw new PaymentNotConfiguredError();

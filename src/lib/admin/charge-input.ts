@@ -7,7 +7,7 @@ import { payPath } from "@/lib/orders/charges";
 import { isCheckoutHoldEmail } from "@/lib/orders/create-order";
 import type { PaymentSettle } from "@/lib/orders/edit-order";
 import { mockPaymentsAllowed } from "@/lib/payment/config";
-import { postfinanceAccountForOrder } from "@/lib/payment/postfinance-account";
+import { cardAccountForOrder } from "@/lib/payment/card-account";
 
 /** Courriel qui suit le règlement : lien de paiement, ou billets. */
 export async function deliverCharge(input: {
@@ -36,10 +36,10 @@ export function hasEmail(email: string): boolean {
   return Boolean(email) && !isCheckoutHoldEmail(email);
 }
 
-/** Carte encaissable par lien : l'organisateur a son espace PostFinance. */
+/** Carte encaissable par lien : l'organisateur a un compte PostFinance ou Stripe actif. */
 export async function linkPaymentAvailable(reference: string): Promise<boolean> {
   if (mockPaymentsAllowed()) return true;
-  return (await postfinanceAccountForOrder(reference)) !== null;
+  return (await cardAccountForOrder(reference)) !== null;
 }
 
 const MAX_DUE_DAYS = 60;

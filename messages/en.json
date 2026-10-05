@@ -1249,11 +1249,27 @@
       "subtitle": "Each organiser is paid into their own accounts. With no method activated, their tickets stay visible but cannot be paid for.",
       "organizer": "Organiser",
       "methods": "Active methods",
-      "card": "Card (PostFinance)",
+      "card": "Card",
       "paypal": "PayPal",
       "iban": "Bank transfer",
       "pending": "Pending",
       "pendingHint": "No payment method activated: buyers can fill in their order, but at the last step they see “Payment not activated yet” and cannot pay.",
+      "cardProvider": {
+        "title": "Card: default provider",
+        "hint": "When PostFinance and Stripe are both active, cards go through this one. If it is disabled, the other takes over.",
+        "postfinance": "PostFinance",
+        "stripe": "Stripe",
+        "notConfigured": "{provider} (not set up)",
+        "current": "Cards are collected by {provider}.",
+        "none": "No active card account: card payment is not offered.",
+        "save": "Save",
+        "saving": "Saving…",
+        "saved": "Default provider saved.",
+        "errors": {
+          "invalid": "Choose PostFinance or Stripe.",
+          "notFound": "Organiser not found."
+        }
+      },
       "postfinance": {
         "title": "PostFinance Checkout",
         "hint": "The organiser’s space on checkout.postfinance.ch › Account › Application users: space ID, user ID and its authentication key. Also register the webhook https://ticketick.ch/api/webhooks/postfinance in the space.",
@@ -1271,6 +1287,29 @@
           "notFound": "Organiser not found.",
           "secretRequired": "The authentication key is required.",
           "credentials": "PostFinance rejects these credentials. Check the space ID, the user and its key."
+        }
+      },
+      "stripe": {
+        "title": "Stripe",
+        "hint": "Secret key of the organiser’s Stripe account: dashboard.stripe.com › Developers › API keys (sk_live_…). ticketick creates the webhook that confirms payments in that account itself. A restricted key (rk_live_…) needs write access to Checkout Sessions, Refunds and Webhook Endpoints.",
+        "account": "Account {name}",
+        "test": "Test mode",
+        "webhookOn": "Webhook connected",
+        "webhookOff": "Webhook not connected",
+        "webhookOffHint": "Payments are only confirmed if the buyer comes back to ticketick after paying. Save the account again on beta or production to create the webhook.",
+        "secretKey": "Secret key",
+        "secretKeep": "Leave empty to keep",
+        "enabledLabel": "Collect cards with Stripe",
+        "save": "Save",
+        "saving": "Checking with Stripe…",
+        "saved": "Stripe account saved and verified, webhook connected.",
+        "savedNoWebhook": "Stripe account saved and verified, but the webhook could not be created (development machine, or restricted key without webhook access).",
+        "errors": {
+          "invalid": "Invalid fields.",
+          "notFound": "Organiser not found.",
+          "secretRequired": "The secret key is required.",
+          "keyFormat": "This is not a Stripe secret key (sk_live_…, sk_test_…, rk_live_… or rk_test_…). The publishable key pk_… will not work.",
+          "credentials": "Stripe rejects this key. Check that it is active and complete."
         }
       },
       "bank": {

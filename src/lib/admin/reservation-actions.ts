@@ -9,7 +9,7 @@ import { failure, readBoolean, readText, success, type FormState } from "@/lib/a
 import { createReservation } from "@/lib/orders/admin-reservation";
 import { cancelReservation } from "@/lib/orders/create-order";
 import { mockPaymentsAllowed } from "@/lib/payment/config";
-import { postfinanceAccountFor } from "@/lib/payment/postfinance-account";
+import { cardAccountForOrganizer } from "@/lib/payment/card-account";
 import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
@@ -74,7 +74,7 @@ export async function reserveSeats(
     if (!hasEmail(data.email)) return failure("emailMissing");
     const card =
       mockPaymentsAllowed() ||
-      (await postfinanceAccountFor([session.event.organizerId])) !== null;
+      (await cardAccountForOrganizer(session.event.organizerId)) !== null;
     if (!card) return failure("cardMissing");
   }
 

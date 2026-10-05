@@ -23,7 +23,7 @@ import { prisma } from "@/lib/prisma";
 import { reservedUntilFrom } from "@/lib/orders/reservation";
 import { clientIpFrom, consume } from "@/lib/rate-limit";
 import { createPaypalOrder, paypalAccountFor } from "@/lib/payment/paypal";
-import { postfinanceAccountFor } from "@/lib/payment/postfinance-account";
+import { cardAccountFor } from "@/lib/payment/card-account";
 
 /**
  * Seuls l'identifiant du tarif et la quantité sont acceptés. Le libellé et le
@@ -270,7 +270,7 @@ export async function POST(request: Request) {
   if (data.paymentMethod === "CARD") {
     let session;
     try {
-      const account = await postfinanceAccountFor(order.organizerIds);
+      const account = await cardAccountFor(order.organizerIds);
       session = await createCardCheckout(account, {
         reference: order.reference,
         currency: order.currency,
@@ -285,6 +285,7 @@ export async function POST(request: Request) {
         customerId: user?.id,
         feeCents: order.feeCents,
         discountCents: order.discountCents,
+        totalCents: order.totalCents,
         lineItems: order.lines.map((l) => ({
           name: l.label,
           quantity: l.quantity,
@@ -301,26 +302,26 @@ export async function POST(request: Request) {
         console.error("[checkout] paiement par carte indisponible", order.organizerIds, error);
         return refusePayment(order.id);
       }
-      // Toute autre erreur (API PostFinance, JWT, réseau) laisserait sinon
-      // un 500 et des places bloquées jusqu'à la séance.
-      console.error("[checkout] création PostFinance impossible", error);
+      // Toute autre erreur (API PostFinance ou Stripe, JWT, réseau) laisserait
+      // sinon un 500 et des places bloquées jusqu'à la séance.
+      console.error("[checkout] création du paiement carte impossible", error);
       return refusePayment(order.id);
     }
 
-    if (session.provider === "postfinance") {
+    if (session.provider !== "mock") {
       try {
         await prisma.payment.upsert({
           where: { orderId: order.id },
           create: {
             orderId: order.id,
-            provider: "postfinance",
+            provider: session.provider,
             providerRef: session.sessionId,
             method: "CARD",
             status: "PENDING",
             amountCents: order.totalCents,
             currency: order.currency,
           },
-          update: { providerRef: session.sessionId },
+          update: { provider: session.provider, providerRef: session.sessionId },
         });
       } catch (error) {
         console.error("[checkout] enregistrement du paiement", error);

@@ -468,7 +468,7 @@ function discountLabel(locale: string): string {
   }
 }
 
-function feeLabel(locale: string): string {
+export function feeLabel(locale: string): string {
   switch (locale) {
     case "de":
       return "Servicegebühr";

@@ -1,9 +1,9 @@
 import Stripe from "stripe";
 
 /**
- * Stripe sert à facturer les organisateurs (abonnement / honoraires
- * ticketick). L'achat de billets passe par le PostFinance du client,
- * jamais par ici.
+ * Le Stripe de ticketick (`STRIPE_SECRET_KEY`) sert à facturer les
+ * organisateurs. Les billets payés par Stripe passent par le compte de
+ * l'organisateur (`stripe-account.ts`), avec les fonctions ci-dessous.
  */
 
 export function isStripeConfigured(): boolean {
@@ -21,15 +21,13 @@ export function getStripe(): Stripe {
 }
 
 /**
- * Rembourse tout ou partie d'un ancien paiement de billets passé par Stripe
- * (`providerRef` : identifiant de la session Checkout).
+ * Rembourse tout ou partie d'un paiement de billets passé par Stripe
+ * (`sessionId` : identifiant de la session Checkout).
  */
-export async function refundStripeSession(input: {
-  sessionId: string;
-  amountCents: number;
-  idempotencyKey: string;
-}): Promise<{ id: string; status: string | null }> {
-  const stripe = getStripe();
+export async function refundStripeSession(
+  stripe: Stripe,
+  input: { sessionId: string; amountCents: number; idempotencyKey: string },
+): Promise<{ id: string; status: string | null }> {
   const session = await stripe.checkout.sessions.retrieve(input.sessionId);
   const intent =
     typeof session.payment_intent === "string"
@@ -57,7 +55,10 @@ export interface CreateCheckoutInput {
   successUrl: string;
   cancelUrl: string;
   lineItems: CheckoutLineItem[];
+  totalCents: number;
+  description: string;
   feeCents?: number;
+  feeLabel?: string;
   metadata?: Record<string, string>;
 }
 
@@ -65,42 +66,50 @@ export interface CreateCheckoutResult {
   provider: "stripe";
   sessionId: string;
   checkoutUrl: string;
-  mock: boolean;
+  mock: false;
 }
 
 const SUPPORTED_LOCALES = ["fr", "en", "de", "it", "es"] as const;
 
+// Minimum accepté par Stripe pour l'expiration d'une session Checkout.
+const SESSION_LIFETIME_MS = 30 * 60 * 1000;
+
 export async function createStripeCheckout(
+  stripe: Stripe,
   input: CreateCheckoutInput,
 ): Promise<CreateCheckoutResult> {
-  const stripe = getStripe();
   const currency = input.currency.toLowerCase();
 
-  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
-    input.lineItems.map((item) => ({
-      quantity: item.quantity,
-      price_data: {
-        currency,
-        unit_amount: item.unitPriceCents,
-        product_data: { name: item.name },
-      },
-    }));
-
+  const items = input.lineItems.map((item) => ({
+    name: item.name,
+    quantity: item.quantity,
+    unitPriceCents: item.unitPriceCents,
+  }));
   if (input.feeCents && input.feeCents > 0) {
-    lineItems.push({
-      quantity: 1,
-      price_data: {
-        currency,
-        unit_amount: input.feeCents,
-        product_data: { name: "Frais de service" },
-      },
-    });
+    items.push({ name: input.feeLabel ?? "Frais", quantity: 1, unitPriceCents: input.feeCents });
   }
+  // Stripe n'accepte pas de ligne négative : un rabais, ou tout écart avec
+  // le total de la commande, ramène le détail à une seule ligne au bon montant.
+  const sum = items.reduce((s, i) => s + i.unitPriceCents * i.quantity, 0);
+  const lines =
+    sum === input.totalCents
+      ? items
+      : [{ name: input.description, quantity: 1, unitPriceCents: input.totalCents }];
+
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = lines.map((item) => ({
+    quantity: item.quantity,
+    price_data: {
+      currency,
+      unit_amount: item.unitPriceCents,
+      product_data: { name: item.name.slice(0, 250) },
+    },
+  }));
 
   const locale = (SUPPORTED_LOCALES as readonly string[]).includes(input.locale)
     ? (input.locale as Stripe.Checkout.SessionCreateParams.Locale)
     : "auto";
 
+  const metadata = { reference: input.reference, ...input.metadata };
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     line_items: lineItems,
@@ -109,13 +118,41 @@ export async function createStripeCheckout(
     locale,
     success_url: input.successUrl,
     cancel_url: input.cancelUrl,
-    metadata: { reference: input.reference, ...input.metadata },
+    expires_at: Math.floor((Date.now() + SESSION_LIFETIME_MS) / 1000),
+    metadata,
+    payment_intent_data: {
+      description: input.description.slice(0, 1000),
+      metadata,
+    },
   });
+  if (!session.url) throw new Error("Stripe : session sans adresse de paiement");
 
   return {
     provider: "stripe",
     sessionId: session.id,
-    checkoutUrl: session.url ?? input.successUrl,
+    checkoutUrl: session.url,
     mock: false,
+  };
+}
+
+export interface PaidStripeSession {
+  sessionId: string;
+  reference: string | null;
+  amountCents: number;
+  currency: string;
+}
+
+/** Relit une session chez Stripe : payée, avec son montant, sinon `null`. */
+export async function readPaidStripeSession(
+  stripe: Stripe,
+  sessionId: string,
+): Promise<PaidStripeSession | null> {
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  if (session.payment_status !== "paid" || session.amount_total == null) return null;
+  return {
+    sessionId: session.id,
+    reference: session.client_reference_id ?? session.metadata?.reference ?? null,
+    amountCents: session.amount_total,
+    currency: (session.currency ?? "chf").toUpperCase(),
   };
 }

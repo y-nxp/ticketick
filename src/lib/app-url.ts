@@ -15,6 +15,17 @@ export function publicAppOrigin(request?: Request): string {
   return "https://ticketick.ch";
 }
 
+/**
+ * Origine configurée pour ce déploiement, si Internet peut la joindre en
+ * HTTPS. Sur un poste de développement : `null`, plutôt que l'adresse de
+ * production qui recevrait des appels destinés à une autre base.
+ */
+export function reachableAppOrigin(): string | null {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+  if (!configured || isLoopback(configured) || !configured.startsWith("https://")) return null;
+  return configured;
+}
+
 function forwardedOrigin(request: Request): string | undefined {
   const proto =
     header(request, "x-forwarded-proto")?.split(",")[0]?.trim() || "https";
