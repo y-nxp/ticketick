@@ -81,7 +81,7 @@ Les deux polices sont chargées par `next/font/google` dans
 - **Impression :** `docs/brand/impression/` (PDF et EPS vectoriels, version tout
   en noir pour l'impression une couleur), générés par Inkscape avec
   `inscape/scripts/export_ticketick_brand_pack.sh` à partir de `/public/brand`.
-- **Partage (Open Graph) :** `src/app/opengraph-image.png`, 1200 × 630 ; les pages
+- **Partage (Open Graph) :** `src/app/[locale]/opengraph-image.png`, 1200 × 630 (sous `[locale]` pour hériter de `metadataBase`) ; les pages
   de spectacle le remplacent par leur photo.
 - **Favicons :** conventions Next.js — `src/app/icon.svg`, `src/app/favicon.ico`,
   `src/app/apple-icon.png` (copies de `/brand/favicon.*` et `apple-touch-icon.png`).

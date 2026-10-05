@@ -39,7 +39,7 @@ Impression (dossier docs/brand/impression du site, générés par Inkscape) :
   (l'anthracite y sortirait en gris tramé)
 
 Partage sur les réseaux sociaux :
-- src/app/opengraph-image.png (1200 × 630) — fond #1E1F23, logo à 60 % de la largeur
+- src/app/[locale]/opengraph-image.png (1200 × 630) — fond #1E1F23, logo à 60 % de la largeur
 
 Icônes :
 - ticketick-icone.svg / ticketick-icone-512.png — icône d'app, barres violettes sur #1E1F23
