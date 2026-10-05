@@ -1,5 +1,10 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
+
+// Rayons maison de globals.css (`rounded-control`, `rounded-card`).
+const twMerge = extendTailwindMerge({
+  extend: { theme: { radius: ["control", "card"] } },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

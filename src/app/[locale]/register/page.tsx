@@ -28,9 +28,9 @@ export default async function RegisterPage({
 
   return (
     <div className="container-page max-w-md py-16">
-      <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+      <div className="rounded-card border border-border bg-card p-8 shadow-sm">
         <div className="mb-6 text-center">
-          <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-primary/10">
+          <div className="mx-auto grid size-14 place-items-center rounded-card bg-primary/10">
             <UserPlus className="size-7 text-primary" />
           </div>
           <h1 className="mt-4 text-2xl font-bold">{t("signUp")}</h1>

@@ -53,7 +53,7 @@ export function RegisterForm({
             required
             defaultValue={defaultEmail}
             autoComplete="email"
-            className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none focus:border-ring"
+            className="h-11 w-full rounded-control border border-border bg-background pl-10 pr-3 text-sm outline-none focus:border-ring"
           />
         </div>
       </label>
@@ -68,7 +68,7 @@ export function RegisterForm({
             required
             minLength={12}
             autoComplete="new-password"
-            className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none focus:border-ring"
+            className="h-11 w-full rounded-control border border-border bg-background pl-10 pr-3 text-sm outline-none focus:border-ring"
           />
         </div>
         <span className="text-xs text-muted-foreground">{t("passwordHint")}</span>
@@ -82,11 +82,11 @@ export function RegisterForm({
           required
           minLength={12}
           autoComplete="new-password"
-          className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-ring"
+          className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-ring"
         />
       </label>
 
-      <label className="flex items-start gap-3 rounded-xl border border-border bg-muted/40 px-3.5 py-3 text-sm">
+      <label className="flex items-start gap-3 rounded-control border border-border bg-muted/40 px-3.5 py-3 text-sm">
         <input
           type="checkbox"
           name="marketingOptIn"
@@ -103,7 +103,7 @@ export function RegisterForm({
       {state?.error ? (
         <p
           role="alert"
-          className="rounded-xl bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+          className="rounded-control bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
         >
           {t(state.error)}
         </p>
@@ -147,7 +147,7 @@ function Field({
         required
         defaultValue={defaultValue}
         autoComplete={autoComplete}
-        className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-ring"
+        className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-ring"
       />
     </label>
   );

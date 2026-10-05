@@ -105,13 +105,13 @@ export function Header({ accountSlot }: { accountSlot?: React.ReactNode }) {
               className="h-11 w-full rounded-full border border-border bg-secondary/40 pl-10 pr-4 text-sm outline-none focus:border-ring focus:bg-background"
             />
           </form>
-          <Link onClick={() => setMobileOpen(false)} href="/" className="rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-secondary">
+          <Link onClick={() => setMobileOpen(false)} href="/" className="rounded-control px-3 py-2.5 text-sm font-medium hover:bg-secondary">
             {t("events")}
           </Link>
-          <Link onClick={() => setMobileOpen(false)} href="/how-it-works" className="rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-secondary">
+          <Link onClick={() => setMobileOpen(false)} href="/how-it-works" className="rounded-control px-3 py-2.5 text-sm font-medium hover:bg-secondary">
             {t("howItWorks")}
           </Link>
-          <Link onClick={() => setMobileOpen(false)} href="/organizer" className="rounded-xl px-3 py-2.5 text-sm font-medium hover:bg-secondary">
+          <Link onClick={() => setMobileOpen(false)} href="/organizer" className="rounded-control px-3 py-2.5 text-sm font-medium hover:bg-secondary">
             {t("organizer")}
           </Link>
           <div className="flex items-center gap-1 pt-2">

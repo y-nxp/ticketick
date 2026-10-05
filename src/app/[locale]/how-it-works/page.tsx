@@ -75,12 +75,12 @@ export default async function HowItWorksPage({
           return (
             <div
               key={i}
-              className="relative rounded-2xl border border-border bg-card p-6"
+              className="relative rounded-card border border-border bg-card p-6"
             >
               <span className="absolute right-4 top-4 text-3xl font-bold text-secondary">
                 {i + 1}
               </span>
-              <div className="grid size-12 place-items-center rounded-xl bg-primary/10 text-primary">
+              <div className="grid size-12 place-items-center rounded-control bg-primary/10 text-primary">
                 <Icon className="size-6" />
               </div>
               <h3 className="mt-4 font-semibold">{step.t}</h3>

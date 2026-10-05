@@ -38,7 +38,7 @@ export default async function EditEventPage({
         <p className="mt-1 text-sm text-muted-foreground">{t("editSubtitle")}</p>
       </header>
 
-      <div className="rounded-2xl border border-border bg-card p-6">
+      <div className="rounded-card border border-border bg-card p-6">
         <EventForm event={event} reference={reference} />
       </div>
 

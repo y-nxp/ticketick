@@ -16,17 +16,33 @@ Utiliser les tokens CSS de `src/app/globals.css` (`--primary`, `--foreground`,
 `--background`, `--card`…) plutôt que des valeurs hex en dur.
 
 ## 2. Typography
-- **Font Family :** 'Inter', system-ui, sans-serif
-- **Headings :** Font-weight 800 (ExtraBold), UPPERCASE pour les titres de marque.
-- **Body :** Font-weight 400 (Regular) ou 500 (Medium).
-- Le site reste en Inter (titres ExtraBold compris) ; seul le logo est en Jost.
+Le logo est la référence : les titres partagent sa famille de lettres pour que le
+site parle la même langue que lui, et Inter garde tout ce qui doit se lire vite.
+Les deux polices sont chargées par `next/font/google` dans
+`src/app/[locale]/layout.tsx` (`--font-sans` pour Inter, `--font-jost` pour Jost
+500 et 600).
+- **Titres (h1, h2, h3) :** Jost SemiBold (600), **en minuscules**, interlettrage
+  normal (`-0.01em` sur les h1). Règle globale dans `globals.css` : pas de
+  `font-bold` ni de `tracking-*` à ajouter sur les titres. Pas de capitales
+  forcées : les capitales espacées sont réservées au logo et aux petits libellés,
+  sinon elles perdent leur valeur de signature.
+- **Petits libellés (badges, catégories d'événements, étiquettes) :** classe
+  commune `.brand-label` de `globals.css` (Jost SemiBold, capitales, `0.12em`),
+  déjà portée par `Badge`. Ne pas recréer ce style à la main ; sur les composants
+  partagés avec les pages d'organisateur, garder les classes Tailwind d'origine à
+  côté (`.organizer-theme` les rétablit). Jamais sur les libellés de formulaire, qui
+  restent en Inter sans capitales.
+- **Inter pour tout le reste :** texte courant, navigation, boutons, formulaires,
+  prix, compteurs du contrôle d'entrée. Body en 400 ou 500.
+- **Courriels :** police système ou Inter, jamais Jost (les clients mail ne la
+  chargent pas de façon fiable).
 
 ## 3. Logo (`/public/brand/`, détails dans `docs/brand/LISEZMOI.md`)
 
 ### Dessin
-- TICK + E + TICK en **Jost Regular**, capitales, interlettrage large : élégance
-  géométrique et retenue d'une billetterie haut de gamme. Regular plutôt que Light
-  pour tenir en petit (billets sur téléphone). Texte vectorisé : aucune police à charger.
+- TICK + E + TICK en **Jost Medium**, capitales, interlettrage modéré : un trait
+  assez présent pour cohabiter avec les titres du site et tenir en petit (billets
+  sur téléphone). Texte vectorisé : aucune police à charger.
 - Le **E** : trois barres à bouts droits, de l'épaisseur des fûts des lettres et
   de la hauteur des capitales, **barre du milieu plus courte** (lecture « Ξ »,
   pas d'icône hamburger ni de « TICK TICK »). L'axe est exactement centré, même
@@ -36,11 +52,13 @@ Utiliser les tokens CSS de `src/app/globals.css` (`--primary`, `--foreground`,
   recolorer les lettres, ni ajouter ombre ou dégradé. Ne pas poser le logo couleur
   sur une carte `#2A2C30` (E violet à 2,9:1) : fond de page `#1E1F23` au minimum.
 - **Deux versions selon la taille** (même dessin, mêmes couleurs) :
-  - **`ticketick-logo-small`, sous 24 px de haut** : Jost Medium, fût et barres
-    de 120 unités (≈ 3 px à 18 px de haut), interlettrage resserré de 20 % ;
-    ratio 9,55 (172 px de large à 18 px de haut).
-  - **`ticketick-logo`, à partir de 24 px de haut** : Jost Regular, fût et barres
-    de 85 unités, interlettrage large ; ratio 9,84.
+  - **`ticketick-logo-small`, sous 24 px de haut** : Jost SemiBold, fût et barres
+    de 145 unités (≈ 3,7 px pour des capitales de 18 px) ; capitales de 700
+    unités, viewBox `0 -14 6010 728`, 155 px de large pour des capitales de 18 px.
+  - **`ticketick-logo`, à partir de 24 px de haut** : Jost Medium, fût et barres
+    de 120 unités ; viewBox `0 -13 5820 725`.
+  - Le cadre dépasse les capitales pour ne pas rogner l'arrondi du C : la hauteur
+    d'affichage vaut 728/700 (ou 725/700) de la hauteur des capitales voulue.
 
 ### Fichiers
 - **Site :** composant `Logo` de `src/components/layout/logo.tsx` (en-tête et pied
@@ -50,8 +68,8 @@ Utiliser les tokens CSS de `src/app/globals.css` (`--primary`, `--foreground`,
   **fond sombre :** `/brand/ticketick-logo-small-inverse.svg` ·
   `/brand/ticketick-logo-inverse.svg`.
 - **Courriels :** les clients mail ne lisent pas le SVG →
-  `/brand/ticketick-logo-small.png` avec `width` et `height` explicites
-  (Outlook ignore `width:auto`).
+  `/brand/ticketick-logo-small.png` (2400 × 291) avec `width` et `height`
+  explicites, 157 × 19 (Outlook ignore `width:auto`).
 - **Avec fond et marges :** `ticketick-logo-fond-nuit.svg` (+ `.png`, fond `#1E1F23`) /
   `-fond-ivoire.svg` (fond `#F8F9FA`), dessin standard ; noms historiques, couleurs
   du site.
@@ -60,6 +78,11 @@ Utiliser les tokens CSS de `src/app/globals.css` (`--primary`, `--foreground`,
 - **Icône seule :** `ticketick-icone.svg` / `-512.png` (trois barres sur `#1E1F23`,
   plus épaisses que dans le logo pour rester visibles à 16 px) ;
   `ticketick-icone-violet.svg` sur fond violet. Réservée aux espaces restreints.
+- **Impression :** `docs/brand/impression/` (PDF et EPS vectoriels, version tout
+  en noir pour l'impression une couleur), générés par Inkscape avec
+  `inscape/scripts/export_ticketick_brand_pack.sh` à partir de `/public/brand`.
+- **Partage (Open Graph) :** `src/app/opengraph-image.png`, 1200 × 630 ; les pages
+  de spectacle le remplacent par leur photo.
 - **Favicons :** conventions Next.js — `src/app/icon.svg`, `src/app/favicon.ico`,
   `src/app/apple-icon.png` (copies de `/brand/favicon.*` et `apple-touch-icon.png`).
   Appli de contrôle : `public/door.webmanifest`.
@@ -70,16 +93,31 @@ Utiliser les tokens CSS de `src/app/globals.css` (`--primary`, `--foreground`,
 
 ### Zone d'exclusion & tailles minimales
 - Marge vide autour du logo au moins égale à la **hauteur des lettres**.
-- Logo complet : **18 px de haut** minimum en digital, en version small
-  (≈ 172 px de large).
+- Logo complet : capitales de **18 px de haut** minimum en digital, en version
+  small (≈ 155 px de large).
 - Icône seule : **16 px** minimum en digital.
 
 ## 4. Design System & UI Components
 - **Style :** épuré, moderne, orienté SaaS & Ticketing / Event management.
+- **Hors charte ticketick :** pages aux couleurs d'un organisateur
+  (`.organizer-theme`), couleurs du plan de salle, QR code, PDF des billets,
+  courriels.
+- **Rayons :** boutons, champs et cartes à 8 px, proches des bouts droits du logo :
+  `rounded-control` (boutons, champs, lignes cliquables) et `rounded-card` (cartes,
+  conteneurs, menus déroulants). Ne plus employer `rounded-xl`/`2xl`/`3xl` ; la
+  base `--radius` vaut 8 px, donc `rounded-lg` et plus petit restent possibles pour
+  les détails. Les pilules (recherche, badges, filtres) restent en `rounded-full`.
+  `.organizer-theme` remet `--radius` à 12 px et redéfinit les deux rayons pour que
+  les pages d'organisateur gardent leur rendu.
 - **Buttons :** actions principales remplies en violet (`#6C5CE7`), texte blanc,
-  coins arrondis (`rounded-lg` ou `rounded-xl`).
+  `rounded-control` (déjà dans `Button`).
 - **Cards & Containers :** bordures fines et ombres douces sur fond clair ;
-  fond `#2A2C30` avec texte blanc sur fond sombre.
+  fond `#2A2C30` avec texte blanc sur fond sombre ; `rounded-card`.
+- **Motif des trois barres :** composant `ThreeBars` de
+  `src/components/ui/three-bars.tsx` (le E du logo seul, violet, barre du milieu
+  plus courte). C'est une signature : il doit rester **rare**. Usage actuel :
+  repère devant les titres de section de l'accueil. Tout nouvel usage se décide
+  avec l'utilisateur. Il ne remplace jamais le logo.
 - **Contrastes :** respecter scrupuleusement les normes **WCAG** — texte anthracite
   sur fond blanc, texte blanc sur fond sombre ou violet.
   Ne jamais poser de texte violet sur fond sombre, ni d'anthracite sur violet.

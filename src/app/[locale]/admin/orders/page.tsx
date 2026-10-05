@@ -29,14 +29,14 @@ export default async function AdminOrdersPage({
       </p>
 
       {orders.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-border p-10 text-center">
+        <div className="mt-6 rounded-card border border-dashed border-border p-10 text-center">
           <Receipt className="mx-auto size-6 text-muted-foreground" />
           <p className="mt-3 text-sm text-muted-foreground">
             {t("orders.empty")}
           </p>
         </div>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
+        <div className="mt-6 overflow-x-auto rounded-card border border-border">
           <table className="w-full min-w-[52rem] text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>

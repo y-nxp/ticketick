@@ -34,7 +34,7 @@ export function SessionPicker({
   return (
     <div
       id="session-picker"
-      className="scroll-mt-24 rounded-2xl border border-border bg-card p-5 shadow-sm"
+      className="scroll-mt-24 rounded-card border border-border bg-card p-5 shadow-sm"
     >
       <h3 className="flex items-center gap-2 text-lg font-semibold">
         <CalendarDays className="size-5 text-primary" />
@@ -55,7 +55,7 @@ export function SessionPicker({
               onClick={() => onSelect(s.id)}
               aria-pressed={selected}
               className={cn(
-                "flex w-full flex-col gap-2 rounded-xl border p-3 text-left transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-3",
+                "flex w-full flex-col gap-2 rounded-control border p-3 text-left transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-3",
                 selected
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border hover:bg-secondary",

@@ -24,10 +24,10 @@ export default async function ResetPasswordPage({
 
   return (
     <div className="container-page max-w-md py-16">
-      <div className="rounded-3xl border border-border bg-card p-8 shadow-sm">
+      <div className="rounded-card border border-border bg-card p-8 shadow-sm">
         <div className="mb-6 text-center">
           <div
-            className={`mx-auto grid size-14 place-items-center rounded-2xl ${
+            className={`mx-auto grid size-14 place-items-center rounded-card ${
               utilisable ? "bg-primary/10" : "bg-destructive/10"
             }`}
           >

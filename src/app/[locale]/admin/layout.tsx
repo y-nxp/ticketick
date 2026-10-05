@@ -74,7 +74,7 @@ export default async function AdminLayout({
               <li key={href}>
                 <Link
                   href={href}
-                  className="flex items-center gap-2.5 whitespace-nowrap rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="flex items-center gap-2.5 whitespace-nowrap rounded-control px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   <Icon className="size-4 shrink-0" />
                   {label}

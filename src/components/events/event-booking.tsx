@@ -53,7 +53,7 @@ export function EventBooking({
 
   if (!session) {
     return (
-      <p className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+      <p className="rounded-card border border-dashed border-border p-6 text-sm text-muted-foreground">
         {te("noSessions")}
       </p>
     );
@@ -166,7 +166,7 @@ export function EventBooking({
           <section>
             <h2 className="mb-3 text-xl font-semibold">{te("map")}</h2>
             {showMap && venue ? (
-              <div className="overflow-hidden rounded-2xl border border-border">
+              <div className="overflow-hidden rounded-card border border-border">
                 <iframe
                   title={venue.name}
                   className="h-72 w-full"
@@ -179,7 +179,7 @@ export function EventBooking({
                 />
               </div>
             ) : (
-              <p className="rounded-2xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+              <p className="rounded-card border border-dashed border-border p-6 text-sm text-muted-foreground">
                 {te("noMap")}
               </p>
             )}
@@ -202,7 +202,7 @@ function InfoCard({
   hint?: string;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
+    <div className="flex items-start gap-3 rounded-card border border-border bg-card p-4">
       <div className="mt-0.5">{icon}</div>
       <div className="min-w-0">
         <p className="text-xs font-medium text-muted-foreground">{label}</p>

@@ -103,7 +103,7 @@ export function SeatMover({
       <SeatMap layout={layout} locale={locale} stateOf={stateOf} onToggle={toggle} />
 
       <div className="space-y-5">
-        <section className="rounded-2xl border border-border bg-card p-5">
+        <section className="rounded-card border border-border bg-card p-5">
           <h2 className="font-semibold">{t("seatsTickets")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{t("seatsHint")}</p>
           <ul className="mt-3 space-y-2">
@@ -118,7 +118,7 @@ export function SeatMover({
                     onClick={() => setActive(isActive ? null : ticket.id)}
                     aria-pressed={isActive}
                     className={cn(
-                      "w-full rounded-xl border px-3 py-2 text-left text-sm transition-colors disabled:opacity-60",
+                      "w-full rounded-control border px-3 py-2 text-left text-sm transition-colors disabled:opacity-60",
                       isActive
                         ? "border-primary bg-primary/10"
                         : "border-border hover:bg-secondary",
@@ -147,7 +147,7 @@ export function SeatMover({
           ) : null}
         </section>
 
-        <form action={action} className="space-y-3 rounded-2xl border border-border bg-card p-5">
+        <form action={action} className="space-y-3 rounded-card border border-border bg-card p-5">
           <input type="hidden" name="orderId" value={orderId} />
           <input type="hidden" name="sessionId" value={sessionId} />
           <input type="hidden" name="moves" value={JSON.stringify(list)} />

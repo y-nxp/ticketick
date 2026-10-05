@@ -20,7 +20,7 @@ export default async function OrganizerPage({
       </h1>
       <p className="mt-4 text-lg text-muted-foreground">{t("heroSubtitle")}</p>
 
-      <div className="mt-10 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
+      <div className="mt-10 rounded-card border border-border bg-card p-6 shadow-sm sm:p-8">
         <InquiryChat />
       </div>
     </div>

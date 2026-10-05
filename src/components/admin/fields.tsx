@@ -12,7 +12,7 @@ import { useTranslations } from "next-intl";
  */
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring disabled:opacity-60";
+  "h-11 w-full rounded-control border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring disabled:opacity-60";
 
 export function Field({
   label,
@@ -88,7 +88,7 @@ export function TextArea({
       name={name}
       rows={rows}
       defaultValue={defaultValue ?? ""}
-      className="w-full rounded-xl border border-border bg-background p-3 text-sm outline-none focus:border-ring"
+      className="w-full rounded-control border border-border bg-background p-3 text-sm outline-none focus:border-ring"
     />
   );
 }
@@ -214,7 +214,7 @@ export function TranslatedField({
       {/* Replié, le bloc reste dans le formulaire : sinon l'enregistrement
           n'enverrait que le français et effacerait les traductions. */}
       <div
-        className={`mt-1 gap-2 rounded-xl border border-dashed border-border p-3 ${
+        className={`mt-1 gap-2 rounded-control border border-dashed border-border p-3 ${
           ouvert ? "grid" : "hidden"
         }`}
       >
@@ -256,7 +256,7 @@ export function FormFeedback({
     return (
       <p
         role="alert"
-        className="rounded-xl bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+        className="rounded-control bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
       >
         {t(`errors.${state.error}`)}
       </p>
@@ -267,7 +267,7 @@ export function FormFeedback({
     return (
       <p
         role="status"
-        className="rounded-xl bg-primary/10 px-3.5 py-2.5 text-sm text-primary"
+        className="rounded-control bg-primary/10 px-3.5 py-2.5 text-sm text-primary"
       >
         {t("saved")}
       </p>

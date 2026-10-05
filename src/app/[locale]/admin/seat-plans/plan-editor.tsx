@@ -58,7 +58,7 @@ import { rowNumberMarks } from "@/lib/seating/layout";
 
 const inputClass =
   "h-9 w-full rounded-lg border border-border bg-background px-2.5 text-sm outline-none transition-colors focus:border-ring";
-const panelClass = "rounded-2xl border border-border bg-card p-4";
+const panelClass = "rounded-card border border-border bg-card p-4";
 const ZOOMS = [1, 1.5, 2.25, 3.5];
 
 /** Couleurs nommées par l'IA, rapprochées des teintes relevées sur le plan. */
@@ -456,7 +456,7 @@ export function PlanEditor({
   return (
     <div className="space-y-4">
       {inUseSessions > 0 ? (
-        <div className="flex gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+        <div className="flex gap-3 rounded-card border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" />
           <div className="space-y-1">
             <p className="font-semibold">{t("inUseWarning", { count: inUseSessions })}</p>
@@ -467,7 +467,7 @@ export function PlanEditor({
     <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
       <div className="min-w-0 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex rounded-xl border border-border p-0.5">
+          <div className="flex rounded-control border border-border p-0.5">
             <button
               type="button"
               onClick={() => setMode("select")}
@@ -556,7 +556,7 @@ export function PlanEditor({
           {lockedKeys.length > 0 ? t("hintLocked") : null}
         </p>
 
-        <div className="max-h-[80vh] overflow-auto rounded-xl border border-border bg-white">
+        <div className="max-h-[80vh] overflow-auto rounded-control border border-border bg-white">
           <svg
             ref={svgRef}
             viewBox={`0 0 ${draft.width} ${draft.height}`}
@@ -817,7 +817,7 @@ export function PlanEditor({
             onClear={() => setSelected(new Set())}
           />
         ) : (
-          <p className="rounded-2xl border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
+          <p className="rounded-card border border-dashed border-border px-4 py-3 text-xs text-muted-foreground">
             {t("selectionEmpty")}
           </p>
         )}
@@ -1038,7 +1038,7 @@ function SelectionPanel({
         </Button>
       </form>
 
-      <fieldset className="space-y-3 rounded-xl border border-dashed border-border p-3">
+      <fieldset className="space-y-3 rounded-control border border-dashed border-border p-3">
         <legend className="px-1 text-xs font-semibold">{t("position")}</legend>
         <div className="flex items-center gap-3">
           <div className="grid grid-cols-3 gap-1" role="group" aria-label={t("moveBy")}>
@@ -1118,7 +1118,7 @@ function SelectionPanel({
         <p className="text-xs text-muted-foreground">{t("duplicateHint")}</p>
       </fieldset>
 
-      <fieldset className="space-y-2 rounded-xl border border-dashed border-border p-3">
+      <fieldset className="space-y-2 rounded-control border border-dashed border-border p-3">
         <legend className="px-1 text-xs font-semibold">{t("numbering")}</legend>
         <div className="grid grid-cols-2 gap-2">
           <label className="flex flex-col gap-1">

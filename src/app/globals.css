@@ -10,7 +10,7 @@
 */
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 
   /* Fonds clairs */
   --background: #ffffff;
@@ -117,6 +117,12 @@
   --radius-2xl: calc(var(--radius) + 10px);
 }
 
+/* Boutons et cartes : coins resserrés, proches des bouts droits du logo. */
+@theme {
+  --radius-control: 0.5rem;
+  --radius-card: 0.5rem;
+}
+
 * {
   border-color: var(--border);
 }
@@ -133,12 +139,18 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Titres en ExtraBold (charte typographique) */
+/* Titres dans la famille du logo, en minuscules : les capitales espacées
+   restent au logo et aux petits libellés. */
 h1,
 h2,
 h3 {
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-family: var(--font-jost), var(--font-sans), sans-serif;
+  font-weight: 600;
+  letter-spacing: normal;
+}
+
+h1 {
+  letter-spacing: -0.01em;
 }
 
 h4,
@@ -165,11 +177,13 @@ h6 {
   }
 }
 
-/* Nom de marque : capitales, ExtraBold, kerning régulier */
-.brand-wordmark {
-  font-weight: 800;
+/* Petits libellés (badges, catégories, étiquettes) : les capitales espacées
+   du logo. Pas sur les libellés de formulaire. */
+.brand-label {
+  font-family: var(--font-jost), var(--font-sans), sans-serif;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.12em;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -186,6 +200,18 @@ h6 {
 */
 .organizer-theme {
   font-family: var(--font-organizer), "Open Sans", system-ui, sans-serif;
+  --radius: 0.75rem;
+  --radius-control: calc(var(--radius) + 4px);
+  --radius-card: calc(var(--radius) + 10px);
+}
+
+/* Les composants partagés y gardent les classes Tailwind qu'ils portaient
+   avant les libellés ticketick. */
+.organizer-theme .brand-label {
+  font-family: revert-layer;
+  font-weight: revert-layer;
+  text-transform: revert-layer;
+  letter-spacing: revert-layer;
 }
 
 .organizer-theme h1,

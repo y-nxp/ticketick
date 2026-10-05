@@ -43,9 +43,9 @@ export default function CartPage() {
           {lines.map((line) => (
             <div
               key={line.ticketTypeId}
-              className="flex gap-4 rounded-2xl border border-border bg-card p-4"
+              className="flex gap-4 rounded-card border border-border bg-card p-4"
             >
-              <div className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-secondary">
+              <div className="relative size-20 shrink-0 overflow-hidden rounded-control bg-secondary">
                 {line.coverImage ? (
                   <Image
                     src={line.coverImage}
@@ -123,7 +123,7 @@ export default function CartPage() {
         </div>
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="rounded-card border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">{t("title")}</h2>
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between">

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { savePostfinanceAccount } from "@/lib/admin/payment-actions";
 
 const fieldClass =
-  "h-11 rounded-xl border border-border bg-background px-3.5 text-sm outline-none focus:border-ring";
+  "h-11 rounded-control border border-border bg-background px-3.5 text-sm outline-none focus:border-ring";
 
 export function PostfinanceForm({
   organizerId,

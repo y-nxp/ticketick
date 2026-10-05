@@ -39,7 +39,7 @@ export function DuplicatePlan({ id, name }: { id: string; name: string }) {
         minLength={2}
         maxLength={120}
         aria-label={t("copyNameLabel")}
-        className="h-10 w-64 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-ring"
+        className="h-10 w-64 rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-ring"
       />
       <Button type="submit" variant="outline" disabled={pending}>
         <Copy />

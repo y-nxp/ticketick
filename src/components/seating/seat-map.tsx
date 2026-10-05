@@ -61,7 +61,7 @@ export function SeatMap({
           <ZoomIn className="size-4" />
         </button>
       </div>
-      <div className="max-h-[75vh] overflow-auto rounded-xl border border-border bg-background">
+      <div className="max-h-[75vh] overflow-auto rounded-control border border-border bg-background">
         <svg
           viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
           style={{ width: `${ZOOMS[zoom] * 100}%` }}

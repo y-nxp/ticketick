@@ -17,7 +17,7 @@ export function EventTags({
         <li
           key={tag}
           className={cn(
-            "rounded-full bg-primary font-semibold uppercase leading-none tracking-wider text-primary-foreground",
+            "brand-label rounded-full bg-primary font-semibold uppercase leading-none tracking-wider text-primary-foreground",
             large ? "px-3 py-1.5 text-xs" : "px-2.5 py-1 text-[11px]",
           )}
         >

@@ -108,7 +108,7 @@ export default async function AboutPage({
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="rounded-2xl border border-border bg-card p-5 text-center shadow-sm"
+            className="rounded-card border border-border bg-card p-5 text-center shadow-sm"
           >
             <dt className="text-sm text-muted-foreground">{stat.label}</dt>
             <dd className="mt-1 text-3xl font-extrabold tracking-tight text-foreground">
@@ -125,9 +125,9 @@ export default async function AboutPage({
         {strengths.map((item) => (
           <div
             key={item.title}
-            className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+            className="rounded-card border border-border bg-card p-5 shadow-sm"
           >
-            <div className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
+            <div className="grid size-11 place-items-center rounded-control bg-primary/10 text-primary">
               <item.icon className="size-5" />
             </div>
             <h3 className="mt-4 font-semibold">{item.title}</h3>
@@ -151,7 +151,7 @@ export default async function AboutPage({
             return (
               <li
                 key={member.name}
-                className="flex gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm"
+                className="flex gap-4 rounded-card border border-border bg-card p-5 shadow-sm"
               >
                 {photo ? (
                   <Image
@@ -242,7 +242,7 @@ export default async function AboutPage({
           {faqs.map((item) => (
             <div
               key={item.q}
-              className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+              className="rounded-card border border-border bg-card p-5 shadow-sm"
             >
               <dt className="font-semibold">{item.q}</dt>
               <dd className="mt-2 text-sm leading-relaxed text-muted-foreground">
@@ -255,7 +255,7 @@ export default async function AboutPage({
 
       <section
         id="contact-projet"
-        className="mt-14 scroll-mt-24 rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8"
+        className="mt-14 scroll-mt-24 rounded-card border border-border bg-card p-6 shadow-sm sm:p-8"
       >
         <h2 className="text-2xl font-semibold tracking-tight">
           {t("closeTitle")}

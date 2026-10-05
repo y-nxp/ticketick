@@ -30,19 +30,19 @@ export function OptionsEditor({ event }: { event: EventForEdit }) {
   const [edite, setEdite] = React.useState<string | null>(null);
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6">
+    <section className="rounded-card border border-border bg-card p-6">
       <h2 className="font-semibold">{t("title")}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{t("hint")}</p>
 
       <div className="mt-4 space-y-3">
         {event.options.length === 0 && !ajout ? (
-          <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+          <p className="rounded-control border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
             {t("empty")}
           </p>
         ) : null}
 
         {event.options.map((option) => (
-          <div key={option.id} className="rounded-xl border border-border p-4">
+          <div key={option.id} className="rounded-control border border-border p-4">
             {edite === option.id ? (
               <OptionForm
                 event={event}
@@ -60,7 +60,7 @@ export function OptionsEditor({ event }: { event: EventForEdit }) {
         ))}
 
         {ajout ? (
-          <div className="rounded-xl border border-border p-4">
+          <div className="rounded-control border border-border p-4">
             <OptionForm event={event} onClose={() => setAjout(false)} />
           </div>
         ) : (
@@ -219,7 +219,7 @@ function OptionForm({
       <div className="space-y-3">
         <p className="text-sm font-medium">{t("groups")}</p>
         {groups.map((group, i) => (
-          <div key={i} className="space-y-3 rounded-xl border border-border p-3">
+          <div key={i} className="space-y-3 rounded-control border border-border p-3">
             <input
               type="hidden"
               name={`group.${i}.choiceCount`}

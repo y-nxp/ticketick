@@ -141,7 +141,7 @@ export function DoorScanner({
   return (
     <div className="space-y-4">
       <label className="block">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <span className="text-xs font-semibold text-muted-foreground">
           {t("session")}
         </span>
         <select
@@ -149,7 +149,7 @@ export function DoorScanner({
           onChange={(e) =>
             router.replace({ pathname: "/door", query: { s: e.target.value } })
           }
-          className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-medium outline-none focus:border-ring"
+          className="mt-1 h-11 w-full rounded-control border border-border bg-background px-3 text-sm font-medium outline-none focus:border-ring"
         >
           {sessions.map((s) => (
             <option key={s.id} value={s.id}>
@@ -159,7 +159,7 @@ export function DoorScanner({
         </select>
       </label>
 
-      <div className="rounded-2xl border border-border bg-card p-4">
+      <div className="rounded-card border border-border bg-card p-4">
         <div className="flex items-center justify-between gap-3">
           <p className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <Users className="size-4" />
@@ -188,7 +188,7 @@ export function DoorScanner({
         </div>
       </div>
 
-      <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-[#1E1F23] sm:aspect-video">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-card bg-[#1E1F23] sm:aspect-video">
         {camera === "on" ? (
           <video
             ref={videoRef}
@@ -228,7 +228,7 @@ export function DoorScanner({
             placeholder={t("manualPlaceholder")}
             aria-label={t("manualPlaceholder")}
             autoCapitalize="characters"
-            className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 font-mono text-sm outline-none focus:border-ring"
+            className="h-11 w-full rounded-control border border-border bg-background pl-10 pr-3 font-mono text-sm outline-none focus:border-ring"
           />
         </label>
         <Button type="submit" disabled={occupe || !manuel.trim()}>
@@ -248,7 +248,7 @@ function Resultat({ lookup, locale }: { lookup: DoorLookup; locale: string }) {
 
   if (!lookup.ok) {
     return (
-      <div className="rounded-2xl bg-destructive px-4 py-5 text-center text-white">
+      <div className="rounded-card bg-destructive px-4 py-5 text-center text-white">
         <p className="text-xl font-extrabold uppercase">{t("refused")}</p>
         <p className="mt-1 text-sm text-white/90">{t(lookup.reason)}</p>
         {lookup.reason === "otherSession" ? (
@@ -277,7 +277,7 @@ function Resultat({ lookup, locale }: { lookup: DoorLookup; locale: string }) {
 
   return (
     <div
-      className={`rounded-2xl px-4 py-5 text-center text-white ${
+      className={`rounded-card px-4 py-5 text-center text-white ${
         deja ? "bg-amber-700" : "bg-emerald-700"
       }`}
     >
@@ -296,8 +296,8 @@ function Resultat({ lookup, locale }: { lookup: DoorLookup; locale: string }) {
         <p className="mt-2 text-lg font-bold">{lookup.ticket.seat}</p>
       ) : null}
       {lookup.ticket.attendee ? (
-        <div className="mx-auto mt-3 max-w-xs rounded-xl bg-white/15 px-3 py-2">
-          <p className="text-xs font-semibold uppercase tracking-wide">
+        <div className="mx-auto mt-3 max-w-xs rounded-control bg-white/15 px-3 py-2">
+          <p className="brand-label text-xs">
             {t("checkId")}
           </p>
           <p className="font-semibold">{lookup.ticket.attendee}</p>

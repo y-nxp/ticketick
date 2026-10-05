@@ -87,12 +87,12 @@ export default async function PayPage({
             className="mx-auto mb-6 h-14 w-auto object-contain"
           />
         ) : organizer ? (
-          <p className="mb-6 text-center text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="brand-label mb-6 text-center text-sm text-muted-foreground">
             {organizer.name}
           </p>
         ) : null}
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-card border border-border bg-card p-6 shadow-sm">
           {charge.status === "DONE" ? (
             <Status
               icon="ok"
@@ -116,7 +116,7 @@ export default async function PayPage({
             />
           )}
 
-          <ul className="mt-6 divide-y divide-border rounded-xl border border-border">
+          <ul className="mt-6 divide-y divide-border rounded-control border border-border">
             {tickets.map((ticket) => {
               const session = ticket.ticketType.session;
               return (

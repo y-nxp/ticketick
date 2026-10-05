@@ -31,9 +31,9 @@ export default async function VerifyEmailPage({
 
   return (
     <div className="container-page max-w-md py-16">
-      <div className="rounded-3xl border border-border bg-card p-8 text-center shadow-sm">
+      <div className="rounded-card border border-border bg-card p-8 text-center shadow-sm">
         <div
-          className={`mx-auto grid size-14 place-items-center rounded-2xl ${
+          className={`mx-auto grid size-14 place-items-center rounded-card ${
             ok ? "bg-primary/10" : "bg-destructive/10"
           }`}
         >

@@ -67,7 +67,7 @@ export function SeatBlocker({
       <SeatMap layout={layout} locale={locale} stateOf={stateOf} onToggle={toggle} />
 
       <div className="space-y-5">
-        <section className="rounded-2xl border border-border bg-card p-5">
+        <section className="rounded-card border border-border bg-card p-5">
           <h2 className="font-semibold">{t("selection", { count: picked.length })}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{t("hint")}</p>
           <ul className="mt-3 space-y-1 text-sm">
@@ -92,7 +92,7 @@ export function SeatBlocker({
                 onChange={(e) => setNote(e.target.value)}
                 maxLength={200}
                 placeholder={t("notePlaceholder")}
-                className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm outline-none focus:border-ring"
+                className="h-11 rounded-control border border-border bg-background px-3.5 text-sm outline-none focus:border-ring"
               />
             </label>
             <div className="flex flex-wrap gap-2">
@@ -140,7 +140,7 @@ export function SeatBlocker({
           </form>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card p-5">
+        <section className="rounded-card border border-border bg-card p-5">
           <h2 className="font-semibold">{t("blockedList", { count: blocked.length })}</h2>
           {blocked.length === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">{t("noneBlocked")}</p>

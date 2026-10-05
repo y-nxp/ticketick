@@ -30,7 +30,7 @@ export function ContactBooking({
   return (
     <div
       id="ticket-selector"
-      className="scroll-mt-24 rounded-2xl border border-border bg-card p-5 shadow-sm"
+      className="scroll-mt-24 rounded-card border border-border bg-card p-5 shadow-sm"
     >
       <h3 className="text-xl font-semibold">{te("title")}</h3>
       <p className="mt-2 font-medium leading-snug">{title}</p>
@@ -87,7 +87,7 @@ export function ContactBooking({
           ) : null}
         </div>
       ) : (
-        <p className="mt-4 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+        <p className="mt-4 rounded-control border border-dashed border-border p-4 text-sm text-muted-foreground">
           {te("pending")}
         </p>
       )}

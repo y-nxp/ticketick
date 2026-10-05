@@ -17,7 +17,7 @@ export function PasswordForm() {
   >(changePassword, undefined);
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6">
+    <section className="rounded-card border border-border bg-card p-6">
       <h2 className="flex items-center gap-2 font-semibold">
         <KeyRound className="size-4 text-muted-foreground" />
         {t("title")}
@@ -32,7 +32,7 @@ export function PasswordForm() {
         {state?.error ? (
           <p
             role="alert"
-            className="rounded-xl bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+            className="rounded-control bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
           >
             {t(state.error)}
           </p>
@@ -41,7 +41,7 @@ export function PasswordForm() {
         {state?.ok ? (
           <p
             role="status"
-            className="flex items-center gap-2 rounded-xl bg-primary/10 px-3.5 py-2.5 text-sm text-primary"
+            className="flex items-center gap-2 rounded-control bg-primary/10 px-3.5 py-2.5 text-sm text-primary"
           >
             <Check className="size-4 shrink-0" />
             {t("done")}
@@ -73,7 +73,7 @@ function Field({
         name={name}
         required
         autoComplete={autoComplete}
-        className="h-11 w-full max-w-sm rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-ring"
+        className="h-11 w-full max-w-sm rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-ring"
       />
     </label>
   );

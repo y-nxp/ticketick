@@ -24,7 +24,7 @@ export default async function AdminInquiriesPage({
       </p>
       <p className="mt-2 text-sm text-muted-foreground">{t("hint")}</p>
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
+      <div className="mt-6 overflow-x-auto rounded-card border border-border">
         <table className="w-full min-w-[44rem] text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>

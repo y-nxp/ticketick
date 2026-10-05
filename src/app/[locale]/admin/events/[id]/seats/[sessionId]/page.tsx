@@ -48,7 +48,7 @@ export default async function SessionSeatsPage({
         </p>
       </header>
 
-      <div className="overflow-x-auto rounded-2xl border border-border">
+      <div className="overflow-x-auto rounded-card border border-border">
         <table className="w-full min-w-[32rem] text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>

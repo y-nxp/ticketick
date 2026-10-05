@@ -41,7 +41,7 @@ export default async function FriendsPage({
   return (
     <div className="container-page py-16">
       <div className="mx-auto max-w-2xl text-center">
-        <div className="mx-auto grid size-16 place-items-center rounded-2xl bg-primary/10">
+        <div className="mx-auto grid size-16 place-items-center rounded-card bg-primary/10">
           <Smartphone className="size-8 text-primary" />
         </div>
         <h1 className="mt-6 text-4xl font-bold tracking-tight">{t("title")}</h1>
@@ -56,8 +56,8 @@ export default async function FriendsPage({
         {list.map((f, i) => {
           const Icon = icons[i];
           return (
-            <div key={i} className="rounded-2xl border border-border bg-card p-6">
-              <div className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary">
+            <div key={i} className="rounded-card border border-border bg-card p-6">
+              <div className="grid size-11 place-items-center rounded-control bg-primary/10 text-primary">
                 <Icon className="size-5" />
               </div>
               <h3 className="mt-4 font-semibold">{f.t}</h3>

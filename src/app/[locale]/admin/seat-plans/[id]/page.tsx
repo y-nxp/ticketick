@@ -47,7 +47,7 @@ export default async function SeatPlanPage({
 
       <PlanPreview layout={plan.layout} locale={locale} />
 
-      <section className="rounded-2xl border border-border bg-card p-5">
+      <section className="rounded-card border border-border bg-card p-5">
         <p className="mb-3 text-sm text-muted-foreground">{t("useHint")}</p>
         <DeletePlan id={plan.id} inUse={plan._count.sessions > 0} />
       </section>

@@ -71,7 +71,7 @@ export default async function OrganizerDashboardPage({
         />
       </div>
 
-      <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="mt-8 overflow-hidden rounded-card border border-border bg-card">
         <div className="border-b border-border px-5 py-4">
           <h2 className="font-semibold">{to("events")}</h2>
         </div>
@@ -142,7 +142,7 @@ function StatCard({
   value: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
+    <div className="rounded-card border border-border bg-card p-5">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         {icon}
         {label}

@@ -114,7 +114,7 @@ export function OrderEditor(props: EditorProps) {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-5">
+    <section className="rounded-card border border-border bg-card p-5">
       <h3 className="font-semibold">{title}</h3>
       <div className="mt-3">{children}</div>
     </section>
@@ -207,7 +207,7 @@ function RemovePanel({
       >
         <input type="hidden" name="orderId" value={orderId} />
         <p className="text-sm text-muted-foreground">{t("removeHint")}</p>
-        <ul className="divide-y divide-border rounded-xl border border-border">
+        <ul className="divide-y divide-border rounded-control border border-border">
           {tickets.map((ticket) => {
             const active = removable.includes(ticket);
             return (
@@ -254,7 +254,7 @@ function RemovePanel({
                 name="refund"
                 value={refund}
                 onChange={(e) => setRefund(e.target.value)}
-                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm"
+                className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm"
               >
                 <option value="NONE">{t("refundNone")}</option>
                 <option value="CASH">{t("refundCash")}</option>
@@ -281,7 +281,7 @@ function RemovePanel({
                   name="refundAmount"
                   inputMode="decimal"
                   defaultValue={(dueCents / 100).toFixed(2)}
-                  className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm"
+                  className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm"
                 />
               </Field>
             ) : null}
@@ -338,7 +338,7 @@ function AddPanel({
         className="space-y-4"
       >
         <input type="hidden" name="orderId" value={orderId} />
-        <div className="overflow-x-auto rounded-xl border border-border">
+        <div className="overflow-x-auto rounded-control border border-border">
           <table className="w-full min-w-[30rem] text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -381,7 +381,7 @@ function AddPanel({
                         }))
                       }
                       aria-label={t("quantityFor", { name: tt.name })}
-                      className="h-10 w-full rounded-xl border border-border bg-background px-3 text-right text-sm"
+                      className="h-10 w-full rounded-control border border-border bg-background px-3 text-right text-sm"
                     />
                   </td>
                 </tr>
@@ -398,7 +398,7 @@ function AddPanel({
               name="settle"
               value={settle}
               onChange={(e) => setSettle(e.target.value)}
-              className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm"
+              className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm"
             >
               <option value="CASH">{t("settleCash")}</option>
               <option value="LINK" disabled={!linkOk}>
@@ -414,7 +414,7 @@ function AddPanel({
                 name="amount"
                 inputMode="decimal"
                 placeholder={(total / 100).toFixed(2)}
-                className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm"
+                className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm"
               />
             </Field>
           ) : null}
@@ -476,7 +476,7 @@ function ChargesPanel({ orderId, locale, charges }: EditorProps) {
 
   return (
     <Section title={t("charges")}>
-      <ul className="divide-y divide-border rounded-xl border border-border">
+      <ul className="divide-y divide-border rounded-control border border-border">
         {charges.map((charge) => {
           const open = charge.status === "OPEN";
           const failed = charge.status === "FAILED";

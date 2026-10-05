@@ -226,7 +226,7 @@ export function SeatedSelector({
   return (
     <div
       id="ticket-selector"
-      className="scroll-mt-24 rounded-2xl border border-border bg-card p-5 shadow-sm"
+      className="scroll-mt-24 rounded-card border border-border bg-card p-5 shadow-sm"
     >
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="min-w-0">
@@ -239,7 +239,7 @@ export function SeatedSelector({
               uniform={uniform}
             />
           ) : (
-            <div className="grid min-h-64 place-items-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
+            <div className="grid min-h-64 place-items-center rounded-control border border-dashed border-border text-sm text-muted-foreground">
               {loaded === "error" ? (
                 te("seatError")
               ) : (
@@ -288,7 +288,7 @@ export function SeatedSelector({
                 return (
                   <li
                     key={pick.key}
-                    className="flex items-center gap-2 rounded-xl border border-border p-2.5"
+                    className="flex items-center gap-2 rounded-control border border-border p-2.5"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">

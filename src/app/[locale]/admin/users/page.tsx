@@ -28,7 +28,7 @@ export default async function AdminUsersPage({
         {t("users.subtitle", { count: users.length })}
       </p>
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
+      <div className="mt-6 overflow-x-auto rounded-card border border-border">
         <table className="w-full min-w-[48rem] text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>

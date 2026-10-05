@@ -63,12 +63,12 @@ export function ReservationForm({
         const data = new FormData(e.currentTarget);
         React.startTransition(() => action(data));
       }}
-      className="space-y-5 rounded-2xl border border-border bg-card p-6"
+      className="space-y-5 rounded-card border border-border bg-card p-6"
     >
       <input type="hidden" name="eventId" value={eventId} />
       <input type="hidden" name="sessionId" value={sessionId} />
 
-      <div className="overflow-x-auto rounded-xl border border-border">
+      <div className="overflow-x-auto rounded-control border border-border">
         <table className="w-full min-w-[30rem] text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
@@ -113,7 +113,7 @@ export function ReservationForm({
                       }))
                     }
                     aria-label={t("quantityFor", { name: row.name })}
-                    className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring"
+                    className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring"
                   />
                 </td>
               </tr>
@@ -150,7 +150,7 @@ export function ReservationForm({
             maxLength={200}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring"
+            className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring"
           />
         </Field>
         <Field label={t("phone")}>
@@ -166,7 +166,7 @@ export function ReservationForm({
             name="settle"
             value={settle}
             onChange={(e) => setSettle(e.target.value)}
-            className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring"
+            className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring"
           >
             <option value="FREE">{t("settleFree")}</option>
             <option value="CASH">{te("settleCash")}</option>
@@ -185,7 +185,7 @@ export function ReservationForm({
               name="amount"
               inputMode="decimal"
               placeholder={(total / 100).toFixed(2)}
-              className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring"
+              className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring"
             />
           </Field>
         ) : null}
@@ -210,7 +210,7 @@ export function ReservationForm({
       {state && !state.ok ? (
         <p
           role="alert"
-          className="rounded-xl bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+          className="rounded-control bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
         >
           {t(`errors.${state.error}`)}
         </p>

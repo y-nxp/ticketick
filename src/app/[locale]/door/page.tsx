@@ -47,7 +47,7 @@ export default async function DoorPage({
 
   return (
     <div className="container-page max-w-lg py-8">
-      <h1 className="text-2xl font-extrabold tracking-tight uppercase">
+      <h1 className="text-2xl">
         {t("title")}
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
@@ -61,7 +61,7 @@ export default async function DoorPage({
             initialCounts={counts}
           />
         ) : (
-          <div className="rounded-2xl border border-border bg-card p-6 text-center">
+          <div className="rounded-card border border-border bg-card p-6 text-center">
             <CalendarX2 className="mx-auto size-8 text-muted-foreground" />
             <p className="mt-3 font-medium">{t("noSessions")}</p>
             <p className="mt-1 text-sm text-muted-foreground">

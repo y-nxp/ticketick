@@ -57,7 +57,7 @@ export default async function AccountPage({
       user.role === "ORGANIZER" ||
       user.role === "ORGANIZER_VIEWER" ? (
         <Link href="/admin" className="mt-8 block">
-          <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10">
+          <div className="flex items-center gap-3 rounded-card border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10">
             <ShieldCheck className="size-5 text-primary" />
             <div>
               <p className="font-medium">{t("adminAccess")}</p>
@@ -79,7 +79,7 @@ export default async function AccountPage({
 
       {user.role === "DOOR_STAFF" ? (
         <Link href="/door" className="mt-8 block">
-          <div className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10">
+          <div className="flex items-center gap-3 rounded-card border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10">
             <ScanLine className="size-5 text-primary" />
             <div>
               <p className="font-medium">{t("doorAccess")}</p>
@@ -92,7 +92,7 @@ export default async function AccountPage({
       ) : null}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-card p-6">
+        <section className="rounded-card border border-border bg-card p-6">
           <h2 className="flex items-center gap-2 font-semibold">
             <UserRound className="size-4 text-muted-foreground" />
             {t("profile")}
@@ -111,7 +111,7 @@ export default async function AccountPage({
           </dl>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card p-6">
+        <section className="rounded-card border border-border bg-card p-6">
           <h2 className="flex items-center gap-2 font-semibold">
             <Receipt className="size-4 text-muted-foreground" />
             {t("myOrders")}
@@ -126,7 +126,7 @@ export default async function AccountPage({
               {orders.map((order) => (
                 <li
                   key={order.id}
-                  className="rounded-xl border border-border p-4"
+                  className="rounded-control border border-border p-4"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-mono text-xs text-muted-foreground">

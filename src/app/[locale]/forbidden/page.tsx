@@ -13,7 +13,7 @@ export default async function ForbiddenPage() {
 
   return (
     <div className="container-page max-w-md py-24 text-center">
-      <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-destructive/10">
+      <div className="mx-auto grid size-14 place-items-center rounded-card bg-destructive/10">
         <ShieldX className="size-7 text-destructive" />
       </div>
       <h1 className="mt-5 text-2xl font-bold">{t("forbiddenTitle")}</h1>

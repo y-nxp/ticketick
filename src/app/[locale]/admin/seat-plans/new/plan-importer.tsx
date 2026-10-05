@@ -10,7 +10,7 @@ import { loadPlanFile, PlanFileError } from "@/lib/seating/load-plan";
 import { PlanEditor } from "../plan-editor";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring";
+  "h-11 w-full rounded-control border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring";
 
 interface Venue {
   id: string;
@@ -83,7 +83,7 @@ export function PlanImporter({ venues, aiEnabled }: { venues: Venue[]; aiEnabled
   return (
     <form
       onSubmit={analyse}
-      className="max-w-xl space-y-4 rounded-2xl border border-border bg-card p-5"
+      className="max-w-xl space-y-4 rounded-card border border-border bg-card p-5"
     >
       {venues.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noVenue")}</p>
@@ -128,7 +128,7 @@ export function PlanImporter({ venues, aiEnabled }: { venues: Venue[]; aiEnabled
         <span className="text-xs text-muted-foreground">{t("fileHint")}</span>
       </label>
       {error ? (
-        <p role="alert" className="rounded-xl bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
+        <p role="alert" className="rounded-control bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
           {t(`errors.${error}`)}
         </p>
       ) : null}

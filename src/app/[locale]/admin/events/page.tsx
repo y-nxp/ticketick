@@ -36,7 +36,7 @@ export default async function AdminEventsPage({
   const origin = publicAppOrigin();
 
   const table = (
-    <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
+    <div className="mt-6 overflow-x-auto rounded-card border border-border">
       <table className="w-full min-w-[60rem] text-sm">
         <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
           <tr>
@@ -170,7 +170,7 @@ export default async function AdminEventsPage({
         {readOnly ? null : (
           <Link
             href="/admin/events/new"
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary-hover"
+            className="inline-flex h-10 items-center gap-2 rounded-control bg-primary px-5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary-hover"
           >
             <Plus className="size-4" />
             {t("events.create")}

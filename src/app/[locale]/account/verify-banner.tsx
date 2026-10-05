@@ -17,7 +17,7 @@ export function VerifyBanner({ email }: { email: string }) {
   );
 
   return (
-    <div className="mt-8 flex flex-wrap items-center gap-4 rounded-2xl border border-[var(--warning)]/40 bg-[var(--warning)]/10 p-4">
+    <div className="mt-8 flex flex-wrap items-center gap-4 rounded-card border border-[var(--warning)]/40 bg-[var(--warning)]/10 p-4">
       <MailCheck className="size-5 shrink-0 text-foreground" />
       <div className="min-w-0 flex-1">
         <p className="font-medium">{t("bannerTitle")}</p>

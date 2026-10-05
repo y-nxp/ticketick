@@ -19,7 +19,7 @@ export function ShareEmbed({
   const iframe = `<iframe src="${origin}/embed/events/${eventSlug}" title="Billetterie" style="border:0;width:100%;max-width:720px;min-height:640px" loading="lazy"></iframe>`;
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6">
+    <section className="rounded-card border border-border bg-card p-6">
       <h2 className="font-semibold">{t("title")}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{t("hint")}</p>
 
@@ -54,7 +54,7 @@ function Snippet({
     <div>
       <p className="text-sm font-medium">{label}</p>
       <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p>
-      <pre className="mt-2 overflow-x-auto rounded-xl bg-secondary p-3 text-xs leading-relaxed">
+      <pre className="mt-2 overflow-x-auto rounded-control bg-secondary p-3 text-xs leading-relaxed">
         {value}
       </pre>
       <Button type="button" variant="outline" size="sm" className="mt-2" onClick={copy}>

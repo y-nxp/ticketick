@@ -97,7 +97,7 @@ function QuantitySelector({ event, session, locale }: SelectorProps) {
   return (
     <div
       id="ticket-selector"
-      className="scroll-mt-24 rounded-2xl border border-border bg-card p-5 shadow-sm"
+      className="scroll-mt-24 rounded-card border border-border bg-card p-5 shadow-sm"
     >
       <h3 className="text-xl font-semibold">{te("selectTickets")}</h3>
       <p className="mt-2 font-medium leading-snug">{t(event.title, locale)}</p>
@@ -183,7 +183,7 @@ function TicketRow({
         : null;
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-border p-3">
+    <div className="flex items-center justify-between gap-3 rounded-control border border-border p-3">
       <div className="min-w-0">
         <p className="truncate font-medium">{t(ticket.name, locale)}</p>
         <p className="text-sm text-muted-foreground">

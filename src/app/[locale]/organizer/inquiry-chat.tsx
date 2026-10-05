@@ -83,7 +83,7 @@ export function InquiryChat() {
             rows={3}
             maxLength={800}
             placeholder={t("detailsPlaceholder")}
-            className="w-full rounded-xl border border-border bg-background p-3 text-sm outline-none focus:border-ring"
+            className="w-full rounded-control border border-border bg-background p-3 text-sm outline-none focus:border-ring"
           />
           <div className="flex flex-wrap gap-2">
             <Button type="button" size="sm" onClick={() => setEtape("email")}>
@@ -125,7 +125,7 @@ export function InquiryChat() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t("emailPlaceholder")}
-            className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-ring"
+            className="h-11 min-w-0 flex-1 rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-ring"
           />
           <Button type="submit" size="sm">
             {t("continue")}
@@ -151,7 +151,7 @@ export function InquiryChat() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder={t("phonePlaceholder")}
-                className="h-11 min-w-0 flex-1 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-ring"
+                className="h-11 min-w-0 flex-1 rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-ring"
               />
               <Button type="submit" disabled={pending}>
                 <Send className="size-4" />
@@ -161,7 +161,7 @@ export function InquiryChat() {
             {state && "error" in state ? (
               <p
                 role="alert"
-                className="rounded-xl bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+                className="rounded-control bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
               >
                 {t(state.error)}
               </p>
@@ -183,7 +183,7 @@ function Bulle({
   return (
     <div className={`flex ${moi ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-[90%] rounded-2xl px-4 py-2.5 text-sm ${
+        className={`max-w-[90%] rounded-card px-4 py-2.5 text-sm ${
           moi
             ? "bg-primary text-primary-foreground"
             : "border border-border bg-card text-foreground"

@@ -95,7 +95,7 @@ export default async function AdminOrderDetailPage({
         )}
       </div>
 
-      <dl className="mt-6 grid gap-4 rounded-2xl border border-border p-5 sm:grid-cols-2">
+      <dl className="mt-6 grid gap-4 rounded-card border border-border p-5 sm:grid-cols-2">
         <div>
           <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t("orders.customer")}
@@ -167,7 +167,7 @@ export default async function AdminOrderDetailPage({
 
       <section className="mt-6">
         <h2 className="text-sm font-semibold">{t("orders.items")}</h2>
-        <ul className="mt-2 divide-y divide-border rounded-2xl border border-border">
+        <ul className="mt-2 divide-y divide-border rounded-card border border-border">
           {order.items.filter((item) => item.quantity > 0).map((item, index) => (
             <li
               key={`${item.ticketType.session.event.title}-${index}`}
@@ -237,7 +237,7 @@ export default async function AdminOrderDetailPage({
       {order.tickets.length > 0 && !(edit && editable && !order.reseller) ? (
         <section className="mt-6">
           <h2 className="text-sm font-semibold">{t("orders.tickets")}</h2>
-          <ul className="mt-2 divide-y divide-border rounded-2xl border border-border">
+          <ul className="mt-2 divide-y divide-border rounded-card border border-border">
             {order.tickets.map((ticket) => (
               <li
                 key={ticket.id}

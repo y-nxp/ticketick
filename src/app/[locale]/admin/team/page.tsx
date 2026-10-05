@@ -35,7 +35,7 @@ export default async function AdminTeamPage({
 
       {team.organizerId ? (
         <>
-          <section className="mt-6 rounded-2xl border border-border bg-card p-5">
+          <section className="mt-6 rounded-card border border-border bg-card p-5">
             <h2 className="flex items-center gap-2 text-lg font-semibold">
               <UserPlus className="size-5 text-primary" />
               {t("invite")}
@@ -46,7 +46,7 @@ export default async function AdminTeamPage({
             <InviteForm organizerId={team.organizerId} locale={locale} />
           </section>
 
-          <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
+          <div className="mt-6 overflow-x-auto rounded-card border border-border">
             <table className="w-full min-w-[36rem] text-sm">
               <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>

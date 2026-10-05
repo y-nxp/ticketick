@@ -60,7 +60,7 @@ export default async function EventPage({
         {te("backToEvents")}
       </Link>
 
-      <div className="relative aspect-[21/9] w-full overflow-hidden rounded-3xl">
+      <div className="relative aspect-[21/9] w-full overflow-hidden rounded-card">
         {event.coverImage && (
           <Image
             src={event.coverImage}
@@ -77,7 +77,7 @@ export default async function EventPage({
             {event.categories.map((c) => (
               <span
                 key={c.id}
-                className="rounded-full px-3 py-1 text-xs font-medium text-white backdrop-blur-sm"
+                className="brand-label rounded-full px-3 py-1 text-xs font-medium text-white backdrop-blur-sm"
                 style={{ backgroundColor: `${c.color}dd` }}
               >
                 {t(c.name, locale)}

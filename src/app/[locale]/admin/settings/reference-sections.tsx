@@ -44,7 +44,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-6">
+    <section className="rounded-card border border-border bg-card p-6">
       <h2 className="font-semibold">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{hint}</p>
       <div className="mt-4 space-y-2">{children}</div>
@@ -74,7 +74,7 @@ function Repliable({
   }
 
   return (
-    <div className="rounded-xl border border-border p-4">
+    <div className="rounded-control border border-border p-4">
       {children(() => setOuvert(false))}
     </div>
   );
@@ -132,7 +132,7 @@ function Ligne({
 }) {
   const t = useTranslations("admin.form");
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border px-4 py-3">
+    <div className="flex items-center gap-3 rounded-control border border-border px-4 py-3">
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{titre}</p>
         <p className="truncate text-xs text-muted-foreground">{detail}</p>
@@ -172,7 +172,7 @@ export function OrganizersSection({
     <Section title={t("title")} hint={t("hint")}>
       {organizers.map((o) =>
         edite === o.id ? (
-          <div key={o.id} className="rounded-xl border border-border p-4">
+          <div key={o.id} className="rounded-control border border-border p-4">
             <OrganizerForm
               organizer={o}
               onClose={() => setEdite(null)}
@@ -317,7 +317,7 @@ function OrganizerForm({
         <select
           name="brandScheme"
           defaultValue={organizer?.brandScheme === "dark" ? "dark" : "light"}
-          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+          className="w-full rounded-control border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
         >
           <option value="light">{t("brandSchemeLight")}</option>
           <option value="dark">{t("brandSchemeDark")}</option>
@@ -328,7 +328,7 @@ function OrganizerForm({
           name="navLinks"
           defaultValue={serializeNavLinks(parseNavLinks(organizer?.navLinks))}
           rows={6}
-          className="w-full rounded-xl border border-border bg-background px-3 py-2 font-mono text-xs outline-none focus:border-ring"
+          className="w-full rounded-control border border-border bg-background px-3 py-2 font-mono text-xs outline-none focus:border-ring"
         />
       </Field>
       <Field label={t("notifyEmails")} hint={t("notifyEmailsHint")}>
@@ -336,7 +336,7 @@ function OrganizerForm({
           name="notifyEmails"
           defaultValue={organizer?.notifyEmails.join("\n")}
           rows={3}
-          className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
+          className="w-full rounded-control border border-border bg-background px-3 py-2 text-sm outline-none focus:border-ring"
         />
       </Field>
 
@@ -365,7 +365,7 @@ export function VenuesSection({ venues }: { venues: ReferenceData["venues"] }) {
     <Section title={t("title")} hint={t("hint")}>
       {venues.map((v) =>
         edite === v.id ? (
-          <div key={v.id} className="rounded-xl border border-border p-4">
+          <div key={v.id} className="rounded-control border border-border p-4">
             <VenueForm venue={v} onClose={() => setEdite(null)} />
           </div>
         ) : (
@@ -458,7 +458,7 @@ export function CategoriesSection({
     <Section title={t("title")} hint={t("hint")}>
       {categories.map((c) =>
         edite === c.id ? (
-          <div key={c.id} className="rounded-xl border border-border p-4">
+          <div key={c.id} className="rounded-control border border-border p-4">
             <CategoryForm category={c} onClose={() => setEdite(null)} />
           </div>
         ) : (

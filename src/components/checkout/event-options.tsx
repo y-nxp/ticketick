@@ -53,7 +53,7 @@ export function EventOptions({
   if (options.length === 0) return null;
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-5">
+    <section className="rounded-card border border-border bg-card p-5">
       <h2 className="text-lg font-semibold">{t("options")}</h2>
       <div className="mt-4 space-y-5">
         {options.map((option) => {

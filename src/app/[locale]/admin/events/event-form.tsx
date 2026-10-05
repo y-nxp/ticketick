@@ -259,7 +259,7 @@ function DeleteEvent({ id }: { id: string }) {
       {state && !state.ok ? (
         <p
           role="alert"
-          className="rounded-xl bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+          className="rounded-control bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
         >
           {tf(`errors.${state.error}`)}
         </p>

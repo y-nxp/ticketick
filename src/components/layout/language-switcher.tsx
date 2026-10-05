@@ -42,13 +42,13 @@ export function LanguageSwitcher() {
         <span className="uppercase">{locale}</span>
       </button>
       {open && (
-        <div className="absolute right-0 mt-2 w-44 overflow-hidden rounded-2xl border border-border bg-popover p-1.5 shadow-lg z-50">
+        <div className="absolute right-0 mt-2 w-44 overflow-hidden rounded-card border border-border bg-popover p-1.5 shadow-lg z-50">
           {locales.map((l) => (
             <button
               key={l}
               onClick={() => switchTo(l)}
               className={cn(
-                "flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm hover:bg-secondary transition-colors",
+                "flex w-full items-center justify-between rounded-control px-3 py-2 text-sm hover:bg-secondary transition-colors",
                 l === locale && "font-semibold",
               )}
             >

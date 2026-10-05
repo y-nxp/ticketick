@@ -24,7 +24,7 @@ export function ForgotForm({ defaultEmail }: { defaultEmail?: string }) {
       <div className="space-y-4">
         <p
           role="status"
-          className="flex items-start gap-2.5 rounded-xl bg-primary/10 px-4 py-3 text-sm text-primary"
+          className="flex items-start gap-2.5 rounded-control bg-primary/10 px-4 py-3 text-sm text-primary"
         >
           <MailCheck className="mt-0.5 size-4 shrink-0" />
           {t("sent")}
@@ -47,14 +47,14 @@ export function ForgotForm({ defaultEmail }: { defaultEmail?: string }) {
           required
           autoComplete="email"
           defaultValue={defaultEmail}
-          className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-ring"
+          className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-ring"
         />
       </label>
 
       {state && "error" in state ? (
         <p
           role="alert"
-          className="rounded-xl bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+          className="rounded-control bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
         >
           {t(state.error)}
         </p>

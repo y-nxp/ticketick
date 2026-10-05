@@ -9,7 +9,7 @@ export default async function NotFound() {
   return (
     <div className="container-page py-24">
       <div className="mx-auto max-w-md text-center">
-        <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-primary/10">
+        <div className="mx-auto grid size-14 place-items-center rounded-card bg-primary/10">
           <SearchX className="size-7 text-primary" />
         </div>
         <h1 className="mt-5 text-2xl font-bold">{t("title")}</h1>

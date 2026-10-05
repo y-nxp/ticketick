@@ -34,7 +34,7 @@ export default async function AdminPaymentsPage({
       <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
 
       {settings.organizers.length > 0 ? (
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-border">
+        <div className="mt-6 overflow-x-auto rounded-card border border-border">
           <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -80,14 +80,14 @@ export default async function AdminPaymentsPage({
       ) : null}
 
       {organizerId && selected && !selected.card && !selected.paypal && !selected.iban ? (
-        <p className="mt-4 rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm">
+        <p className="mt-4 rounded-control border border-border bg-muted/50 px-4 py-3 text-sm">
           {t("pendingHint")}
         </p>
       ) : null}
 
       {organizerId ? (
         <>
-          <section className="mt-6 rounded-2xl border border-border bg-card p-5">
+          <section className="mt-6 rounded-card border border-border bg-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 text-lg font-semibold">
                 <CreditCard className="size-5 text-primary" />
@@ -123,7 +123,7 @@ export default async function AdminPaymentsPage({
             />
           </section>
 
-          <section className="mt-6 rounded-2xl border border-border bg-card p-5">
+          <section className="mt-6 rounded-card border border-border bg-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 text-lg font-semibold">
                 <Wallet className="size-5 text-primary" />
@@ -162,7 +162,7 @@ export default async function AdminPaymentsPage({
             />
           </section>
 
-          <section className="mt-6 rounded-2xl border border-border bg-card p-5">
+          <section className="mt-6 rounded-card border border-border bg-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="flex items-center gap-2 text-lg font-semibold">
                 <Landmark className="size-5 text-primary" />

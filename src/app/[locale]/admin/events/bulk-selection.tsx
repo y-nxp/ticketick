@@ -158,7 +158,7 @@ export function BulkToolbar() {
     <div
       role="toolbar"
       aria-label={t("toolbar")}
-      className="sticky top-20 z-30 mt-6 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card p-3 shadow-sm"
+      className="sticky top-20 z-30 mt-6 flex flex-wrap items-center gap-2 rounded-card border border-border bg-card p-3 shadow-sm"
     >
       <span className="px-2 text-sm font-medium">{t("selected", { count })}</span>
       {ACTIONS.map(({ action, icon }) => (

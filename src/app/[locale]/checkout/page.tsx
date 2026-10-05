@@ -535,7 +535,7 @@ function CheckoutInner() {
         <p className="mt-2 text-muted-foreground">
           {t("successHint", { email: form.email })}
         </p>
-        <div className="mt-6 rounded-2xl border border-border bg-card p-5 text-left">
+        <div className="mt-6 rounded-card border border-border bg-card p-5 text-left">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Réf.</span>
             <span className="font-mono font-semibold">{result.reference}</span>
@@ -625,13 +625,13 @@ function CheckoutInner() {
     <div className="container-page py-10">
       <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
       {creatingHold && !holdActive ? (
-        <div className="mt-4 flex items-start gap-3 rounded-xl border border-primary/25 bg-primary/8 px-4 py-3">
+        <div className="mt-4 flex items-start gap-3 rounded-control border border-primary/25 bg-primary/8 px-4 py-3">
           <Loader2 className="mt-0.5 size-5 shrink-0 animate-spin text-primary" />
           <p className="font-semibold">{t("reserving")}</p>
         </div>
       ) : null}
       {holdActive ? (
-        <div className="mt-4 flex items-start gap-3 rounded-xl border border-primary/25 bg-primary/8 px-4 py-3">
+        <div className="mt-4 flex items-start gap-3 rounded-control border border-primary/25 bg-primary/8 px-4 py-3">
           <Clock className="mt-0.5 size-5 shrink-0 text-primary" />
           <div>
             <p className="font-semibold tabular-nums">
@@ -644,7 +644,7 @@ function CheckoutInner() {
         </div>
       ) : null}
       {showExpired ? (
-        <div className="mt-4 rounded-xl bg-destructive/10 px-4 py-3 text-sm">
+        <div className="mt-4 rounded-control bg-destructive/10 px-4 py-3 text-sm">
           <p className="text-destructive">{t("reservedExpired")}</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <Button
@@ -708,7 +708,7 @@ function CheckoutInner() {
         </div>
       ) : null}
       {canceled && !holdActive && !showExpired ? (
-        <p className="mt-4 rounded-xl bg-warning/15 px-4 py-3 text-sm">
+        <p className="mt-4 rounded-control bg-warning/15 px-4 py-3 text-sm">
           {t("canceled")}
         </p>
       ) : null}
@@ -719,7 +719,7 @@ function CheckoutInner() {
       >
         <div className="order-2 space-y-8 lg:order-1">
           {/* Coordonnées */}
-          <section className="rounded-2xl border border-border bg-card p-5">
+          <section className="rounded-card border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">{t("contact")}</h2>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <Input
@@ -754,7 +754,7 @@ function CheckoutInner() {
           </section>
 
           {attendeeLines.length > 0 ? (
-            <section className="rounded-2xl border border-border bg-card p-5">
+            <section className="rounded-card border border-border bg-card p-5">
               <h2 className="text-lg font-semibold">{t("attendeesTitle")}</h2>
               <p className="mt-1 text-sm text-muted-foreground">
                 {t("attendeesHint")}
@@ -764,7 +764,7 @@ function CheckoutInner() {
                   Array.from({ length: l.quantity }, (_, i) => (
                     <fieldset
                       key={`${l.ticketTypeId}-${i}`}
-                      className="grid gap-3 rounded-xl border border-border p-3 sm:grid-cols-2"
+                      className="grid gap-3 rounded-control border border-border p-3 sm:grid-cols-2"
                     >
                       <legend className="px-1 text-sm font-medium">
                         {l.eventTitle} · {l.ticketName}
@@ -805,7 +805,7 @@ function CheckoutInner() {
 
           {/* Paiement */}
           {free ? (
-            <section className="flex items-start gap-3 rounded-2xl border border-border bg-card p-5">
+            <section className="flex items-start gap-3 rounded-card border border-border bg-card p-5">
               <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-primary text-primary-foreground">
                 <Gift className="size-5" />
               </span>
@@ -815,13 +815,13 @@ function CheckoutInner() {
               </div>
             </section>
           ) : (
-          <section className="rounded-2xl border border-border bg-card p-5">
+          <section className="rounded-card border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">{t("paymentMethod")}</h2>
             <div className="mt-4 space-y-3">
               {!offerReady ? (
                 <div
                   aria-hidden
-                  className="h-[4.5rem] animate-pulse rounded-xl border border-border bg-muted/50"
+                  className="h-[4.5rem] animate-pulse rounded-control border border-border bg-muted/50"
                 />
               ) : null}
               {offer.card ? (
@@ -864,7 +864,7 @@ function CheckoutInner() {
                 offer.blocked ? (
                   <div
                     role="status"
-                    className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm"
+                    className="rounded-control border border-border bg-muted/50 px-4 py-3 text-sm"
                   >
                     <p className="font-medium">
                       {t(`paymentBlocked.${offer.blocked}.title`)}
@@ -884,13 +884,13 @@ function CheckoutInner() {
           )}
 
           {seatNotice ? (
-            <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <p className="rounded-control bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {t("seatsRemoved")}
             </p>
           ) : null}
 
           {error && (
-            <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <p className="rounded-control bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {error}
             </p>
           )}
@@ -902,7 +902,7 @@ function CheckoutInner() {
 
         {/* Récapitulatif : en premier sur mobile, à droite sur bureau. */}
         <aside className="order-1 lg:sticky lg:top-24 lg:order-2 lg:self-start">
-          <div className="rounded-2xl border border-border bg-card p-5">
+          <div className="rounded-card border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">{t("orderSummary")}</h2>
             <ul className="mt-4 space-y-3">
               {lines.map((l) => (
@@ -997,7 +997,7 @@ function Input({
           });
         }}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 rounded-xl border border-border bg-background px-3.5 text-sm outline-none focus:border-ring"
+        className="h-11 rounded-control border border-border bg-background px-3.5 text-sm outline-none focus:border-ring"
       />
       {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
     </label>
@@ -1021,7 +1021,7 @@ function PaymentOption({
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-start gap-3 rounded-xl border p-4 text-left transition-colors ${
+      className={`flex w-full items-start gap-3 rounded-control border p-4 text-left transition-colors ${
         active
           ? "border-primary bg-primary/5"
           : "border-border hover:bg-secondary/50"

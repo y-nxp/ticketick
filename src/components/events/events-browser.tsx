@@ -142,7 +142,7 @@ export function EventsBrowser({
   // élargir alors qu'aucun spectacle n'est encore à l'affiche.
   if (events.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border py-16 text-center">
+      <div className="rounded-card border border-dashed border-border py-16 text-center">
         <p className="font-medium">{th("emptyCatalog")}</p>
         <p className="mt-1 text-sm text-muted-foreground">
           {th("emptyCatalogHint")}
@@ -203,12 +203,12 @@ export function EventsBrowser({
 
       {/* Filtres détaillés */}
       {showFilters && (
-        <div className="mt-4 grid gap-4 rounded-2xl border border-border bg-card p-4 sm:grid-cols-3">
+        <div className="mt-4 grid gap-4 rounded-card border border-border bg-card p-4 sm:grid-cols-3">
           <Field label={tf("city")}>
             <select
               value={city}
               onChange={(e) => setCity(e.target.value)}
-              className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-ring"
+              className="h-10 w-full rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-ring"
             >
               <option value="all">{tf("allCities")}</option>
               {cities.map((c) => (
@@ -222,7 +222,7 @@ export function EventsBrowser({
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value as DateFilter)}
-              className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-ring"
+              className="h-10 w-full rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-ring"
             >
               <option value="any">{tf("anyDate")}</option>
               <option value="today">{tf("today")}</option>
@@ -235,7 +235,7 @@ export function EventsBrowser({
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortKey)}
-              className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-ring"
+              className="h-10 w-full rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-ring"
             >
               <option value="date">{tf("sortDate")}</option>
               <option value="priceAsc">{tf("sortPriceAsc")}</option>
@@ -277,7 +277,7 @@ export function EventsBrowser({
           ))}
         </div>
       ) : (
-        <div className="mt-10 rounded-2xl border border-dashed border-border py-16 text-center">
+        <div className="mt-10 rounded-card border border-dashed border-border py-16 text-center">
           <p className="font-medium">{th("noResults")}</p>
           <p className="mt-1 text-sm text-muted-foreground">
             {th("noResultsHint")}

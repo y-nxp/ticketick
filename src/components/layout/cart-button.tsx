@@ -153,7 +153,7 @@ export function CartButton({
             aria-label={t("cart")}
             className={`fixed inset-x-3 z-50 ${panelOffsetClass} md:absolute md:inset-x-auto md:right-0 md:top-full md:w-[28rem] md:pt-2`}
           >
-            <div className="overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl">
+            <div className="overflow-hidden rounded-card border border-border bg-popover text-popover-foreground shadow-xl">
               <CartPreview onNavigate={close} />
             </div>
           </div>

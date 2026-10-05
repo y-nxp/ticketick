@@ -42,13 +42,13 @@ export function DiscountsEditor({
   return (
     <div className="mt-6 space-y-3">
       {discounts.length === 0 && !ajout ? (
-        <p className="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
+        <p className="rounded-card border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
           {t("empty")}
         </p>
       ) : null}
 
       {discounts.map((d) => (
-        <div key={d.id} className="rounded-2xl border border-border bg-card p-4">
+        <div key={d.id} className="rounded-card border border-border bg-card p-4">
           {edite === d.id ? (
             <DiscountForm
               discount={d}
@@ -88,7 +88,7 @@ export function DiscountsEditor({
       ))}
 
       {ajout ? (
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="rounded-card border border-border bg-card p-4">
           <DiscountForm
             organizers={organizers}
             venues={venues}

@@ -28,14 +28,14 @@ export default async function NewEventPage({
       </header>
 
       {reference.organizers.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+        <p className="rounded-card border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
           {t("needOrganizer")}{" "}
           <Link href="/admin/settings" className="font-medium text-primary hover:underline">
             {t("goToSettings")}
           </Link>
         </p>
       ) : (
-        <div className="rounded-2xl border border-border bg-card p-6">
+        <div className="rounded-card border border-border bg-card p-6">
           <EventForm reference={reference} />
         </div>
       )}

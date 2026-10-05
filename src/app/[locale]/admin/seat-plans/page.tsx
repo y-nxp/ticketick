@@ -31,11 +31,11 @@ export default async function SeatPlansPage({
       </header>
 
       {plans.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+        <p className="rounded-card border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
           {t("empty")}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-border">
+        <div className="overflow-x-auto rounded-card border border-border">
           <table className="w-full min-w-[36rem] text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>

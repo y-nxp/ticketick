@@ -36,7 +36,7 @@ export function LoginForm({ next }: { next?: string }) {
             required
             autoComplete="email"
             autoFocus
-            className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none focus:border-ring"
+            className="h-11 w-full rounded-control border border-border bg-background pl-10 pr-3 text-sm outline-none focus:border-ring"
           />
         </div>
       </label>
@@ -50,7 +50,7 @@ export function LoginForm({ next }: { next?: string }) {
             name="password"
             required
             autoComplete="current-password"
-            className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-3 text-sm outline-none focus:border-ring"
+            className="h-11 w-full rounded-control border border-border bg-background pl-10 pr-3 text-sm outline-none focus:border-ring"
           />
         </div>
       </label>
@@ -60,7 +60,7 @@ export function LoginForm({ next }: { next?: string }) {
         // ne verraient pas apparaître le message autrement.
         <p
           role="alert"
-          className="rounded-xl bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+          className="rounded-control bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
         >
           {t(state.error)}
         </p>

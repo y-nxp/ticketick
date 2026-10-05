@@ -96,7 +96,7 @@ export default async function AdminOverviewPage({
         {cards.map(({ icon: Icon, label, value, hint }) => (
           <div
             key={label}
-            className="rounded-2xl border border-border bg-card p-5"
+            className="rounded-card border border-border bg-card p-5"
           >
             <div className="flex items-center gap-2 text-muted-foreground">
               <Icon className="size-4" />
@@ -109,7 +109,7 @@ export default async function AdminOverviewPage({
       </div>
 
       {data.orders.total === 0 ? (
-        <p className="mt-6 rounded-2xl border border-dashed border-border p-5 text-sm text-muted-foreground">
+        <p className="mt-6 rounded-card border border-dashed border-border p-5 text-sm text-muted-foreground">
           {t("overview.noOrdersYet")}
         </p>
       ) : null}

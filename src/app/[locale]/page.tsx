@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowRight, Sparkles, ShieldCheck, Mail, Ticket } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
+import { ThreeBars } from "@/components/ui/three-bars";
 import { EventsBrowser } from "@/components/events/events-browser";
 import { EventCard } from "@/components/events/event-card";
 import {
@@ -49,11 +50,11 @@ export default async function HomePage({
         />
         <div className="container-page py-16 sm:py-24">
           <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium shadow-sm">
+            <span className="brand-label inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs shadow-sm">
               <Sparkles className="size-4 text-primary" />
               {t("heroBadge")} 🇨🇭
             </span>
-            <h1 className="mt-6 text-4xl font-bold tracking-tight sm:text-6xl">
+            <h1 className="mt-6 text-4xl sm:text-6xl">
               {t("heroTitle")}
             </h1>
             <p className="mx-auto mt-5 max-w-2xl text-lg text-muted-foreground">
@@ -98,7 +99,8 @@ export default async function HomePage({
       {featured.length > 0 && (
         <section className="container-page">
           <div className="mb-5 flex items-end justify-between">
-            <h2 className="text-2xl font-bold tracking-tight">
+            <h2 className="flex items-center gap-3 text-2xl">
+              <ThreeBars />
               {t("sectionFeatured")}
             </h2>
           </div>
@@ -122,7 +124,8 @@ export default async function HomePage({
 
       {/* ALL EVENTS + FILTERS */}
       <section id="events" className="container-page mt-16 scroll-mt-20">
-        <h2 className="mb-6 text-2xl font-bold tracking-tight">
+        <h2 className="mb-6 flex items-center gap-3 text-2xl">
+          <ThreeBars />
           {t("sectionAll")}
         </h2>
         <EventsBrowser

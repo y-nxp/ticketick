@@ -41,7 +41,7 @@ export default async function AdminSettingsPage({
       </header>
 
       {organizers.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
+        <p className="rounded-card border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
           {t("startHere")}
         </p>
       ) : null}

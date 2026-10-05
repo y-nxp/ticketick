@@ -56,7 +56,7 @@ export function EventCard({
       href={href}
       // En mode sombre l'ombre noire est invisible : le relief au survol
       // est porté par un halo violet et une bordure accentuée.
-      className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 dark:hover:border-primary/40 dark:hover:shadow-primary/20"
+      className="group flex flex-col overflow-hidden rounded-card border border-border bg-card transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/5 dark:hover:border-primary/40 dark:hover:shadow-primary/20"
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         {event.coverImage ? (
@@ -76,19 +76,19 @@ export function EventCard({
           // La date lisible reste sous le titre ; ce bloc la répète en grand.
           <div
             aria-hidden
-            className="absolute left-0 top-0 flex min-w-[4.5rem] flex-col items-center rounded-br-2xl px-3 pb-2 pt-1.5 leading-none shadow-md"
+            className="absolute left-0 top-0 flex min-w-[4.5rem] flex-col items-center rounded-br-card px-3 pb-2 pt-1.5 leading-none shadow-md"
             style={{
               backgroundColor: "var(--brand-accent, var(--foreground))",
               color: "var(--background)",
             }}
           >
-            <span className="text-[11px] font-medium uppercase tracking-wider">
+            <span className="brand-label text-[11px] font-medium uppercase tracking-wider">
               {fmt({ weekday: "short" })}
             </span>
             <span className="mt-0.5 text-3xl font-extrabold tabular-nums">
               {fmt({ day: "numeric" }).replace(/\.$/, "")}
             </span>
-            <span className="mt-1 text-[11px] font-medium uppercase tracking-wider">
+            <span className="brand-label mt-1 text-[11px] font-medium uppercase tracking-wider">
               {fmt({ month: "short" })}
             </span>
           </div>
@@ -97,7 +97,7 @@ export function EventCard({
           {event.categories.slice(0, 2).map((c) => (
             <span
               key={c.id}
-              className="rounded-full px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm"
+              className="brand-label rounded-full px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm"
               style={{ backgroundColor: `${c.color}dd` }}
             >
               {t(c.name, locale)}
@@ -126,7 +126,7 @@ export function EventCard({
                 minute: "2-digit",
               })}
               {upcomingCount > 1 && (
-                <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                <span className="brand-label shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
                   {labels.dates(upcomingCount)}
                 </span>
               )}

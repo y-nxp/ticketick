@@ -26,7 +26,7 @@ export function ResetForm({ token }: { token: string }) {
       {state?.error ? (
         <p
           role="alert"
-          className="rounded-xl bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
+          className="rounded-control bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive"
         >
           {t(state.error)}
         </p>
@@ -49,7 +49,7 @@ function Champ({ name, label }: { name: string; label: string }) {
         required
         minLength={12}
         autoComplete="new-password"
-        className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-ring"
+        className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm outline-none focus:border-ring"
       />
     </label>
   );

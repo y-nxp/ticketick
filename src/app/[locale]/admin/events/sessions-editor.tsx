@@ -50,19 +50,19 @@ export function SessionsEditor({
   const [edite, setEdite] = React.useState<string | null>(null);
 
   return (
-    <section className="rounded-2xl border border-border bg-card p-6">
+    <section className="rounded-card border border-border bg-card p-6">
       <h2 className="font-semibold">{t("title")}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{t("hint")}</p>
 
       <div className="mt-4 space-y-3">
         {event.sessions.length === 0 && !ajout ? (
-          <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+          <p className="rounded-control border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
             {t("empty")}
           </p>
         ) : null}
 
         {event.sessions.map((s) => (
-          <div key={s.id} className="rounded-xl border border-border p-4">
+          <div key={s.id} className="rounded-control border border-border p-4">
             {edite === s.id ? (
               <SessionForm
                 eventId={event.id}
@@ -86,7 +86,7 @@ export function SessionsEditor({
         ))}
 
         {ajout ? (
-          <div className="rounded-xl border border-border p-4">
+          <div className="rounded-control border border-border p-4">
             <SessionForm
               eventId={event.id}
               venues={reference.venues}
@@ -303,7 +303,7 @@ function SessionForm({
       />
 
       <details
-        className="rounded-xl border border-border px-3 py-2"
+        className="rounded-control border border-border px-3 py-2"
         open={
           session?.acceptCard != null || session?.acceptIban != null
         }

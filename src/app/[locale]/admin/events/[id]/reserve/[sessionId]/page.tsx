@@ -79,11 +79,11 @@ export default async function ReserveSessionPage({
       </header>
 
       {past ? (
-        <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-control border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
           {t("errors.sessionPast")}
         </p>
       ) : rows.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-control border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
           {t("noTariffs")}
         </p>
       ) : (
@@ -97,7 +97,7 @@ export default async function ReserveSessionPage({
         />
       )}
 
-      <section className="rounded-2xl border border-border bg-card p-6">
+      <section className="rounded-card border border-border bg-card p-6">
         <h2 className="font-semibold">
           {t("existing", { count: reservations.length })}
         </h2>
