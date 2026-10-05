@@ -4,7 +4,7 @@
 - Anthracite #2A2C30 — lettres du logo sur fond clair
 - Blanc #FFFFFF — lettres du logo sur fond sombre, barres de l'icône violette
 - Violet #6C5CE7 — le E en trois barres (signature, aussi utilisé pour les boutons du site)
-- Fond sombre #1E1F23 — fond des versions avec fond sombre, de l'icône et du favicon
+- Fond sombre #1E1F23 — fond des versions avec fond sombre, de l'icône d'app et de l'icône iPhone
 - Fond clair #F8F9FA — fond de la version avec fond clair
 
 ## Typographie
@@ -44,7 +44,9 @@ Partage sur les réseaux sociaux :
 Icônes :
 - ticketick-icone.svg / ticketick-icone-512.png — icône d'app, barres violettes sur #1E1F23
 - ticketick-icone-violet.svg — variante, barres blanches sur violet
-- favicon.svg, favicon.ico (16, 32, 48), favicon-32.png, apple-touch-icon.png (180 px)
+- favicon.svg, favicon.ico (16, 32, 48), favicon-32.png — barres violettes sur fond transparent,
+  agrandies pour occuper l'onglet ; chaque taille du .ico est calée sur des pixels entiers
+- apple-touch-icon.png (180 px) — garde son fond #1E1F23 (iOS remplit la transparence en noir)
 
 ## Règles
 - Sous 24 px de haut, utiliser la version small ; au-dessus, la version standard.

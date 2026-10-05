@@ -85,6 +85,9 @@ Les deux polices sont chargées par `next/font/google` dans
   de spectacle le remplacent par leur photo.
 - **Favicons :** conventions Next.js — `src/app/icon.svg`, `src/app/favicon.ico`,
   `src/app/apple-icon.png` (copies de `/brand/favicon.*` et `apple-touch-icon.png`).
+  Favicon (SVG et .ico) sur fond transparent ; l'icône iPhone et celles de
+  `door.webmanifest` gardent leur fond `#1E1F23` (iOS et Android noircissent la
+  transparence).
   Appli de contrôle : `public/door.webmanifest`.
 - **Ne jamais recomposer le logo** en texte HTML ni en tracés copiés dans le code :
   toujours les fichiers.
