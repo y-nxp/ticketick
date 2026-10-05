@@ -8,6 +8,10 @@ import { cn } from "@/lib/utils";
  * capitales de 18 px au minimum (≈ 155 px de large). Le cadre du SVG inclut le
  * débord du C (728 unités pour 700 de capitales), d'où les hauteurs ci-dessous.
  */
+// À incrémenter à chaque changement des fichiers : ils sont mis en cache 4 h
+// (navigateur et Cloudflare) sous la même adresse.
+const VERSION = 2;
+
 export function Logo({ className }: { className?: string }) {
   const size = "h-[18.72px] w-auto xl:h-[22.88px]";
   return (
@@ -21,7 +25,7 @@ export function Logo({ className }: { className?: string }) {
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/brand/ticketick-logo-small.svg"
+        src={`/brand/ticketick-logo-small.svg?v=${VERSION}`}
         alt=""
         width={601}
         height={73}
@@ -29,7 +33,7 @@ export function Logo({ className }: { className?: string }) {
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/brand/ticketick-logo-small-inverse.svg"
+        src={`/brand/ticketick-logo-small-inverse.svg?v=${VERSION}`}
         alt=""
         width={601}
         height={73}
