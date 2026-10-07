@@ -10,12 +10,21 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/** Une adresse comme `/.env` arrive ici avec « .env » pour langue : Intl la refuse. */
+function intlLocale(locale: string): string {
+  try {
+    return Intl.getCanonicalLocales(locale)[0] ?? "fr-CH";
+  } catch {
+    return "fr-CH";
+  }
+}
+
 export function formatPrice(
   amountCents: number,
   locale: string = "fr-CH",
   currency: string = "CHF",
 ) {
-  return new Intl.NumberFormat(locale, {
+  return new Intl.NumberFormat(intlLocale(locale), {
     style: "currency",
     currency,
   }).format(amountCents / 100);
@@ -33,7 +42,7 @@ export function formatDate(
   options?: Intl.DateTimeFormatOptions,
 ) {
   const d = typeof date === "string" ? new Date(date) : date;
-  return new Intl.DateTimeFormat(locale, {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
     weekday: "short",
     day: "2-digit",
     month: "short",

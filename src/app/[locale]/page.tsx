@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowRight, Sparkles, ShieldCheck, Mail, Ticket } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -25,6 +27,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) return {};
   return { alternates: pageAlternates("", locale, routing.locales) };
 }
 
@@ -36,6 +39,8 @@ export default async function HomePage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { locale } = await params;
+  // Les fichiers (`/.env`, `/wp-login.php`) échappent au proxy et tombent ici.
+  if (!hasLocale(routing.locales, locale)) notFound();
   const { q } = await searchParams;
   setRequestLocale(locale);
 
