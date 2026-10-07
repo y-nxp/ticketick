@@ -20,7 +20,7 @@ cd "$APP_DIR"
 
 echo "════════════════════════════════════════════"
 echo "  ticketick PRODUCTION (serveur) — Deploy"
-echo "  Hôte : $(hostname) · $(uname -m)"
+echo "  Architecture : $(uname -m)"
 echo "════════════════════════════════════════════"
 
 # ── 1. Secrets figés au premier déploiement.
@@ -110,12 +110,14 @@ echo "🔎 État de la base :"
 echo "💳 Encaissement des organisateurs qui vendent :"
 "${COMPOSE[@]}" exec -T db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -qtc \
   "SELECT o.name || ' : ' || coalesce(nullif(concat_ws(', ',
-            CASE WHEN pf.enabled THEN 'carte' END,
+            CASE WHEN pf.enabled THEN 'carte (PostFinance)' END,
+            CASE WHEN st.enabled THEN 'carte (Stripe)' END,
             CASE WHEN pp.enabled THEN 'PayPal' END,
             CASE WHEN o.\"bankIban\" IS NOT NULL THEN 'virement' END), ''),
           '⚠ aucun — paiement pas encore activé')
      FROM \"Organizer\" o
      LEFT JOIN \"OrganizerPostfinanceAccount\" pf ON pf.\"organizerId\" = o.id
+     LEFT JOIN \"OrganizerStripeAccount\" st ON st.\"organizerId\" = o.id
      LEFT JOIN \"OrganizerPaypalAccount\" pp ON pp.\"organizerId\" = o.id
     WHERE EXISTS (SELECT 1 FROM \"Event\" e
                    WHERE e.\"organizerId\" = o.id AND e.status = 'PUBLISHED')

@@ -26,7 +26,7 @@ export DEBIAN_FRONTEND=noninteractive
 echo "▶ Système à jour..."
 apt-get update -qq
 apt-get -y -qq -o Dpkg::Options::=--force-confold full-upgrade
-apt-get -y -qq install ca-certificates curl openssl ufw fail2ban unattended-upgrades > /dev/null
+apt-get -y -qq install ca-certificates curl openssl ufw fail2ban python3-systemd unattended-upgrades > /dev/null
 timedatectl set-timezone Europe/Zurich
 
 echo "▶ Docker..."
