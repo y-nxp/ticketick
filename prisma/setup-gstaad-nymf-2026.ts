@@ -303,7 +303,7 @@ interface Programme {
 
 const PROGRAMME: Record<string, Programme> = {
   "2026-12-26 Grigoryan / Antonyan": { title: "Juliana Grigoryan & Hasmik Antonyan", genre: "belcanto", work: "Incanto", cast: [{ name: "Juliana Grigoryan", role: "soprano" }, { name: "Hasmik Antonyan", role: "piano" }] },
-  "2026-12-27 Ensemble Mare Nostrum": { title: "Ensemble Mare Nostrum", genre: "baroque", work: "Stradella, un génie, un rebelle, un fugitif…", cast: [{ name: "Niccolò Balducci", role: "soprano" }, { name: "Alex Rosen", role: "bass" }, { name: "Ensemble Mare Nostrum" }, { name: "Andrea De Carlo", role: "conductor" }] },
+  "2026-12-27 Ensemble Mare Nostrum": { title: "Niccolò Balducci, Alex Rosen & Ensemble Mare Nostrum", genre: "baroque", work: "Stradella, un génie, un rebelle, un fugitif…", cast: [{ name: "Niccolò Balducci", role: "soprano" }, { name: "Alex Rosen", role: "bass" }, { name: "Ensemble Mare Nostrum" }, { name: "Andrea De Carlo", role: "conductor" }] },
   "2026-12-27 Fuchs / Cemin": { title: "Julie Fuchs & Alphonse Cemin", genre: "belcanto", work: "Paris-Vienne", cast: [{ name: "Julie Fuchs", role: "soprano" }, { name: "Alphonse Cemin", role: "piano" }] },
   "2026-12-28 Berry / Pérot / Goimard": { title: "Winona Berry, Arthur Pérot & Magali Goimard", genre: "young", work: "Les voix du Sud", cast: [{ name: "Winona Berry*", role: "mezzo" }, { name: "Arthur Pérot*", role: "tenor" }, { name: "Magali Goimard", role: "piano" }], notes: ["bordeaux"] },
   "2026-12-28 Edris / Pati / Pordoy": { title: "Amina Edris, Pene Pati & Mathieu Pordoy", genre: "duos", work: "D’un monde à l’autre", cast: [{ name: "Amina Edris", role: "soprano" }, { name: "Pene Pati", role: "tenor" }, { name: "Mathieu Pordoy", role: "piano" }] },
@@ -330,7 +330,7 @@ const PROGRAMME: Record<string, Programme> = {
 /** Entrée libre sur inscription auprès du festival, rien à vendre ici. */
 const TALKS: (Programme & { date: string; time: string; slugName: string })[] = [
   { date: "2026-12-30", time: "11:30", slugName: "Nelson Monfort", title: "Nelson Monfort", genre: "talk", work: "Que la montagne est belle", cast: [{ name: "Nelson Monfort", role: "speaker" }] },
-  { date: "2027-01-02", time: "11:30", slugName: "Michèle Larivière", title: "Michèle Larivière", genre: "talk", work: "Bicentenaire de la mort de Beethoven", cast: [{ name: "Michèle Larivière", role: "speakerF" }], notes: ["beethovenYear"] },
+  { date: "2027-01-02", time: "12:00", slugName: "Michèle Larivière", title: "Michèle Larivière", genre: "talk", work: "Bicentenaire de la mort de Beethoven", cast: [{ name: "Michèle Larivière", role: "speakerF" }], notes: ["beethovenYear"] },
 ];
 
 const QUOTES: Record<Lang, [string, string]> = {
@@ -873,7 +873,7 @@ const AGENDA_TAGS: Record<string, Genre[]> = {
   "2026-12-27 Fuchs / Cemin": ["belcanto"],
   "2026-12-28 Berry / Pérot / Goimard": ["belcanto", "young"],
   "2026-12-28 Edris / Pati / Pordoy": ["duos", "belcanto"],
-  "2026-12-29 Angioloni / Masson": ["young"],
+  "2026-12-29 Angioloni / Masson": ["belcanto"],
   "2026-12-29 Grigolo": ["belcanto"],
   "2026-12-30 Nelson Monfort": ["talk"],
   "2026-12-30 Spyres / Pordoy": ["duos", "belcanto"],
@@ -1414,6 +1414,44 @@ async function moveLariviereToHotel(organizerId: string): Promise<string> {
   return `Conférence Larivière : à l'${to}.`;
 }
 
+/**
+ * Relecture du festival (07.10.2026) : chanteurs dans le titre du 27.12,
+ * conférence Larivière à 12 h, concert du 29.12 à 15 h en « Bel canto ».
+ * Une valeur déjà modifiée dans l'admin est gardée.
+ */
+async function applyReview20261007(organizerId: string): Promise<string> {
+  const done: string[] = [];
+
+  const mareNostrum = concertSlug({ date: "2026-12-27", artist: "Ensemble Mare Nostrum" });
+  const title = same(PROGRAMME["2026-12-27 Ensemble Mare Nostrum"]!.title);
+  const { count: titled } = await prisma.event.updateMany({
+    where: { slug: mareNostrum, organizerId, title: { path: ["fr"], equals: "Ensemble Mare Nostrum" } },
+    data: { title },
+  });
+  if (titled) done.push(`titre « ${title.fr} »`);
+
+  const talk = TALKS.find((t) => t.slugName === "Michèle Larivière")!;
+  const { count: moved } = await prisma.eventSession.updateMany({
+    where: {
+      event: { slug: concertSlug({ date: talk.date, artist: talk.slugName }), organizerId },
+      startsAt: zurich(talk.date, "11:30"),
+    },
+    data: { startsAt: zurich(talk.date, talk.time) },
+  });
+  if (moved) done.push(`conférence Larivière à ${talk.time}`);
+
+  const angioloni = concertSlug({ date: "2026-12-29", artist: "Angioloni / Masson" });
+  const tags = {} as Tr;
+  for (const lang of LANGS) tags[lang] = GENRES.belcanto[lang];
+  const { count: retagged } = await prisma.event.updateMany({
+    where: { slug: angioloni, organizerId, tags: { path: ["fr"], equals: GENRES.young.fr } },
+    data: { tags },
+  });
+  if (retagged) done.push("29.12 à 15 h en « Bel canto »");
+
+  return `Relecture du 07.10 : ${done.join(", ") || "déjà appliquée dans l'admin"}.`;
+}
+
 async function main() {
   const existing = await prisma.organizer.findUnique({
     where: { slug: ORG_SLUG },
@@ -1442,6 +1480,7 @@ async function main() {
   await once("gnymf-2026/tarif-moins-25-nom", () => renameYouthTariff(id));
   await once("gnymf-2026/lariviere-rougemont", () => sellLariviere(id));
   await once("gnymf-2026/lariviere-hotel-rougemont", () => moveLariviereToHotel(id));
+  await once("gnymf-2026/relecture-2026-10-07", () => applyReview20261007(id));
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );
