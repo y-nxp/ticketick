@@ -234,7 +234,9 @@ export async function resetPassword(
         ? "/admin"
         : role === "DOOR_STAFF"
           ? "/door"
-          : "/account",
+          : role === "RESELLER_AGENT"
+            ? "/pos"
+            : "/account",
     locale,
   });
 }

@@ -57,7 +57,7 @@ export type EditResult =
 /** Différence due par le client pour des places ajoutées. */
 export type PaymentSettle =
   | { method: "FREE" }
-  | { method: "CASH" | "DOOR"; amountCents: number }
+  | { method: "CASH" | "DOOR" | "TERMINAL"; amountCents: number }
   | { method: "LINK"; amountCents: number; dueAt: Date };
 
 /** Différence rendue au client pour des places retirées. */
@@ -571,7 +571,8 @@ export async function openPaymentCharge(
   if (settle.method === "FREE" || settle.amountCents <= 0) return {};
 
   const method: ChargeMethod = settle.method;
-  const cash = method === "CASH";
+  // Le terminal du point de vente encaisse sur le moment, comme les espèces.
+  const cash = method === "CASH" || method === "TERMINAL";
   const link = settle.method === "LINK" ? newPayToken() : null;
   const charge = await tx.orderCharge.create({
     data: {
@@ -584,7 +585,7 @@ export async function openPaymentCharge(
       currency: order.currency,
       dueAt: settle.method === "LINK" ? settle.dueAt : null,
       tokenHash: link?.tokenHash ?? null,
-      provider: cash ? "cash" : null,
+      provider: cash ? (method === "TERMINAL" ? "terminal" : "cash") : null,
       ticketIds: input.ticketIds,
       fromInvites: input.fromInvites,
       createdById: input.actorId,

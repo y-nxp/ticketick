@@ -36,6 +36,8 @@ export interface CurrentUser {
   doorOrganizerId: string | null;
   /** Responsable invité : organisateur dont il consulte les ventes. */
   statsOrganizerId: string | null;
+  /** Agent : point de vente pour lequel il vend. */
+  resellerId: string | null;
   emailVerified: boolean;
   impersonator: { id: string; email: string; name: string | null } | null;
 }
@@ -71,6 +73,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
             active: true,
             doorOrganizerId: true,
             statsOrganizerId: true,
+            resellerId: true,
             emailVerifiedAt: true,
             organizer: { select: { id: true } },
           },
@@ -121,6 +124,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     organizerId: session.user.organizer?.id ?? null,
     doorOrganizerId: session.user.doorOrganizerId,
     statsOrganizerId: session.user.statsOrganizerId,
+    resellerId: session.user.resellerId,
     emailVerified: session.user.emailVerifiedAt != null,
     impersonator,
   };
@@ -193,6 +197,19 @@ export async function requireStats(returnTo?: string): Promise<CurrentUser> {
     return redirect({ href: "/forbidden", locale: await getLocale() });
   }
   return user;
+}
+
+/** Agent d'un point de vente actif : il ne voit et ne vend que pour lui. */
+export async function requireResellerAgent(
+  returnTo?: string,
+): Promise<CurrentUser & { resellerId: string }> {
+  const user = await requireRole("RESELLER_AGENT", returnTo);
+  const resellerId = user.resellerId;
+  const active =
+    resellerId != null &&
+    (await prisma.reseller.count({ where: { id: resellerId, active: true } })) > 0;
+  if (!active) return redirect({ href: "/forbidden", locale: await getLocale() });
+  return { ...user, resellerId };
 }
 
 /** Organisateur dont l'utilisateur voit les ventes ; `null` = tous (admin). */

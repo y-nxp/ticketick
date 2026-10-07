@@ -6,4 +6,6 @@ export async function register(): Promise<void> {
 
   const { startHoldJanitor } = await import("@/lib/orders/hold-janitor");
   startHoldJanitor();
+  const { startResellerReports } = await import("@/lib/resellers/report");
+  startResellerReports();
 }

@@ -162,6 +162,7 @@ export async function paidOrderForMail(orderId: string) {
       lastName: true,
       locale: true,
       reference: true,
+      reseller: { select: { email: true, notifyEmails: true } },
       options: { select: orderOptionSelect },
       tickets: {
         where: { status: { in: ["VALID", "USED"] } },
@@ -170,10 +171,16 @@ export async function paidOrderForMail(orderId: string) {
       },
     },
   });
-  if (!order || order.tickets.length === 0 || !order.email) return null;
+  if (!order || order.tickets.length === 0) return null;
+  // Vente d'un point de vente : ses adresses de copie reçoivent les billets,
+  // même quand l'acheteur n'a pas laissé d'e-mail.
+  const resellerEmails = order.reseller?.notifyEmails ?? [];
+  if (!order.email && resellerEmails.length === 0) return null;
   const holder = `${order.firstName} ${order.lastName}`.trim();
   return {
     email: order.email,
+    fromReseller: order.reseller != null,
+    resellerEmails,
     buyerName: holder,
     reference: order.reference,
     locale: order.locale,

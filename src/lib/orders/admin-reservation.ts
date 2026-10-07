@@ -5,8 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { readLayout, zoneAllowed, type SeatLayout } from "@/lib/seating/layout";
 import { claimSeats, syncSessionSeats } from "@/lib/seating/seats";
 import { issueMissingTickets } from "@/lib/tickets/issue";
+import { applyAttendees, type Holder } from "./attendees";
 import { generateReference, SoldOutError, takeStock } from "./create-order";
 import { openPaymentCharge, type PaymentSettle } from "./edit-order";
+import { recordResellerSale } from "./reseller-ledger";
 
 /**
  * Réservation saisie dans l'admin : « 10 places en catégorie 1 pour
@@ -38,6 +40,10 @@ export interface ReservationInput {
   phone?: string;
   /** Sans règlement : réservation offerte, comme jusqu'ici. */
   settle?: PaymentSettle;
+  /** Vente d'un point de vente : commission figée à la vente. */
+  reseller?: { id: string; commissionCents: number };
+  /** Titulaires des tarifs nominatifs, déjà vérifiés. */
+  holders?: Map<string, Holder[]>;
 }
 
 export type ReservationError =
@@ -50,10 +56,16 @@ export type ReservationError =
   | "retry";
 
 export type ReservationResult =
-  | { ok: true; orderId: string; chargeId?: string; token?: string }
+  | { ok: true; orderId: string; reference: string; chargeId?: string; token?: string }
   | { ok: false; error: ReservationError; ticketTypeId?: string };
 
-const PAID_METHOD = { FREE: "RESERVATION", CASH: "CASH", DOOR: "CASH", LINK: "CARD" } as const;
+const PAID_METHOD = {
+  FREE: "RESERVATION",
+  CASH: "CASH",
+  DOOR: "CASH",
+  LINK: "CARD",
+  TERMINAL: "TERMINAL",
+} as const;
 
 export async function createReservation(
   input: ReservationInput,
@@ -114,7 +126,9 @@ export async function createReservation(
           ticketNote: input.ticketNote.trim() || null,
           status: "PAID",
           paymentMethod: free ? "RESERVATION" : PAID_METHOD[settle.method],
-          channel: "BOX_OFFICE",
+          channel: input.reseller ? "RESELLER" : "BOX_OFFICE",
+          resellerId: input.reseller?.id,
+          commissionCents: input.reseller?.commissionCents ?? 0,
           soldByUserId: input.soldByUserId,
           // Offerte : prix des tarifs gardés pour mémoire. Payante : le total
           // suit l'encaissé, porté par le règlement.
@@ -166,13 +180,23 @@ export async function createReservation(
       const ticketIds = (
         await tx.ticket.findMany({ where: { code: { in: codes } }, select: { id: true } })
       ).map((t) => t.id);
+      if (input.holders?.size) await applyAttendees(tx, order.id, input.holders);
       const charge = await openPaymentCharge(tx, order, {
         settle,
         ticketIds,
         fromInvites,
         actorId: input.soldByUserId,
       });
-      return { orderId: order.id, ...charge };
+      if (input.reseller && !free && (settle.method === "CASH" || settle.method === "TERMINAL")) {
+        await recordResellerSale(tx, {
+          resellerId: input.reseller.id,
+          orderId: order.id,
+          reference: order.reference,
+          commissionCents: input.reseller.commissionCents,
+          collectedCents: settle.amountCents,
+        });
+      }
+      return { orderId: order.id, reference: order.reference, ...charge };
     });
     return { ok: true, ...created };
   } catch (error) {

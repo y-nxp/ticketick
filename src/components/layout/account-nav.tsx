@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { User, LogIn, ShieldCheck, ScanLine } from "lucide-react";
+import { User, LogIn, ShieldCheck, ScanLine, Store } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/dal";
 
@@ -42,6 +42,16 @@ export async function AccountNav() {
           className="inline-flex size-10 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10"
         >
           <ScanLine className="size-5" />
+        </Link>
+      ) : null}
+      {user.role === "RESELLER_AGENT" ? (
+        <Link
+          href="/pos"
+          aria-label={ta("posAccess")}
+          title={ta("posAccess")}
+          className="inline-flex size-10 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10"
+        >
+          <Store className="size-5" />
         </Link>
       ) : null}
       {user.role === "ADMIN" ||

@@ -63,6 +63,7 @@ export async function setUserRole(
       role,
       ...(role === "DOOR_STAFF" ? {} : { doorOrganizerId: null }),
       ...(role === "ORGANIZER_VIEWER" ? {} : { statsOrganizerId: null }),
+      ...(role === "RESELLER_AGENT" ? {} : { resellerId: null }),
     },
   });
 

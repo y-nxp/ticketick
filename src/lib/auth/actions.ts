@@ -160,6 +160,7 @@ function afterLoginHref(
     return "/admin";
   }
   if (role === "DOOR_STAFF") return "/door";
+  if (role === "RESELLER_AGENT") return "/pos";
   return "/";
 }
 

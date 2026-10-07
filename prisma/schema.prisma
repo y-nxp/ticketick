@@ -159,6 +159,8 @@ enum PaymentMethod {
   FREE
   /// Places réservées depuis l'admin, sans encaissement sur ticketick.
   RESERVATION
+  /// Carte encaissée sur le terminal d'un point de vente.
+  TERMINAL
 }
 
 /// État d'un siège numéroté pour une séance.
@@ -328,9 +330,10 @@ model Organizer {
 
   events       Event[]
   followers    OrganizerFollow[]
-  doorStaff    User[]                  @relation("DoorStaff")
-  statsViewers User[]                  @relation("StatsViewers")
+  doorStaff    User[]                       @relation("DoorStaff")
+  statsViewers User[]                       @relation("StatsViewers")
   discounts    Discount[]
+  resellers    Reseller[]
   paypal       OrganizerPaypalAccount?
   postfinance  OrganizerPostfinanceAccount?
   stripe       OrganizerStripeAccount?
@@ -477,6 +480,7 @@ model Event {
 
   sessions  EventSession[]
   discounts Discount[]
+  resellers ResellerEvent[]
   options   EventOption[]
 
   createdAt DateTime @default(now())
@@ -618,22 +622,77 @@ model Reseller {
   phone   String?
   address String?
   city    String?
+  /// Langue du récapitulatif envoyé par e-mail.
+  locale  String       @default("fr")
 
-  /// Commission retenue par le revendeur, en points de base (250 = 2,50 %).
-  commissionBps Int @default(0)
+  /// Organisateur qui l'a créé, seul à le gérer avec l'admin. Vide : créé par
+  /// l'admin, il peut vendre les spectacles de plusieurs organisateurs.
+  organizer   Organizer? @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  organizerId String?
 
-  /// Autorise l'encaissement en espèces (génère une dette envers ticketick).
-  allowCashSales Boolean @default(true)
+  /// Commission par défaut, modifiable par spectacle attribué.
+  commissionKind       CommissionKind @default(PERCENT)
+  /// Pourcentage, en points de base (250 = 2,50 %).
+  commissionBps        Int            @default(0)
+  /// Montant fixe par billet payant vendu.
+  commissionFixedCents Int            @default(0)
+
+  /// Espèces et terminal : l'argent reste au point de vente, qui le doit à l'organisateur.
+  allowCashSales     Boolean @default(true)
+  allowTerminalSales Boolean @default(true)
+  /// Carte en ligne de l'organisateur : le client paie sur l'écran ou par QR.
+  allowOnlineSales   Boolean @default(true)
+
+  /// Copies des e-mails de vente et récapitulatifs, une adresse par ligne.
+  notifyEmails        String[]        @default([])
+  reportFrequency     ReportFrequency @default(NONE)
+  /// Le récapitulatif part aussi aux adresses de copie de l'organisateur.
+  reportCopyOrganizer Boolean         @default(true)
+  /// Fin de la période du dernier récapitulatif envoyé.
+  lastReportAt        DateTime?
 
   active Boolean @default(true)
 
   agents      User[]
   orders      Order[]
+  events      ResellerEvent[]
   ledger      ResellerLedgerEntry[]
   settlements ResellerSettlement[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([organizerId])
+}
+
+enum CommissionKind {
+  PERCENT
+  FIXED_PER_TICKET
+}
+
+enum ReportFrequency {
+  NONE
+  DAILY
+  WEEKLY
+}
+
+/// Spectacle qu'un point de vente a le droit de vendre. Commission vide :
+/// celle du point de vente.
+model ResellerEvent {
+  id         String   @id @default(cuid())
+  reseller   Reseller @relation(fields: [resellerId], references: [id], onDelete: Cascade)
+  resellerId String
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId    String
+
+  commissionKind       CommissionKind?
+  commissionBps        Int?
+  commissionFixedCents Int?
+
+  createdAt DateTime @default(now())
+
+  @@unique([resellerId, eventId])
+  @@index([eventId])
 }
 
 /// Grand livre d'un revendeur. Montants signés **du point de vue du revendeur** :
@@ -748,11 +807,11 @@ model Order {
   user   User?   @relation(fields: [userId], references: [id])
   userId String?
 
-  email     String
-  firstName String
-  lastName  String
-  phone     String?
-  locale    String  @default("fr")
+  email      String
+  firstName  String
+  lastName   String
+  phone      String?
+  locale     String  @default("fr")
   /// Mention imprimée sur chaque billet (« Réservation Illyria »).
   ticketNote String?
 
@@ -937,6 +996,8 @@ enum ChargeMethod {
   CREDIT_NOTE
   /// Remboursé chez le prestataire du paiement d'origine (PostFinance, PayPal, Stripe).
   PROVIDER
+  /// Carte passée sur le terminal du point de vente, qui garde l'argent comme des espèces.
+  TERMINAL
 }
 
 enum ChargeStatus {

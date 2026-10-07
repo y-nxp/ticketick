@@ -389,32 +389,6 @@ export async function getAdminOrder(id: string) {
   return order;
 }
 
-export async function getAdminResellers() {
-  await requireAdmin();
-
-  const resellers = await prisma.reseller.findMany({
-    orderBy: { name: "asc" },
-    select: {
-      id: true,
-      name: true,
-      type: true,
-      active: true,
-      commissionBps: true,
-      allowCashSales: true,
-      ledger: { select: { amountCents: true } },
-      _count: { select: { agents: true, orders: true } },
-    },
-  });
-
-  return resellers.map(({ ledger, ...reseller }) => ({
-    ...reseller,
-    // Les écritures sont signées du point de vue du revendeur : leur somme
-    // donne le solde sans avoir à distinguer les types d'entrées. Positif,
-    // ticketick lui doit ; négatif, il doit à ticketick.
-    balanceCents: ledger.reduce((sum, e) => sum + e.amountCents, 0),
-  }));
-}
-
 export async function getAdminInquiries() {
   await requireAdmin();
 

@@ -41,7 +41,6 @@ export default async function AdminLayout({
     { href: "/admin/orders", label: t("nav.orders"), icon: Receipt },
     ...(admin
       ? [
-          { href: "/admin/resellers", label: t("nav.resellers"), icon: Store },
           { href: "/admin/users", label: t("nav.users"), icon: Users },
           { href: "/admin/payments", label: t("nav.payments"), icon: Wallet },
           { href: "/admin/seat-plans", label: t("nav.seatPlans"), icon: Armchair },
@@ -56,6 +55,7 @@ export default async function AdminLayout({
       ? []
       : [
           { href: "/admin/discounts", label: t("nav.discounts"), icon: BadgePercent },
+          { href: "/admin/resellers", label: t("nav.resellers"), icon: Store },
           { href: "/admin/team", label: t("nav.team"), icon: UserPlus },
           { href: "/door", label: t("nav.door"), icon: ScanLine },
           { href: "/admin/settings", label: t("nav.settings"), icon: Settings },

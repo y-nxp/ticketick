@@ -41,7 +41,7 @@ export interface EditorCharge {
   id: string;
   number: string;
   kind: "PAYMENT" | "REFUND";
-  method: "CASH" | "LINK" | "DOOR" | "CREDIT_NOTE" | "PROVIDER";
+  method: "CASH" | "LINK" | "DOOR" | "TERMINAL" | "CREDIT_NOTE" | "PROVIDER";
   status: "OPEN" | "DONE" | "EXPIRED" | "CANCELLED" | "FAILED";
   amountCents: number;
   due: string | null;

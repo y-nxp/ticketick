@@ -28,7 +28,7 @@ export interface AttendeeRule {
   sessionStartsAt: Date;
 }
 
-type Holder = { name: string; birthDate: Date };
+export type Holder = { name: string; birthDate: Date };
 
 function localDay(date: Date): { y: number; m: number; d: number } {
   const parts = new Intl.DateTimeFormat("en-CA", {

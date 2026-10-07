@@ -173,12 +173,16 @@ export async function sendPaidOrderTickets(
 ) {
   const order = await paidOrderForMail(orderId);
   if (!order) return { sent: false, mock: false };
+  // Les ventes d'un point de vente partent toujours en copie à l'organisateur.
+  const organizerCopy = options.copyOrganizer !== false || order.fromReseller;
+  const copies = [
+    ...new Set([...order.resellerEmails, ...(organizerCopy ? order.notifyEmails : [])]),
+  ].filter((adresse) => adresse !== order.email);
+  const to = order.email || copies.shift();
+  if (!to) return { sent: false, mock: false };
   return sendTicketCards({
-    to: order.email,
-    bcc:
-      options.copyOrganizer === false
-        ? undefined
-        : order.notifyEmails.filter((adresse) => adresse !== order.email),
+    to,
+    bcc: copies.length > 0 ? copies : undefined,
     buyerName: order.buyerName,
     reference: order.reference,
     locale: order.locale,

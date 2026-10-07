@@ -94,10 +94,12 @@ async function envoyer(options: {
   fromName?: string;
   replyTo?: string;
 }): Promise<{ sent: boolean; mock: boolean }> {
+  const copies = options.bcc?.length ? ` (+ ${options.bcc.length} en copie cachée)` : "";
   if (!isMailConfigured()) {
     console.info(
-      `[email:mock] ${options.etiquette} → ${options.to} — « ${options.subject} »`,
+      `[email:mock] ${options.etiquette} → ${options.to}${copies} — « ${options.subject} »`,
     );
+    if (options.bcc?.length) console.info(`[email:mock] copie cachée → ${options.bcc.join(", ")}`);
     // Le contenu est journalisé en entier : sans boîte de réception, c'est le
     // seul moyen de récupérer un lien de réinitialisation en développement.
     console.info(options.text);
@@ -120,7 +122,7 @@ async function envoyer(options: {
     // peut pas répondre à « je n'ai rien reçu ». Le contenu, lui, n'y figure
     // pas : un lien de réinitialisation dans un journal serait exploitable.
     console.info(
-      `[email] ${options.etiquette} envoyé à ${options.to} — ${info.messageId}`,
+      `[email] ${options.etiquette} envoyé à ${options.to}${copies} — ${info.messageId}`,
     );
     return { sent: true, mock: false };
   } catch (error) {
@@ -583,6 +585,161 @@ export async function sendStatsInvitationEmail(payload: {
     text,
     html: `<div style="font:14px/1.6 system-ui,sans-serif;color:#2A2C30">${html}</div>`,
     etiquette: "invitation responsable",
+  });
+}
+
+const AGENT_INVITATION_TEXTES: Record<
+  string,
+  {
+    sujet: (pos: string) => string;
+    bonjour: string;
+    corps: (pos: string) => string;
+    bouton: string;
+    expire: (jours: number) => string;
+  }
+> = {
+  fr: {
+    sujet: (pos) => `Accès vendeur — ${pos}`,
+    bonjour: "Bonjour",
+    corps: (pos) =>
+      `Vous êtes invité à vendre des billets sur ticketick pour le point de vente ${pos}. Pour activer votre accès, choisissez votre mot de passe :`,
+    bouton: "Choisir mon mot de passe",
+    expire: (d) => `Ce lien est valable ${d} jours et ne fonctionne qu'une fois.`,
+  },
+  en: {
+    sujet: (pos) => `Seller access — ${pos}`,
+    bonjour: "Hello",
+    corps: (pos) =>
+      `You are invited to sell tickets on ticketick for the point of sale ${pos}. To activate your access, choose your password:`,
+    bouton: "Choose my password",
+    expire: (d) => `This link is valid for ${d} days and works only once.`,
+  },
+  de: {
+    sujet: (pos) => `Verkaufszugang — ${pos}`,
+    bonjour: "Guten Tag",
+    corps: (pos) =>
+      `Sie sind eingeladen, auf ticketick Tickets für die Verkaufsstelle ${pos} zu verkaufen. Um Ihren Zugang zu aktivieren, wählen Sie Ihr Passwort:`,
+    bouton: "Passwort wählen",
+    expire: (d) => `Dieser Link ist ${d} Tage gültig und funktioniert nur einmal.`,
+  },
+  it: {
+    sujet: (pos) => `Accesso venditore — ${pos}`,
+    bonjour: "Buongiorno",
+    corps: (pos) =>
+      `Sei invitato a vendere biglietti su ticketick per il punto vendita ${pos}. Per attivare l'accesso, scegli la tua password:`,
+    bouton: "Scegli la password",
+    expire: (d) => `Il link è valido ${d} giorni e funziona una sola volta.`,
+  },
+};
+
+export async function sendResellerAgentInvitationEmail(payload: {
+  to: string;
+  name: string | null;
+  locale: string;
+  resellerName: string;
+  url: string;
+  expiresInDays: number;
+}) {
+  const l = byLocale(AGENT_INVITATION_TEXTES, payload.locale);
+  const salutation = payload.name ? `${l.bonjour} ${payload.name},` : `${l.bonjour},`;
+  const corps = l.corps(payload.resellerName);
+  const text = [
+    salutation,
+    "",
+    corps,
+    payload.url,
+    "",
+    l.expire(payload.expiresInDays),
+    "",
+    "ticketick.ch",
+  ].join("\n");
+  const html = [
+    `<p>${echapper(salutation)}</p>`,
+    `<p>${echapper(corps)}</p>`,
+    `<p><a href="${payload.url}" style="display:inline-block;padding:12px 20px;border-radius:8px;background:#6C5CE7;color:#fff;text-decoration:none;font-weight:600">${echapper(l.bouton)}</a></p>`,
+    `<p style="color:#6b7280;font-size:13px">${echapper(l.expire(payload.expiresInDays))}</p>`,
+  ].join("");
+  return envoyer({
+    to: payload.to,
+    subject: l.sujet(payload.resellerName),
+    text,
+    html: `<div style="font:14px/1.6 system-ui,sans-serif;color:#2A2C30">${html}</div>`,
+    etiquette: "invitation vendeur",
+  });
+}
+
+/** Récapitulatif d'un point de vente : libellés et montants déjà formatés. */
+export interface ResellerReportPayload {
+  to: string;
+  bcc?: string[];
+  subject: string;
+  heading: string;
+  period: string;
+  columns: [string, string, string, string];
+  rows: [string, string, string, string][];
+  emptyRows: string;
+  summaryTitle: string;
+  summary: { label: string; value: string }[];
+  footer: string;
+  url: string;
+  button: string;
+}
+
+export async function sendResellerReportEmail(payload: ResellerReportPayload) {
+  const cell = "padding:6px 8px;border-bottom:1px solid #e5e7eb";
+  const right = `${cell};text-align:right;white-space:nowrap`;
+  const table = payload.rows.length
+    ? [
+        `<table style="border-collapse:collapse;width:100%;font-size:13px">`,
+        `<tr>${payload.columns
+          .map((c, i) => `<th style="${i === 0 ? cell : right};text-align:${i === 0 ? "left" : "right"};color:#6b7280;font-weight:600">${echapper(c)}</th>`)
+          .join("")}</tr>`,
+        ...payload.rows.map(
+          (r) =>
+            `<tr>${r.map((v, i) => `<td style="${i === 0 ? cell : right}">${echapper(v)}</td>`).join("")}</tr>`,
+        ),
+        `</table>`,
+      ].join("")
+    : `<p style="color:#6b7280">${echapper(payload.emptyRows)}</p>`;
+  const summary = [
+    `<table style="border-collapse:collapse;font-size:13px">`,
+    ...payload.summary.map(
+      (s) =>
+        `<tr><td style="padding:3px 16px 3px 0;color:#6b7280">${echapper(s.label)}</td><td style="padding:3px 0;text-align:right;font-weight:600">${echapper(s.value)}</td></tr>`,
+    ),
+    `</table>`,
+  ].join("");
+  const html = [
+    `<p style="font-size:16px;font-weight:600;margin:0">${echapper(payload.heading)}</p>`,
+    `<p style="color:#6b7280;margin:2px 0 16px">${echapper(payload.period)}</p>`,
+    table,
+    `<p style="font-weight:600;margin:20px 0 6px">${echapper(payload.summaryTitle)}</p>`,
+    summary,
+    `<p style="margin-top:20px"><a href="${payload.url}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#6C5CE7;color:#fff;text-decoration:none;font-weight:600">${echapper(payload.button)}</a></p>`,
+    `<p style="color:#6b7280;font-size:12px">${echapper(payload.footer)}</p>`,
+  ].join("");
+  const text = [
+    payload.heading,
+    payload.period,
+    "",
+    ...(payload.rows.length
+      ? payload.rows.map((r) => `${r[0]} — ${payload.columns[1]} ${r[1]} · ${payload.columns[2]} ${r[2]} · ${payload.columns[3]} ${r[3]}`)
+      : [payload.emptyRows]),
+    "",
+    payload.summaryTitle,
+    ...payload.summary.map((s) => `${s.label} : ${s.value}`),
+    "",
+    payload.url,
+    "",
+    payload.footer,
+  ].join("\n");
+  return envoyer({
+    to: payload.to,
+    bcc: payload.bcc,
+    subject: payload.subject,
+    text,
+    html: `<div style="font:14px/1.6 system-ui,sans-serif;color:#2A2C30;max-width:640px">${html}</div>`,
+    etiquette: "récapitulatif point de vente",
   });
 }
 

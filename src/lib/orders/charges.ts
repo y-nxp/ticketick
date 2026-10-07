@@ -25,6 +25,7 @@ import { anyStripeAccountForOrganizer, stripeClient } from "@/lib/payment/stripe
 import { prisma } from "@/lib/prisma";
 import { hashHoldToken } from "./create-order";
 import { lockOrder, newPayToken, releaseTickets } from "./edit-order";
+import { recordResellerSale } from "./reseller-ledger";
 
 /**
  * Règlements ouverts depuis l'admin : lien de paiement par carte, paiement
@@ -96,10 +97,20 @@ async function settlePayment(input: {
       where: { id: { in: charge.ticketIds }, status: "PENDING" },
       data: { status: "VALID" },
     });
-    await tx.order.update({
+    const order = await tx.order.update({
       where: { id: charge.orderId },
       data: { totalCents: { increment: charge.amountCents } },
+      select: { reference: true, resellerId: true, commissionCents: true },
     });
+    if (order.resellerId) {
+      await recordResellerSale(tx, {
+        resellerId: order.resellerId,
+        orderId: charge.orderId,
+        reference: order.reference,
+        commissionCents: order.commissionCents,
+        collectedCents: 0,
+      });
+    }
     return { kind: "settled" as const, orderId: charge.orderId };
   });
 }

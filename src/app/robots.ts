@@ -14,6 +14,7 @@ const privatePaths = [
   "/login",
   "/organizer/dashboard",
   "/pay",
+  "/pos",
   "/register",
   "/reset-password",
   "/verify-email",
