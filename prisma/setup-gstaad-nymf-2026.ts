@@ -36,7 +36,7 @@ const same = (s: string): Tr => ({ fr: s, en: s, de: s, it: s, es: s });
 const LANGS = ["fr", "en", "de", "it", "es"] as const;
 type Lang = (typeof LANGS)[number];
 
-type VenueKey = "ROUGEMONT" | "STJOSEPH" | "LANDHAUS" | "YACHTCLUB";
+type VenueKey = "ROUGEMONT" | "STJOSEPH" | "LANDHAUS" | "YACHTCLUB" | "HOTELROUGEMONT";
 
 type VenueDef = {
   name: string;
@@ -96,6 +96,16 @@ const VENUES: Record<VenueKey, VenueDef> = {
     lat: 46.4776188,
     lng: 7.2841414,
   },
+  HOTELROUGEMONT: {
+    name: "Hôtel de Rougemont",
+    city: "Rougemont",
+    zip: "1659",
+    canton: "VD",
+    capacity: 0,
+    address: "Chemin des Palettes 14",
+    lat: 46.4882883,
+    lng: 7.2024335,
+  },
 };
 /** Nom de la première version du catalogue, corrigé d'après le calendrier officiel. */
 const LEGACY_STJOSEPH = "Kirche St. Joseph";
@@ -121,7 +131,7 @@ interface Concert {
   date: string;
   time: string;
   artist: string;
-  venue: Exclude<VenueKey, "YACHTCLUB">;
+  venue: Exclude<VenueKey, "YACHTCLUB" | "HOTELROUGEMONT">;
   pricing: Pricing;
   series?: keyof typeof SERIES;
 }
@@ -1371,6 +1381,39 @@ async function sellLariviere(organizerId: string): Promise<string> {
   return `Conférence Larivière : à Rougemont, en vente (${tariffs} tarif(s) créé(s)).`;
 }
 
+/** Conférence de Michèle Larivière à l'Hôtel de Rougemont plutôt qu'à l'église. Tarifs et jauge inchangés. */
+async function moveLariviereToHotel(organizerId: string): Promise<string> {
+  const talk = TALKS.find((t) => t.slugName === "Michèle Larivière");
+  if (!talk) return "Conférence Larivière : absente du programme.";
+  const slug = concertSlug({ date: talk.date, artist: talk.slugName });
+  const event = await prisma.event.findFirst({
+    where: { slug, organizerId },
+    select: { id: true, description: true, sessions: { select: { id: true } } },
+  });
+  if (!event) return `${slug} : introuvable`;
+  const venueId = await findOrCreateVenue(prisma, "HOTELROUGEMONT");
+  const church = VENUES.ROUGEMONT;
+  const formerPlaces = [`${church.name}, ${church.city}`, church.name];
+  const to = placeLine(VENUES.HOTELROUGEMONT.name, VENUES.HOTELROUGEMONT.city);
+  const current = (event.description ?? {}) as Partial<Tr>;
+  const description = {} as Tr;
+  for (const lang of LANGS) {
+    const text = current[lang];
+    const from = text && formerPlaces.find((p) => text.includes(p));
+    description[lang] = text
+      ? from ? text.replace(from, to) : text
+      : programmeDescription(talk, "HOTELROUGEMONT")[lang];
+  }
+  await prisma.$transaction([
+    prisma.event.update({ where: { id: event.id }, data: { description } }),
+    prisma.eventSession.updateMany({
+      where: { id: { in: event.sessions.map((s) => s.id) } },
+      data: { venueId },
+    }),
+  ]);
+  return `Conférence Larivière : à l'${to}.`;
+}
+
 async function main() {
   const existing = await prisma.organizer.findUnique({
     where: { slug: ORG_SLUG },
@@ -1398,6 +1441,7 @@ async function main() {
   await once("gnymf-2026/conferences-billetterie", () => noteTalks(id));
   await once("gnymf-2026/tarif-moins-25-nom", () => renameYouthTariff(id));
   await once("gnymf-2026/lariviere-rougemont", () => sellLariviere(id));
+  await once("gnymf-2026/lariviere-hotel-rougemont", () => moveLariviereToHotel(id));
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );
