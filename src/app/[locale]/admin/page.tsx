@@ -48,22 +48,27 @@ export default async function AdminOverviewPage({
     {
       icon: Ticket,
       label: t("overview.sold"),
-      value: `${data.inventory.sold} / ${data.inventory.capacity}`,
-      hint: t("overview.soldHint", {
-        percent: percent(data.inventory.sold, data.inventory.capacity),
-      }),
+      value: `${data.tickets.sold} / ${data.tickets.capacity}`,
+      hint: [
+        t("overview.soldHint", {
+          percent: percent(data.tickets.sold, data.tickets.capacity),
+        }),
+        ...(data.tickets.pending > 0
+          ? [t("overview.soldPending", { count: data.tickets.pending })]
+          : []),
+      ].join(" · "),
     },
     {
       icon: Banknote,
       label: t("overview.revenue"),
-      value: formatPrice(data.inventory.revenueCents, locale),
+      value: formatPrice(data.orders.paidCents, locale),
       hint: t("overview.revenueHint"),
     },
     {
       icon: Receipt,
       label: t("overview.orders"),
-      value: String(data.orders.total),
-      hint: formatPrice(data.orders.paidCents, locale),
+      value: String(data.orders.paid),
+      hint: t("overview.ordersHint", { pending: data.orders.pending }),
     },
     ...(!organizerView
       ? [
@@ -108,7 +113,7 @@ export default async function AdminOverviewPage({
         ))}
       </div>
 
-      {data.orders.total === 0 ? (
+      {data.orders.paid === 0 ? (
         <p className="mt-6 rounded-card border border-dashed border-border p-5 text-sm text-muted-foreground">
           {t("overview.noOrdersYet")}
         </p>

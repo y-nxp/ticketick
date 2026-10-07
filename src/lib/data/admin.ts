@@ -28,8 +28,10 @@ function catalogOrderWhere(
 export interface AdminOverview {
   events: { total: number; published: number; draft: number };
   sessions: { total: number; upcoming: number };
-  inventory: { capacity: number; sold: number; revenueCents: number };
-  orders: { total: number; paidCents: number };
+  /** Billets des commandes payées ; `pending` : places retenues pendant un paiement. */
+  tickets: { capacity: number; sold: number; pending: number };
+  /** Commandes payées et montant encaissé ; `pending` : paiements en cours. */
+  orders: { paid: number; paidCents: number; pending: number };
   users: { total: number; admins: number };
   resellers: { total: number; balanceCents: number };
 }
@@ -41,6 +43,10 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     ? { event: { organizerId } }
     : {};
   const orderWhere = catalogOrderWhere(organizerId) ?? {};
+  const ticketWhere: Prisma.TicketWhereInput = organizerId
+    ? { ticketType: { session: { event: { organizerId } } } }
+    : {};
+  const unpaid: Prisma.EnumOrderStatusFilter = { in: ["PENDING", "AWAITING_PAYMENT"] };
 
   const now = new Date();
 
@@ -50,7 +56,9 @@ export async function getAdminOverview(): Promise<AdminOverview> {
     sessionsTotal,
     sessionsUpcoming,
     inventory,
-    ordersTotal,
+    ticketsSold,
+    ticketsPending,
+    ordersPending,
     paidOrders,
     usersTotal,
     admins,
@@ -73,10 +81,22 @@ export async function getAdminOverview(): Promise<AdminOverview> {
         },
       },
     }),
-    prisma.order.count({ where: orderWhere }),
+    prisma.ticket.count({
+      where: { ...ticketWhere, status: { in: ["VALID", "USED"] }, order: { status: "PAID" } },
+    }),
+    // Retenues en ligne et réservations du guichet payables par lien.
+    prisma.ticket.count({
+      where: {
+        ...ticketWhere,
+        status: "PENDING",
+        order: { status: { in: ["PENDING", "AWAITING_PAYMENT", "PAID"] } },
+      },
+    }),
+    prisma.order.count({ where: { ...orderWhere, status: unpaid } }),
     prisma.order.aggregate({
       where: { ...orderWhere, status: "PAID" },
       _sum: { totalCents: true },
+      _count: true,
     }),
     organizerId ? Promise.resolve(0) : prisma.user.count(),
     organizerId ? Promise.resolve(0) : prisma.user.count({ where: { role: "ADMIN" } }),
@@ -93,8 +113,16 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       draft: eventsTotal - eventsPublished,
     },
     sessions: { total: sessionsTotal, upcoming: sessionsUpcoming },
-    inventory: sumInventory(inventory),
-    orders: { total: ordersTotal, paidCents: paidOrders._sum.totalCents ?? 0 },
+    tickets: {
+      capacity: sumInventory(inventory).capacity,
+      sold: ticketsSold,
+      pending: ticketsPending,
+    },
+    orders: {
+      paid: paidOrders._count,
+      paidCents: paidOrders._sum.totalCents ?? 0,
+      pending: ordersPending,
+    },
     users: { total: usersTotal, admins },
     resellers: {
       total: resellersTotal,
