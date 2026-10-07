@@ -47,7 +47,7 @@ export function rememberShopOrigin(pathname: string) {
   document.cookie = `${SHOP_ORIGIN_COOKIE}=${encodeURIComponent(path)}; Path=/; SameSite=Lax; Max-Age=${COOKIE_MAX_AGE}`;
 }
 
-export function continueShoppingHref(eventSlug?: string): string {
+function storedShopPath(): string | null {
   try {
     const stored = sessionStorage.getItem(STORAGE_KEY);
     const path = stored ? normalizeShopPath(stored) : null;
@@ -64,8 +64,20 @@ export function continueShoppingHref(eventSlug?: string): string {
       if (path) return path;
     }
   }
+  return null;
+}
+
+export function continueShoppingHref(eventSlug?: string): string {
+  const path = storedShopPath();
+  if (path) return path;
   if (eventSlug) return `/events/${eventSlug}`;
   return "/";
+}
+
+/** Tous les spectacles : ceux de l’organisateur si l’on vient de son portail. */
+export function browseShowsHref(): string {
+  const go = parseGoOrigin(storedShopPath());
+  return go ? `/go/${go.orgSlug}` : "/";
 }
 
 export function normalizeShopPath(pathname: string): string | null {

@@ -554,7 +554,7 @@ function CheckoutInner() {
           )}
         </div>
         <ContinueShopping
-          eventSlug={lines[0]?.eventSlug}
+          catalog
           className={`mt-6 inline-flex ${buttonVariants({ size: "lg" })}`}
         >
           {t("backHome")}
@@ -572,6 +572,7 @@ function CheckoutInner() {
       <div className="container-page py-20 text-center">
         <h1 className="text-2xl font-bold">{tc("empty")}</h1>
         <ContinueShopping
+          catalog
           className={`mt-6 inline-flex ${buttonVariants({ size: "lg" })}`}
         >
           {tc("browse")}

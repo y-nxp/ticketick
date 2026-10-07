@@ -27,6 +27,7 @@ export default function CartPage() {
         <p className="mt-2 text-muted-foreground">{t("empty")}</p>
         <p className="text-sm text-muted-foreground">{t("emptyHint")}</p>
         <ContinueShopping
+          catalog
           className={`mt-6 inline-flex ${buttonVariants({ size: "lg" })}`}
         >
           {t("browse")}

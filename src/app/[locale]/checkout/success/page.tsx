@@ -46,9 +46,8 @@ export default async function CheckoutSuccessPage({
     ref && paid?.status === "PAID" && paid._count.tickets > 0
       ? ticketPdfPath(ref)
       : null;
-  const shopHome =
-    parseGoOrigin((await cookies()).get(SHOP_ORIGIN_COOKIE)?.value)?.path ??
-    "/";
+  const origin = parseGoOrigin((await cookies()).get(SHOP_ORIGIN_COOKIE)?.value);
+  const shopHome = origin ? `/go/${origin.orgSlug}` : "/";
 
   return (
     <div className="container-page max-w-2xl py-20 text-center">
