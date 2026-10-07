@@ -133,6 +133,7 @@
   },
   "cart": {
     "title": "Ihr Warenkorb",
+    "summary": "Übersicht",
     "empty": "Ihr Warenkorb ist leer.",
     "emptyHint": "Stöbern Sie durch die Veranstaltungen, um Tickets hinzuzufügen.",
     "browse": "Veranstaltungen ansehen",

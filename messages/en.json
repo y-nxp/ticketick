@@ -133,6 +133,7 @@
   },
   "cart": {
     "title": "Your cart",
+    "summary": "Summary",
     "empty": "Your cart is empty.",
     "emptyHint": "Browse events to add tickets.",
     "browse": "Browse events",

@@ -124,7 +124,7 @@ export default function CartPage() {
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <div className="rounded-card border border-border bg-card p-5">
-            <h2 className="text-lg font-semibold">{t("title")}</h2>
+            <h2 className="text-lg font-semibold">{t("summary")}</h2>
             <dl className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t("subtotal")}</dt>

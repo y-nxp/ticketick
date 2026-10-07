@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { Metadata } from "next";
+import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { OrganizerShell } from "@/components/branding/organizer-shell";
@@ -43,8 +44,12 @@ export default async function OrganizerEventPage({
     <OrganizerShell organizer={event.organizer}>
       <Link
         href={`/go/${event.organizer.slug}`}
-        className="mb-6 inline-block text-sm text-neutral-600 hover:text-[var(--brand-accent)]"
+        className="group mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm transition-colors hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)]"
       >
+        <ArrowLeft
+          className="size-4 transition-transform group-hover:-translate-x-0.5"
+          aria-hidden
+        />
         {tp("backToList")}
       </Link>
 

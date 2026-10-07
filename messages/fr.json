@@ -133,6 +133,7 @@
   },
   "cart": {
     "title": "Votre panier",
+    "summary": "Récapitulatif",
     "empty": "Votre panier est vide.",
     "emptyHint": "Parcourez les spectacles pour ajouter des billets.",
     "browse": "Voir les spectacles",
