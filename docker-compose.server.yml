@@ -112,9 +112,11 @@ services:
       PGDATABASE: ${POSTGRES_DB}
       BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
       BACKUP_REMOTE: ${BACKUP_REMOTE:-}
+      BACKUP_REMOTE_KEEP_DAYS: ${BACKUP_REMOTE_KEEP_DAYS:-90}
     volumes:
       - ./backup.sh:/backup.sh:ro
       - ./backups:/backups
+      - uploads-data:/uploads:ro
       - ./rclone.conf:/config/rclone.conf:ro
 
   caddy:

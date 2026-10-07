@@ -1,6 +1,6 @@
 #!/bin/sh
 # ============================================================
-# ticketick — sauvegarde de la base PostgreSQL
+# ticketick — sauvegarde de la base PostgreSQL et des fichiers téléversés
 # Tourne dans le service `backup` (image postgres:16-alpine).
 #   backup.sh        boucle : une sauvegarde par jour à BACKUP_HOUR
 #   backup.sh now    une sauvegarde immédiate (avant chaque déploiement)
@@ -16,6 +16,8 @@ umask 077
 
 DIR=/backups
 KEEP="${BACKUP_KEEP_DAYS:-14}"
+REMOTE_KEEP="${BACKUP_REMOTE_KEEP_DAYS:-90}"
+UPLOADS=/uploads
 HOUR="${BACKUP_HOUR:-03}"
 RCLONE_CONF=/config/rclone.conf
 
@@ -27,8 +29,12 @@ offsite() {
   offsite_enabled || return 0
   command -v rclone > /dev/null || apk add --no-cache -q rclone > /dev/null
   if rclone --config "$RCLONE_CONF" copy "$DIR" "$BACKUP_REMOTE" \
-       --include 'ticketick-*.dump' --max-age 72h --quiet; then
+       --include 'ticketick-*.dump' --include 'ticketick-*.tar.gz' --max-age 72h --quiet; then
     echo "☁️  Copie hors serveur à jour ($BACKUP_REMOTE)"
+    rclone --config "$RCLONE_CONF" delete "$BACKUP_REMOTE" \
+      --include 'ticketick-*.dump' --include 'ticketick-*.tar.gz' \
+      --min-age "${REMOTE_KEEP}d" --quiet \
+      || echo "⚠ Nettoyage hors serveur en échec"
   else
     echo "⚠ Copie hors serveur en échec"
   fi
@@ -45,7 +51,17 @@ backup() {
     echo "❌ Sauvegarde en échec"
     return 1
   fi
-  find "$DIR" -name 'ticketick-*.dump' -mtime +"$KEEP" -delete
+  if [ -d "$UPLOADS" ]; then
+    up="${file%.dump}-fichiers.tar.gz"
+    if tar -czf "$up.part" -C "$UPLOADS" . && tar -tzf "$up.part" > /dev/null; then
+      mv "$up.part" "$up"
+      echo "✅ Fichiers téléversés $(basename "$up") ($(du -h "$up" | cut -f1))"
+    else
+      rm -f "$up.part"
+      echo "⚠ Archive des fichiers téléversés en échec"
+    fi
+  fi
+  find "$DIR" \( -name 'ticketick-*.dump' -o -name 'ticketick-*.tar.gz' \) -mtime +"$KEEP" -delete
   offsite
 }
 
@@ -54,7 +70,7 @@ if [ "${1:-}" = now ]; then
   exit
 fi
 
-echo "▶ Sauvegarde quotidienne à ${HOUR} h, ${KEEP} jours gardés$(offsite_enabled && echo ", copie vers $BACKUP_REMOTE")"
+echo "▶ Sauvegarde quotidienne à ${HOUR} h, ${KEEP} jours gardés$(offsite_enabled && echo ", copie vers $BACKUP_REMOTE (${REMOTE_KEEP} jours)")"
 last=""
 while true; do
   today=$(date +%F)

@@ -220,9 +220,13 @@ Le nuage orange doit donc rester actif sur `ticketick.ch` et `www`.
 
 **Sauvegardes**
 
-Le service `backup` sauvegarde la base chaque nuit à 03:00 dans
-`~/ticketick-prod/backups` (14 jours gardés), et avant chaque déploiement.
-Chaque fichier est relu avant d'être gardé. Sauvegarde immédiate et
+Le service `backup` sauvegarde la base et les fichiers téléversés
+(`…-fichiers.tar.gz`) chaque nuit à 03:00 dans `~/ticketick-prod/backups`
+(14 jours gardés), et avant chaque déploiement. Chaque fichier est relu avant
+d'être gardé. Avec `BACKUP_REMOTE`, ils partent aussi chiffrés sur Swiss Backup
+(appareil dédié à ticketick, conteneur `default/ticketick`), gardés 90 jours
+(`BACKUP_REMOTE_KEEP_DAYS`). Les mots de passe du chiffrement sont hors du
+dépôt : sans eux, ces copies sont illisibles. Sauvegarde immédiate et
 restauration :
 
 ```bash
