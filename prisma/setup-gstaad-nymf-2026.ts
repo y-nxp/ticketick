@@ -1299,6 +1299,78 @@ async function noteTalks(organizerId: string): Promise<string> {
   return `Conférences au Yacht Club : texte « Billetterie » ajouté à ${count} fiche(s).`;
 }
 
+/**
+ * Conférence de Michèle Larivière déplacée à l'église de Rougemont et mise en
+ * vente : placement libre à 30 CHF et tarif moins de 25 ans, comme les concerts.
+ * Les tarifs déjà créés dans l'admin sont gardés.
+ */
+async function sellLariviere(organizerId: string): Promise<string> {
+  const talk = TALKS.find((t) => t.slugName === "Michèle Larivière");
+  if (!talk) return "Conférence Larivière : absente du programme.";
+  const slug = concertSlug({ date: talk.date, artist: talk.slugName });
+  const event = await prisma.event.findFirst({
+    where: { slug, organizerId },
+    select: {
+      id: true,
+      description: true,
+      sessions: { select: { id: true, _count: { select: { ticketTypes: true } } } },
+    },
+  });
+  if (!event) return `${slug} : introuvable`;
+  const venueId = await findOrCreateVenue(prisma, "ROUGEMONT");
+  const capacity = VENUES.ROUGEMONT.capacity;
+  const yacht = VENUES.YACHTCLUB;
+  const formerPlaces = [`${yacht.name}, ${yacht.city}`, yacht.name];
+  const to = placeLine(VENUES.ROUGEMONT.name, VENUES.ROUGEMONT.city);
+  const current = (event.description ?? {}) as Partial<Tr>;
+  const description = {} as Tr;
+  for (const lang of LANGS) {
+    const text = current[lang];
+    const from = text && formerPlaces.find((p) => text.includes(p));
+    description[lang] = text
+      ? from ? text.replace(from, to) : text
+      : programmeDescription(talk, "ROUGEMONT")[lang];
+  }
+  let tariffs = 0;
+  await prisma.$transaction(async (tx) => {
+    await tx.event.update({
+      where: { id: event.id },
+      data: {
+        description,
+        onlineSale: true,
+        acceptCard: true,
+        contactUrl: null,
+        contactNote: Prisma.DbNull,
+      },
+    });
+    for (const session of event.sessions) {
+      await tx.eventSession.update({
+        where: { id: session.id },
+        data: { venueId, capacity, seatPlanId: null },
+      });
+      if (session._count.ticketTypes) continue;
+      await tx.ticketType.create({
+        data: { sessionId: session.id, name: UNRESERVED, priceCents: 3000, currency: "CHF", quantity: capacity, maxPerOrder: 10 },
+      });
+      await tx.ticketType.create({
+        data: {
+          sessionId: session.id,
+          name: YOUTH_NAME,
+          priceCents: 0,
+          currency: "CHF",
+          quantity: capacity,
+          maxPerOrder: 2,
+          maxPerPaidTicket: 2,
+          requiresAttendee: true,
+          maxAgeYears: 25,
+        },
+      });
+      tariffs += 2;
+    }
+  });
+  return `Conférence Larivière : à Rougemont, en vente (${tariffs} tarif(s) créé(s)).`;
+}
+
 async function main() {
   const existing = await prisma.organizer.findUnique({
     where: { slug: ORG_SLUG },
@@ -1325,6 +1397,7 @@ async function main() {
   await once("gnymf-2026/plan-rougemont-libelles", labelRougemontPlan);
   await once("gnymf-2026/conferences-billetterie", () => noteTalks(id));
   await once("gnymf-2026/tarif-moins-25-nom", () => renameYouthTariff(id));
+  await once("gnymf-2026/lariviere-rougemont", () => sellLariviere(id));
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );
