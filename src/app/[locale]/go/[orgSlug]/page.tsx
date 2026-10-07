@@ -10,6 +10,8 @@ import {
   getOrganizerEvents,
 } from "@/lib/data/events";
 import { t } from "@/lib/types";
+import { routing } from "@/i18n/routing";
+import { pageAlternates, siteOpenGraph } from "@/lib/seo/site";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +28,8 @@ export async function generateMetadata({
     description: organizer.description
       ? t(organizer.description, locale)
       : organizer.website,
-    openGraph: organizer.logoUrl ? { images: [organizer.logoUrl] } : undefined,
+    openGraph: organizer.logoUrl ? siteOpenGraph(locale, [organizer.logoUrl]) : undefined,
+    alternates: pageAlternates(`/go/${organizer.slug}`, locale, routing.locales),
   };
 }
 

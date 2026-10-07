@@ -1,5 +1,22 @@
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { InquiryChat } from "./inquiry-chat";
+import { pageAlternates } from "@/lib/seo/site";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "organizer" });
+  const tm = await getTranslations({ locale, namespace: "meta" });
+  return {
+    title: t("title"),
+    description: tm("organizerDescription"),
+    alternates: pageAlternates("/organizer", locale),
+  };
+}
 
 export default async function OrganizerPage({
   params,

@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { Search, ShoppingBag, CreditCard, Mail } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { byLocale } from "@/lib/i18n-fallback";
+import { pageAlternates } from "@/lib/seo/site";
 
 const content = {
   fr: {
@@ -52,6 +54,16 @@ const content = {
 } as const;
 
 const icons = [Search, ShoppingBag, CreditCard, Mail];
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const c = byLocale<(typeof content)[keyof typeof content]>(content, locale);
+  return { title: c.title, description: c.subtitle, alternates: pageAlternates("/how-it-works", locale) };
+}
 
 export default async function HowItWorksPage({
   params,

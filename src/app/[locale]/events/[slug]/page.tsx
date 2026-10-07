@@ -9,6 +9,7 @@ import { EventTags } from "@/components/events/event-tags";
 import { getEventBySlug } from "@/lib/data/events";
 import { eventAlternates, eventJsonLd, jsonLdScript } from "@/lib/seo/event";
 import { eventTags, t } from "@/lib/types";
+import { siteOpenGraph } from "@/lib/seo/site";
 
 // Le stock évolue en continu : la page est rendue à la demande plutôt que
 // figée au build, où la base n'est de toute façon pas joignable.
@@ -29,7 +30,7 @@ export async function generateMetadata({
     title: t(event.title, locale),
     description: t(event.description, locale),
     alternates: eventAlternates(event, locale),
-    openGraph: event.coverImage ? { images: [event.coverImage] } : undefined,
+    openGraph: event.coverImage ? siteOpenGraph(locale, [event.coverImage]) : undefined,
   };
 }
 

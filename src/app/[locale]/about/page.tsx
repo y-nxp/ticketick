@@ -8,6 +8,7 @@ import { InquiryChat } from "@/app/[locale]/organizer/inquiry-chat";
 import { referenceFlyers } from "@/lib/about/references";
 import { teamPhotos } from "@/lib/about/team";
 import { cn } from "@/lib/utils";
+import { pageAlternates } from "@/lib/seo/site";
 
 export async function generateMetadata({
   params,
@@ -16,7 +17,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "about" });
-  return { title: t("title"), description: t("metaDescription") };
+  return {
+    title: t("title"),
+    description: t("metaDescription"),
+    alternates: pageAlternates("/about", locale),
+  };
 }
 
 export default async function AboutPage({
@@ -66,8 +71,10 @@ export default async function AboutPage({
   const schema = {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": "https://ticketick.ch/#organization",
     name: "ticketick",
     url: "https://ticketick.ch",
+    logo: "https://ticketick.ch/brand/ticketick-icone-512.png",
     email: "support@ticketick.ch",
     description: t("metaDescription"),
     address: {

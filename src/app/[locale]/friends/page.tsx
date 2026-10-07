@@ -1,7 +1,19 @@
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Smartphone, Ticket, Bell, Wallet, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { byLocale } from "@/lib/i18n-fallback";
+import { pageAlternates } from "@/lib/seo/site";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "friends" });
+  return { title: t("title"), description: t("subtitle"), alternates: pageAlternates("/friends", locale) };
+}
 
 export default async function FriendsPage({
   params,

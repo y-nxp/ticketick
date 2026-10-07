@@ -3,6 +3,10 @@
     "name": "ticketick",
     "tagline": "La venta de entradas suiza, sencilla y moderna."
   },
+  "meta": {
+    "siteTitle": "ticketick.ch — La venta de entradas suiza",
+    "siteDescription": "Reserve sus entradas para los mejores espectáculos de Suiza: conciertos, teatro, festivales, humor y mucho más."
+  },
   "nav": {
     "events": "Espectáculos",
     "howItWorks": "Cómo funciona",

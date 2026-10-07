@@ -3,6 +3,11 @@
     "name": "ticketick",
     "tagline": "Swiss ticketing, simple and modern."
   },
+  "meta": {
+    "siteTitle": "ticketick.ch — Swiss ticketing",
+    "siteDescription": "Book tickets for the best shows in Switzerland: concerts, theatre, festivals, comedy and more.",
+    "organizerDescription": "Sell tickets for your concerts, festivals and shows with ticketick: reserved seating, online payment, e-mailed tickets and door control."
+  },
   "nav": {
     "events": "Events",
     "howItWorks": "How it works",

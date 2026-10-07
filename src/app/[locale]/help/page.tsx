@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { ContentPage } from "@/components/layout/content-page";
 import { byLocale } from "@/lib/i18n-fallback";
+import { pageAlternates } from "@/lib/seo/site";
 
 const copy: Record<
   string,
@@ -38,6 +40,15 @@ const copy: Record<
     email: "support@ticketick.ch",
   },
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return { title: byLocale(copy, locale).title, alternates: pageAlternates("/help", locale) };
+}
 
 export default async function HelpPage({
   params,

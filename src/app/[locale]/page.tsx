@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowRight, Sparkles, ShieldCheck, Mail, Ticket } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -11,9 +12,21 @@ import {
   getFeaturedEvents,
   getPublishedEvents,
 } from "@/lib/data/events";
+import { routing } from "@/i18n/routing";
+import { jsonLdScript } from "@/lib/seo/event";
+import { pageAlternates, siteJsonLd } from "@/lib/seo/site";
 
 // Catalogue et stocks vivent en base : rendu à la demande.
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return { alternates: pageAlternates("", locale, routing.locales) };
+}
 
 export default async function HomePage({
   params,
@@ -28,6 +41,7 @@ export default async function HomePage({
 
   const t = await getTranslations("home");
   const te = await getTranslations("event");
+  const tm = await getTranslations("meta");
 
   const [events, featured, cities, categories] = await Promise.all([
     getPublishedEvents(),
@@ -38,6 +52,12 @@ export default async function HomePage({
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLdScript(siteJsonLd(locale, tm("siteDescription"))),
+        }}
+      />
       {/* HERO */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-primary/8 via-background to-background" />

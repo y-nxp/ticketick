@@ -3,6 +3,11 @@
     "name": "ticketick",
     "tagline": "La billetterie suisse, simple et moderne."
   },
+  "meta": {
+    "siteTitle": "ticketick.ch — La billetterie suisse",
+    "siteDescription": "Réservez vos billets pour les meilleurs spectacles de Suisse : concerts, théâtre, festivals, humour et plus.",
+    "organizerDescription": "Vendez les billets de vos concerts, festivals et spectacles avec ticketick : places numérotées, paiement en ligne, billets par e-mail et contrôle d'entrée."
+  },
   "nav": {
     "events": "Spectacles",
     "howItWorks": "Comment ça marche",

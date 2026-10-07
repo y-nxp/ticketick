@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Jost } from "next/font/google";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import "../globals.css";
 import { routing } from "@/i18n/routing";
 import { CartProvider } from "@/components/cart/cart-context";
@@ -15,6 +15,7 @@ import {
 import { themeInitScript } from "@/components/layout/theme";
 import { cookies } from "next/headers";
 import { SHOP_ORIGIN_COOKIE } from "@/lib/shop-origin";
+import { siteOpenGraph } from "@/lib/seo/site";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -30,17 +31,25 @@ const jost = Jost({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "ticketick.ch — La billetterie suisse",
-    template: "%s · ticketick.ch",
-  },
-  description:
-    "Réservez vos billets pour les meilleurs spectacles de Suisse : concerts, théâtre, festivals, humour et plus.",
-  metadataBase: new URL("https://ticketick.ch"),
-  applicationName: "ticketick",
-  appleWebApp: { title: "ticketick", statusBarStyle: "default" },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "meta" });
+  return {
+    title: {
+      default: t("siteTitle"),
+      template: "%s · ticketick.ch",
+    },
+    description: t("siteDescription"),
+    metadataBase: new URL("https://ticketick.ch"),
+    applicationName: "ticketick",
+    appleWebApp: { title: "ticketick", statusBarStyle: "default" },
+    openGraph: siteOpenGraph(locale),
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: [

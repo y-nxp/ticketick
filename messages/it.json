@@ -3,6 +3,11 @@
     "name": "ticketick",
     "tagline": "Biglietteria svizzera, semplice e moderna."
   },
+  "meta": {
+    "siteTitle": "ticketick.ch — La biglietteria svizzera",
+    "siteDescription": "Prenotate i biglietti per i migliori spettacoli in Svizzera: concerti, teatro, festival, comicità e altro.",
+    "organizerDescription": "Vendete i biglietti dei vostri concerti, festival e spettacoli con ticketick: posti numerati, pagamento online, biglietti via e-mail e controllo all'ingresso."
+  },
   "nav": {
     "events": "Spettacoli",
     "howItWorks": "Come funziona",

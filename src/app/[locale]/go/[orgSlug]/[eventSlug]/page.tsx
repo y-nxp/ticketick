@@ -10,6 +10,7 @@ import { Link } from "@/i18n/navigation";
 import { getEventBySlug } from "@/lib/data/events";
 import { eventAlternates, eventJsonLd, jsonLdScript } from "@/lib/seo/event";
 import { eventTags, t } from "@/lib/types";
+import { siteOpenGraph } from "@/lib/seo/site";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ export async function generateMetadata({
     title: `${t(event.title, locale)} · ${event.organizer.name}`,
     description: t(event.description, locale),
     alternates: event.visibility === "MEMBERS" ? undefined : eventAlternates(event, locale),
-    openGraph: event.coverImage ? { images: [event.coverImage] } : undefined,
+    openGraph: event.coverImage ? siteOpenGraph(locale, [event.coverImage]) : undefined,
   };
 }
 
