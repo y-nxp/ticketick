@@ -7,6 +7,7 @@ import { Link, redirect } from "@/i18n/navigation";
 import { EventBooking } from "@/components/events/event-booking";
 import { EventTags } from "@/components/events/event-tags";
 import { getEventBySlug } from "@/lib/data/events";
+import { eventAlternates, eventJsonLd, jsonLdScript } from "@/lib/seo/event";
 import { eventTags, t } from "@/lib/types";
 
 // Le stock évolue en continu : la page est rendue à la demande plutôt que
@@ -27,6 +28,7 @@ export async function generateMetadata({
   return {
     title: t(event.title, locale),
     description: t(event.description, locale),
+    alternates: eventAlternates(event, locale),
     openGraph: event.coverImage ? { images: [event.coverImage] } : undefined,
   };
 }
@@ -49,9 +51,16 @@ export default async function EventPage({
   }
 
   const te = await getTranslations("event");
+  const jsonLd = eventJsonLd(event, locale);
 
   return (
     <div className="container-page py-8">
+      {jsonLd.length ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
+        />
+      ) : null}
       <Link
         href="/"
         className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"

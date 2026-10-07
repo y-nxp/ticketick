@@ -8,6 +8,7 @@ import { EventBooking } from "@/components/events/event-booking";
 import { EventTags } from "@/components/events/event-tags";
 import { Link } from "@/i18n/navigation";
 import { getEventBySlug } from "@/lib/data/events";
+import { eventAlternates, eventJsonLd, jsonLdScript } from "@/lib/seo/event";
 import { eventTags, t } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,7 @@ export async function generateMetadata({
   return {
     title: `${t(event.title, locale)} · ${event.organizer.name}`,
     description: t(event.description, locale),
+    alternates: event.visibility === "MEMBERS" ? undefined : eventAlternates(event, locale),
     openGraph: event.coverImage ? { images: [event.coverImage] } : undefined,
   };
 }
@@ -39,9 +41,17 @@ export default async function OrganizerEventPage({
   if (!event || event.organizer.slug !== orgSlug) notFound();
 
   const tp = await getTranslations("portal");
+  // Un spectacle publié sur l'accueil y porte ses données structurées.
+  const jsonLd = event.visibility === "UNLISTED" ? eventJsonLd(event, locale) : [];
 
   return (
     <OrganizerShell organizer={event.organizer}>
+      {jsonLd.length ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }}
+        />
+      ) : null}
       <Link
         href={`/go/${event.organizer.slug}`}
         className="group mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm transition-colors hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)]"
