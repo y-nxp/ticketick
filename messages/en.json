@@ -574,6 +574,8 @@
           "draft": "Back to draft",
           "list": "Publish on ticketick",
           "unlist": "Remove from ticketick",
+          "cardOn": "Open card payment",
+          "cardOff": "Close card payment",
           "delete": "Delete"
         },
         "clear": "Clear selection",

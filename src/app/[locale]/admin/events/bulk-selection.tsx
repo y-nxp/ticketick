@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { Eye, EyeOff, FileEdit, Send, Trash2, X } from "lucide-react";
+import { Ban, CreditCard, Eye, EyeOff, FileEdit, Send, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   bulkEventAction,
@@ -112,6 +112,8 @@ const ACTIONS: { action: BulkEventAction; icon: React.ReactNode }[] = [
   { action: "draft", icon: <FileEdit className="size-4" /> },
   { action: "list", icon: <Eye className="size-4" /> },
   { action: "unlist", icon: <EyeOff className="size-4" /> },
+  { action: "cardOn", icon: <CreditCard className="size-4" /> },
+  { action: "cardOff", icon: <Ban className="size-4" /> },
 ];
 
 export function BulkToolbar() {

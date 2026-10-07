@@ -224,7 +224,7 @@ export async function setEventListed(
   return success(eventId);
 }
 
-const BULK_ACTIONS = ["publish", "draft", "list", "unlist", "delete"] as const;
+const BULK_ACTIONS = ["publish", "draft", "list", "unlist", "cardOn", "cardOff", "delete"] as const;
 export type BulkEventAction = (typeof BULK_ACTIONS)[number];
 export type BulkEventResult =
   | { ok: true; done: number; skipped: number }
@@ -282,6 +282,17 @@ export async function bulkEventAction(
         await prisma.event.updateMany({
           where: { ...where, visibility: { notIn: ["MEMBERS", visibility] } },
           data: { visibility },
+        })
+      ).count;
+      break;
+    }
+    case "cardOn":
+    case "cardOff": {
+      const acceptCard = action === "cardOn";
+      done = (
+        await prisma.event.updateMany({
+          where: { ...where, acceptCard: !acceptCard },
+          data: { acceptCard },
         })
       ).count;
       break;

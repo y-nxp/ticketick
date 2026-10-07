@@ -574,6 +574,8 @@
           "draft": "Repasser en brouillon",
           "list": "Publier sur ticketick",
           "unlist": "Retirer de ticketick",
+          "cardOn": "Ouvrir le paiement par carte",
+          "cardOff": "Fermer le paiement par carte",
           "delete": "Supprimer"
         },
         "clear": "Désélectionner",

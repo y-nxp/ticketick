@@ -574,6 +574,8 @@
           "draft": "Zurück zum Entwurf",
           "list": "Auf ticketick veröffentlichen",
           "unlist": "Von ticketick entfernen",
+          "cardOn": "Kartenzahlung öffnen",
+          "cardOff": "Kartenzahlung schliessen",
           "delete": "Löschen"
         },
         "clear": "Auswahl aufheben",
