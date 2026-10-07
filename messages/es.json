@@ -133,7 +133,7 @@
   },
   "cart": {
     "title": "Tu carrito",
-    "summary": "Resumen",
+    "summary": "Total del pedido",
     "empty": "Tu carrito está vacío.",
     "emptyHint": "Explora los espectáculos para añadir entradas.",
     "browse": "Ver los espectáculos",

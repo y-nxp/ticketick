@@ -133,7 +133,7 @@
   },
   "cart": {
     "title": "Il tuo carrello",
-    "summary": "Riepilogo",
+    "summary": "Totale dell’ordine",
     "empty": "Il tuo carrello è vuoto.",
     "emptyHint": "Esplora gli spettacoli per aggiungere biglietti.",
     "browse": "Vedi gli spettacoli",
