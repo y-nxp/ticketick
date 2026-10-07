@@ -130,11 +130,12 @@ export default async function HomePage({
             </h2>
           </div>
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {featured.slice(0, 3).map((event) => (
+            {featured.slice(0, 3).map((event, i) => (
               <EventCard
                 key={event.id}
                 event={event}
                 locale={locale}
+                imagePriority={i === 0 ? "high" : "eager"}
                 labels={{
                   from: te("from"),
                   soldOut: te("soldOut"),
@@ -159,6 +160,7 @@ export default async function HomePage({
           cities={cities}
           locale={locale}
           initialQuery={q ?? ""}
+          eagerFirst={featured.length === 0}
         />
       </section>
     </>

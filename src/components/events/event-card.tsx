@@ -19,6 +19,7 @@ export function EventCard({
   locale,
   labels,
   href = `/events/${event.slug}`,
+  imagePriority,
 }: {
   event: EventItem;
   locale: string;
@@ -30,6 +31,8 @@ export function EventCard({
   };
   /** Page de l'organisateur : la carte y mène à sa propre fiche. */
   href?: string;
+  /** Cartes visibles dès l'ouverture : photo chargée sans attendre, la première en priorité. */
+  imagePriority?: "high" | "eager";
 }) {
   const soldOut = isSoldOut(event);
   const price = minPriceCents(event);
@@ -65,6 +68,8 @@ export function EventCard({
             alt={t(event.title, locale)}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            loading={imagePriority ? "eager" : undefined}
+            fetchPriority={imagePriority === "high" ? "high" : undefined}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (

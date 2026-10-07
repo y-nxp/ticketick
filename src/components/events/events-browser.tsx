@@ -25,12 +25,15 @@ export function EventsBrowser({
   cities,
   locale,
   initialQuery = "",
+  eagerFirst = false,
 }: {
   events: EventItem[];
   categories: Category[];
   cities: string[];
   locale: string;
   initialQuery?: string;
+  /** La grille est la première chose visible : ses premières photos sans attendre. */
+  eagerFirst?: boolean;
 }) {
   const tf = useTranslations("filters");
   const th = useTranslations("home");
@@ -262,11 +265,12 @@ export function EventsBrowser({
       {/* Grille */}
       {filtered.length > 0 ? (
         <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((event) => (
+          {filtered.map((event, i) => (
             <EventCard
               key={event.id}
               event={event}
               locale={locale}
+              imagePriority={eagerFirst && i < 3 ? (i === 0 ? "high" : "eager") : undefined}
               labels={{
                 from: te("from"),
                 soldOut: te("soldOut"),
