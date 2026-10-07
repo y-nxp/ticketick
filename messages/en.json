@@ -85,7 +85,7 @@
     "companionHint": "Up to {n} per paying ticket, 16 and under.",
     "companionRule": "{n, plural, =1 {One free seat max} other {# free seats max}} per paying ticket.",
     "companionRuleNamed": "{n, plural, =1 {One free seat max} other {# free seats max}} per “{ticket}” ticket.",
-    "companionRuleOrder": "{n, plural, =1 {One free seat} other {Up to # free seats}} per order, with at least one paying ticket.",
+    "companionRuleOrder": "Valid with at least one paying ticket.",
     "companionNeedsPaid": "Available with at least one other paying seat.",
     "companionMaxReached": "Maximum number of free seats reached.",
     "seatPickTitle": "Choose your seats",
@@ -106,7 +106,7 @@
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
     "attendeeNote": "Name and date of birth required at checkout.",
-    "attendeeNoteAge": "Under {age}: name and date of birth required at checkout, ID checked at the door.",
+    "attendeeNoteAge": "Under {age}: name and date of birth required at checkout.",
     "contact": {
       "badge": "Registration required",
       "title": "Registration",

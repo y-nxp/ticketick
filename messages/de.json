@@ -85,7 +85,7 @@
     "companionHint": "Bis zu {n} pro bezahltes Ticket, bis 16 Jahre.",
     "companionRule": "{n, plural, =1 {Max. eine Freikarte} other {Max. # Freikarten}} pro bezahltes Ticket.",
     "companionRuleNamed": "{n, plural, =1 {Max. eine Freikarte} other {Max. # Freikarten}} pro Ticket „{ticket}“.",
-    "companionRuleOrder": "{n, plural, =1 {Eine Freikarte} other {Bis zu # Freikarten}} pro Bestellung, mit mindestens einem bezahlten Ticket.",
+    "companionRuleOrder": "Gültig mit mindestens einem bezahlten Ticket.",
     "companionNeedsPaid": "Möglich mit mindestens einem weiteren bezahlten Platz.",
     "companionMaxReached": "Höchstzahl an Freikarten erreicht.",
     "seatPickTitle": "Wählen Sie Ihre Plätze",
@@ -106,7 +106,7 @@
     "zoomIn": "Plan vergrößern",
     "zoomOut": "Plan verkleinern",
     "attendeeNote": "Name und Geburtsdatum werden beim Bezahlen verlangt.",
-    "attendeeNoteAge": "Unter {age} Jahren: Name und Geburtsdatum beim Bezahlen, Ausweis am Eingang.",
+    "attendeeNoteAge": "Unter {age} Jahren: Name und Geburtsdatum werden beim Bezahlen verlangt.",
     "contact": {
       "badge": "Mit Anmeldung",
       "title": "Anmeldung",

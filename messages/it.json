@@ -85,7 +85,7 @@
     "companionHint": "Fino a {n} per biglietto a pagamento, fino a 16 anni.",
     "companionRule": "{n, plural, =1 {Un posto gratuito max} other {# posti gratuiti max}} per biglietto a pagamento.",
     "companionRuleNamed": "{n, plural, =1 {Un posto gratuito max} other {# posti gratuiti max}} per biglietto « {ticket} ».",
-    "companionRuleOrder": "{n, plural, =1 {Un posto gratuito} other {Fino a # posti gratuiti}} per ordine, con almeno un biglietto a pagamento.",
+    "companionRuleOrder": "Valido con almeno un biglietto a pagamento.",
     "companionNeedsPaid": "Possibile con almeno un altro posto a pagamento.",
     "companionMaxReached": "Numero massimo di posti gratuiti raggiunto.",
     "seatPickTitle": "Scegliete i vostri posti",
@@ -106,7 +106,7 @@
     "zoomIn": "Ingrandisci la pianta",
     "zoomOut": "Riduci la pianta",
     "attendeeNote": "Nome e data di nascita richiesti al pagamento.",
-    "attendeeNoteAge": "Meno di {age} anni: nome e data di nascita al pagamento, documento d'identità all'ingresso.",
+    "attendeeNoteAge": "Meno di {age} anni: nome e data di nascita richiesti al pagamento.",
     "contact": {
       "badge": "Su iscrizione",
       "title": "Iscrizione",
