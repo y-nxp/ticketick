@@ -30,7 +30,7 @@ export function Footer() {
       <div className="border-t border-border/70">
         <div className="container-page flex flex-col items-center justify-between gap-2 py-5 text-xs text-muted-foreground sm:flex-row">
           <p>© {year} ticketick.ch — {t("rights")}</p>
-          <p>ticketick.ch · ticketick.net</p>
+          <p>ticketick.ch · ticketick.io</p>
         </div>
       </div>
     </footer>

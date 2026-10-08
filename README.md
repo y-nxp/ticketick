@@ -1,6 +1,6 @@
 # ticketick 🎟️🇨🇭
 
-La billetterie suisse moderne — **ticketick.ch** (international : ticketick.net).
+La billetterie suisse moderne — **ticketick.ch** (international : ticketick.io).
 
 Réservation de billets pour concerts, théâtre, festivals, humour et plus.
 Multilingue **FR / EN / DE / IT**, paiement **PostFinance Checkout** ou **virement IBAN**,
