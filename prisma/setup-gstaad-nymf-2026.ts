@@ -1101,6 +1101,7 @@ const INVITATIONS: Record<string, number> = {
   "2027-01-03 Bernheim / Matheson": 108,
   "2027-01-03 Mkhitaryan / Zhilikhovsky": 92,
   "2027-01-04 Ryan-Dugelay": 12,
+  "2027-01-04 Pagano": 48,
   "2027-01-05 Arderíus": 12,
   "2027-01-05 Amadi / Belkin": 54,
   "2027-01-06 Chenaux": 12,
@@ -1452,6 +1453,22 @@ async function applyReview20261007(organizerId: string): Promise<string> {
   return `Relecture du 07.10 : ${done.join(", ") || "déjà appliquée dans l'admin"}.`;
 }
 
+/** Demande d'Illyria (08.10.2026) : 48 places réservées pour Ettore Pagano, retirées de la jauge. */
+async function reservePagano(organizerId: string): Promise<string> {
+  const key = "2027-01-04 Pagano";
+  const concert = CONCERTS.find((c) => `${c.date} ${c.artist}` === key)!;
+  const session = await prisma.eventSession.findFirst({
+    where: { event: { slug: concertSlug(concert), organizerId } },
+    select: { id: true, capacity: true, sold: true },
+  });
+  if (!session) return `${key} : introuvable`;
+  const full = VENUES[concert.venue].capacity;
+  if (session.capacity !== full) return `${key} : jauge déjà réglée (${session.capacity}), inchangée`;
+  const capacity = Math.max(session.sold, full - INVITATIONS[key]!);
+  await prisma.eventSession.update({ where: { id: session.id }, data: { capacity } });
+  return `${key} : jauge ${full} → ${capacity}`;
+}
+
 async function main() {
   const existing = await prisma.organizer.findUnique({
     where: { slug: ORG_SLUG },
@@ -1481,6 +1498,7 @@ async function main() {
   await once("gnymf-2026/lariviere-rougemont", () => sellLariviere(id));
   await once("gnymf-2026/lariviere-hotel-rougemont", () => moveLariviereToHotel(id));
   await once("gnymf-2026/relecture-2026-10-07", () => applyReview20261007(id));
+  await once("gnymf-2026/invitations-pagano", () => reservePagano(id));
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );
