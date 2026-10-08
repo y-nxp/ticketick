@@ -292,9 +292,9 @@ export async function buildTicketsPdf(
 
     const footerLogos: { img: Awaited<ReturnType<typeof embedImage>>; w: number; h: number }[] =
       [];
-    const brandBytes = await readPublicFile("/brand/logo_standard.png");
+    const brandBytes = await readPublicFile("/brand/ticketick-logo-small.png");
     if (brandBytes) {
-      const img = await embedImage(doc, brandBytes, "/brand/logo_standard.png");
+      const img = await embedImage(doc, brandBytes, "/brand/ticketick-logo-small.png");
       const h = 14;
       footerLogos.push({ img, h, w: (img.width / img.height) * h });
     }

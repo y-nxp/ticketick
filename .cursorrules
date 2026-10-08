@@ -91,8 +91,8 @@ Les deux polices sont chargées par `next/font/google` dans
   Appli de contrôle : `public/door.webmanifest`.
 - **Ne jamais recomposer le logo** en texte HTML ni en tracés copiés dans le code :
   toujours les fichiers.
-- Billets PDF : encore l'ancien `/brand/logo_standard.png`, volontairement, en
-  attendant leur refonte.
+- **Billets PDF :** `/brand/ticketick-logo-small.png` en pied de billet, 14 pt de
+  haut (le PDF n'embarque pas de SVG).
 
 ### Zone d'exclusion & tailles minimales
 - Marge vide autour du logo au moins égale à la **hauteur des lettres**.
