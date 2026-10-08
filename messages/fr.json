@@ -241,7 +241,15 @@
         "title": "Une commande par organisateur",
         "body": "Votre panier réunit des spectacles de plusieurs organisateurs, qui encaissent chacun sur leur propre compte. Passez une commande pour chacun."
       }
-    }
+    },
+    "buyerFromAccount": "Coordonnées reprises de votre compte.",
+    "buyerFromDevice": "Coordonnées reprises de votre dernier achat sur cet appareil.",
+    "buyerForget": "Effacer",
+    "buyerRemember": "Se souvenir de mes coordonnées sur cet appareil",
+    "buyerRememberHint": "Elles seront remplies au prochain achat. À décocher sur un ordinateur partagé.",
+    "accountInviteTitle": "Retrouvez tous vos billets",
+    "accountInviteText": "Avec un compte, vos coordonnées sont remplies à chaque achat et tous vos billets sont au même endroit, y compris ceux achetés sans compte avec la même adresse e-mail.",
+    "accountInviteCta": "Créer mon compte"
   },
   "account": {
     "title": "Mon espace",

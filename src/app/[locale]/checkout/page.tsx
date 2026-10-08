@@ -16,6 +16,7 @@ import {
 import { useRouter } from "@/i18n/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ContinueShopping } from "@/components/cart/continue-shopping";
+import { AccountInvite } from "@/components/checkout/account-invite";
 import {
   EventOptions,
   type OptionDraft,
@@ -33,6 +34,8 @@ import {
 } from "@/lib/orders/payment-actions";
 import type { CartPayments } from "@/lib/orders/payment-methods";
 import { formatHoldClock } from "@/lib/orders/reservation";
+import { getAccountBuyer } from "@/lib/auth/buyer-actions";
+import { clearBuyer, readBuyer, writeBuyer } from "@/lib/checkout/buyer";
 
 type Method = "CARD" | "IBAN" | "PAYPAL";
 
@@ -216,6 +219,10 @@ function CheckoutInner() {
     email: "",
     phone: "",
   });
+  const [remember, setRemember] = React.useState(true);
+  const [prefilled, setPrefilled] = React.useState<"account" | "device" | null>(
+    null,
+  );
   const [submitting, setSubmitting] = React.useState(false);
   const [result, setResult] = React.useState<OrderResult | null>(null);
   const [error, setError] = React.useState<string | null>(null);
@@ -231,6 +238,33 @@ function CheckoutInner() {
   });
 
   const ticketIds = lines.map((l) => l.ticketTypeId).join(",");
+
+  React.useEffect(() => {
+    let ignore = false;
+    getAccountBuyer()
+      .catch(() => null)
+      .then((account) => {
+        if (ignore) return;
+        const source = account ?? readBuyer();
+        if (!source) return;
+        setForm((f) => ({
+          firstName: f.firstName || source.firstName,
+          lastName: f.lastName || source.lastName,
+          email: f.email || source.email,
+          phone: f.phone || source.phone,
+        }));
+        setPrefilled(account ? "account" : "device");
+      });
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  function forgetBuyer() {
+    clearBuyer();
+    setForm({ firstName: "", lastName: "", email: "", phone: "" });
+    setPrefilled(null);
+  }
 
   React.useEffect(() => {
     if (!hydrated || lines.length === 0) return;
@@ -456,6 +490,10 @@ function CheckoutInner() {
         }
         throw new Error("checkout_failed");
       }
+      if (prefilled !== "account") {
+        if (remember) writeBuyer(form);
+        else clearBuyer();
+      }
       const data: OrderResult & {
         checkoutUrl?: string;
         reservedUntil?: string;
@@ -559,6 +597,7 @@ function CheckoutInner() {
         >
           {t("backHome")}
         </ContinueShopping>
+        {prefilled !== "account" ? <AccountInvite /> : null}
       </div>
     );
   }
@@ -722,15 +761,34 @@ function CheckoutInner() {
           {/* Coordonnées */}
           <section className="rounded-card border border-border bg-card p-5">
             <h2 className="text-lg font-semibold">{t("contact")}</h2>
+            {prefilled === "account" ? (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t("buyerFromAccount")}
+              </p>
+            ) : null}
+            {prefilled === "device" ? (
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t("buyerFromDevice")}{" "}
+                <button
+                  type="button"
+                  onClick={forgetBuyer}
+                  className="font-medium text-foreground underline underline-offset-4"
+                >
+                  {t("buyerForget")}
+                </button>
+              </p>
+            ) : null}
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <Input
                 label={t("firstName")}
+                name="given-name"
                 value={form.firstName}
                 onChange={(v) => setForm((f) => ({ ...f, firstName: v }))}
                 required
               />
               <Input
                 label={t("lastName")}
+                name="family-name"
                 value={form.lastName}
                 onChange={(v) => setForm((f) => ({ ...f, lastName: v }))}
                 required
@@ -738,6 +796,7 @@ function CheckoutInner() {
               <Input
                 label={t("email")}
                 type="email"
+                name="email"
                 value={form.email}
                 onChange={(v) => setForm((f) => ({ ...f, email: v }))}
                 hint={t("emailHint")}
@@ -747,11 +806,28 @@ function CheckoutInner() {
               <Input
                 label={t("phone")}
                 type="tel"
+                name="tel"
                 value={form.phone}
                 onChange={(v) => setForm((f) => ({ ...f, phone: v }))}
                 className="sm:col-span-2"
               />
             </div>
+            {prefilled !== "account" ? (
+              <label className="mt-4 flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                  className="mt-0.5 size-4 rounded border-border accent-[var(--primary)]"
+                />
+                <span>
+                  <span className="font-medium">{t("buyerRemember")}</span>
+                  <span className="mt-0.5 block text-muted-foreground">
+                    {t("buyerRememberHint")}
+                  </span>
+                </span>
+              </label>
+            ) : null}
           </section>
 
           {attendeeLines.length > 0 ? (
@@ -968,6 +1044,7 @@ function CheckoutInner() {
 
 function Input({
   label,
+  name,
   value,
   onChange,
   type = "text",
@@ -976,6 +1053,8 @@ function Input({
   className,
 }: {
   label: string;
+  /** Sert aussi de jeton `autocomplete` : le navigateur peut remplir le champ. */
+  name?: string;
   value: string;
   onChange: (v: string) => void;
   type?: string;
@@ -988,6 +1067,8 @@ function Input({
       <span className="text-sm font-medium">{label}</span>
       <input
         type={type}
+        name={name}
+        autoComplete={name}
         value={value}
         required={required}
         onFocus={(e) => {

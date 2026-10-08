@@ -241,7 +241,15 @@
         "title": "Un ordine per organizzatore",
         "body": "Il suo carrello contiene spettacoli di più organizzatori, ognuno dei quali incassa sul proprio conto. Effettui un ordine separato per ciascuno."
       }
-    }
+    },
+    "buyerFromAccount": "Dati ripresi dal tuo account.",
+    "buyerFromDevice": "Dati ripresi dal tuo ultimo acquisto su questo dispositivo.",
+    "buyerForget": "Cancella",
+    "buyerRemember": "Ricorda i miei dati su questo dispositivo",
+    "buyerRememberHint": "Saranno compilati al prossimo acquisto. Da deselezionare su un computer condiviso.",
+    "accountInviteTitle": "Ritrova tutti i tuoi biglietti",
+    "accountInviteText": "Con un account, i tuoi dati sono compilati a ogni acquisto e tutti i tuoi biglietti sono in un unico posto, compresi quelli acquistati senza account con lo stesso indirizzo e-mail.",
+    "accountInviteCta": "Crea il mio account"
   },
   "account": {
     "title": "Il mio spazio",

@@ -240,7 +240,15 @@
         "title": "Un pedido por organizador",
         "body": "Tu carrito contiene espectáculos de varios organizadores, y cada uno cobra en su propia cuenta. Haz un pedido por separado para cada uno."
       }
-    }
+    },
+    "buyerFromAccount": "Datos tomados de tu cuenta.",
+    "buyerFromDevice": "Datos tomados de tu última compra en este dispositivo.",
+    "buyerForget": "Borrar",
+    "buyerRemember": "Recordar mis datos en este dispositivo",
+    "buyerRememberHint": "Se rellenarán en la próxima compra. Desmárcalo en un ordenador compartido.",
+    "accountInviteTitle": "Encuentra todas tus entradas",
+    "accountInviteText": "Con una cuenta, tus datos se rellenan en cada compra y todas tus entradas están en un mismo lugar, incluidas las compradas sin cuenta con la misma dirección de correo.",
+    "accountInviteCta": "Crear mi cuenta"
   },
   "account": {
     "title": "Mi cuenta",

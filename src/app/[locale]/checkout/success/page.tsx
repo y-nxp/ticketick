@@ -9,6 +9,8 @@ import { settlePostfinanceOrder, settleStripeOrder } from "@/lib/orders/settle-c
 import { prisma } from "@/lib/prisma";
 import { parseGoOrigin, SHOP_ORIGIN_COOKIE } from "@/lib/shop-origin";
 import { ticketPdfPath } from "@/lib/tickets/download";
+import { getCurrentUser } from "@/lib/auth/dal";
+import { AccountInvite } from "@/components/checkout/account-invite";
 
 export default async function CheckoutSuccessPage({
   params,
@@ -48,6 +50,7 @@ export default async function CheckoutSuccessPage({
       : null;
   const origin = parseGoOrigin((await cookies()).get(SHOP_ORIGIN_COOKIE)?.value);
   const shopHome = origin ? `/go/${origin.orgSlug}` : "/";
+  const signedIn = Boolean(await getCurrentUser());
 
   return (
     <div className="container-page max-w-2xl py-20 text-center">
@@ -97,6 +100,7 @@ export default async function CheckoutSuccessPage({
           {t("backHome")}
         </Button>
       </Link>
+      {ref && !refundDue && !signedIn ? <AccountInvite /> : null}
     </div>
   );
 }

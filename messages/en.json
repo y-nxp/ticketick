@@ -241,7 +241,15 @@
         "title": "One order per organiser",
         "body": "Your cart contains shows from several organisers, each paid into their own account. Please place a separate order for each."
       }
-    }
+    },
+    "buyerFromAccount": "Details taken from your account.",
+    "buyerFromDevice": "Details taken from your last purchase on this device.",
+    "buyerForget": "Clear",
+    "buyerRemember": "Remember my details on this device",
+    "buyerRememberHint": "They will be filled in next time. Untick on a shared computer.",
+    "accountInviteTitle": "Keep all your tickets in one place",
+    "accountInviteText": "With an account, your details are filled in at every purchase and all your tickets are in one place, including those bought without an account with the same email address.",
+    "accountInviteCta": "Create my account"
   },
   "account": {
     "title": "My account",

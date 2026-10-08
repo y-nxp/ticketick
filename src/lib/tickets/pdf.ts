@@ -26,10 +26,8 @@ const PAPER = rgb(1, 1, 1);
 const WASH = rgb(248 / 255, 249 / 255, 250 / 255);
 const ALERT = rgb(0.75, 0.16, 0.18);
 
-/** Largeur A6 : lisible sur un téléphone sans zoomer, imprimable tel quel. */
-const PAGE_W = 297.64;
-/** Hauteur du premier tracé, qui mesure le billet avant de le dessiner à sa taille. */
-const DRAFT_H = 3000;
+const PAGE_W = 595.28;
+const PAGE_H = 841.89;
 const ON_VIOLET = rgb(1, 1, 1);
 
 export async function buildTicketsPdf(
@@ -51,7 +49,8 @@ export async function buildTicketsPdf(
     }
     return hit;
   };
-  const qr = async (code: string) => {
+
+  const qr = (code: string) => {
     const key = `qr:${code}`;
     let hit = images.get(key);
     if (!hit) {
@@ -60,15 +59,16 @@ export async function buildTicketsPdf(
     }
     return hit;
   };
-
   const ctx: DrawContext = { regular, bold, italic, copy, total, image, qr };
 
   for (const [index, ticket] of tickets.entries()) {
-    const draft = doc.addPage([PAGE_W, DRAFT_H]);
-    const bottom = await drawTicket(draft, DRAFT_H, ticket, index, ctx);
+    const draft = doc.addPage([PAGE_W, PAGE_H]);
+    const footerTop = await drawFooter(draft, ticket, ctx);
+    const bottom = await drawBody(draft, ticket, index, ctx, false);
     doc.removePage(doc.getPageCount() - 1);
-    const pageH = DRAFT_H - bottom;
-    await drawTicket(doc.addPage([PAGE_W, pageH]), pageH, ticket, index, ctx);
+    const page = doc.addPage([PAGE_W, PAGE_H]);
+    await drawBody(page, ticket, index, ctx, bottom < footerTop + 12);
+    await drawFooter(page, ticket, ctx);
   }
 
   return Buffer.from(await doc.save());
@@ -84,37 +84,37 @@ type DrawContext = {
   qr: (code: string) => Promise<PDFImage>;
 };
 
-async function drawTicket(
+async function drawBody(
   page: PDFPage,
-  pageH: number,
   ticket: TicketPdfCard,
   index: number,
   ctx: DrawContext,
+  tight: boolean,
 ): Promise<number> {
-const { regular, bold, italic, copy, total } = ctx;
+const { regular, bold, italic, copy, total, image, qr: qrImage } = ctx;
   const width = PAGE_W;
-  const margin = 20;
+  const margin = 42;
   const contentW = width - margin * 2;
-  let y = pageH - margin;
+  let y = PAGE_H - margin;
 
-  page.drawRectangle({ x: 0, y: 0, width, height: pageH, color: PAPER });
+  page.drawRectangle({ x: 0, y: 0, width, height: PAGE_H, color: PAPER });
 
   const nOf = pdfSafe(copy.nOf(index + 1, total));
-  const nOfW = regular.widthOfTextAtSize(nOf, 8);
+  const nOfW = regular.widthOfTextAtSize(nOf, 10);
   page.drawText(nOf, {
     x: width - margin - nOfW,
-    y: y - 8,
-    size: 8,
+    y: y - 10,
+    size: 10,
     font: regular,
     color: MUTED,
   });
 
   const logoBytes = await readPublicFile(ticket.organizerLogoUrl);
-  let headerH = 14;
+  let headerH = 18;
   if (logoBytes) {
-    const logo = await ctx.image(logoBytes, ticket.organizerLogoUrl);
-    const logoH = 32;
-    const logoW = Math.min((logo.width / logo.height) * logoH, contentW - nOfW - 12);
+    const logo = await image(logoBytes, ticket.organizerLogoUrl);
+    const logoH = tight ? 44 : 56;
+    const logoW = Math.min((logo.width / logo.height) * logoH, 240);
     page.drawImage(logo, {
       x: margin,
       y: y - logoH,
@@ -125,131 +125,112 @@ const { regular, bold, italic, copy, total } = ctx;
   } else if (ticket.organizerName) {
     drawWrapped(page, pdfSafe(ticket.organizerName), {
       x: margin,
-      y: y - 11,
-      maxWidth: contentW - nOfW - 12,
-      size: 11,
+      y: y - 14,
+      maxWidth: contentW - nOfW - 16,
+      size: 14,
       font: bold,
       color: INK,
-      lineHeight: 13,
+      lineHeight: 17,
     });
   }
-  y -= headerH + 10;
+  y -= headerH + 14;
 
   if (!ticket.valid) {
     const banner = pdfSafe(copy.unpaid);
-    page.drawRectangle({
-      x: margin,
-      y: y - 18,
-      width: contentW,
-      height: 18,
-      color: ALERT,
-    });
+    page.drawRectangle({ x: margin, y: y - 22, width: contentW, height: 22, color: ALERT });
     page.drawText(banner, {
-      x: margin + (contentW - bold.widthOfTextAtSize(banner, 8)) / 2,
-      y: y - 12,
-      size: 8,
+      x: margin + (contentW - bold.widthOfTextAtSize(banner, 10)) / 2,
+      y: y - 15,
+      size: 10,
       font: bold,
       color: PAPER,
     });
-    y -= 26;
+    y -= 32;
   }
 
-  page.drawRectangle({ x: margin, y: y - 2, width: contentW, height: 2, color: VIOLET });
-  y -= 18;
+  page.drawRectangle({ x: margin, y: y - 2.5, width: contentW, height: 2.5, color: VIOLET });
+  y -= 26;
 
   if (logoBytes && ticket.organizerName) {
     y = drawWrapped(page, pdfSafe(ticket.organizerName.toUpperCase()), {
       x: margin,
       y,
       maxWidth: contentW,
-      size: 7,
+      size: 9,
       font: bold,
       color: VIOLET,
-      lineHeight: 10,
+      lineHeight: 12,
     });
-    y -= 6;
+    y -= 8;
   }
 
   y = drawWrapped(page, pdfSafe(ticket.eventTitle), {
     x: margin,
-    y: y - 4,
+    y: y - 6,
     maxWidth: contentW,
-    size: 15,
+    size: tight ? 20 : 22,
     font: bold,
     color: INK,
-    lineHeight: 18,
+    lineHeight: tight ? 24 : 26,
   });
   if (ticket.eventSubtitle) {
     y = drawWrapped(page, pdfSafe(ticket.eventSubtitle), {
       x: margin,
       y: y + 2,
       maxWidth: contentW,
-      size: 11,
+      size: 14,
       font: italic,
       color: INK,
-      lineHeight: 14,
+      lineHeight: 18,
     });
   }
 
   y = drawKeyBanner(page, ticket, copy, {
     x: margin,
-    y: y - 6,
+    y: y - 8,
     width: contentW,
     bold,
     regular,
+    tight,
   });
 
   if (ticket.note) {
-    const noteLines = wrapLines(pdfSafe(ticket.note), bold, 10, contentW - 20);
-    const boxH = 10 + noteLines.length * 13;
-    y -= 10 + boxH;
+    const noteLines = wrapLines(pdfSafe(ticket.note), bold, 12, contentW - 24);
+    const boxH = 12 + noteLines.length * 15;
+    y -= 14 + boxH;
     page.drawRectangle({ x: margin, y, width: contentW, height: boxH, color: WASH });
     page.drawRectangle({ x: margin, y, width: 3, height: boxH, color: VIOLET });
-    let ny = y + boxH - 5 - 9;
+    let ny = y + boxH - 6 - 11;
     for (const line of noteLines) {
-      page.drawText(line, { x: margin + 12, y: ny, size: 10, font: bold, color: INK });
-      ny -= 13;
+      page.drawText(line, { x: margin + 14, y: ny, size: 12, font: bold, color: INK });
+      ny -= 15;
     }
   }
 
-  const qr = await ctx.qr(ticket.code);
-  const qrSize = 168;
-  y -= 14 + qrSize;
-  page.drawImage(qr, {
-    x: (width - qrSize) / 2,
-    y,
-    width: qrSize,
-    height: qrSize,
-  });
-  y -= 12;
+  const qr = await qrImage(ticket.code);
+  const qrSize = tight ? 128 : 160;
+  const top = y - (tight ? 14 : 20);
+  page.drawImage(qr, { x: margin, y: top - qrSize, width: qrSize, height: qrSize });
   page.drawText(ticket.code, {
-    x: (width - bold.widthOfTextAtSize(ticket.code, 9)) / 2,
-    y,
-    size: 9,
+    x: margin + (qrSize - bold.widthOfTextAtSize(ticket.code, 10)) / 2,
+    y: top - qrSize - 16,
+    size: 10,
     font: bold,
     color: INK,
   });
   if (!ticket.valid) {
     const stamp = pdfSafe(copy.unpaidShort);
-    y -= 12;
     page.drawText(stamp, {
-      x: (width - bold.widthOfTextAtSize(stamp, 8)) / 2,
-      y,
+      x: margin + (qrSize - bold.widthOfTextAtSize(stamp, 8)) / 2,
+      y: top - qrSize - 28,
       size: 8,
       font: bold,
       color: ALERT,
     });
   }
 
-  y -= 14;
-  page.drawLine({
-    start: { x: margin, y },
-    end: { x: width - margin, y },
-    thickness: 0.75,
-    color: RULE,
-  });
-  y -= 14;
-
+  const colX = margin + qrSize + 28;
+  const colW = width - margin - colX;
   const pairs = (
     [
       [copy.tariff, ticket.ticketName],
@@ -259,64 +240,67 @@ const { regular, bold, italic, copy, total } = ctx;
     ] as [string, string][]
   ).filter(([, value]) => value.trim());
 
-  const colGap = 12;
-  const colW = (contentW - colGap) / 2;
+  const gap = 16;
+  const factW = (colW - gap) / 2;
+  let fy = top - 4;
   for (let i = 0; i < pairs.length; i += 2) {
     const left = pairs[i];
     const right = pairs[i + 1];
-    const leftH = drawFact(page, left[0], left[1], {
-      x: margin,
-      y,
-      width: colW,
-      bold,
-    });
+    const leftH = drawFact(page, left[0], left[1], { x: colX, y: fy, width: factW, bold });
     const rightH = right
       ? drawFact(page, right[0], right[1], {
-          x: margin + colW + colGap,
-          y,
-          width: colW,
+          x: colX + factW + gap,
+          y: fy,
+          width: factW,
           bold,
         })
       : 0;
-    y -= Math.max(leftH, rightH) + 8;
+    fy -= Math.max(leftH, rightH) + 12;
   }
 
   if (ticket.venueLines.length) {
-    y -= 2;
     page.drawText(pdfSafe(copy.address), {
-      x: margin,
-      y,
-      size: 6.5,
+      x: colX,
+      y: fy,
+      size: 7.5,
       font: bold,
       color: MUTED,
     });
-    y -= 12;
+    fy -= 14;
     for (const line of ticket.venueLines) {
-      y = drawWrapped(page, pdfSafe(line), {
-        x: margin,
-        y,
-        maxWidth: contentW,
-        size: 10,
+      fy = drawWrapped(page, pdfSafe(line), {
+        x: colX,
+        y: fy,
+        maxWidth: colW,
+        size: 11,
         font: regular,
         color: INK,
-        lineHeight: 12.5,
+        lineHeight: 14,
       });
     }
   }
 
-  y -= 4;
+  y = Math.min(top - qrSize - 34, fy) - 4;
+  page.drawLine({
+    start: { x: margin, y },
+    end: { x: width - margin, y },
+    thickness: 1,
+    color: RULE,
+  });
+  y -= 18;
+
   y = drawWrapped(page, pdfSafe(copy.practical), {
     x: margin,
     y,
     maxWidth: contentW,
-    size: 8.5,
+    size: 10,
     font: regular,
     color: INK,
-    lineHeight: 11,
+    lineHeight: 13,
   });
 
   if (ticket.optionBlocks?.length) {
-    y -= 8;
+    y -= 12;
     for (const block of ticket.optionBlocks) {
       y = drawOptionBlock(page, block, {
         x: margin,
@@ -325,69 +309,78 @@ const { regular, bold, italic, copy, total } = ctx;
         bold,
         regular,
       });
-      y -= 8;
+      y -= 10;
     }
   }
 
   if (ticket.contractor) {
-    y -= 6;
+    y -= 8;
     page.drawText(pdfSafe(copy.contractor), {
       x: margin,
       y,
-      size: 6.5,
+      size: 7.5,
       font: bold,
       color: MUTED,
     });
-    y = drawWrapped(page, pdfSafe(ticket.contractor), {
+    drawWrapped(page, pdfSafe(ticket.contractor), {
       x: margin,
-      y: y - 12,
+      y: y - 14,
       maxWidth: contentW,
-      size: 9.5,
+      size: 11,
       font: bold,
       color: INK,
-      lineHeight: 12,
+      lineHeight: 14,
     });
   }
+  return y;
+}
 
+/** Pied de page (conditions et logos), collé au bas de la feuille ; renvoie sa hauteur. */
+async function drawFooter(
+  page: PDFPage,
+  ticket: TicketPdfCard,
+  ctx: DrawContext,
+): Promise<number> {
+  const { regular, copy } = ctx;
+  const width = PAGE_W;
+  const margin = 42;
+  const contentW = width - margin * 2;
   const disclaimer = pdfSafe(ticket.disclaimer ?? copy.disclaimer);
-  const discSize = 6.5;
-  const discLh = 8.5;
+  const discSize = 7.5;
+  const discLh = 10;
   const discLines = wrapLines(disclaimer, regular, discSize, contentW);
 
-  const footerLogos: { img: Awaited<ReturnType<typeof embedImage>>; w: number; h: number }[] =
-    [];
+  const footerLogos: { img: PDFImage; w: number; h: number }[] = [];
   const brandBytes = await readPublicFile("/brand/ticketick-logo-small.png");
   if (brandBytes) {
     const img = await ctx.image(brandBytes, "/brand/ticketick-logo-small.png");
-    const h = 11;
+    const h = 14;
     footerLogos.push({ img, h, w: (img.width / img.height) * h });
   }
   const producerBytes = await readPublicFile(ticket.producerLogoUrl);
   if (producerBytes && ticket.producerLogoUrl) {
     const img = await ctx.image(producerBytes, ticket.producerLogoUrl);
-    const h = 26;
+    const h = 36;
     footerLogos.push({
       img,
       h,
-      w: Math.min((img.width / img.height) * h, 100),
+      w: Math.min((img.width / img.height) * h, 130),
     });
   }
 
-  const logoGap = 16;
+  const logoGap = 22;
   const rowH = footerLogos.reduce((max, logo) => Math.max(max, logo.h), 0);
   const rowW =
     footerLogos.reduce((sum, logo) => sum + logo.w, 0) +
     logoGap * Math.max(0, footerLogos.length - 1);
 
-  const padTop = 12;
-  const padBot = 14;
-  const logosBlock = footerLogos.length ? 10 + rowH : 0;
-  const footerH = padTop + discLines.length * discLh + logosBlock + padBot;
-  const footerTop = y - 10;
-  const bottom = footerTop - footerH;
+  const padTop = 14;
+  const padBot = 18;
+  const logosBlock = footerLogos.length ? 12 + rowH : 0;
+  const footerTop = padTop + discLines.length * discLh + logosBlock + padBot;
 
-  page.drawRectangle({ x: 0, y: bottom, width, height: footerH, color: WASH });
-  page.drawRectangle({ x: 0, y: footerTop, width, height: 1.5, color: VIOLET });
+  page.drawRectangle({ x: 0, y: 0, width, height: footerTop, color: WASH });
+  page.drawRectangle({ x: 0, y: footerTop, width, height: 2, color: VIOLET });
 
   let footerY = footerTop - padTop;
   for (const line of discLines) {
@@ -407,15 +400,14 @@ const { regular, bold, italic, copy, total } = ctx;
     for (const logo of footerLogos) {
       page.drawImage(logo.img, {
         x,
-        y: bottom + padBot + (rowH - logo.h) / 2,
+        y: padBot + (rowH - logo.h) / 2,
         width: logo.w,
         height: logo.h,
       });
       x += logo.w + logoGap;
     }
   }
-
-  return bottom;
+  return footerTop;
 }
 
 /** Bandeau violet : date, heure, ouverture des portes, place et visibilité. */
@@ -423,24 +415,34 @@ function drawKeyBanner(
   page: PDFPage,
   ticket: TicketPdfCard,
   copy: ReturnType<typeof labels>,
-  opts: { x: number; y: number; width: number; bold: PDFFont; regular: PDFFont },
+  opts: {
+    x: number;
+    y: number;
+    width: number;
+    bold: PDFFont;
+    regular: PDFFont;
+    tight: boolean;
+  },
 ): number {
-  const { bold, regular } = opts;
-  const pad = 12;
+  const { bold, regular, tight } = opts;
+  const pad = tight ? 12 : 18;
   const innerW = opts.width - pad * 2;
+  const label = 8;
+  const daySize = tight ? 15 : 17;
+  const timeSize = tight ? 28 : 34;
+  const placeSize = tight ? 20 : 24;
   const time = pdfSafe(ticket.startTime);
-  const timeSize = 22;
   const timeW = bold.widthOfTextAtSize(time, timeSize);
-  const dayLines = wrapLines(pdfSafe(ticket.day), bold, 11.5, innerW - timeW - 12);
+  const dayLines = wrapLines(pdfSafe(ticket.day), bold, daySize, innerW - timeW - 20);
   const doors = ticket.doorsTime ? pdfSafe(copy.doorsAt(ticket.doorsTime)) : "";
-  const placeLines = wrapLines(pdfSafe(ticket.seatPlace), bold, 15, innerW);
+  const placeLines = wrapLines(pdfSafe(ticket.seatPlace), bold, placeSize, innerW);
   const view = ticket.seatView ? pdfSafe(ticket.seatView) : "";
 
-  const dateBlock = Math.max(10 + dayLines.length * 14, 10 + timeSize);
-  const doorsBlock = doors ? 13 : 0;
-  const placeBlock = 10 + placeLines.length * 18;
-  const viewBlock = view ? 20 : 0;
-  const height = pad + dateBlock + doorsBlock + 12 + placeBlock + viewBlock + pad - 4;
+  const dateBlock = Math.max(14 + dayLines.length * 21, 14 + timeSize * 0.8);
+  const doorsBlock = doors ? 18 : 0;
+  const placeBlock = 14 + placeLines.length * 28;
+  const viewBlock = view ? 26 : 0;
+  const height = pad + dateBlock + doorsBlock + 16 + placeBlock + viewBlock + pad - 6;
   const top = opts.y;
   const left = opts.x + pad;
 
@@ -452,55 +454,55 @@ function drawKeyBanner(
     color: VIOLET,
   });
 
-  let y = top - pad - 6;
-  page.drawText(pdfSafe(copy.date), { x: left, y, size: 6.5, font: bold, color: ON_VIOLET });
+  let y = top - pad - label;
+  page.drawText(pdfSafe(copy.date), { x: left, y, size: label, font: bold, color: ON_VIOLET });
   const startLabel = pdfSafe(copy.start);
   page.drawText(startLabel, {
-    x: left + innerW - bold.widthOfTextAtSize(startLabel, 6.5),
+    x: left + innerW - bold.widthOfTextAtSize(startLabel, label),
     y,
-    size: 6.5,
+    size: label,
     font: bold,
     color: ON_VIOLET,
   });
   page.drawText(time, {
     x: left + innerW - timeW,
-    y: y - 4 - timeSize * 0.72,
+    y: y - 6 - timeSize * 0.72,
     size: timeSize,
     font: bold,
     color: ON_VIOLET,
   });
-  let dy = y - 4 - 11.5 * 0.72 - 2;
+  let dy = y - 6 - daySize * 0.72 - 2;
   for (const line of dayLines) {
-    page.drawText(line, { x: left, y: dy, size: 11.5, font: bold, color: ON_VIOLET });
-    dy -= 14;
+    page.drawText(line, { x: left, y: dy, size: daySize, font: bold, color: ON_VIOLET });
+    dy -= 21;
   }
   y -= dateBlock;
 
   if (doors) {
-    page.drawText(doors, { x: left, y: y + 1, size: 8.5, font: regular, color: ON_VIOLET });
+    page.drawText(doors, { x: left, y: y - 2, size: 11, font: regular, color: ON_VIOLET });
     y -= doorsBlock;
   }
 
   page.drawLine({
-    start: { x: left, y: y + 4 },
-    end: { x: left + innerW, y: y + 4 },
-    thickness: 0.6,
+    start: { x: left, y: y + 2 },
+    end: { x: left + innerW, y: y + 2 },
+    thickness: 0.75,
     color: ON_VIOLET,
     opacity: 0.45,
   });
-  y -= 8;
+  y -= 14;
 
-  page.drawText(pdfSafe(copy.place), { x: left, y, size: 6.5, font: bold, color: ON_VIOLET });
-  y -= 4 + 15 * 0.72 + 2;
+  page.drawText(pdfSafe(copy.place), { x: left, y, size: label, font: bold, color: ON_VIOLET });
+  y -= 6 + placeSize * 0.72 + 2;
   for (const line of placeLines) {
-    page.drawText(line, { x: left, y, size: 15, font: bold, color: ON_VIOLET });
-    y -= 18;
+    page.drawText(line, { x: left, y, size: placeSize, font: bold, color: ON_VIOLET });
+    y -= 28;
   }
 
   if (view) {
-    const viewW = bold.widthOfTextAtSize(view, 8.5) + 14;
-    page.drawRectangle({ x: left, y: y - 3, width: viewW, height: 15, color: PAPER });
-    page.drawText(view, { x: left + 7, y: y + 1.5, size: 8.5, font: bold, color: VIOLET });
+    const viewW = bold.widthOfTextAtSize(view, 11) + 18;
+    page.drawRectangle({ x: left, y: y - 2, width: viewW, height: 20, color: PAPER });
+    page.drawText(view, { x: left + 9, y: y + 4, size: 11, font: bold, color: VIOLET });
   }
 
   return top - height;
@@ -582,18 +584,18 @@ function drawFact(
   page.drawText(pdfSafe(label), {
     x: opts.x,
     y: opts.y,
-    size: 6.5,
+    size: 7.5,
     font: opts.bold,
     color: MUTED,
   });
   const bottom = drawWrapped(page, pdfSafe(value), {
     x: opts.x,
-    y: opts.y - 12,
+    y: opts.y - 14,
     maxWidth: opts.width,
-    size: 10,
+    size: 12,
     font: opts.bold,
     color: INK,
-    lineHeight: 12,
+    lineHeight: 14,
   });
   return opts.y - bottom;
 }

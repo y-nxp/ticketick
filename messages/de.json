@@ -241,7 +241,15 @@
         "title": "Eine Bestellung pro Veranstalter",
         "body": "Ihr Warenkorb enthält Veranstaltungen mehrerer Veranstalter, die jeweils auf ihr eigenes Konto einkassieren. Bitte geben Sie für jeden eine eigene Bestellung auf."
       }
-    }
+    },
+    "buyerFromAccount": "Angaben aus Ihrem Konto übernommen.",
+    "buyerFromDevice": "Angaben aus Ihrem letzten Kauf auf diesem Gerät übernommen.",
+    "buyerForget": "Löschen",
+    "buyerRemember": "Meine Angaben auf diesem Gerät speichern",
+    "buyerRememberHint": "Sie werden beim nächsten Kauf ausgefüllt. Auf einem gemeinsam genutzten Computer deaktivieren.",
+    "accountInviteTitle": "Alle Ihre Tickets an einem Ort",
+    "accountInviteText": "Mit einem Konto werden Ihre Angaben bei jedem Kauf ausgefüllt und alle Ihre Tickets sind an einem Ort, auch die ohne Konto mit derselben E-Mail-Adresse gekauften.",
+    "accountInviteCta": "Konto erstellen"
   },
   "account": {
     "title": "Mein Konto",
