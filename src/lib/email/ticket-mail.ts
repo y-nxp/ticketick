@@ -222,6 +222,19 @@ export async function sendPaidOrderTickets(
   });
 }
 
+/** Renvoi demandé par l'acheteur (SAV téléphonique) : son adresse seule, sans copie. */
+export async function sendOrderTicketsToBuyer(orderId: string) {
+  const order = await paidOrderForMail(orderId);
+  if (!order?.email) return { sent: false, mock: false };
+  return sendTicketCards({
+    to: order.email,
+    buyerName: order.buyerName,
+    reference: order.reference,
+    locale: order.locale,
+    tickets: order.cards,
+  });
+}
+
 export async function sendPreviewTicketEmail(to: string) {
   const locale = "fr";
   const venue = {

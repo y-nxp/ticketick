@@ -58,6 +58,7 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
           LITELLM_API_URL: ${{ vars.LITELLM_API_URL }}
+          PARTNER_API_SECRET: ${{ secrets.PARTNER_API_SECRET }}
           GB10_SSH_PRIVATE_KEY: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
           BACKUP_REMOTE: ${{ vars.BACKUP_REMOTE }}
           BACKUP_RCLONE_CONF: ${{ secrets.BACKUP_RCLONE_CONF }}
@@ -84,6 +85,8 @@ jobs:
           echo "── Import de plans de salle"
           status LITELLM_API_URL conseillé "variable, adresse publique d'aimanager"
           status LITELLM_API_KEY conseillé "lecture de la légende par l'IA"
+          echo "── SAV téléphonique"
+          status PARTNER_API_SECRET conseillé "clé partagée avec Clouboard (API partenaire)"
           echo "── Sauvegardes (quotidiennes sur le serveur dans tous les cas)"
           status BACKUP_REMOTE conseillé "variable, destination rclone hors serveur (ex. swissbackup-crypt:ticketick)"
           status BACKUP_RCLONE_CONF conseillé "secret, contenu de rclone.conf pour cette destination"
@@ -274,6 +277,7 @@ jobs:
           LITELLM_API_URL: ${{ vars.LITELLM_API_URL }}
           LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
           PLAN_AI_MODEL: ${{ vars.PLAN_AI_MODEL }}
+          PARTNER_API_SECRET: ${{ secrets.PARTNER_API_SECRET }}
           SITE_ADDRESS: ${{ vars.PROD_SITE_ADDRESS || 'ticketick.ch' }}
           WWW_ADDRESS: ${{ vars.PROD_WWW_ADDRESS || 'www.ticketick.ch' }}
           BACKUP_REMOTE: ${{ vars.BACKUP_REMOTE }}
@@ -299,7 +303,7 @@ jobs:
           write NEXT_PUBLIC_APP_URL STRIPE_SECRET_KEY STRIPE_PUBLISHABLE_KEY STRIPE_WEBHOOK_SECRET \
             PF_CHECKOUT_SPACE_ID PF_CHECKOUT_USER PF_CHECKOUT_SECRET \
             SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS MAIL_FROM MAIL_TO \
-            LITELLM_API_URL LITELLM_API_KEY PLAN_AI_MODEL > bundle/app.env
+            LITELLM_API_URL LITELLM_API_KEY PLAN_AI_MODEL PARTNER_API_SECRET > bundle/app.env
           write IMAGE_APP IMAGE_TOOLS SITE_ADDRESS WWW_ADDRESS BACKUP_REMOTE REGISTRY_USER > bundle/release.env
           printf '%s' "$REGISTRY_TOKEN" > bundle/registry-token
 
