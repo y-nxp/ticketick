@@ -3,7 +3,14 @@
 import * as React from "react";
 import { useTranslations } from "next-intl";
 import { ZoomIn, ZoomOut } from "lucide-react";
-import { rowNumberMarks, seatLabel, type SeatLayout } from "@/lib/seating/layout";
+import {
+  readView,
+  rowNumberMarks,
+  seatLabel,
+  viewLabel,
+  type SeatLayout,
+  type SeatZone,
+} from "@/lib/seating/layout";
 import { t } from "@/lib/types";
 
 /** `blocked` : place réservée aux invités, affichée et cliquable dans l'admin. */
@@ -12,6 +19,24 @@ export type SeatState = "free" | "selected" | "taken" | "mine" | "off" | "blocke
 const ZOOMS = [1, 1.5, 2.25];
 /** Places libres quand toute la salle est au même prix : pas de catégories. */
 const UNIFORM_FREE = "#CFC9F8";
+
+/**
+ * Salle au même prix partout : les couleurs ne servent plus qu'à montrer les
+ * zones à visibilité réduite. Sans elles, une seule couleur.
+ */
+function keepsZoneColors(layout: SeatLayout, uniform: boolean): boolean {
+  return !uniform || layout.zones.some((z) => readView(z.view));
+}
+
+/**
+ * Libellé d'une zone : nom de la catégorie et visibilité réduite. Salle au
+ * même prix : la visibilité seule, sans nom de catégorie.
+ */
+function zoneText(zone: SeatZone, locale: string, uniform: boolean): string | null {
+  const view = viewLabel(readView(zone.view), locale);
+  if (uniform) return view;
+  return [t(zone.name, locale), view].filter(Boolean).join(" · ");
+}
 
 /**
  * Plan de salle cliquable. Les couleurs de catégorie sont celles du plan
@@ -34,6 +59,7 @@ export function SeatMap({
   const [zoom, setZoom] = React.useState(0);
   const { viewBox: vb, seatSize: s } = layout;
   const zones = new Map(layout.zones.map((z) => [z.key, z]));
+  const tinted = keepsZoneColors(layout, uniform);
   const rows = React.useMemo(
     () => (layout.rowNumbers ? rowNumberMarks(layout) : []),
     [layout],
@@ -124,16 +150,21 @@ export function SeatMap({
             const zone = zones.get(seat.zone);
             const clickable =
               state === "free" || state === "selected" || state === "blocked";
-            const label = `${seatLabel(layout, seat.key, locale)}${zone && !uniform ? ` · ${t(zone.name, locale)}` : ""}`;
+            const label = [
+              seatLabel(layout, seat.key, locale, { view: false }),
+              zone ? zoneText(zone, locale, uniform) : null,
+            ]
+              .filter(Boolean)
+              .join(" · ");
             const fill =
               state === "selected" || state === "mine"
                 ? "var(--primary)"
                 : state === "blocked"
                   ? "#2A2C30"
                   : state === "free"
-                  ? uniform
-                    ? UNIFORM_FREE
-                    : (zone?.color ?? "#e5e7eb")
+                  ? tinted
+                    ? (zone?.color ?? "#e5e7eb")
+                    : UNIFORM_FREE
                   : "#d4d4d8";
             return (
               <g
@@ -205,26 +236,45 @@ export function SeatLegend({
 }) {
   const te = useTranslations("event");
   const swatch = "inline-block size-3.5 shrink-0 rounded-[3px] border border-black/20";
+  const uniform = uniformPrice != null;
+  const items: { key: string; colors: string[]; text: string; price?: string }[] = [];
+  if (!uniform) {
+    for (const z of layout.zones) {
+      items.push({
+        key: z.key,
+        colors: [z.color],
+        text: zoneText(z, locale, false) ?? "",
+        price: zonePrices[z.key],
+      });
+    }
+  } else if (!keepsZoneColors(layout, true)) {
+    items.push({ key: "free", colors: [UNIFORM_FREE], text: te("seatFree"), price: uniformPrice });
+  } else {
+    // Une ligne par visibilité, avec les couleurs de toutes ses zones.
+    for (const view of [undefined, "partial", "none"] as const) {
+      const group = layout.zones.filter((z) => readView(z.view) === view);
+      if (group.length === 0) continue;
+      items.push({
+        key: view ?? "free",
+        colors: group.map((z) => z.color),
+        text: viewLabel(view, locale) ?? te("seatFree"),
+        price: uniformPrice,
+      });
+    }
+  }
   return (
     <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
-      {uniformPrice != null ? (
-        <li className="flex items-center gap-2">
-          <span className={swatch} style={{ background: UNIFORM_FREE }} />
-          <span>
-            {te("seatFree")}
-            {uniformPrice ? (
-              <span className="text-muted-foreground"> · {uniformPrice}</span>
-            ) : null}
+      {items.map((item) => (
+        <li key={item.key} className="flex items-center gap-2">
+          <span className="flex shrink-0 gap-0.5">
+            {item.colors.map((color) => (
+              <span key={color} className={swatch} style={{ background: color }} />
+            ))}
           </span>
-        </li>
-      ) : null}
-      {(uniformPrice != null ? [] : layout.zones).map((z) => (
-        <li key={z.key} className="flex items-center gap-2">
-          <span className={swatch} style={{ background: z.color }} />
           <span>
-            {t(z.name, locale)}
-            {zonePrices[z.key] ? (
-              <span className="text-muted-foreground"> · {zonePrices[z.key]}</span>
+            {item.text}
+            {item.price ? (
+              <span className="text-muted-foreground"> · {item.price}</span>
             ) : null}
           </span>
         </li>

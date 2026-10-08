@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   AlignCenterHorizontal,
   AlignCenterVertical,
@@ -54,7 +54,7 @@ import {
   tiltSeats,
   type Orientation,
 } from "@/lib/seating/draft";
-import { rowNumberMarks } from "@/lib/seating/layout";
+import { readView, rowNumberMarks, SEAT_VIEWS, viewLabel } from "@/lib/seating/layout";
 
 const inputClass =
   "h-9 w-full rounded-lg border border-border bg-background px-2.5 text-sm outline-none transition-colors focus:border-ring";
@@ -147,6 +147,7 @@ export function PlanEditor({
   onRestart?: () => void;
 }) {
   const t = useTranslations("admin.seatPlans");
+  const locale = useLocale();
   const router = useRouter();
   const [draft, setDraft] = React.useState(initial);
   const [history, setHistory] = React.useState<PlanDraft[]>([]);
@@ -695,36 +696,60 @@ export function PlanEditor({
             {draft.zones.map((z) => {
               const found = counts.get(z.key) ?? 0;
               return (
-                <li key={z.key} className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={z.color}
-                    aria-label={t("zoneColor")}
-                    onChange={(e) =>
-                      setDraft({
-                        ...draft,
-                        zones: draft.zones.map((o) => (o.key === z.key ? { ...o, color: e.target.value.toUpperCase() } : o)),
-                      })
-                    }
-                    className="h-7 w-7 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0"
-                  />
-                  <input
-                    value={z.name}
-                    aria-label={t("zoneName")}
-                    onChange={(e) =>
-                      setDraft({
-                        ...draft,
-                        zones: draft.zones.map((o) => (o.key === z.key ? { ...o, name: e.target.value } : o)),
-                      })
-                    }
-                    className={inputClass}
-                  />
-                  <span
-                    className={`w-16 shrink-0 text-right text-xs tabular-nums ${z.declared !== null && z.declared !== found ? "font-semibold text-amber-700" : "text-muted-foreground"}`}
-                    title={z.declared !== null ? t("declared", { count: z.declared }) : undefined}
-                  >
-                    {z.declared !== null ? `${found} / ${z.declared}` : found}
-                  </span>
+                <li key={z.key} className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={z.color}
+                      aria-label={t("zoneColor")}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          zones: draft.zones.map((o) => (o.key === z.key ? { ...o, color: e.target.value.toUpperCase() } : o)),
+                        })
+                      }
+                      className="h-7 w-7 shrink-0 cursor-pointer rounded border border-border bg-transparent p-0"
+                    />
+                    <input
+                      value={z.name}
+                      aria-label={t("zoneName")}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          zones: draft.zones.map((o) => (o.key === z.key ? { ...o, name: e.target.value } : o)),
+                        })
+                      }
+                      className={inputClass}
+                    />
+                    <span
+                      className={`w-16 shrink-0 text-right text-xs tabular-nums ${z.declared !== null && z.declared !== found ? "font-semibold text-amber-700" : "text-muted-foreground"}`}
+                      title={z.declared !== null ? t("declared", { count: z.declared }) : undefined}
+                    >
+                      {z.declared !== null ? `${found} / ${z.declared}` : found}
+                    </span>
+                  </div>
+                  <div className="pl-9">
+                    <select
+                      value={z.view ?? ""}
+                      aria-label={t("zoneView")}
+                      onChange={(e) =>
+                        setDraft({
+                          ...draft,
+                          zones: draft.zones.map((o) =>
+                            o.key === z.key ? { ...o, view: readView(e.target.value) } : o,
+                          ),
+                        })
+                      }
+                      className={inputClass}
+                    >
+                      <option value="">{t("zoneViewFull")}</option>
+                      {SEAT_VIEWS.map((v) => (
+                        <option key={v} value={v}>
+                          {viewLabel(v, locale)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </li>
               );
             })}

@@ -11,6 +11,8 @@ import type { SeatDef, SeatLayout, SeatMark } from "../layout";
 
 export const ROUGEMONT_PLAN_SLUG = "rougemont-eglise";
 
+export const ROUGEMONT_CAT2_COLOR = "#F7B7B7";
+
 const PREMIUM = "PREMIUM";
 const CAT1 = "CAT1";
 const CAT2 = "CAT2";
@@ -122,8 +124,8 @@ export const rougemontLayout: SeatLayout = {
   zones: [
     { key: PREMIUM, color: "#E13FE3", name: { fr: "Premium", en: "Premium", de: "Premium", it: "Premium" } },
     { key: CAT1, color: "#FFF59D", name: { fr: "Catégorie 1", en: "Category 1", de: "Kategorie 1", it: "Categoria 1" } },
-    { key: CAT2, color: "#F08A8A", name: { fr: "Catégorie 2", en: "Category 2", de: "Kategorie 2", it: "Categoria 2" } },
-    { key: CAT3, color: "#9FD4F5", name: { fr: "Catégorie 3", en: "Category 3", de: "Kategorie 3", it: "Categoria 3" } },
+    { key: CAT2, color: ROUGEMONT_CAT2_COLOR, view: "partial", name: { fr: "Catégorie 2", en: "Category 2", de: "Kategorie 2", it: "Categoria 2" } },
+    { key: CAT3, color: "#9FD4F5", view: "none", name: { fr: "Catégorie 3", en: "Category 3", de: "Kategorie 3", it: "Categoria 3" } },
   ],
   sections: [
     { key: "NEF", name: { fr: "Nef", en: "Nave", de: "Schiff", it: "Navata" } },

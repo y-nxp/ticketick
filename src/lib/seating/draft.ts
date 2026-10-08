@@ -1,5 +1,5 @@
 import type { Translated } from "@/lib/types";
-import type { SeatLayout } from "./layout";
+import { readView, type SeatLayout } from "./layout";
 import { seatKey, type DraftSeat, type PlanDraft } from "./detect";
 
 /**
@@ -86,6 +86,7 @@ export function layoutToDraft(layout: SeatLayout): PlanDraft {
       name: z.name.fr,
       declared: null,
       i18n: z.name,
+      ...(readView(z.view) ? { view: readView(z.view) } : {}),
     })),
     sections: layout.sections.map((sec) => ({ key: sec.key, name: sec.name.fr, i18n: sec.name })),
     marks: layout.marks.map((m) => ({
@@ -154,7 +155,12 @@ export function draftToLayout(draft: PlanDraft, { keepUnused = false } = {}): Se
     seatSize: SEAT_SIZE,
     zones: draft.zones
       .filter((z) => keepUnused || usedZones.has(z.key))
-      .map((z) => ({ key: z.key, name: translated(z.name, z.i18n), color: z.color })),
+      .map((z) => ({
+        key: z.key,
+        name: translated(z.name, z.i18n),
+        color: z.color,
+        ...(readView(z.view) ? { view: readView(z.view) } : {}),
+      })),
     sections: draft.sections
       .filter((s) => keepUnused || usedSections.has(s.key))
       .map((s) => ({ key: s.key, name: translated(s.name, s.i18n) })),

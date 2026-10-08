@@ -13,6 +13,7 @@
  */
 
 import type { Translated } from "@/lib/types";
+import type { SeatView } from "./layout";
 
 export interface PlanRaster {
   data: Uint8ClampedArray;
@@ -53,6 +54,7 @@ export interface DraftZone extends Localized {
   name: string;
   /** Nombre de places annoncé par la légende, pour contrôle. */
   declared: number | null;
+  view?: SeatView;
 }
 
 export interface DraftSection extends Localized {

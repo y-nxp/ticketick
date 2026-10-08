@@ -17,10 +17,12 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import {
+  ROUGEMONT_CAT2_COLOR,
   ROUGEMONT_PLAN_SLUG,
   SIDE_MARKS,
   rougemontLayout,
 } from "../src/lib/seating/plans/rougemont";
+import { viewLabel, type SeatView } from "../src/lib/seating/layout";
 
 const prisma = new PrismaClient();
 
@@ -1505,6 +1507,65 @@ async function countInviteSeats(organizerId: string): Promise<string> {
   return `Places invités :\n    ${lines.join("\n    ")}`;
 }
 
+/**
+ * Catégories 2 et 3 de Rougemont : visibilité partielle et nulle, annoncées
+ * sur le plan et sur le billet ; catégorie 2 éclaircie. Les billets déjà
+ * émis reçoivent la mention à la suite de leur place.
+ */
+async function markRougemontViews(): Promise<string> {
+  const plan = await prisma.seatPlan.findUnique({
+    where: { slug: ROUGEMONT_PLAN_SLUG },
+    select: { id: true, layout: true },
+  });
+  const layout = plan?.layout as unknown as typeof rougemontLayout | undefined;
+  if (!plan || !layout || !Array.isArray(layout.zones)) return "Visibilité Rougemont : plan absent.";
+  const views: Record<string, SeatView> = { CAT2: "partial", CAT3: "none" };
+  const zones = layout.zones.map((z) => {
+    const view = views[z.key];
+    if (!view) return z;
+    const color = z.key === "CAT2" && z.color.toUpperCase() === "#F08A8A" ? ROUGEMONT_CAT2_COLOR : z.color;
+    return { ...z, color, view };
+  });
+  await prisma.seatPlan.update({
+    where: { id: plan.id },
+    data: { layout: { ...layout, zones } as unknown as Prisma.InputJsonValue },
+  });
+
+  const tickets = await prisma.$queryRaw<
+    { id: string; seatLabel: string; zone: string; locale: string }[]
+  >`
+    SELECT t.id, t."seatLabel", ss.zone, o.locale
+    FROM "Ticket" t
+    JOIN "TicketType" tt ON tt.id = t."ticketTypeId"
+    JOIN "EventSession" s ON s.id = tt."sessionId"
+    JOIN "SessionSeat" ss ON ss."sessionId" = s.id AND ss."seatKey" = t."seatKey"
+    JOIN "Order" o ON o.id = t."orderId"
+    WHERE s."seatPlanId" = ${plan.id} AND ss.zone IN ('CAT2', 'CAT3') AND t."seatLabel" IS NOT NULL
+  `;
+  let relabelled = 0;
+  for (const ticket of tickets) {
+    const note = viewLabel(views[ticket.zone], ticket.locale);
+    if (!note || ticket.seatLabel.endsWith(note)) continue;
+    await prisma.ticket.update({
+      where: { id: ticket.id },
+      data: { seatLabel: `${ticket.seatLabel} · ${note}` },
+    });
+    relabelled += 1;
+  }
+  return `Visibilité Rougemont : catégories 2 et 3 annoncées, ${relabelled} billet(s) complété(s).`;
+}
+
+/** Ouverture des portes 30 minutes avant chaque séance, imprimée sur le billet. */
+async function openDoors(organizerId: string): Promise<string> {
+  const count = await prisma.$executeRaw`
+    UPDATE "EventSession" s
+    SET "doorsAt" = s."startsAt" - interval '30 minutes'
+    FROM "Event" e
+    WHERE e.id = s."eventId" AND e."organizerId" = ${organizerId} AND s."doorsAt" IS NULL
+  `;
+  return `Ouverture des portes : ${count} séance(s), 30 minutes avant le début.`;
+}
+
 async function main() {
   const existing = await prisma.organizer.findUnique({
     where: { slug: ORG_SLUG },
@@ -1536,6 +1597,8 @@ async function main() {
   await once("gnymf-2026/relecture-2026-10-07", () => applyReview20261007(id));
   await once("gnymf-2026/invitations-pagano", () => reservePagano(id));
   await once("gnymf-2026/places-invites", () => countInviteSeats(id));
+  await once("gnymf-2026/visibilite-rougemont", markRougemontViews);
+  await once("gnymf-2026/ouverture-portes", () => openDoors(id));
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );

@@ -8,11 +8,18 @@ import { t, type Translated } from "@/lib/types";
  * les met à l'échelle via `viewBox`.
  */
 
+/** Vue réduite ou nulle sur la scène. Absente : bonne visibilité, rien à signaler. */
+export const SEAT_VIEWS = ["partial", "none"] as const;
+
+export type SeatView = (typeof SEAT_VIEWS)[number];
+
 export interface SeatZone {
   key: string;
   name: Translated;
   /** Couleur de la catégorie, reprise du plan fourni par la salle. */
   color: string;
+  /** Annoncée sur le plan, à l'achat et sur le billet. */
+  view?: SeatView;
 }
 
 export interface SeatSection {
@@ -68,24 +75,48 @@ const WORDS: Record<string, { row: string; seat: string }> = {
   es: { row: "Fila", seat: "Asiento" },
 };
 
+const VIEW_WORDS: Record<string, Record<SeatView, string>> = {
+  fr: { partial: "Visibilité partielle", none: "Sans visibilité" },
+  en: { partial: "Restricted view", none: "No view of the stage" },
+  de: { partial: "Eingeschränkte Sicht", none: "Keine Sicht auf die Bühne" },
+  it: { partial: "Visibilità parziale", none: "Senza visibilità" },
+  es: { partial: "Visibilidad parcial", none: "Sin visibilidad" },
+};
+
 function tr(value: Translated, locale: string): string {
   return t(value, locale);
 }
 
-/** Libellé imprimé sur le billet : « Nef · Rang 5 · Place 9 ». */
+/** Écrit côté serveur aussi (billets, courriels) : pas de messages next-intl ici. */
+export function viewLabel(view: SeatView | undefined, locale: string): string | null {
+  if (!view) return null;
+  return (VIEW_WORDS[locale] ?? VIEW_WORDS.fr)[view] ?? null;
+}
+
+export function readView(value: unknown): SeatView | undefined {
+  return SEAT_VIEWS.includes(value as SeatView) ? (value as SeatView) : undefined;
+}
+
+/**
+ * Libellé imprimé sur le billet : « Nef · Rang 5 · Place 9 », suivi de la
+ * visibilité quand elle est réduite.
+ */
 export function seatLabel(
   layout: SeatLayout,
   key: string,
   locale: string,
+  { view = true }: { view?: boolean } = {},
 ): string {
   const seat = layout.seats.find((s) => s.key === key);
   if (!seat) return key;
   const section = layout.sections.find((s) => s.key === seat.section);
+  const zone = view ? layout.zones.find((z) => z.key === seat.zone) : undefined;
   const w = WORDS[locale] ?? WORDS.fr;
   return [
     section ? tr(section.name, locale) : null,
     `${w.row} ${seat.row}`,
     `${w.seat} ${seat.number}`,
+    viewLabel(readView(zone?.view), locale),
   ]
     .filter(Boolean)
     .join(" · ");

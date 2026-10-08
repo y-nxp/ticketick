@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import * as z from "zod";
 import { requireAdmin } from "@/lib/auth/dal";
 import { prisma } from "@/lib/prisma";
-import { readLayout } from "@/lib/seating/layout";
+import { readLayout, SEAT_VIEWS } from "@/lib/seating/layout";
 import { failure, readText, slugify, success, type FormState } from "./form";
 
 /**
@@ -40,6 +40,7 @@ const layoutSchema = z
           key: z.string().regex(KEY),
           name,
           color: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+          view: z.enum(SEAT_VIEWS).optional(),
         }),
       )
       .min(1)

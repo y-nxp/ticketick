@@ -100,7 +100,7 @@
     "seatZonesNumbered": "{count, plural, one {categoría {list}} other {categorías {list}}}",
     "seatSelected": "Tu selección",
     "seatTaken": "Ocupado",
-    "seatFree": "Asiento libre",
+    "seatFree": "Asiento disponible",
     "seatNone": "Ningún asiento seleccionado.",
     "seatTariff": "Tarifa",
     "seatRemove": "Quitar este asiento",
