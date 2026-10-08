@@ -406,11 +406,50 @@
       "unavailable": "Este enlace ya no se puede pagar. Recargue la página.",
       "cardMissing": "El pago con tarjeta no está disponible para este organizador. Contacte con él.",
       "failed": "No se ha podido abrir el pago. Vuelva a intentarlo en un momento."
-    }
+    },
+    "changeTitle": "Diferencia a pagar",
+    "changeIntro": "Por tus nuevas localidades de abajo. Tus entradas actuales siguen siendo válidas hasta el pago; después recibirás las nuevas.",
+    "changeClosedText": "El plazo de pago ha vencido: tus localidades actuales siguen siendo tuyas, sin cambios."
   },
   "notFound": {
     "title": "Página no encontrada",
     "body": "Esta página no existe o se ha movido. Puede que el enlace esté incompleto.",
     "home": "Ver los eventos"
+  },
+  "change": {
+    "title": "Cambiar de localidades",
+    "intro": "Pedido {reference}. Elige una de tus localidades en la lista y luego toca la nueva en el plano.",
+    "validUntil": "Enlace válido hasta el {date}, para un solo cambio.",
+    "pending": "Un cambio anterior sigue pendiente de pago. Si confirmas una nueva elección, lo sustituye.",
+    "yourSeats": "Tus localidades",
+    "hint": "Elige la localidad que quieres cambiar y luego la nueva en el plano.",
+    "refused": "Esta localidad no está disponible con tu entrada.",
+    "summary": "Tu cambio",
+    "nothingYet": "Todavía no has elegido ninguna localidad nueva.",
+    "same": "Mismo precio",
+    "due": "A pagar",
+    "free": "Sin suplemento",
+    "noRefund": "Una localidad más barata no se reembolsa.",
+    "keepNote": "Tus entradas actuales siguen siendo válidas hasta que pagues la diferencia.",
+    "confirmFree": "Confirmar el cambio",
+    "confirmPay": "Confirmar y pagar {amount}",
+    "reset": "Borrar mis elecciones",
+    "saving": "Guardando…",
+    "doneTitle": "Cambio confirmado",
+    "doneText": "Tus nuevas entradas se han enviado a {email}. Las antiguas ya no son válidas.",
+    "download": "Descargar las entradas (PDF)",
+    "usedTitle": "Este enlace ya se ha usado",
+    "usedText": "Tus localidades se han cambiado. Para cualquier otra solicitud, escríbenos a {contact}.",
+    "expiredTitle": "Este enlace ya no es válido",
+    "expiredText": "Para cambiar tus localidades, escríbenos a {contact}.",
+    "errors": {
+      "seatsUnavailable": "Una de las localidades elegidas acaba de ocuparse. Elige otra.",
+      "soldOut": "Esta tarifa está agotada para la localidad elegida. Elige otra.",
+      "expired": "Este enlace ya no es válido. Recarga la página.",
+      "used": "Este enlace ya se ha usado. Recarga la página.",
+      "retry": "No se ha podido guardar el cambio. Inténtalo de nuevo en un momento.",
+      "failed": "No se ha podido hacer el cambio. Recarga la página e inténtalo de nuevo."
+    },
+    "current": "Tu localidad actual"
   }
 }

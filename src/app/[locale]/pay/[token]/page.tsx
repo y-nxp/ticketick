@@ -71,6 +71,7 @@ export default async function PayPage({
   const fmt = intlLocale(locale);
   const amount = formatPrice(charge.amountCents, fmt, charge.currency);
   const payable = linkIsPayable(charge);
+  const change = charge.replacesTicketIds.length > 0;
   const provider = payable
     ? ((await cardAccountForOrder(charge.order.reference))?.provider ?? "other")
     : "other";
@@ -101,17 +102,23 @@ export default async function PayPage({
           ) : payable ? (
             <>
               <h1 className="text-2xl font-extrabold tracking-tight">
-                {t("title")}
+                {change ? t("changeTitle") : t("title")}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                {t("intro", { organizer: organizer?.name ?? "" })}
+                {change
+                  ? t("changeIntro")
+                  : t("intro", { organizer: organizer?.name ?? "" })}
               </p>
             </>
           ) : (
             <Status
               icon="off"
               title={t("closedTitle")}
-              text={t("closedText", { organizer: organizer?.name ?? "" })}
+              text={
+                change
+                  ? t("changeClosedText")
+                  : t("closedText", { organizer: organizer?.name ?? "" })
+              }
             />
           )}
 

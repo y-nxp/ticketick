@@ -26,6 +26,7 @@ import { prisma } from "@/lib/prisma";
 import { hashHoldToken } from "./create-order";
 import { lockOrder, newPayToken, releaseTickets } from "./edit-order";
 import { recordResellerSale } from "./reseller-ledger";
+import { releaseReplacedTickets } from "./seat-change";
 
 /**
  * Règlements ouverts depuis l'admin : lien de paiement par carte, paiement
@@ -68,6 +69,7 @@ async function settlePayment(input: {
         status: true,
         amountCents: true,
         ticketIds: true,
+        replacesTicketIds: true,
         orderId: true,
       },
     });
@@ -97,6 +99,9 @@ async function settlePayment(input: {
       where: { id: { in: charge.ticketIds }, status: "PENDING" },
       data: { status: "VALID" },
     });
+    if (charge.replacesTicketIds.length > 0) {
+      await releaseReplacedTickets(tx, charge.orderId, charge.replacesTicketIds);
+    }
     const order = await tx.order.update({
       where: { id: charge.orderId },
       data: { totalCents: { increment: charge.amountCents } },
@@ -279,6 +284,7 @@ const payChargeSelect = {
   provider: true,
   providerRef: true,
   ticketIds: true,
+  replacesTicketIds: true,
   order: {
     select: {
       id: true,

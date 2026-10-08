@@ -516,12 +516,12 @@ model EventSession {
 
   /// Jauge de la salle pour cette séance, toutes catégories confondues.
   /// Absente : seuls les contingents de chaque tarif limitent la vente.
-  capacity Int?
+  capacity    Int?
   /// Places déjà retenues (tous tarifs). Sert à faire respecter `capacity`.
-  sold     Int  @default(0)
+  sold        Int  @default(0)
   /// Placement libre : places mises de côté pour les invités, en plus de `capacity`.
   /// Une réservation « invités » les fait passer dans la jauge.
-  inviteSeats Int @default(0)
+  inviteSeats Int  @default(0)
 
   /// Surcharge les moyens du spectacle. `null` = on hérite.
   acceptCard Boolean?
@@ -841,14 +841,15 @@ model Order {
   totalCents    Int
   currency      String @default("CHF")
 
-  items     OrderItem[]
-  discounts OrderDiscount[]
-  options   OrderOption[]
-  tickets   Ticket[]
-  payment   Payment?
-  charges   OrderCharge[]
-  ledger    ResellerLedgerEntry[]
-  seats     SessionSeat[]
+  items       OrderItem[]
+  discounts   OrderDiscount[]
+  options     OrderOption[]
+  tickets     Ticket[]
+  payment     Payment?
+  charges     OrderCharge[]
+  changeLinks OrderChangeLink[]
+  ledger      ResellerLedgerEntry[]
+  seats       SessionSeat[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1018,33 +1019,52 @@ enum ChargeStatus {
 /// Règlement d'une modification faite depuis l'admin. `Order.totalCents`
 /// suit l'encaissé net : il ne bouge qu'au règlement effectif.
 model OrderCharge {
-  id          String       @id @default(cuid())
-  order       Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId     String
+  id                String       @id @default(cuid())
+  order             Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId           String
   /// Référence donnée au client et au prestataire : TT-ABCD-EFGH-2.
-  number      String       @unique
-  kind        ChargeKind
-  method      ChargeMethod
-  status      ChargeStatus @default(OPEN)
-  amountCents Int
-  currency    String       @default("CHF")
+  number            String       @unique
+  kind              ChargeKind
+  method            ChargeMethod
+  status            ChargeStatus @default(OPEN)
+  amountCents       Int
+  currency          String       @default("CHF")
   /// Lien de paiement : passé ce délai, les places sont rendues.
-  dueAt       DateTime?
+  dueAt             DateTime?
   /// Empreinte SHA-256 du jeton du lien : le lien seul ouvre le paiement.
-  tokenHash   String?      @unique
-  provider    String?
-  providerRef String?
+  tokenHash         String?      @unique
+  provider          String?
+  providerRef       String?
   /// Billets ajoutés ou retirés par ce règlement.
-  ticketIds   String[]     @default([])
+  ticketIds         String[]     @default([])
   /// Places prises sur les invitations : y retournent si le lien expire.
-  fromInvites Boolean      @default(false)
-  createdById String?
-  createdAt   DateTime     @default(now())
-  settledAt   DateTime?
+  fromInvites       Boolean      @default(false)
+  /// Changement de places : billets rendus une fois la différence payée.
+  replacesTicketIds String[]     @default([])
+  createdById       String?
+  createdAt         DateTime     @default(now())
+  settledAt         DateTime?
 
   @@index([orderId])
   @@index([status, dueAt])
   @@index([provider, providerRef])
+}
+
+/// Lien envoyé au client pour choisir lui-même d'autres places. Sans
+/// remboursement : une place moins chère ne rend rien, une plus chère se paie.
+model OrderChangeLink {
+  id          String    @id @default(cuid())
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId     String
+  /// Empreinte SHA-256 du jeton : le lien seul ouvre la page.
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  /// Changement fait (ou différence payée) : le lien ne sert plus.
+  usedAt      DateTime?
+  createdById String?
+  createdAt   DateTime  @default(now())
+
+  @@index([orderId])
 }
 
 /// Reprises de données déjà passées (scripts lancés à chaque déploiement) :

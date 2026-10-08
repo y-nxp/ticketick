@@ -18,7 +18,12 @@ import {
   success,
   type FormState,
 } from "@/lib/admin/form";
-import { payUrlFor, sendCreditNoteEmail, sendPaymentLinkEmail } from "@/lib/email/charge-mail";
+import {
+  payUrlFor,
+  sendCreditNoteEmail,
+  sendPaymentLinkEmail,
+  sendSeatChangeLinkEmail,
+} from "@/lib/email/charge-mail";
 import { sendPaidOrderTickets } from "@/lib/email/ticket-mail";
 import {
   cancelCharge,
@@ -34,6 +39,7 @@ import {
   updateOrderDetails,
   type RefundSettle,
 } from "@/lib/orders/edit-order";
+import { changePath, createChangeLink } from "@/lib/orders/seat-change";
 import { prisma } from "@/lib/prisma";
 
 /** Commande visible par l'acteur : un organisateur ne touche qu'aux siennes. */
@@ -299,6 +305,30 @@ export async function chargeAction(
   }
   refresh(owned.order.id);
   return success(note);
+}
+
+export type ChangeLinkState =
+  | { ok: true; url: string; sent: boolean }
+  | { ok: false; error: string }
+  | undefined;
+
+export async function sendChangeLinkAction(
+  _prev: ChangeLinkState,
+  formData: FormData,
+): Promise<ChangeLinkState> {
+  const owned = await ownedOrder(readText(formData, "orderId"));
+  if (!owned) return { ok: false, error: "notFound" };
+  if (!hasEmail(owned.order.email)) return { ok: false, error: "emailMissing" };
+  const link = await createChangeLink({ orderId: owned.order.id, actorId: owned.user.id });
+  if (!link.ok) return { ok: false, error: link.error === "empty" ? "changeNothing" : link.error };
+  const url = payUrlFor(changePath(link.token, owned.order.locale));
+  const sent = await sendSeatChangeLinkEmail({
+    orderId: owned.order.id,
+    url,
+    expiresAt: link.expiresAt,
+  });
+  refresh(owned.order.id);
+  return { ok: true, url, sent: sent.sent };
 }
 
 export async function resendTicketsAction(

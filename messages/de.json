@@ -1604,7 +1604,9 @@
         "moved": "Plätze geändert. Senden Sie die Tickets erneut an den Kunden.",
         "settled": "Zahlung erfasst.",
         "settledSent": "Zahlung erfasst, Tickets gesendet.",
-        "chargeCancelled": "Zahlung storniert, Plätze freigegeben."
+        "chargeCancelled": "Zahlung storniert, Plätze freigegeben.",
+        "changeLinkSent": "Link an den Kunden gesendet.",
+        "changeLinkNotSent": "Link erstellt, aber die E-Mail wurde nicht gesendet: Kopieren Sie ihn unten."
       },
       "errors": {
         "notFound": "Bestellung, Ticket oder Platz nicht gefunden.",
@@ -1625,8 +1627,20 @@
         "retry": "Gleichzeitig wurden Plätze vergeben. Versuchen Sie es erneut.",
         "invalid": "Unvollständiges Formular, laden Sie die Seite neu.",
         "quantity": "Ungültige Anzahl Plätze.",
-        "ticketsNotSent": "Das Senden der Tickets ist fehlgeschlagen."
-      }
+        "ticketsNotSent": "Das Senden der Tickets ist fehlgeschlagen.",
+        "changeNothing": "Kein Ticket zu ändern: Es braucht gültige nummerierte Plätze für ein kommendes Konzert."
+      },
+      "changeLink": "Platzwechsel durch den Kunden",
+      "changeLinkHint": "Der Kunde erhält einen Link, um selbst andere Plätze auf dem Saalplan zu wählen. Ein teurerer Platz wird per Karte bezahlt (nur die Differenz); ein günstigerer Platz wird nicht erstattet. Höchstens 14 Tage gültig, bis zum Konzert, für eine einzige Änderung.",
+      "changeLinkNoCard": "Für diesen Veranstalter ist keine Kartenzahlung eingerichtet: Nur Änderungen ohne Aufpreis sind möglich.",
+      "changeLinkSend": "Link an den Kunden senden",
+      "changeLinkReplace": "Es ist bereits ein Link offen. Durch einen neuen ersetzen? Der alte funktioniert dann nicht mehr.",
+      "changeLinkOpen": "Link gesendet am {sent}, gültig bis {date}.",
+      "changeLinkUsed": "Der Kunde hat seine Plätze am {date} gewechselt.",
+      "changeLinkExpired": "Der letzte Link ist am {date} abgelaufen.",
+      "changeLinkUrl": "Link für den Platzwechsel",
+      "copy": "Kopieren",
+      "copied": "Kopiert"
     }
   },
   "pay": {
@@ -1647,7 +1661,10 @@
       "unavailable": "Dieser Link kann nicht mehr bezahlt werden. Laden Sie die Seite neu.",
       "cardMissing": "Kartenzahlung ist für diesen Veranstalter nicht verfügbar. Bitte kontaktieren Sie ihn.",
       "failed": "Die Zahlung konnte nicht geöffnet werden. Versuchen Sie es gleich noch einmal."
-    }
+    },
+    "changeTitle": "Zu bezahlende Differenz",
+    "changeIntro": "Für Ihre neuen Plätze unten. Ihre aktuellen Tickets bleiben bis zur Zahlung gültig; danach erhalten Sie die neuen.",
+    "changeClosedText": "Die Zahlungsfrist ist abgelaufen: Ihre aktuellen Plätze bleiben unverändert Ihre."
   },
   "notFound": {
     "title": "Seite nicht gefunden",
@@ -1826,5 +1843,41 @@
       "newQr": "Neuer QR-Code",
       "refresh": "Zahlung prüfen"
     }
+  },
+  "change": {
+    "title": "Plätze ändern",
+    "intro": "Bestellung {reference}. Wählen Sie einen Ihrer Plätze in der Liste und tippen Sie dann auf den neuen Platz im Saalplan.",
+    "validUntil": "Link gültig bis {date}, für eine einzige Änderung.",
+    "pending": "Eine frühere Änderung wartet noch auf die Zahlung. Wenn Sie eine neue Wahl bestätigen, ersetzt sie diese.",
+    "yourSeats": "Ihre Plätze",
+    "hint": "Wählen Sie den zu ändernden Platz und dann den neuen im Saalplan.",
+    "refused": "Dieser Platz ist mit Ihrem Ticket nicht verfügbar.",
+    "summary": "Ihre Änderung",
+    "nothingYet": "Noch kein neuer Platz gewählt.",
+    "same": "Gleicher Preis",
+    "due": "Zu bezahlen",
+    "free": "Ohne Aufpreis",
+    "noRefund": "Ein günstigerer Platz wird nicht erstattet.",
+    "keepNote": "Ihre aktuellen Tickets bleiben gültig, bis die Differenz bezahlt ist.",
+    "confirmFree": "Änderung bestätigen",
+    "confirmPay": "Bestätigen und {amount} bezahlen",
+    "reset": "Auswahl löschen",
+    "saving": "Wird gespeichert…",
+    "doneTitle": "Änderung bestätigt",
+    "doneText": "Ihre neuen Tickets wurden an {email} gesendet. Die alten sind nicht mehr gültig.",
+    "download": "Tickets herunterladen (PDF)",
+    "usedTitle": "Dieser Link wurde bereits verwendet",
+    "usedText": "Ihre Plätze wurden geändert. Für eine weitere Anfrage schreiben Sie uns an {contact}.",
+    "expiredTitle": "Dieser Link ist nicht mehr gültig",
+    "expiredText": "Um Ihre Plätze zu ändern, schreiben Sie uns an {contact}.",
+    "errors": {
+      "seatsUnavailable": "Einer der gewählten Plätze wurde soeben vergeben. Bitte wählen Sie einen anderen.",
+      "soldOut": "Dieser Tarif ist für den gewählten Platz ausverkauft. Bitte wählen Sie einen anderen.",
+      "expired": "Dieser Link ist nicht mehr gültig. Laden Sie die Seite neu.",
+      "used": "Dieser Link wurde bereits verwendet. Laden Sie die Seite neu.",
+      "retry": "Die Änderung konnte nicht gespeichert werden. Versuchen Sie es gleich noch einmal.",
+      "failed": "Die Änderung war nicht möglich. Laden Sie die Seite neu und versuchen Sie es erneut."
+    },
+    "current": "Ihr aktueller Platz"
   }
 }

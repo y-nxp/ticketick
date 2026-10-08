@@ -227,12 +227,15 @@ export function SeatLegend({
   locale,
   zonePrices,
   uniformPrice,
+  mineLabel,
 }: {
   layout: SeatLayout;
   locale: string;
   zonePrices: Record<string, string>;
   /** Salle entière au même prix : une seule pastille « place libre ». */
   uniformPrice?: string;
+  /** Places déjà à l'acheteur (état `mine`), quand le plan en montre. */
+  mineLabel?: string;
 }) {
   const te = useTranslations("event");
   const swatch = "inline-block size-3.5 shrink-0 rounded-[3px] border border-black/20";
@@ -283,6 +286,12 @@ export function SeatLegend({
         <span className={swatch} style={{ background: "var(--primary)" }} />
         {te("seatSelected")}
       </li>
+      {mineLabel ? (
+        <li className="flex items-center gap-2">
+          <span className={swatch} style={{ background: "var(--primary)", opacity: 0.4 }} />
+          {mineLabel}
+        </li>
+      ) : null}
       <li className="flex items-center gap-2">
         <span className={swatch} style={{ background: "#d4d4d8" }} />
         {te("seatTaken")}

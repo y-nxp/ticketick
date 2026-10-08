@@ -91,8 +91,8 @@ function layout(input: {
   title: string;
   paragraphs: string[];
   lines: { event: string; when: string; venue: string; tariff: string; seat: string }[];
-  totalLabel: string;
-  total: string;
+  totalLabel?: string;
+  total?: string;
   button?: { href: string; label: string };
   after: string[];
   closing: string;
@@ -127,10 +127,14 @@ function layout(input: {
     ${paragraphs}
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:8px 0 16px;border-collapse:collapse">
       ${rows}
-      <tr>
+      ${
+        input.totalLabel && input.total
+          ? `<tr>
         <td style="padding:12px 0 0;font-weight:800">${echapper(input.totalLabel)}</td>
         <td style="padding:12px 0 0;text-align:right;font-weight:800">${echapper(input.total)}</td>
-      </tr>
+      </tr>`
+          : ""
+      }
     </table>
     ${button}
     ${after}
@@ -245,6 +249,176 @@ export async function sendCreditNoteEmail(chargeId: string): Promise<{ sent: boo
 export function payUrlFor(path: string): string {
   return `${publicAppOrigin()}${path}`;
 }
+
+/** Lien de changement de places : le client choisit lui-même sur le plan. */
+export async function sendSeatChangeLinkEmail(input: {
+  orderId: string;
+  url: string;
+  expiresAt: Date;
+}): Promise<{ sent: boolean }> {
+  const order = await prisma.order.findUnique({
+    where: { id: input.orderId },
+    select: {
+      email: true,
+      firstName: true,
+      lastName: true,
+      locale: true,
+      reference: true,
+      tickets: {
+        where: {
+          status: "VALID",
+          seatKey: { not: null },
+          ticketType: { session: { startsAt: { gt: new Date() } } },
+        },
+        orderBy: [{ ticketType: { session: { startsAt: "asc" } } }, { seatKey: "asc" }],
+        select: {
+          seatLabel: true,
+          ticketType: {
+            select: {
+              name: true,
+              session: {
+                select: {
+                  startsAt: true,
+                  venue: { select: { name: true, city: true } },
+                  event: {
+                    select: { title: true, organizer: { select: { name: true } } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  const organizer = order?.tickets[0]?.ticketType.session.event.organizer;
+  if (!order?.email || !organizer) return { sent: false };
+
+  const locale = order.locale;
+  const t = byLocale(CHANGE_TEXTES, locale);
+  const name = `${order.firstName} ${order.lastName}`.trim();
+  const lines = order.tickets.map((ticket) => {
+    const session = ticket.ticketType.session;
+    return {
+      event: translate(session.event.title as Translated, locale),
+      when: dateTime(session.startsAt, locale),
+      venue: session.venue ? `${session.venue.name}, ${session.venue.city}` : "",
+      tariff: translate(ticket.ticketType.name as Translated, locale),
+      seat: ticket.seatLabel ?? "",
+    };
+  });
+  const paragraphs = [t.bonjour(name), t.corps(order.reference)];
+  const after = [t.difference, t.anciens, t.echeance(dateTime(input.expiresAt, locale)), t.questions];
+  const html = layout({
+    locale,
+    organizer: organizer.name,
+    title: t.titre,
+    paragraphs,
+    lines,
+    button: { href: input.url, label: t.bouton },
+    after,
+    closing: t.salutations,
+  });
+  const text = [
+    ...paragraphs,
+    "",
+    ...lines.map((l) => [l.event, l.when, l.venue, l.tariff, l.seat].filter(Boolean).join(" — ")),
+    "",
+    `${t.bouton} : ${input.url}`,
+    "",
+    ...after,
+    "",
+    t.salutations,
+    organizer.name,
+  ].join("\n");
+
+  return envoyer({
+    to: order.email,
+    subject: t.sujet(organizer.name, order.reference),
+    text,
+    html,
+    fromName: organizer.name,
+    etiquette: "changement de places",
+  });
+}
+
+const CHANGE_TEXTES = {
+  fr: {
+    sujet: (org: string, ref: string) => `${org} — changer vos places (${ref})`,
+    titre: "Changer de places",
+    bonjour: (nom: string) => (nom ? `Bonjour ${nom},` : "Bonjour,"),
+    corps: (ref: string) =>
+      `Vous pouvez choisir vous-même d'autres places pour votre commande ${ref}, directement sur le plan de salle. Vos places actuelles :`,
+    bouton: "Choisir mes nouvelles places",
+    difference:
+      "Pour une place plus chère, vous ne payez que la différence, par carte. Une place moins chère n'est pas remboursée.",
+    anciens:
+      "Vos billets actuels restent valables jusqu'au changement. Vous recevez ensuite vos nouveaux billets : les anciens ne sont plus acceptés à l'entrée.",
+    echeance: (d: string) => `Ce lien est valable jusqu'au ${d}, pour un seul changement.`,
+    questions: "Une question ? Répondez simplement à ce message.",
+    salutations: "Avec nos meilleures salutations,",
+  },
+  en: {
+    sujet: (org: string, ref: string) => `${org} — change your seats (${ref})`,
+    titre: "Change your seats",
+    bonjour: (nom: string) => (nom ? `Hello ${nom},` : "Hello,"),
+    corps: (ref: string) =>
+      `You can choose other seats for your order ${ref} yourself, directly on the seating plan. Your current seats:`,
+    bouton: "Choose my new seats",
+    difference:
+      "For a more expensive seat, you only pay the difference, by card. A cheaper seat is not refunded.",
+    anciens:
+      "Your current tickets remain valid until the change. You then receive your new tickets: the old ones are no longer accepted at the door.",
+    echeance: (d: string) => `This link is valid until ${d}, for a single change.`,
+    questions: "Any question? Simply reply to this message.",
+    salutations: "Best regards,",
+  },
+  de: {
+    sujet: (org: string, ref: string) => `${org} — Ihre Plätze ändern (${ref})`,
+    titre: "Plätze ändern",
+    bonjour: (nom: string) => (nom ? `Guten Tag ${nom},` : "Guten Tag,"),
+    corps: (ref: string) =>
+      `Sie können für Ihre Bestellung ${ref} selbst andere Plätze wählen, direkt auf dem Saalplan. Ihre aktuellen Plätze:`,
+    bouton: "Meine neuen Plätze wählen",
+    difference:
+      "Für einen teureren Platz bezahlen Sie nur die Differenz, per Karte. Ein günstigerer Platz wird nicht erstattet.",
+    anciens:
+      "Ihre aktuellen Tickets bleiben bis zur Änderung gültig. Danach erhalten Sie Ihre neuen Tickets: Die alten werden am Eingang nicht mehr akzeptiert.",
+    echeance: (d: string) => `Dieser Link ist bis ${d} gültig, für eine einzige Änderung.`,
+    questions: "Fragen? Antworten Sie einfach auf diese Nachricht.",
+    salutations: "Freundliche Grüsse",
+  },
+  it: {
+    sujet: (org: string, ref: string) => `${org} — cambiare i vostri posti (${ref})`,
+    titre: "Cambiare posti",
+    bonjour: (nom: string) => (nom ? `Buongiorno ${nom},` : "Buongiorno,"),
+    corps: (ref: string) =>
+      `Potete scegliere voi stessi altri posti per il vostro ordine ${ref}, direttamente sulla pianta della sala. I vostri posti attuali:`,
+    bouton: "Scegliere i miei nuovi posti",
+    difference:
+      "Per un posto più caro pagate solo la differenza, con carta. Un posto meno caro non viene rimborsato.",
+    anciens:
+      "I vostri biglietti attuali restano validi fino al cambio. Riceverete poi i nuovi biglietti: quelli vecchi non saranno più accettati all'ingresso.",
+    echeance: (d: string) => `Questo link è valido fino al ${d}, per un solo cambio.`,
+    questions: "Domande? Rispondete semplicemente a questo messaggio.",
+    salutations: "Cordiali saluti,",
+  },
+  es: {
+    sujet: (org: string, ref: string) => `${org} — cambiar tus localidades (${ref})`,
+    titre: "Cambiar de localidades",
+    bonjour: (nom: string) => (nom ? `Hola, ${nom}:` : "Hola:"),
+    corps: (ref: string) =>
+      `Puedes elegir tú mismo otras localidades para tu pedido ${ref}, directamente en el plano de la sala. Tus localidades actuales:`,
+    bouton: "Elegir mis nuevas localidades",
+    difference:
+      "Por una localidad más cara solo pagas la diferencia, con tarjeta. Una localidad más barata no se reembolsa.",
+    anciens:
+      "Tus entradas actuales siguen siendo válidas hasta el cambio. Después recibirás tus nuevas entradas: las antiguas ya no se aceptarán en la entrada.",
+    echeance: (d: string) => `Este enlace es válido hasta el ${d}, para un solo cambio.`,
+    questions: "¿Alguna pregunta? Responde a este mensaje.",
+    salutations: "Un cordial saludo,",
+  },
+};
 
 const LINK_TEXTES = {
   fr: {

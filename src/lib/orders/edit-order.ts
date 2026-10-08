@@ -128,7 +128,7 @@ export async function lockOrder(
   return tx.order.findUniqueOrThrow({ where: { id: row.id }, select: orderSelect });
 }
 
-function assertEditable(order: LockedOrder, changesSeats: boolean): void {
+export function assertEditable(order: LockedOrder, changesSeats: boolean): void {
   if (order.status !== "PAID") throw new EditFailure("notEditable");
   // La commission du revendeur est figée à la vente : ses commandes ne
   // changent ni de places ni de montant ici.
@@ -272,7 +272,7 @@ export function newPayToken(): { token: string; tokenHash: string } {
   return { token, tokenHash: hashHoldToken(token) };
 }
 
-async function run<T>(
+export async function run<T>(
   fn: () => Promise<T>,
   fromInvites = false,
 ): Promise<T | { ok: false; error: EditError; ticketTypeId?: string }> {

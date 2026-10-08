@@ -128,6 +128,11 @@ export async function getOrderEditContext(orderId: string, locale: string) {
           settledAt: true,
         },
       },
+      changeLinks: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { createdAt: true, expiresAt: true, usedAt: true },
+      },
     },
   });
   if (!order) return null;

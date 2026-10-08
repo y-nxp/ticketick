@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import { Armchair, Mail, MinusCircle, PlusCircle, Save } from "lucide-react";
+import { Armchair, Copy, Mail, MinusCircle, PlusCircle, Save, Shuffle } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox, Field, Select, TextInput } from "@/components/admin/fields";
@@ -14,7 +14,9 @@ import {
   chargeAction,
   removeTicketsAction,
   resendTicketsAction,
+  sendChangeLinkAction,
   updateOrderDetailsAction,
+  type ChangeLinkState,
 } from "@/lib/admin/order-edit-actions";
 import type { FormState } from "@/lib/admin/types";
 import { formatPrice } from "@/lib/utils";
@@ -68,6 +70,7 @@ export interface EditorProps {
   providerRefund: string | null;
   linkAvailable: boolean;
   seatedSessions: { id: string; label: string }[];
+  changeLink: { sent: string; expires: string; used: string | null; expired: boolean } | null;
 }
 
 const PROVIDERS: Record<string, string> = {
@@ -104,6 +107,9 @@ export function OrderEditor(props: EditorProps) {
         <>
           <RemovePanel {...props} />
           <AddPanel {...props} hasEmail={hasEmail} />
+          {props.seatedSessions.length > 0 ? (
+            <ChangeLinkPanel {...props} hasEmail={hasEmail} />
+          ) : null}
         </>
       ) : null}
       {props.charges.length > 0 ? <ChargesPanel {...props} /> : null}
@@ -444,6 +450,89 @@ function AddPanel({
           </Button>
           <Note state={state} />
         </div>
+      </form>
+    </Section>
+  );
+}
+
+function ChangeLinkPanel({
+  orderId,
+  changeLink,
+  linkAvailable,
+  hasEmail,
+}: EditorProps & { hasEmail: boolean }) {
+  const t = useTranslations("admin.orderEdit");
+  const [copied, setCopied] = React.useState(false);
+  const [state, action, pending] = useActionState<ChangeLinkState, FormData>(
+    sendChangeLinkAction,
+    undefined,
+  );
+  const last = changeLink
+    ? changeLink.used
+      ? t("changeLinkUsed", { date: changeLink.used })
+      : changeLink.expired
+        ? t("changeLinkExpired", { date: changeLink.expires })
+        : t("changeLinkOpen", { sent: changeLink.sent, date: changeLink.expires })
+    : null;
+
+  return (
+    <Section title={t("changeLink")}>
+      <form
+        action={action}
+        onSubmit={(e) => {
+          if (changeLink && !changeLink.used && !changeLink.expired) {
+            if (!window.confirm(t("changeLinkReplace"))) e.preventDefault();
+          }
+        }}
+        className="space-y-3"
+      >
+        <input type="hidden" name="orderId" value={orderId} />
+        <p className="text-sm text-muted-foreground">{t("changeLinkHint")}</p>
+        {!linkAvailable ? (
+          <p className="text-xs text-muted-foreground">{t("changeLinkNoCard")}</p>
+        ) : null}
+        {last ? <p className="text-sm">{last}</p> : null}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="submit" variant="outline" disabled={pending || !hasEmail}>
+            <Shuffle className="size-4" />
+            {pending ? t("sending") : t("changeLinkSend")}
+          </Button>
+          {!hasEmail ? (
+            <p className="text-xs text-muted-foreground">{t("linkNeedsEmail")}</p>
+          ) : null}
+          {state && !state.ok ? (
+            <p role="alert" className="text-sm text-destructive">
+              {t(`errors.${state.error}`)}
+            </p>
+          ) : null}
+          {state?.ok ? (
+            <p role="status" className="text-sm text-[var(--success)]">
+              {t(state.sent ? "done.changeLinkSent" : "done.changeLinkNotSent")}
+            </p>
+          ) : null}
+        </div>
+        {state?.ok ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              readOnly
+              value={state.url}
+              aria-label={t("changeLinkUrl")}
+              onFocus={(e) => e.currentTarget.select()}
+              className="h-10 min-w-0 flex-1 rounded-control border border-border bg-background px-3 font-mono text-xs"
+            />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                void navigator.clipboard.writeText(state.url).then(() => setCopied(true));
+              }}
+            >
+              <Copy className="size-4" />
+              {copied ? t("copied") : t("copy")}
+            </Button>
+          </div>
+        ) : null}
       </form>
     </Section>
   );

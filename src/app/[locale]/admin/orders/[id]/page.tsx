@@ -342,6 +342,18 @@ export default async function AdminOrderDetailPage({
             id: s.id,
             label: `${s.label} · ${formatDate(s.startsAt, fmt, short)}`,
           }))}
+          changeLink={
+            edit.order.changeLinks[0]
+              ? {
+                  sent: formatDate(edit.order.changeLinks[0].createdAt, fmt, short),
+                  expires: formatDate(edit.order.changeLinks[0].expiresAt, fmt, short),
+                  used: edit.order.changeLinks[0].usedAt
+                    ? formatDate(edit.order.changeLinks[0].usedAt, fmt, short)
+                    : null,
+                  expired: edit.order.changeLinks[0].expiresAt < new Date(),
+                }
+              : null
+          }
         />
       ) : null}
     </div>

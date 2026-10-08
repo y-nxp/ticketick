@@ -6,6 +6,7 @@ const privatePaths = [
   "/admin",
   "/account",
   "/cart",
+  "/change",
   "/checkout",
   "/door",
   "/embed",

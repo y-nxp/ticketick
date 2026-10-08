@@ -1604,7 +1604,9 @@
         "moved": "Seats changed. Resend the tickets to the customer.",
         "settled": "Payment recorded.",
         "settledSent": "Payment recorded, tickets sent.",
-        "chargeCancelled": "Payment cancelled, seats released."
+        "chargeCancelled": "Payment cancelled, seats released.",
+        "changeLinkSent": "Link sent to the customer.",
+        "changeLinkNotSent": "Link created, but the email was not sent: copy it below."
       },
       "errors": {
         "notFound": "Order, ticket or seat not found.",
@@ -1625,8 +1627,20 @@
         "retry": "Seats were just taken at the same time. Try again.",
         "invalid": "Incomplete form, reload the page.",
         "quantity": "Invalid number of seats.",
-        "ticketsNotSent": "Sending the tickets failed."
-      }
+        "ticketsNotSent": "Sending the tickets failed.",
+        "changeNothing": "No ticket to change: valid numbered seats for an upcoming concert are needed."
+      },
+      "changeLink": "Seat change by the customer",
+      "changeLinkHint": "The customer receives a link to choose other seats on the plan. A more expensive seat is paid by card (the difference only); a cheaper seat is not refunded. Valid for up to 14 days, until the concert, for a single change.",
+      "changeLinkNoCard": "No card payment is set up for this organizer: only changes without a surcharge will go through.",
+      "changeLinkSend": "Send the link to the customer",
+      "changeLinkReplace": "A link is already open. Replace it with a new one? The old one will stop working.",
+      "changeLinkOpen": "Link sent on {sent}, valid until {date}.",
+      "changeLinkUsed": "The customer changed seats on {date}.",
+      "changeLinkExpired": "The last link expired on {date}.",
+      "changeLinkUrl": "Seat change link",
+      "copy": "Copy",
+      "copied": "Copied"
     }
   },
   "pay": {
@@ -1647,7 +1661,10 @@
       "unavailable": "This link can no longer be paid. Reload the page.",
       "cardMissing": "Card payment is not available for this organiser. Please contact them.",
       "failed": "The payment could not be opened. Try again in a moment."
-    }
+    },
+    "changeTitle": "Difference to pay",
+    "changeIntro": "For your new seats below. Your current tickets remain valid until payment; you then receive the new ones.",
+    "changeClosedText": "The payment deadline has passed: your current seats remain yours, unchanged."
   },
   "notFound": {
     "title": "Page not found",
@@ -1826,5 +1843,41 @@
       "newQr": "New QR code",
       "refresh": "Check the payment"
     }
+  },
+  "change": {
+    "title": "Change your seats",
+    "intro": "Order {reference}. Pick one of your seats in the list, then tap the new seat on the plan.",
+    "validUntil": "Link valid until {date}, for a single change.",
+    "pending": "A previous change is still awaiting payment. If you confirm a new choice, it replaces it.",
+    "yourSeats": "Your seats",
+    "hint": "Pick the seat to change, then the new one on the plan.",
+    "refused": "This seat is not available with your ticket.",
+    "summary": "Your change",
+    "nothingYet": "No new seat chosen yet.",
+    "same": "Same price",
+    "due": "To pay",
+    "free": "No surcharge",
+    "noRefund": "A cheaper seat is not refunded.",
+    "keepNote": "Your current tickets remain valid until the difference is paid.",
+    "confirmFree": "Confirm the change",
+    "confirmPay": "Confirm and pay {amount}",
+    "reset": "Clear my choices",
+    "saving": "Saving…",
+    "doneTitle": "Change confirmed",
+    "doneText": "Your new tickets have been sent to {email}. The old ones are no longer valid.",
+    "download": "Download the tickets (PDF)",
+    "usedTitle": "This link has already been used",
+    "usedText": "Your seats have been changed. For any other request, write to us at {contact}.",
+    "expiredTitle": "This link is no longer valid",
+    "expiredText": "To change your seats, write to us at {contact}.",
+    "errors": {
+      "seatsUnavailable": "One of the chosen seats has just been taken. Please choose another.",
+      "soldOut": "This tariff is sold out for the chosen seat. Please choose another.",
+      "expired": "This link is no longer valid. Reload the page.",
+      "used": "This link has already been used. Reload the page.",
+      "retry": "The change could not be saved. Try again in a moment.",
+      "failed": "The change could not be made. Reload the page and try again."
+    },
+    "current": "Your current seat"
   }
 }
