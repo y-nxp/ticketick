@@ -57,7 +57,7 @@ export type EditResult =
 /** Différence due par le client pour des places ajoutées. */
 export type PaymentSettle =
   | { method: "FREE" }
-  | { method: "CASH" | "DOOR" | "TERMINAL"; amountCents: number }
+  | { method: "CASH" | "DOOR" | "TERMINAL" | "TRANSFER"; amountCents: number }
   | { method: "LINK"; amountCents: number; dueAt: Date };
 
 /** Différence rendue au client pour des places retirées. */
@@ -553,6 +553,8 @@ export async function addTicketsTx(
   return { ...charge, ticketIds };
 }
 
+const CASH_PROVIDER = { CASH: "cash", TERMINAL: "terminal", TRANSFER: "transfer" } as const;
+
 /**
  * Règlement des billets émis : encaissé tout de suite en espèces, ou attendu
  * (lien de paiement, paiement sur place). Rien pour une place offerte.
@@ -571,8 +573,8 @@ export async function openPaymentCharge(
   if (settle.method === "FREE" || settle.amountCents <= 0) return {};
 
   const method: ChargeMethod = settle.method;
-  // Le terminal du point de vente encaisse sur le moment, comme les espèces.
-  const cash = method === "CASH" || method === "TERMINAL";
+  // Terminal du point de vente et virement déjà reçu : encaissés, comme les espèces.
+  const cash = method === "CASH" || method === "TERMINAL" || method === "TRANSFER";
   const link = settle.method === "LINK" ? newPayToken() : null;
   const charge = await tx.orderCharge.create({
     data: {
@@ -585,7 +587,7 @@ export async function openPaymentCharge(
       currency: order.currency,
       dueAt: settle.method === "LINK" ? settle.dueAt : null,
       tokenHash: link?.tokenHash ?? null,
-      provider: cash ? (method === "TERMINAL" ? "terminal" : "cash") : null,
+      provider: cash ? CASH_PROVIDER[method as keyof typeof CASH_PROVIDER] : null,
       ticketIds: input.ticketIds,
       fromInvites: input.fromInvites,
       createdById: input.actorId,

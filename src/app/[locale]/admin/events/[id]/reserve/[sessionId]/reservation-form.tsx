@@ -170,6 +170,7 @@ export function ReservationForm({
           >
             <option value="FREE">{t("settleFree")}</option>
             <option value="CASH">{te("settleCash")}</option>
+            <option value="TRANSFER">{te("settleTransfer")}</option>
             <option value="LINK" disabled={!linkAvailable || !hasEmail}>
               {te("settleLink")}
             </option>

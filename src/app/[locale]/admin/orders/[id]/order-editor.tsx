@@ -41,7 +41,7 @@ export interface EditorCharge {
   id: string;
   number: string;
   kind: "PAYMENT" | "REFUND";
-  method: "CASH" | "LINK" | "DOOR" | "TERMINAL" | "CREDIT_NOTE" | "PROVIDER";
+  method: "CASH" | "LINK" | "DOOR" | "TERMINAL" | "TRANSFER" | "CREDIT_NOTE" | "PROVIDER";
   status: "OPEN" | "DONE" | "EXPIRED" | "CANCELLED" | "FAILED";
   amountCents: number;
   due: string | null;
@@ -401,6 +401,7 @@ function AddPanel({
               className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm"
             >
               <option value="CASH">{t("settleCash")}</option>
+              <option value="TRANSFER">{t("settleTransfer")}</option>
               <option value="LINK" disabled={!linkOk}>
                 {t("settleLink")}
               </option>
@@ -432,7 +433,7 @@ function AddPanel({
         {settle === "DOOR" ? (
           <p className="text-xs text-muted-foreground">{t("doorHint")}</p>
         ) : null}
-        {(settle === "CASH" || settle === "FREE") && hasEmail ? (
+        {(settle === "CASH" || settle === "TRANSFER" || settle === "FREE") && hasEmail ? (
           <Checkbox name="sendTickets" label={t("sendTickets")} defaultChecked />
         ) : null}
 

@@ -647,7 +647,8 @@
         "LINK": "Link di pagamento inviato",
         "DOOR": "Da pagare sul posto",
         "CASH": "Pagamento atteso",
-        "TERMINAL": "Pagamento atteso"
+        "TERMINAL": "Pagamento atteso",
+        "TRANSFER": "Pagamento atteso"
       }
     },
     "resellers": {
@@ -1524,6 +1525,7 @@
       "fromInvites": "Usare i posti riservati agli invitati (bloccati)",
       "settle": "Pagamento",
       "settleCash": "Pagato in contanti",
+      "settleTransfer": "Pagato con bonifico (conto dell'organizzatore)",
       "settleLink": "Link di pagamento con carta",
       "settleDoor": "Da pagare sul posto, la sera dello spettacolo",
       "settleFree": "Omaggio",
@@ -1548,7 +1550,8 @@
         "DOOR": "sul posto",
         "CREDIT_NOTE": "nota di credito",
         "PROVIDER": "sulla carta",
-        "TERMINAL": "terminale del punto vendita"
+        "TERMINAL": "terminale del punto vendita",
+        "TRANSFER": "bonifico"
       },
       "status": {
         "OPEN": "In attesa",

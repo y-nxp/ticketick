@@ -647,7 +647,8 @@
         "LINK": "Zahlungslink gesendet",
         "DOOR": "Vor Ort zu bezahlen",
         "CASH": "Zahlung erwartet",
-        "TERMINAL": "Zahlung erwartet"
+        "TERMINAL": "Zahlung erwartet",
+        "TRANSFER": "Zahlung erwartet"
       }
     },
     "resellers": {
@@ -1524,6 +1525,7 @@
       "fromInvites": "Für Gäste reservierte (gesperrte) Plätze verwenden",
       "settle": "Zahlung",
       "settleCash": "Bar bezahlt",
+      "settleTransfer": "Per Überweisung bezahlt (Konto des Veranstalters)",
       "settleLink": "Zahlungslink per Karte",
       "settleDoor": "Vor Ort am Vorstellungsabend zu bezahlen",
       "settleFree": "Gratis",
@@ -1548,7 +1550,8 @@
         "DOOR": "vor Ort",
         "CREDIT_NOTE": "Gutschrift",
         "PROVIDER": "auf die Karte",
-        "TERMINAL": "Terminal der Verkaufsstelle"
+        "TERMINAL": "Terminal der Verkaufsstelle",
+        "TRANSFER": "Überweisung"
       },
       "status": {
         "OPEN": "Offen",

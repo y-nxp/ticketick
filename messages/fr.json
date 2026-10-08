@@ -647,7 +647,8 @@
         "LINK": "Lien de paiement envoyé",
         "DOOR": "À payer sur place",
         "CASH": "Paiement attendu",
-        "TERMINAL": "Paiement attendu"
+        "TERMINAL": "Paiement attendu",
+        "TRANSFER": "Paiement attendu"
       }
     },
     "resellers": {
@@ -1524,6 +1525,7 @@
       "fromInvites": "Prendre les places réservées aux invités (bloquées)",
       "settle": "Règlement",
       "settleCash": "Payé en espèces",
+      "settleTransfer": "Payé par virement (compte de l'organisateur)",
       "settleLink": "Lien de paiement par carte",
       "settleDoor": "À payer sur place, le soir du spectacle",
       "settleFree": "Offert",
@@ -1548,7 +1550,8 @@
         "DOOR": "sur place",
         "CREDIT_NOTE": "note de crédit",
         "PROVIDER": "sur la carte",
-        "TERMINAL": "terminal du point de vente"
+        "TERMINAL": "terminal du point de vente",
+        "TRANSFER": "virement"
       },
       "status": {
         "OPEN": "En attente",

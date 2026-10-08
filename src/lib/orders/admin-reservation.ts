@@ -65,6 +65,7 @@ const PAID_METHOD = {
   DOOR: "CASH",
   LINK: "CARD",
   TERMINAL: "TERMINAL",
+  TRANSFER: "IBAN",
 } as const;
 
 export async function createReservation(

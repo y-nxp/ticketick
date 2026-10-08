@@ -998,6 +998,8 @@ enum ChargeMethod {
   PROVIDER
   /// Carte passée sur le terminal du point de vente, qui garde l'argent comme des espèces.
   TERMINAL
+  /// Virement reçu par l'organisateur sur son propre compte, hors ticketick.
+  TRANSFER
 }
 
 enum ChargeStatus {

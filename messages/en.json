@@ -647,7 +647,8 @@
         "LINK": "Payment link sent",
         "DOOR": "To pay on site",
         "CASH": "Payment expected",
-        "TERMINAL": "Payment expected"
+        "TERMINAL": "Payment expected",
+        "TRANSFER": "Payment expected"
       }
     },
     "resellers": {
@@ -1524,6 +1525,7 @@
       "fromInvites": "Use the seats held for guests (blocked)",
       "settle": "Payment",
       "settleCash": "Paid in cash",
+      "settleTransfer": "Paid by bank transfer (organiser's account)",
       "settleLink": "Card payment link",
       "settleDoor": "To be paid on site, on the evening of the show",
       "settleFree": "Complimentary",
@@ -1548,7 +1550,8 @@
         "DOOR": "on site",
         "CREDIT_NOTE": "credit note",
         "PROVIDER": "to the card",
-        "TERMINAL": "point of sale terminal"
+        "TERMINAL": "point of sale terminal",
+        "TRANSFER": "bank transfer"
       },
       "status": {
         "OPEN": "Pending",

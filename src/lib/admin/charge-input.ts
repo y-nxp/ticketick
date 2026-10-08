@@ -58,7 +58,7 @@ export function readPaymentSettle(
   const typed = readText(formData, "amount");
   const amountCents = typed === "" ? defaultCents : readMoneyCents(formData, "amount");
   if (amountCents == null || amountCents > 100_000_00) return "amount";
-  if (method === "CASH" || method === "DOOR") return { method, amountCents };
+  if (method === "CASH" || method === "DOOR" || method === "TRANSFER") return { method, amountCents };
   if (method !== "LINK") return "amount";
   if (amountCents <= 0) return "amount";
   const days = readInteger(formData, "dueDays") ?? 7;
