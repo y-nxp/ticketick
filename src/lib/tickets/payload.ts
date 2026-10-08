@@ -4,6 +4,7 @@ import {
   ticketDisclaimer,
   ticketResponsible,
 } from "@/lib/tickets/responsible";
+import { splitSeatView } from "@/lib/seating/layout";
 import type { TicketOptionBlock } from "@/lib/tickets/option-block";
 import { readUploadFile } from "@/lib/uploads";
 import { EVENT_TIME_ZONE } from "@/lib/utils";
@@ -20,10 +21,15 @@ export type VenueBits = {
 export interface TicketCard {
   code: string;
   eventTitle: string;
+  eventSubtitle?: string;
   organizerName: string;
   organizerLogoUrl?: string;
+  /** « Organisateur et contractant : … » */
+  contractor?: string;
   ticketName: string;
   when: string;
+  /** Date sans l'heure : « lundi 28 décembre 2026 ». */
+  day: string;
   startTime: string;
   doorsTime?: string;
   venueLines: string[];
@@ -33,6 +39,9 @@ export interface TicketCard {
   priceLabel: string;
   priceCents: number;
   seating: string;
+  /** `seating` sans la visibilité, qui passe dans `seatView`. */
+  seatPlace: string;
+  seatView?: string;
   producerName?: string;
   producerUrl?: string;
   producerLogoUrl?: string;
@@ -66,6 +75,18 @@ export function formatWhen(date: Date, locale: string): string {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: EVENT_TIME_ZONE,
+    }).format(date),
+  );
+}
+
+export function formatDay(date: Date, locale: string): string {
+  return plainSpaces(
+    new Intl.DateTimeFormat(`${locale}-CH`, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
       timeZone: EVENT_TIME_ZONE,
     }).format(date),
   );
@@ -127,8 +148,10 @@ export function pdfSafe(text: string): string {
 export function toTicketCard(input: {
   code: string;
   eventTitle: unknown;
+  eventSubtitle?: unknown;
   ticketName: unknown;
   organizerName: string;
+  contractor?: string | null;
   organizerLogoUrl?: string | null;
   startsAt: Date;
   doorsAt?: Date | null;
@@ -150,10 +173,14 @@ export function toTicketCard(input: {
 }): TicketCard {
   const fallback = ticketResponsible(input.organizerSlug);
   const fromRow = readTitle(input.ticketDisclaimer, input.locale);
+  const seating = input.seatLabel?.trim() || seatingLabel(input.locale);
+  const { place, view } = splitSeatView(seating);
   return {
     code: input.code,
     eventTitle: readTitle(input.eventTitle, input.locale),
+    eventSubtitle: readTitle(input.eventSubtitle, input.locale).trim() || undefined,
     organizerName: input.organizerName,
+    contractor: input.contractor?.trim() || undefined,
     organizerLogoUrl: input.organizerLogoUrl ?? undefined,
     producerName: input.producerName ?? fallback?.name,
     producerUrl: input.producerUrl ?? fallback?.url,
@@ -162,6 +189,7 @@ export function toTicketCard(input: {
       fromRow || ticketDisclaimer(input.locale, input.organizerSlug),
     ticketName: readTitle(input.ticketName, input.locale),
     when: formatWhen(input.startsAt, input.locale),
+    day: formatDay(input.startsAt, input.locale),
     startTime: formatClock(input.startsAt, input.locale),
     doorsTime: input.doorsAt
       ? formatClock(input.doorsAt, input.locale)
@@ -176,7 +204,9 @@ export function toTicketCard(input: {
       input.locale,
       input.currency ?? "CHF",
     ),
-    seating: input.seatLabel?.trim() || seatingLabel(input.locale),
+    seating,
+    seatPlace: place,
+    seatView: view,
     valid: input.valid !== false,
     optionBlocks: input.optionBlocks?.length ? input.optionBlocks : undefined,
     note: input.note?.trim() || undefined,

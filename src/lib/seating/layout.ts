@@ -93,6 +93,17 @@ export function viewLabel(view: SeatView | undefined, locale: string): string | 
   return (VIEW_WORDS[locale] ?? VIEW_WORDS.fr)[view] ?? null;
 }
 
+/** Sépare d'un libellé de `seatLabel` la mention de visibilité finale. */
+export function splitSeatView(label: string): { place: string; view?: string } {
+  const parts = label.split(" · ");
+  const last = parts.at(-1);
+  const views = Object.values(VIEW_WORDS).flatMap((w) => Object.values(w));
+  if (parts.length > 1 && last && views.includes(last)) {
+    return { place: parts.slice(0, -1).join(" · "), view: last };
+  }
+  return { place: label };
+}
+
 export function readView(value: unknown): SeatView | undefined {
   return SEAT_VIEWS.includes(value as SeatView) ? (value as SeatView) : undefined;
 }

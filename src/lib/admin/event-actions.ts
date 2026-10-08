@@ -75,6 +75,7 @@ export async function saveEvent(
 
   const id = readOptionalText(data, "id");
   const title = readTranslated(data, "title");
+  const subtitle = readTranslated(data, "subtitle");
   const description = readTranslated(data, "description");
   const tags = readTranslated(data, "tags");
   const contactNote = readTranslated(data, "contactNote");
@@ -138,6 +139,7 @@ export async function saveEvent(
 
   const fields = {
     title,
+    subtitle: subtitle.fr ? subtitle : Prisma.DbNull,
     description,
     tags: tags.fr ? tags : Prisma.DbNull,
     organizerId,

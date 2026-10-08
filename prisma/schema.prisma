@@ -313,6 +313,9 @@ model Organizer {
   producerLogoUrl  String?
   /// CG du billet { fr, en, de, it }. Si vide : conditions ticketick.ch/terms.
   ticketDisclaimer Json?
+  /// Personne morale avec qui l'acheteur contracte, imprimée sur les billets
+  /// (« Organisateur et contractant : … »). Si vide : ligne absente.
+  contractor       String?
 
   /// Active la PWA "amis du festival" pour cet organisateur
   friendsAppEnabled Boolean @default(false)
@@ -447,6 +450,9 @@ model Event {
   slug        String          @unique
   /// Traductions { fr, en, de, it }
   title       Json
+  /// Titre du programme imprimé sous le titre sur les billets
+  /// (« Les voix du Sud ») : traductions { fr, en, de, it, es }.
+  subtitle    Json?
   description Json
   status      EventStatus     @default(DRAFT)
   visibility  EventVisibility @default(PUBLIC)

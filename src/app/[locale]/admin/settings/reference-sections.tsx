@@ -254,6 +254,13 @@ function OrganizerForm({
         hint={t("logoHint")}
         currentUrl={organizer?.logoUrl}
       />
+      <Field label={t("contractor")} hint={t("contractorHint")}>
+        <TextInput
+          name="contractor"
+          defaultValue={organizer?.contractor ?? ""}
+          placeholder={t("contractorPlaceholder")}
+        />
+      </Field>
       <Field label={t("producerName")} hint={t("producerHint")}>
         <TextInput
           name="producerName"

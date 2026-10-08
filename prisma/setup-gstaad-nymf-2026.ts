@@ -1566,6 +1566,36 @@ async function openDoors(organizerId: string): Promise<string> {
   return `Ouverture des portes : ${count} séance(s), 30 minutes avant le début.`;
 }
 
+const CONTRACTOR = "Association Altezze e Musica, CH–3782 Lauenen";
+
+/** Billets : titre du programme sous le titre, contractant de l'acheteur. */
+async function applyTicketDetails(organizerId: string): Promise<string> {
+  const keyed = [
+    ...CONCERTS.map((c) => ({
+      work: PROGRAMME[`${c.date} ${c.artist}`]?.work,
+      slug: concertSlug(c),
+    })),
+    ...TALKS.map((t) => ({
+      work: t.work,
+      slug: concertSlug({ date: t.date, artist: t.slugName }),
+    })),
+  ];
+  let subtitles = 0;
+  for (const { work, slug } of keyed) {
+    if (!work) continue;
+    const { count } = await prisma.event.updateMany({
+      where: { slug, organizerId, subtitle: { equals: Prisma.DbNull } },
+      data: { subtitle: same(work) },
+    });
+    subtitles += count;
+  }
+  const { count: contractor } = await prisma.organizer.updateMany({
+    where: { id: organizerId, contractor: null },
+    data: { contractor: CONTRACTOR },
+  });
+  return `Billets : ${subtitles} sous-titre(s), contractant ${contractor ? "renseigné" : "déjà présent"}.`;
+}
+
 async function main() {
   const existing = await prisma.organizer.findUnique({
     where: { slug: ORG_SLUG },
@@ -1599,6 +1629,7 @@ async function main() {
   await once("gnymf-2026/places-invites", () => countInviteSeats(id));
   await once("gnymf-2026/visibilite-rougemont", markRougemontViews);
   await once("gnymf-2026/ouverture-portes", () => openDoors(id));
+  await once("gnymf-2026/billets-sous-titre-contractant", () => applyTicketDetails(id));
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );

@@ -61,6 +61,13 @@ export function EventForm({
         value={event?.title as Record<string, unknown> | undefined}
       />
       <TranslatedField
+        name="subtitle"
+        label={t("subtitle")}
+        hint={t("subtitleHint")}
+        value={event?.subtitle as Record<string, unknown> | undefined}
+        required={false}
+      />
+      <TranslatedField
         name="description"
         label={t("description")}
         value={event?.description as Record<string, unknown> | undefined}

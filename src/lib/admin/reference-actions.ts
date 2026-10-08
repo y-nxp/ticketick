@@ -109,6 +109,7 @@ export async function saveOrganizer(
     ticketDisclaimer: (disclaimer.fr
       ? disclaimer
       : Prisma.DbNull) as Prisma.InputJsonValue,
+    contractor: readOptionalText(data, "contractor") ?? null,
   };
 
   try {
