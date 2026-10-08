@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Ticket, Receipt, UserRound, LogOut, ShieldCheck, FileDown, ScanLine } from "lucide-react";
+import { Ticket, Receipt, LogOut, ShieldCheck, FileDown, ScanLine } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { getMyOrders } from "@/lib/data/my-orders";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { t as translate, type Translated } from "@/lib/types";
 import { PasswordForm } from "./password-form";
+import { ProfileForm } from "./profile-form";
 import { VerifyBanner } from "./verify-banner";
 import { ticketPdfPath } from "@/lib/tickets/download";
 
@@ -31,6 +32,7 @@ export default async function AccountPage({
   // L'identifiant vient de la session : on ne consulte que ses propres
   // commandes.
   const orders = await getMyOrders(user.id);
+  const [firstName = "", ...lastName] = (user.name ?? "").trim().split(/\s+/);
 
   return (
     <div className="container-page py-10">
@@ -92,24 +94,13 @@ export default async function AccountPage({
       ) : null}
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
-        <section className="rounded-card border border-border bg-card p-6">
-          <h2 className="flex items-center gap-2 font-semibold">
-            <UserRound className="size-4 text-muted-foreground" />
-            {t("profile")}
-          </h2>
-          <dl className="mt-4 space-y-3 text-sm">
-            <div>
-              <dt className="text-muted-foreground">{t("email")}</dt>
-              <dd className="font-medium">{user.email}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">{t("role")}</dt>
-              <dd>
-                <Badge variant="secondary">{t(`roles.${user.role}`)}</Badge>
-              </dd>
-            </div>
-          </dl>
-        </section>
+        <ProfileForm
+          email={user.email}
+          firstName={firstName}
+          lastName={lastName.join(" ")}
+          phone={user.phone ?? ""}
+          role={user.role === "CUSTOMER" ? undefined : t(`roles.${user.role}`)}
+        />
 
         <section className="rounded-card border border-border bg-card p-6">
           <h2 className="flex items-center gap-2 font-semibold">

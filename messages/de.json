@@ -301,7 +301,18 @@
     "ticketCount": "{count} Ticket(s)",
     "downloadPdf": "PDF herunterladen / drucken",
     "adminAccessHintViewer": "Verkäufe und Bestellungen Ihrer Organisation einsehen.",
-    "posAccess": "Bereich der Verkaufsstelle"
+    "posAccess": "Bereich der Verkaufsstelle",
+    "details": {
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "phone": "Telefon (optional)",
+      "submit": "Speichern",
+      "pending": "Wird gespeichert…",
+      "done": "Angaben gespeichert. Sie werden bei Ihren nächsten Käufen übernommen.",
+      "name": "Bitte geben Sie Vor- und Nachnamen an.",
+      "unavailable": "Dienst vorübergehend nicht verfügbar. Bitte versuchen Sie es gleich noch einmal.",
+      "phoneInvalid": "Diese Telefonnummer ist ungültig."
+    }
   },
   "organizer": {
     "title": "Veranstalterbereich",

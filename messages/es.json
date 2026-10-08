@@ -299,7 +299,18 @@
     },
     "ticketCount": "{count} entrada(s)",
     "downloadPdf": "Descargar / imprimir el PDF",
-    "adminAccessHintViewer": "Consulta las ventas y los pedidos de tu organización."
+    "adminAccessHintViewer": "Consulta las ventas y los pedidos de tu organización.",
+    "details": {
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "phone": "Teléfono (opcional)",
+      "submit": "Guardar",
+      "pending": "Guardando…",
+      "done": "Datos guardados. Se usarán en tus próximas compras.",
+      "name": "Indica tu nombre y apellido.",
+      "unavailable": "Servicio momentáneamente no disponible. Inténtalo de nuevo en un instante.",
+      "phoneInvalid": "Este número de teléfono no es válido."
+    }
   },
   "verifyEmail": {
     "bannerTitle": "Confirma tu dirección de correo electrónico",

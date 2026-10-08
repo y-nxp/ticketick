@@ -301,7 +301,18 @@
     "ticketCount": "{count} billet(s)",
     "downloadPdf": "Télécharger / imprimer le PDF",
     "adminAccessHintViewer": "Consulter les ventes et les commandes de votre organisation.",
-    "posAccess": "Espace point de vente"
+    "posAccess": "Espace point de vente",
+    "details": {
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "phone": "Téléphone (facultatif)",
+      "submit": "Enregistrer",
+      "pending": "Enregistrement…",
+      "done": "Coordonnées enregistrées. Elles seront reprises lors de vos prochains achats.",
+      "name": "Indiquez votre prénom et votre nom.",
+      "unavailable": "Service momentanément indisponible. Réessayez dans un instant.",
+      "phoneInvalid": "Ce numéro de téléphone n’est pas valable."
+    }
   },
   "organizer": {
     "title": "Espace organisateur",

@@ -301,7 +301,18 @@
     "ticketCount": "{count} ticket(s)",
     "downloadPdf": "Download / print PDF",
     "adminAccessHintViewer": "View your organization's sales and orders.",
-    "posAccess": "Point of sale area"
+    "posAccess": "Point of sale area",
+    "details": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone (optional)",
+      "submit": "Save",
+      "pending": "Saving…",
+      "done": "Details saved. They will be filled in for your next purchases.",
+      "name": "Please enter your first and last name.",
+      "unavailable": "Service temporarily unavailable. Please try again in a moment.",
+      "phoneInvalid": "This phone number is not valid."
+    }
   },
   "organizer": {
     "title": "Organizer space",
