@@ -257,7 +257,7 @@ export function SeatLegend({
       items.push({
         key: view ?? "free",
         colors: group.map((z) => z.color),
-        text: viewLabel(view, locale) ?? te("seatFree"),
+        text: viewLabel(view, locale) ?? te("seatViewNormal"),
         price: uniformPrice,
       });
     }

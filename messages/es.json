@@ -101,6 +101,7 @@
     "seatSelected": "Tu selección",
     "seatTaken": "Ocupado",
     "seatFree": "Asiento disponible",
+    "seatViewNormal": "Visibilidad normal",
     "seatNone": "Ningún asiento seleccionado.",
     "seatTariff": "Tarifa",
     "seatRemove": "Quitar este asiento",
