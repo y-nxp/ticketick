@@ -12,6 +12,9 @@ import {
   toTicketCard,
   type TicketCard,
 } from "@/lib/tickets/payload";
+import type { SeatView } from "@/lib/seating/layout";
+
+const VIEW_CONTACT = "ticket@ticketick.ch";
 
 export async function sendTicketCards(input: {
   to: string;
@@ -21,6 +24,8 @@ export async function sendTicketCards(input: {
   locale: string;
   tickets: TicketCard[];
   preview?: boolean;
+  /** Renvoi annonçant des places à visibilité réduite, avec l'adresse pour en changer. */
+  viewNotice?: SeatView[];
 }) {
   const attachments: MailAttachment[] = await Promise.all(
     input.tickets.map(async (ticket, index) => ({
@@ -70,7 +75,16 @@ export async function sendTicketCards(input: {
   });
 
   const t = textes(input.locale);
-  const titre = input.preview ? t.apercuSujet : t.sujet;
+  const views = new Set(input.viewNotice ?? []);
+  const vue =
+    views.size === 0
+      ? null
+      : views.size > 1
+        ? t.vueMixte
+        : views.has("none")
+          ? t.vueAucune
+          : t.vuePartielle;
+  const titre = input.preview ? t.apercuSujet : vue ? t.vueSujet : t.sujet;
   const totalCents = input.tickets.reduce((sum, ticket) => sum + ticket.priceCents, 0);
   const totalLabel = formatTicketPrice(totalCents, input.locale);
   const downloadHref = `${publicAppOrigin()}${ticketPdfPath(input.reference)}`;
@@ -101,6 +115,15 @@ export async function sendTicketCards(input: {
     <h1 style="margin:0 0 8px;font-size:22px">${echapper(titre)}</h1>
     <p style="margin:0 0 20px;font-size:14px;color:#4b5563">${echapper(t.reference)} ${echapper(input.reference)}</p>
     <p style="margin:0 0 8px;line-height:1.5">${echapper(t.bonjour(input.buyerName))}</p>
+    ${
+      vue
+        ? `<div style="margin:0 0 20px;padding:14px 16px;background:#fff;border:1px solid #e5e7eb;border-left:4px solid #6C5CE7;border-radius:0 8px 8px 0">
+      <p style="margin:0 0 6px;font-weight:700">${echapper(t.vueTitre)}</p>
+      <p style="margin:0 0 6px;line-height:1.5">${echapper(vue)}</p>
+      <p style="margin:0;line-height:1.5">${echapper(t.vueChangement)} <a href="mailto:${VIEW_CONTACT}" style="color:#6C5CE7;font-weight:700">${VIEW_CONTACT}</a>${echapper(t.vueReference(input.reference))}</p>
+    </div>`
+        : ""
+    }
     <p style="margin:0 0 20px;line-height:1.5">${echapper(input.preview ? t.apercuCorps : t.corps)}</p>
     ${
       input.preview
@@ -133,6 +156,14 @@ export async function sendTicketCards(input: {
     "",
     `${t.reference} ${input.reference}`,
     "",
+    ...(vue
+      ? [
+          t.vueTitre,
+          vue,
+          `${t.vueChangement} ${VIEW_CONTACT}${t.vueReference(input.reference)}`,
+          "",
+        ]
+      : []),
     input.preview ? t.apercuCorps : t.corps,
     "",
     t.recap,
@@ -169,7 +200,7 @@ export async function sendTicketCards(input: {
  */
 export async function sendPaidOrderTickets(
   orderId: string,
-  options: { copyOrganizer?: boolean } = {},
+  options: { copyOrganizer?: boolean; viewNotice?: SeatView[] } = {},
 ) {
   const order = await paidOrderForMail(orderId);
   if (!order) return { sent: false, mock: false };
@@ -187,6 +218,7 @@ export async function sendPaidOrderTickets(
     reference: order.reference,
     locale: order.locale,
     tickets: order.cards,
+    viewNotice: options.viewNotice,
   });
 }
 
@@ -332,6 +364,13 @@ function footerLogosHtml(
 function textes(locale: string) {
   const pack = {
     fr: {
+      vueSujet: "Vos billets ticketick.ch : visibilité de vos places",
+      vueTitre: "Information importante sur vos places",
+      vuePartielle: "Vos places sont en visibilité partielle : une partie de la scène n’est pas visible depuis celles-ci. La mention figure désormais sur vos billets ci-dessous et en pièce jointe ; ils restent valables tels quels.",
+      vueAucune: "Vos places sont sans visibilité : la scène n’est pas visible depuis celles-ci. La mention figure désormais sur vos billets ci-dessous et en pièce jointe ; ils restent valables tels quels.",
+      vueMixte: "Vos places sont en visibilité partielle ou sans visibilité sur la scène, selon la mention portée par chaque billet ci-dessous et en pièce jointe. Vos billets restent valables tels quels.",
+      vueChangement: "Si vous souhaitez changer de places, écrivez-nous à",
+      vueReference: (ref: string) => ` en indiquant votre référence ${ref}.`,
       sujet: "Votre commande ticketick.ch : vos billets",
       apercuSujet: "Aperçu — billet ticketick",
       bonjour: (nom: string) => `Bonjour ${nom},`,
@@ -352,6 +391,13 @@ function textes(locale: string) {
       pied: "L’équipe ticketick.ch",
     },
     en: {
+      vueSujet: "Your ticketick.ch tickets: view from your seats",
+      vueTitre: "Important information about your seats",
+      vuePartielle: "Your seats have a restricted view: part of the stage cannot be seen from them. This is now shown on your tickets below and attached; they remain valid as they are.",
+      vueAucune: "Your seats have no view of the stage. This is now shown on your tickets below and attached; they remain valid as they are.",
+      vueMixte: "Your seats have a restricted view or no view of the stage, as shown on each ticket below and attached. Your tickets remain valid as they are.",
+      vueChangement: "If you would like to change seats, write to us at",
+      vueReference: (ref: string) => ` quoting your reference ${ref}.`,
       sujet: "Your ticketick.ch order: your tickets",
       apercuSujet: "Preview — ticketick ticket",
       bonjour: (nom: string) => `Hello ${nom},`,
@@ -372,6 +418,13 @@ function textes(locale: string) {
       pied: "The ticketick.ch team",
     },
     de: {
+      vueSujet: "Ihre Tickets auf ticketick.ch: Sicht von Ihren Plätzen",
+      vueTitre: "Wichtige Information zu Ihren Plätzen",
+      vuePartielle: "Ihre Plätze haben eine eingeschränkte Sicht: Ein Teil der Bühne ist von dort nicht sichtbar. Der Hinweis steht nun auf Ihren Tickets unten und im Anhang; sie bleiben unverändert gültig.",
+      vueAucune: "Von Ihren Plätzen aus ist die Bühne nicht sichtbar. Der Hinweis steht nun auf Ihren Tickets unten und im Anhang; sie bleiben unverändert gültig.",
+      vueMixte: "Ihre Plätze haben eine eingeschränkte oder keine Sicht auf die Bühne, wie auf jedem Ticket unten und im Anhang vermerkt. Ihre Tickets bleiben unverändert gültig.",
+      vueChangement: "Möchten Sie andere Plätze, schreiben Sie uns an",
+      vueReference: (ref: string) => ` mit Ihrer Referenz ${ref}.`,
       sujet: "Ihre Bestellung auf ticketick.ch: Ihre Tickets",
       apercuSujet: "Vorschau — ticketick-Ticket",
       bonjour: (nom: string) => `Guten Tag ${nom},`,
@@ -392,6 +445,13 @@ function textes(locale: string) {
       pied: "Das Team von ticketick.ch",
     },
     it: {
+      vueSujet: "I vostri biglietti ticketick.ch: visibilità dei posti",
+      vueTitre: "Informazione importante sui vostri posti",
+      vuePartielle: "I vostri posti sono a visibilità parziale: da lì una parte del palco non è visibile. L’indicazione figura ora sui biglietti qui sotto e in allegato, che restano validi così come sono.",
+      vueAucune: "I vostri posti sono senza visibilità: da lì il palco non è visibile. L’indicazione figura ora sui biglietti qui sotto e in allegato, che restano validi così come sono.",
+      vueMixte: "I vostri posti sono a visibilità parziale o senza visibilità sul palco, come indicato su ogni biglietto qui sotto e in allegato. I biglietti restano validi così come sono.",
+      vueChangement: "Se desiderate cambiare posti, scriveteci a",
+      vueReference: (ref: string) => ` indicando il riferimento ${ref}.`,
       sujet: "Il vostro ordine ticketick.ch: i biglietti",
       apercuSujet: "Anteprima — biglietto ticketick",
       bonjour: (nom: string) => `Buongiorno ${nom},`,
@@ -412,6 +472,13 @@ function textes(locale: string) {
       pied: "Il team ticketick.ch",
     },
     es: {
+      vueSujet: "Tus entradas de ticketick.ch: visibilidad de tus asientos",
+      vueTitre: "Información importante sobre tus asientos",
+      vuePartielle: "Tus asientos tienen visibilidad parcial: desde ellos no se ve una parte del escenario. La indicación figura ahora en tus entradas, abajo y en el adjunto; siguen siendo válidas tal cual.",
+      vueAucune: "Tus asientos no tienen visibilidad del escenario. La indicación figura ahora en tus entradas, abajo y en el adjunto; siguen siendo válidas tal cual.",
+      vueMixte: "Tus asientos tienen visibilidad parcial o nula del escenario, según indica cada entrada abajo y en el adjunto. Tus entradas siguen siendo válidas tal cual.",
+      vueChangement: "Si quieres cambiar de asientos, escríbenos a",
+      vueReference: (ref: string) => ` indicando tu referencia ${ref}.`,
       sujet: "Tu pedido en ticketick.ch: tus entradas",
       apercuSujet: "Vista previa — entrada ticketick",
       bonjour: (nom: string) => `Hola, ${nom}:`,
