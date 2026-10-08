@@ -121,7 +121,10 @@
       "pending": "Die Angaben zur Anmeldung werden in Kürze bekannt gegeben.",
       "introSite": "Kein Ticket zu kaufen: Die Anmeldung erfolgt direkt auf der Website unten.",
       "site": "Anmelden auf {site}"
-    }
+    },
+    "seatLimitPerson": "Maximal {n} Plätze pro Person für diese Vorstellung, Warenkorb inbegriffen.",
+    "limitPerson": "Maximal {n} Plätze pro Person für diese Vorstellung.",
+    "limitOrder": "Maximal {n} Plätze pro Bestellung."
   },
   "portal": {
     "tickets": "Ticketverkauf",
@@ -249,7 +252,8 @@
     "buyerRememberHint": "Sie werden beim nächsten Kauf ausgefüllt. Auf einem gemeinsam genutzten Computer deaktivieren.",
     "accountInviteTitle": "Alle Ihre Tickets an einem Ort",
     "accountInviteText": "Mit einem Konto werden Ihre Angaben bei jedem Kauf ausgefüllt und alle Ihre Tickets sind an einem Ort, auch die ohne Konto mit derselben E-Mail-Adresse gekauften.",
-    "accountInviteCta": "Konto erstellen"
+    "accountInviteCta": "Konto erstellen",
+    "max_per_person": "Sie haben für diese Vorstellung bereits Gratisplätze reserviert: Das Maximum pro Person ist erreicht, frühere Reservierungen inbegriffen."
   },
   "account": {
     "title": "Mein Konto",

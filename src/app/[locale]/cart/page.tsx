@@ -104,7 +104,10 @@ export default function CartPage() {
                       onClick={() =>
                         updateQuantity(line.ticketTypeId, line.quantity + 1)
                       }
-                      className="grid size-8 place-items-center rounded-full border border-border hover:bg-secondary"
+                      disabled={
+                        line.maxPerOrder != null && line.quantity >= line.maxPerOrder
+                      }
+                      className="grid size-8 place-items-center rounded-full border border-border hover:bg-secondary disabled:opacity-40"
                     >
                       <Plus className="size-3.5" />
                     </button>

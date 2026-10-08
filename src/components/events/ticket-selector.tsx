@@ -9,7 +9,7 @@ import { useCart } from "@/components/cart/cart-context";
 import { rememberShopOrigin } from "@/lib/shop-origin";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { SeatedSelector } from "./seated-selector";
-import { maxFor as limitFor } from "./ticket-limits";
+import { isFreeBooking, maxWithCart, type Counts } from "./ticket-limits";
 import {
   t,
   type EventItem,
@@ -36,9 +36,14 @@ export function TicketSelector(props: SelectorProps) {
 
 function QuantitySelector({ event, session, locale }: SelectorProps) {
   const te = useTranslations("event");
-  const { add, previewOpen } = useCart();
+  const { add, lines, previewOpen } = useCart();
   const pathname = usePathname();
   const [qty, setQty] = React.useState<Record<string, number>>({});
+  const cartCounts: Counts = {};
+  for (const l of lines) {
+    if (l.sessionId !== session.id) continue;
+    cartCounts[l.ticketTypeId] = (cartCounts[l.ticketTypeId] ?? 0) + l.quantity;
+  }
 
   const totalCents = session.ticketTypes.reduce(
     (sum, tt) => sum + (qty[tt.id] ?? 0) * tt.priceCents,
@@ -47,7 +52,7 @@ function QuantitySelector({ event, session, locale }: SelectorProps) {
   const totalCount = Object.values(qty).reduce((a, b) => a + b, 0);
 
   const maxFor = (tt: TicketType, current: Record<string, number>) =>
-    limitFor(session, tt, current);
+    maxWithCart(session, tt, current, cartCounts);
 
   function setQuantity(id: string, next: number) {
     setQty((prev) => {
@@ -83,6 +88,7 @@ function QuantitySelector({ event, session, locale }: SelectorProps) {
             coverImage: event.coverImage,
             requiresAttendee: tt.requiresAttendee,
             maxAgeYears: tt.maxAgeYears,
+            maxPerOrder: tt.maxPerOrder,
           },
           n,
         );
@@ -118,6 +124,7 @@ function QuantitySelector({ event, session, locale }: SelectorProps) {
               qty={qty[tt.id] ?? 0}
               onChange={(n) => setQuantity(tt.id, n)}
               max={maxFor(tt, qty)}
+              inCart={cartCounts[tt.id] ?? 0}
               sourceName={source ? t(source.name, locale) : undefined}
             />
           );
@@ -152,6 +159,7 @@ function TicketRow({
   qty,
   onChange,
   max,
+  inCart,
   sourceName,
 }: {
   ticket: TicketType;
@@ -159,6 +167,8 @@ function TicketRow({
   qty: number;
   onChange: (n: number) => void;
   max: number;
+  /** Billets de ce tarif déjà au panier : ils comptent dans le plafond. */
+  inCart: number;
   /** Nom du tarif payant qui débloque ce tarif gratuit, s'il est désigné. */
   sourceName?: string;
 }) {
@@ -178,9 +188,13 @@ function TicketRow({
             ? te("companionRuleNamed", { n: ratio, ticket: sourceName })
             : te("companionRule", { n: ratio })
         : null
-      : ticket.description
-        ? t(ticket.description, locale)
-        : null;
+      : !soldOut && qty + inCart >= ticket.maxPerOrder
+        ? isFreeBooking(ticket)
+          ? te("limitPerson", { n: ticket.maxPerOrder })
+          : te("limitOrder", { n: ticket.maxPerOrder })
+        : ticket.description
+          ? t(ticket.description, locale)
+          : null;
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-control border border-border p-3">

@@ -121,7 +121,10 @@
       "pending": "Les coordonnées d’inscription seront communiquées prochainement.",
       "introSite": "Pas de billet à acheter : l’inscription se fait directement sur le site ci-dessous.",
       "site": "S’inscrire sur {site}"
-    }
+    },
+    "seatLimitPerson": "Maximum {n} places par personne pour ce spectacle, panier compris.",
+    "limitPerson": "Maximum {n} places par personne pour ce spectacle.",
+    "limitOrder": "Maximum {n} places par commande."
   },
   "portal": {
     "tickets": "Billetterie",
@@ -249,7 +252,8 @@
     "buyerRememberHint": "Elles seront remplies au prochain achat. À décocher sur un ordinateur partagé.",
     "accountInviteTitle": "Retrouvez tous vos billets",
     "accountInviteText": "Avec un compte, vos coordonnées sont remplies à chaque achat et tous vos billets sont au même endroit, y compris ceux achetés sans compte avec la même adresse e-mail.",
-    "accountInviteCta": "Créer mon compte"
+    "accountInviteCta": "Créer mon compte",
+    "max_per_person": "Vous avez déjà réservé des places gratuites pour ce spectacle : le maximum par personne est atteint, réservations précédentes comprises."
   },
   "account": {
     "title": "Mon espace",

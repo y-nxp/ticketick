@@ -104,6 +104,7 @@ export type OrderError =
   | "not_on_sale"
   | "sales_closed"
   | "max_per_order"
+  | "max_per_person"
   | "companion_limit"
   | "companion_requires_paid"
   | "sold_out"
@@ -224,6 +225,11 @@ export async function createOrder(
     if (tt.sold + quantity > tt.quantity) {
       return { ok: false, error: "sold_out", ticketTypeId };
     }
+  }
+
+  if (!input.hold && !input.resellerId) {
+    const over = await overPersonLimit(input, merged, byId);
+    if (over) return { ok: false, error: "max_per_person", ticketTypeId: over };
   }
 
   // Placement numéroté : un siège par billet, jamais deux fois le même dans
@@ -779,6 +785,45 @@ export type CreateHoldResult =
   | Extract<CreateOrderResult, { ok: false }>;
 
 /**
+ * Réservation gratuite : le maximum par commande vaut par personne pour la
+ * séance, toutes commandes confondues. Sans cela, deux commandes sous la même
+ * adresse doublaient le plafond. L'acheteur est reconnu par son e-mail ou son
+ * compte. Renvoie le tarif dépassé.
+ */
+async function overPersonLimit(
+  input: Pick<CreateOrderInput, "email" | "userId">,
+  quantities: Map<string, { quantity: number }>,
+  ticketTypes: Map<
+    string,
+    { priceCents: number; maxPerPaidTicket: number | null; maxPerOrder: number }
+  >,
+  excludeOrderId?: string,
+): Promise<string | null> {
+  const email = input.email.trim();
+  if (!email) return null;
+  for (const [ticketTypeId, { quantity }] of quantities) {
+    const tt = ticketTypes.get(ticketTypeId);
+    if (!tt || tt.priceCents > 0 || tt.maxPerPaidTicket != null) continue;
+    const prior = await prisma.orderItem.aggregate({
+      _sum: { quantity: true },
+      where: {
+        ticketTypeId,
+        order: {
+          status: { in: ["PAID", "AWAITING_PAYMENT"] },
+          ...(excludeOrderId ? { id: { not: excludeOrderId } } : {}),
+          OR: [
+            { email: { equals: email, mode: "insensitive" } },
+            ...(input.userId ? [{ userId: input.userId }] : []),
+          ],
+        },
+      },
+    });
+    if ((prior._sum.quantity ?? 0) + quantity > tt.maxPerOrder) return ticketTypeId;
+  }
+  return null;
+}
+
+/**
  * Retient le stock dès l'arrivée sur le checkout, avant les coordonnées.
  * Le jeton renvoyé n'existe qu'une fois, chez l'appelant : la base n'en garde
  * que l'empreinte.
@@ -870,6 +915,9 @@ export async function fulfillCheckoutHold(
     select: {
       id: true,
       name: true,
+      priceCents: true,
+      maxPerOrder: true,
+      maxPerPaidTicket: true,
       requiresAttendee: true,
       maxAgeYears: true,
       session: {
@@ -904,6 +952,16 @@ export async function fulfillCheckoutHold(
     input.attendees ?? [],
   );
   if (!checked.ok) return checked;
+
+  if (!input.resellerId) {
+    const over = await overPersonLimit(
+      input,
+      new Map(order.items.map((i) => [i.ticketTypeId, { quantity: i.quantity }] as const)),
+      new Map(ticketTypes.map((tt) => [tt.id, tt] as const)),
+      order.id,
+    );
+    if (over) return { ok: false, error: "max_per_person", ticketTypeId: over };
+  }
 
   const options = await resolveOrderOptions({
     sessionIds: [...new Set(ticketTypes.map((tt) => tt.session.id))],

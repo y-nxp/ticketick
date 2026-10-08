@@ -12,7 +12,7 @@ import { getSeatState } from "@/lib/seating/public-actions";
 import { rememberShopOrigin } from "@/lib/shop-origin";
 import { cn, formatDate, formatPrice } from "@/lib/utils";
 import { t, type EventItem, type SessionItem, type TicketType } from "@/lib/types";
-import { maxFor, type Counts } from "./ticket-limits";
+import { isFreeBooking, maxWithCart, type Counts } from "./ticket-limits";
 
 interface Pick {
   key: string;
@@ -98,16 +98,21 @@ export function SeatedSelector({
   const defaultFor = (zone: string) =>
     allowedIn(zone).find((tt) => !isCompanion(tt));
 
-  const inCart = new Set(
-    lines.filter((l) => l.sessionId === session.id).flatMap((l) => l.seats ?? []),
-  );
+  const sessionLines = lines.filter((l) => l.sessionId === session.id);
+  const inCart = new Set(sessionLines.flatMap((l) => l.seats ?? []));
+  const cartCounts: Counts = {};
+  for (const l of sessionLines) {
+    cartCounts[l.ticketTypeId] = (cartCounts[l.ticketTypeId] ?? 0) + l.quantity;
+  }
+  const maxFor = (tt: TicketType, counts: Counts) =>
+    maxWithCart(session, tt, counts, cartCounts);
 
   /** Les gratuités au-delà de leur plafond reprennent le tarif de la place. */
   function normalize(list: Pick[]): Pick[] {
     const out = [...list];
     for (const tt of tariffs.filter(isCompanion)) {
       let counts = countsOf(out);
-      while ((counts[tt.id] ?? 0) > maxFor(session, tt, counts)) {
+      while ((counts[tt.id] ?? 0) > maxFor(tt, counts)) {
         const idx = out.map((p) => p.ticketTypeId).lastIndexOf(tt.id);
         const seat = seatByKey.get(out[idx].key);
         const fallback = seat ? defaultFor(seat.zone) : undefined;
@@ -129,8 +134,12 @@ export function SeatedSelector({
     const tt = seat ? defaultFor(seat.zone) : undefined;
     if (!tt) return;
     const counts = countsOf(picks);
-    if ((counts[tt.id] ?? 0) >= maxFor(session, tt, counts)) {
-      setNotice(te("seatLimit"));
+    if ((counts[tt.id] ?? 0) >= maxFor(tt, counts)) {
+      setNotice(
+        isFreeBooking(tt)
+          ? te("seatLimitPerson", { n: tt.maxPerOrder })
+          : te("seatLimit"),
+      );
       return;
     }
     setPicks([...picks, { key, ticketTypeId: tt.id }]);
@@ -149,7 +158,7 @@ export function SeatedSelector({
     const counts = countsOf(picks);
     counts[pick.ticketTypeId] -= 1;
     counts[tt.id] = (counts[tt.id] ?? 0) + 1;
-    return counts[tt.id] <= maxFor(session, tt, counts);
+    return counts[tt.id] <= maxFor(tt, counts);
   }
 
   function stateOf(key: string): SeatState {
@@ -181,6 +190,7 @@ export function SeatedSelector({
           seatLabels: keys.map((k) => seatLabel(layout, k, locale)),
           requiresAttendee: tt.requiresAttendee,
           maxAgeYears: tt.maxAgeYears,
+          maxPerOrder: tt.maxPerOrder,
         },
         keys.length,
       );

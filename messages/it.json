@@ -121,7 +121,10 @@
       "pending": "I recapiti per l’iscrizione saranno comunicati a breve.",
       "introSite": "Nessun biglietto da acquistare: l’iscrizione si fa direttamente sul sito qui sotto.",
       "site": "Iscriversi su {site}"
-    }
+    },
+    "seatLimitPerson": "Massimo {n} posti a persona per questo spettacolo, carrello compreso.",
+    "limitPerson": "Massimo {n} posti a persona per questo spettacolo.",
+    "limitOrder": "Massimo {n} posti per ordine."
   },
   "portal": {
     "tickets": "Biglietteria",
@@ -249,7 +252,8 @@
     "buyerRememberHint": "Saranno compilati al prossimo acquisto. Da deselezionare su un computer condiviso.",
     "accountInviteTitle": "Ritrova tutti i tuoi biglietti",
     "accountInviteText": "Con un account, i tuoi dati sono compilati a ogni acquisto e tutti i tuoi biglietti sono in un unico posto, compresi quelli acquistati senza account con lo stesso indirizzo e-mail.",
-    "accountInviteCta": "Crea il mio account"
+    "accountInviteCta": "Crea il mio account",
+    "max_per_person": "Hai già prenotato posti gratuiti per questo spettacolo: il massimo a persona è raggiunto, prenotazioni precedenti comprese."
   },
   "account": {
     "title": "Il mio spazio",

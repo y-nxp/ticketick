@@ -21,6 +21,8 @@ export interface CartLine {
   /** Gratuité nominative : nom et date de naissance demandés au paiement. */
   requiresAttendee?: boolean;
   maxAgeYears?: number;
+  /** Plafond du tarif pour la commande : le « + » du panier s'y arrête. */
+  maxPerOrder?: number;
 }
 
 interface CartState {
@@ -46,6 +48,10 @@ const CartContext = React.createContext<CartState | null>(null);
 // v2 : les lignes portent désormais la séance. Changer la clé écarte les
 // paniers au format précédent plutôt que de les faire planter à l'affichage.
 const STORAGE_KEY = "ticketick.cart.v2";
+
+function capped(quantity: number, max?: number): number {
+  return max ? Math.min(quantity, max) : quantity;
+}
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = React.useState<CartLine[]>([]);
@@ -77,7 +83,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (existing) {
         return prev.map((l) => {
           if (l.ticketTypeId !== line.ticketTypeId) return l;
-          if (!line.seats?.length) return { ...l, quantity: l.quantity + quantity };
+          if (!line.seats?.length) {
+            return {
+              ...l,
+              maxPerOrder: line.maxPerOrder,
+              quantity: capped(l.quantity + quantity, line.maxPerOrder),
+            };
+          }
           const seats = [...(l.seats ?? [])];
           const seatLabels = [...(l.seatLabels ?? [])];
           line.seats.forEach((key, i) => {
@@ -90,7 +102,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [
         ...prev,
-        { ...line, quantity: line.seats?.length ? line.seats.length : quantity },
+        {
+          ...line,
+          quantity: line.seats?.length
+            ? line.seats.length
+            : capped(quantity, line.maxPerOrder),
+        },
       ];
     });
     setAddedRevision((n) => n + 1);
@@ -103,7 +120,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           ? prev.filter((l) => l.ticketTypeId !== ticketTypeId)
           : prev.map((l) =>
               l.ticketTypeId === ticketTypeId && !l.seats?.length
-                ? { ...l, quantity }
+                ? { ...l, quantity: capped(quantity, l.maxPerOrder) }
                 : l,
             ),
       );
