@@ -403,16 +403,32 @@ export async function saveSession(
   const actuel = id
     ? await prisma.eventSession.findFirst({
         where: { id, eventId },
-        select: { sold: true, seatPlanId: true },
+        select: { sold: true, seatPlanId: true, capacity: true, inviteSeats: true },
       })
     : null;
   if (id && !actuel) return failure("notFound");
-  if (actuel && capacity !== null && capacity < actuel.sold) {
-    return failure("capacityBelowSold");
-  }
 
   const venueId = readOptionalText(data, "venueId") ?? null;
   const seatPlanId = readOptionalText(data, "seatPlanId") ?? null;
+
+  // Places invités du placement libre (sur plan, ce sont les sièges bloqués).
+  // Jauge inchangée : ce qui quitte la réserve passe en vente, et inversement.
+  const invitesRaw = readText(data, "inviteSeats");
+  let inviteSeats = 0;
+  if (!seatPlanId && invitesRaw !== "") {
+    const n = readInteger(data, "inviteSeats");
+    if (n === null || n < 0) return failure("inviteSeatsInvalid");
+    inviteSeats = n;
+  }
+  if (inviteSeats > 0 && capacity === null) return failure("inviteSeatsNeedCapacity");
+  const invitesBefore = actuel && !actuel.seatPlanId ? actuel.inviteSeats : 0;
+  if (actuel && capacity !== null && capacity === actuel.capacity) {
+    capacity += invitesBefore - inviteSeats;
+  }
+  if (capacity !== null && capacity < 1) return failure("capacityInvalid");
+  if (actuel && capacity !== null && capacity < actuel.sold) {
+    return failure("capacityBelowSold");
+  }
   const planChanged = (actuel?.seatPlanId ?? null) !== seatPlanId;
   // Les billets déjà vendus portent (ou non) une place : changer de plan les
   // rendrait incohérents avec la salle.
@@ -457,6 +473,7 @@ export async function saveSession(
     venueId,
     seatPlanId,
     capacity,
+    inviteSeats,
     acceptCard,
     acceptIban,
   };

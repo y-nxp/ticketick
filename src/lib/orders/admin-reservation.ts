@@ -223,20 +223,21 @@ export async function createReservation(
 }
 
 /**
- * Placement libre : les places invités sont celles retirées de la jauge. La
- * jauge remonte du nombre réservé, la vente publique ne perd donc rien.
+ * Placement libre : les places invités sont tenues hors de la jauge. Elles y
+ * passent au moment de la réservation, la vente publique ne perd donc rien.
  */
 export async function returnHeldToSale(
   tx: Prisma.TransactionClient,
   sessionId: string,
-  lines: { quantity: number }[],
+  lines: { ticketTypeId: string; quantity: number }[],
 ): Promise<void> {
   const n = lines.reduce((sum, l) => sum + l.quantity, 0);
-  await tx.$executeRaw`
+  const moved = await tx.$executeRaw`
     UPDATE "EventSession"
-    SET capacity = capacity + ${n}
-    WHERE id = ${sessionId} AND capacity IS NOT NULL
+    SET capacity = capacity + ${n}, "inviteSeats" = "inviteSeats" - ${n}
+    WHERE id = ${sessionId} AND capacity IS NOT NULL AND "inviteSeats" >= ${n}
   `;
+  if (moved !== 1) throw new NoSeatsError(lines[0]!.ticketTypeId);
 }
 
 export class NoSeatsError extends Error {

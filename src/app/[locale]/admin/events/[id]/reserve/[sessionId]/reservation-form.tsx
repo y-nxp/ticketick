@@ -158,7 +158,9 @@ export function ReservationForm({
         </Field>
       </div>
 
-      {seated ? <Checkbox name="fromInvites" label={te("fromInvites")} /> : null}
+      {seated || rows.some((row) => row.invites) ? (
+        <Checkbox name="fromInvites" label={te("fromInvites")} />
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label={te("settle")}>

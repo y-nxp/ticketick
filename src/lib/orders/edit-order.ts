@@ -193,7 +193,8 @@ export async function releaseTickets(
       await tx.$executeRaw`
         UPDATE "EventSession"
         SET sold = GREATEST(sold - ${n}, 0),
-            capacity = CASE WHEN capacity IS NULL THEN NULL ELSE GREATEST(capacity - ${n}, 0) END
+            capacity = CASE WHEN capacity IS NULL THEN NULL ELSE GREATEST(capacity - ${n}, 0) END,
+            "inviteSeats" = CASE WHEN capacity IS NULL THEN "inviteSeats" ELSE "inviteSeats" + ${n} END
         WHERE id = ${sessionId}
       `;
     } else {

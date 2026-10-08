@@ -150,6 +150,7 @@ function SessionRow({
                   total: session.capacity,
                 })
               : t("soldOf", { sold: vendus, total: offre })}
+            {session.inviteSeats > 0 ? ` · ${t("inviteSeatsHeld", { count: session.inviteSeats })}` : null}
             {plan ? ` · ${plan.name}` : null}
           </p>
         </div>
@@ -273,6 +274,16 @@ function SessionForm({
             defaultValue={session?.capacity ?? ""}
           />
         </Field>
+        {session?.seatPlanId ? null : (
+          <Field label={t("inviteSeats")} hint={t("inviteSeatsHint")}>
+            <TextInput
+              name="inviteSeats"
+              type="number"
+              min="0"
+              defaultValue={session?.inviteSeats ?? 0}
+            />
+          </Field>
+        )}
         {seatPlans.length > 0 ? (
           <Field label={t("seatPlan")} hint={t("seatPlanHint")}>
             <Select

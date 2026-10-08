@@ -34,7 +34,8 @@ export default async function ReserveSessionPage({
   const rows = session.ticketTypes.map((tt) => {
     let available = Math.max(0, tt.quantity - tt.sold);
     let zoneLabel: string | null = null;
-    let invites: number | null = null;
+    // Placement libre : une réserve commune à tous les tarifs.
+    let invites: number | null = layout ? null : session.inviteSeats || null;
     if (freeByZone) {
       const keys = tt.seatZones.length ? tt.seatZones : [...zones.keys()];
       const free = keys.reduce((n, key) => n + (freeByZone[key] ?? 0), 0);

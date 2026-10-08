@@ -1173,7 +1173,10 @@ async function applyInvitations(organizerId: string): Promise<string> {
         continue;
       }
       const capacity = Math.max(session.sold, session.capacity - wanted);
-      await prisma.eventSession.update({ where: { id: session.id }, data: { capacity } });
+      await prisma.eventSession.update({
+        where: { id: session.id },
+        data: { capacity, inviteSeats: session.capacity - capacity },
+      });
       lines.push(`${concert.date} ${concert.artist} : jauge ${session.capacity} → ${capacity}`);
       continue;
     }
@@ -1465,8 +1468,41 @@ async function reservePagano(organizerId: string): Promise<string> {
   const full = VENUES[concert.venue].capacity;
   if (session.capacity !== full) return `${key} : jauge déjà réglée (${session.capacity}), inchangée`;
   const capacity = Math.max(session.sold, full - INVITATIONS[key]!);
-  await prisma.eventSession.update({ where: { id: session.id }, data: { capacity } });
+  await prisma.eventSession.update({
+    where: { id: session.id },
+    data: { capacity, inviteSeats: full - capacity },
+  });
   return `${key} : jauge ${full} → ${capacity}`;
+}
+
+/**
+ * Placement libre : les invitations retirées de la jauge deviennent des
+ * « places invités », réservables au guichet. Seules les séances dont la jauge
+ * n'a pas bougé depuis sont reprises.
+ */
+async function countInviteSeats(organizerId: string): Promise<string> {
+  const lines: string[] = [];
+  for (const concert of CONCERTS) {
+    const key = `${concert.date} ${concert.artist}`;
+    const wanted = INVITATIONS[key];
+    if (!wanted) continue;
+    const session = await prisma.eventSession.findFirst({
+      where: { event: { slug: concertSlug(concert), organizerId }, seatPlanId: null },
+      select: { id: true, capacity: true, sold: true, inviteSeats: true },
+    });
+    if (!session || session.capacity == null || session.inviteSeats > 0) continue;
+    const full = VENUES[concert.venue].capacity;
+    if (session.capacity !== Math.max(session.sold, full - wanted)) {
+      lines.push(`${key} : jauge modifiée (${session.capacity}), à régler dans l'admin`);
+      continue;
+    }
+    await prisma.eventSession.update({
+      where: { id: session.id },
+      data: { inviteSeats: full - session.capacity },
+    });
+    lines.push(`${key} : ${full - session.capacity} places invités`);
+  }
+  return `Places invités :\n    ${lines.join("\n    ")}`;
 }
 
 async function main() {
@@ -1499,6 +1535,7 @@ async function main() {
   await once("gnymf-2026/lariviere-hotel-rougemont", () => moveLariviereToHotel(id));
   await once("gnymf-2026/relecture-2026-10-07", () => applyReview20261007(id));
   await once("gnymf-2026/invitations-pagano", () => reservePagano(id));
+  await once("gnymf-2026/places-invites", () => countInviteSeats(id));
   console.log(
     `✅ ${ORG_NAME} : ${seats.sessions} séances sur le plan Rougemont, ${seats.created} sièges ajoutés.`,
   );

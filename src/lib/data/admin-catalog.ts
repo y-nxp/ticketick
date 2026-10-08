@@ -160,6 +160,7 @@ export async function getEventForEdit(id: string) {
           seatPlanId: true,
           capacity: true,
           sold: true,
+          inviteSeats: true,
           acceptCard: true,
           acceptIban: true,
           ticketTypes: {
@@ -234,6 +235,7 @@ export async function getSessionForReservation(eventId: string, sessionId: strin
       label: true,
       capacity: true,
       sold: true,
+      inviteSeats: true,
       seatPlanId: true,
       seatPlan: { select: { layout: true } },
       venue: { select: { name: true, city: true } },

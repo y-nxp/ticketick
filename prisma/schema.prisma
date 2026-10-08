@@ -519,6 +519,9 @@ model EventSession {
   capacity Int?
   /// Places déjà retenues (tous tarifs). Sert à faire respecter `capacity`.
   sold     Int  @default(0)
+  /// Placement libre : places mises de côté pour les invités, en plus de `capacity`.
+  /// Une réservation « invités » les fait passer dans la jauge.
+  inviteSeats Int @default(0)
 
   /// Surcharge les moyens du spectacle. `null` = on hérite.
   acceptCard Boolean?
