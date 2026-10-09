@@ -668,15 +668,15 @@ export async function sendResellerAgentInvitationEmail(payload: {
   });
 }
 
-/** Récapitulatif d'un point de vente : libellés et montants déjà formatés. */
-export interface ResellerReportPayload {
+/** Rapport en tableau (point de vente, invitations) : libellés et montants déjà formatés. */
+export interface TableReportPayload {
   to: string;
   bcc?: string[];
   subject: string;
   heading: string;
   period: string;
-  columns: [string, string, string, string];
-  rows: [string, string, string, string][];
+  columns: string[];
+  rows: string[][];
   emptyRows: string;
   summaryTitle: string;
   summary: { label: string; value: string }[];
@@ -685,7 +685,11 @@ export interface ResellerReportPayload {
   button: string;
 }
 
-export async function sendResellerReportEmail(payload: ResellerReportPayload) {
+export function sendResellerReportEmail(payload: TableReportPayload) {
+  return sendTableReportEmail(payload, "récapitulatif point de vente");
+}
+
+export async function sendTableReportEmail(payload: TableReportPayload, etiquette: string) {
   const cell = "padding:6px 8px;border-bottom:1px solid #e5e7eb";
   const right = `${cell};text-align:right;white-space:nowrap`;
   const table = payload.rows.length
@@ -723,7 +727,9 @@ export async function sendResellerReportEmail(payload: ResellerReportPayload) {
     payload.period,
     "",
     ...(payload.rows.length
-      ? payload.rows.map((r) => `${r[0]} — ${payload.columns[1]} ${r[1]} · ${payload.columns[2]} ${r[2]} · ${payload.columns[3]} ${r[3]}`)
+      ? payload.rows.map(
+          (r) => `${r[0]} — ${payload.columns.slice(1).map((c, i) => `${c} ${r[i + 1]}`).join(" · ")}`,
+        )
       : [payload.emptyRows]),
     "",
     payload.summaryTitle,
@@ -739,7 +745,7 @@ export async function sendResellerReportEmail(payload: ResellerReportPayload) {
     subject: payload.subject,
     text,
     html: `<div style="font:14px/1.6 system-ui,sans-serif;color:#2A2C30;max-width:640px">${html}</div>`,
-    etiquette: "récapitulatif point de vente",
+    etiquette,
   });
 }
 

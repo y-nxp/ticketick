@@ -552,7 +552,8 @@
       "team": "Team",
       "discounts": "Sconti",
       "seatPlans": "Piante di sala",
-      "payments": "Incassi"
+      "payments": "Incassi",
+      "invitations": "Inviti"
     },
     "overview": {
       "title": "Panoramica",
@@ -1669,6 +1670,67 @@
       "changeLinkUrl": "Link per il cambio posti",
       "copy": "Copiare",
       "copied": "Copiato"
+    },
+    "invitations": {
+      "title": "Inviti",
+      "subtitle": "Posti riservati agli ospiti, prenotazioni offerte o pagate e posti ancora in vendita, per le date future.",
+      "organizer": "Organizzatore",
+      "noOrganizer": "Nessun organizzatore ha date future.",
+      "empty": "Nessuna data futura.",
+      "guestHeld": "Posti ospiti liberi",
+      "guestHeldHint": "Riservati, non ancora assegnati",
+      "offered": "Offerti",
+      "paid": "Pagati",
+      "sold": "Venduti",
+      "onSale": "In vendita",
+      "soldHint": "{count, plural, one {# biglietto venduto} other {# biglietti venduti}}",
+      "date": "Data",
+      "seated": "Posti numerati",
+      "freeSeating": "Posti liberi",
+      "reservations": "{count, plural, one {Mostra la prenotazione} other {Mostra le # prenotazioni}}",
+      "places": "{count, plural, one {# posto} other {# posti}}",
+      "noName": "Senza nome",
+      "reserve": "Prenota",
+      "settle": {
+        "RESERVATION": "Offerta",
+        "IBAN": "Pagata con bonifico",
+        "CASH": "Pagata in contanti",
+        "CARD": "Pagata con carta",
+        "TERMINAL": "Pagata al terminale",
+        "OTHER": "Pagata",
+        "awaiting": "In attesa di pagamento"
+      },
+      "reportTitle": "Rapporto via e-mail",
+      "reportStatus": {
+        "NONE": "Nessun rapporto automatico.",
+        "DAILY": "Rapporto giornaliero, ogni mattina alle 7.",
+        "WEEKLY": "Rapporto settimanale, il lunedì alle 7."
+      },
+      "nextReport": "prossimo invio: {date}",
+      "reportRecipients": "Destinatari: {emails}",
+      "noRecipients": "Nessun destinatario: «Invia ora» lo invia al tuo indirizzo.",
+      "sendNow": "Invia ora",
+      "sending": "Invio…",
+      "sent": "Rapporto inviato a {emails}.",
+      "frequency": "Invio automatico",
+      "frequencyHint": "Il rapporto mostra la situazione al momento dell’invio, data per data.",
+      "frequencies": {
+        "NONE": "Mai",
+        "DAILY": "Ogni giorno",
+        "WEEKLY": "Ogni settimana (lunedì)"
+      },
+      "emails": "Destinatari",
+      "emailsHint": "Un indirizzo per riga, al massimo 10. Vuoto: indirizzi in copia dell’organizzatore ({emails}).",
+      "emailsHintEmpty": "Un indirizzo per riga, al massimo 10.",
+      "save": "Salva",
+      "saved": "Impostazioni salvate.",
+      "errors": {
+        "notFound": "Organizzatore non trovato.",
+        "invalid": "Impostazione non valida.",
+        "emails": "Un indirizzo non è valido, oppure sono più di 10.",
+        "throttled": "Troppi invii. Riprova tra un’ora.",
+        "notSent": "Non è stato possibile inviare il rapporto."
+      }
     }
   },
   "pay": {
@@ -1907,5 +1969,21 @@
       "failed": "Il cambio non è stato possibile. Ricaricate la pagina e riprovate."
     },
     "current": "Il vostro posto attuale"
+  },
+  "inviteReport": {
+    "subject": "Inviti {name} — situazione al {date}",
+    "heading": "Inviti — {name}",
+    "asOf": "Situazione al {date}",
+    "date": "Data",
+    "guestHeld": "Posti ospiti liberi",
+    "offered": "Offerti",
+    "paid": "Pagati",
+    "paidAmount": "Importo pagato",
+    "sold": "Biglietti venduti",
+    "onSale": "In vendita",
+    "empty": "Nessuna data futura.",
+    "totals": "Totale delle date future",
+    "footer": "Posti ospiti liberi: riservati, non ancora assegnati. Pagati: prenotazioni saldate fuori dalla biglietteria (bonifico, contanti…).",
+    "open": "Apri gli inviti"
   }
 }

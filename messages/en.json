@@ -552,7 +552,8 @@
       "team": "Team",
       "discounts": "Discounts",
       "seatPlans": "Seating plans",
-      "payments": "Payments"
+      "payments": "Payments",
+      "invitations": "Invitations"
     },
     "overview": {
       "title": "Overview",
@@ -1669,6 +1670,67 @@
       "changeLinkUrl": "Seat change link",
       "copy": "Copy",
       "copied": "Copied"
+    },
+    "invitations": {
+      "title": "Invitations",
+      "subtitle": "Seats set aside for guests, complimentary or paid reservations, and seats still on sale, for upcoming dates.",
+      "organizer": "Organizer",
+      "noOrganizer": "No organizer has an upcoming date.",
+      "empty": "No upcoming dates.",
+      "guestHeld": "Free guest seats",
+      "guestHeldHint": "Set aside, not yet assigned",
+      "offered": "Complimentary",
+      "paid": "Paid",
+      "sold": "Sold",
+      "onSale": "On sale",
+      "soldHint": "{count, plural, one {# ticket sold} other {# tickets sold}}",
+      "date": "Date",
+      "seated": "Numbered seats",
+      "freeSeating": "Unreserved seating",
+      "reservations": "{count, plural, one {Show the reservation} other {Show the # reservations}}",
+      "places": "{count, plural, one {# seat} other {# seats}}",
+      "noName": "No name",
+      "reserve": "Reserve",
+      "settle": {
+        "RESERVATION": "Complimentary",
+        "IBAN": "Paid by transfer",
+        "CASH": "Paid in cash",
+        "CARD": "Paid by card",
+        "TERMINAL": "Paid by terminal",
+        "OTHER": "Paid",
+        "awaiting": "Awaiting payment"
+      },
+      "reportTitle": "Email report",
+      "reportStatus": {
+        "NONE": "No automatic report.",
+        "DAILY": "Daily report, every morning at 7 am.",
+        "WEEKLY": "Weekly report, Monday at 7 am."
+      },
+      "nextReport": "next send: {date}",
+      "reportRecipients": "Recipients: {emails}",
+      "noRecipients": "No recipients: “Send now” sends it to your address.",
+      "sendNow": "Send now",
+      "sending": "Sending…",
+      "sent": "Report sent to {emails}.",
+      "frequency": "Automatic sending",
+      "frequencyHint": "The report shows the situation at the time of sending, date by date.",
+      "frequencies": {
+        "NONE": "Never",
+        "DAILY": "Every day",
+        "WEEKLY": "Every week (Monday)"
+      },
+      "emails": "Recipients",
+      "emailsHint": "One address per line, up to 10. Empty: the organizer’s copy addresses ({emails}).",
+      "emailsHintEmpty": "One address per line, up to 10.",
+      "save": "Save",
+      "saved": "Settings saved.",
+      "errors": {
+        "notFound": "Organizer not found.",
+        "invalid": "Invalid setting.",
+        "emails": "An address is not valid, or there are more than 10.",
+        "throttled": "Too many sends. Try again in an hour.",
+        "notSent": "The report could not be sent."
+      }
     }
   },
   "pay": {
@@ -1907,5 +1969,21 @@
       "failed": "The change could not be made. Reload the page and try again."
     },
     "current": "Your current seat"
+  },
+  "inviteReport": {
+    "subject": "Invitations {name} — status on {date}",
+    "heading": "Invitations — {name}",
+    "asOf": "Status on {date}",
+    "date": "Date",
+    "guestHeld": "Free guest seats",
+    "offered": "Complimentary",
+    "paid": "Paid",
+    "paidAmount": "Amount paid",
+    "sold": "Tickets sold",
+    "onSale": "On sale",
+    "empty": "No upcoming dates.",
+    "totals": "Total for upcoming dates",
+    "footer": "Free guest seats: set aside, not yet assigned. Paid: reservations settled outside the ticketing (transfer, cash…).",
+    "open": "Open invitations"
   }
 }

@@ -552,7 +552,8 @@
       "team": "Équipe",
       "discounts": "Rabais",
       "seatPlans": "Plans de salle",
-      "payments": "Encaissement"
+      "payments": "Encaissement",
+      "invitations": "Invitations"
     },
     "overview": {
       "title": "Vue d’ensemble",
@@ -1669,6 +1670,67 @@
       "changeLinkUrl": "Lien de changement",
       "copy": "Copier",
       "copied": "Copié"
+    },
+    "invitations": {
+      "title": "Invitations",
+      "subtitle": "Places mises de côté pour les invités, réservations offertes ou payées, et places restant en vente, pour les dates à venir.",
+      "organizer": "Organisateur",
+      "noOrganizer": "Aucun organisateur n’a de date à venir.",
+      "empty": "Aucune date à venir.",
+      "guestHeld": "Places invités libres",
+      "guestHeldHint": "Mises de côté, pas encore attribuées",
+      "offered": "Offertes",
+      "paid": "Payées",
+      "sold": "Vendues",
+      "onSale": "En vente",
+      "soldHint": "{count, plural, one {# billet vendu} other {# billets vendus}}",
+      "date": "Date",
+      "seated": "Places numérotées",
+      "freeSeating": "Placement libre",
+      "reservations": "{count, plural, one {Voir la réservation} other {Voir les # réservations}}",
+      "places": "{count, plural, one {# place} other {# places}}",
+      "noName": "Sans nom",
+      "reserve": "Réserver",
+      "settle": {
+        "RESERVATION": "Offerte",
+        "IBAN": "Payée par virement",
+        "CASH": "Payée en espèces",
+        "CARD": "Payée par carte",
+        "TERMINAL": "Payée au terminal",
+        "OTHER": "Payée",
+        "awaiting": "En attente de paiement"
+      },
+      "reportTitle": "Rapport par e-mail",
+      "reportStatus": {
+        "NONE": "Pas de rapport automatique.",
+        "DAILY": "Rapport quotidien, chaque matin à 7 h.",
+        "WEEKLY": "Rapport hebdomadaire, le lundi à 7 h."
+      },
+      "nextReport": "prochain envoi : {date}",
+      "reportRecipients": "Destinataires : {emails}",
+      "noRecipients": "Aucun destinataire : « Envoyer maintenant » l’envoie à votre adresse.",
+      "sendNow": "Envoyer maintenant",
+      "sending": "Envoi…",
+      "sent": "Rapport envoyé à {emails}.",
+      "frequency": "Envoi automatique",
+      "frequencyHint": "Le rapport donne l’état au moment de l’envoi, date par date.",
+      "frequencies": {
+        "NONE": "Jamais",
+        "DAILY": "Chaque jour",
+        "WEEKLY": "Chaque semaine (lundi)"
+      },
+      "emails": "Destinataires",
+      "emailsHint": "Une adresse par ligne, 10 au plus. Vide : adresses de copie de l’organisateur ({emails}).",
+      "emailsHintEmpty": "Une adresse par ligne, 10 au plus.",
+      "save": "Enregistrer",
+      "saved": "Réglages enregistrés.",
+      "errors": {
+        "notFound": "Organisateur introuvable.",
+        "invalid": "Réglage non valable.",
+        "emails": "Une adresse n’est pas valable, ou il y en a plus de 10.",
+        "throttled": "Trop d’envois. Réessayez dans une heure.",
+        "notSent": "Le rapport n’a pas pu être envoyé."
+      }
     }
   },
   "pay": {
@@ -1907,5 +1969,21 @@
       "failed": "Le changement n'a pas pu être fait. Rechargez la page et réessayez."
     },
     "current": "Votre place actuelle"
+  },
+  "inviteReport": {
+    "subject": "Invitations {name} — état au {date}",
+    "heading": "Invitations — {name}",
+    "asOf": "État au {date}",
+    "date": "Date",
+    "guestHeld": "Invités libres",
+    "offered": "Offertes",
+    "paid": "Payées",
+    "paidAmount": "Montant payé",
+    "sold": "Billets vendus",
+    "onSale": "En vente",
+    "empty": "Aucune date à venir.",
+    "totals": "Total des dates à venir",
+    "footer": "Places invités libres : mises de côté, pas encore attribuées. Payées : réservations réglées hors billetterie (virement, espèces…).",
+    "open": "Ouvrir les invitations"
   }
 }

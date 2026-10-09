@@ -8,4 +8,6 @@ export async function register(): Promise<void> {
   startHoldJanitor();
   const { startResellerReports } = await import("@/lib/resellers/report");
   startResellerReports();
+  const { startInvitationReports } = await import("@/lib/invitations/report");
+  startInvitationReports();
 }

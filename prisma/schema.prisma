@@ -328,6 +328,13 @@ model Organizer {
   /// tous deux actifs : "postfinance" | "stripe". Vide : PostFinance.
   cardProvider String?
 
+  /// Rapport des invitations par e-mail : places invités, offertes et payées.
+  inviteReportFrequency ReportFrequency @default(NONE)
+  /// Vide : le rapport part aux adresses de copie (`notifyEmails`).
+  inviteReportEmails    String[]        @default([])
+  /// Fin de la période du dernier rapport envoyé automatiquement.
+  lastInviteReportAt    DateTime?
+
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @unique
 

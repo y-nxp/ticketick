@@ -12,6 +12,7 @@ import {
   Wallet,
   BadgePercent,
   Armchair,
+  Gift,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getCurrentUser } from "@/lib/auth/dal";
@@ -39,6 +40,7 @@ export default async function AdminLayout({
     { href: "/admin", label: t("nav.overview"), icon: LayoutDashboard },
     { href: "/admin/events", label: t("nav.events"), icon: CalendarDays },
     { href: "/admin/orders", label: t("nav.orders"), icon: Receipt },
+    { href: "/admin/invitations", label: t("nav.invitations"), icon: Gift },
     ...(admin
       ? [
           { href: "/admin/users", label: t("nav.users"), icon: Users },
