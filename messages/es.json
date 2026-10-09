@@ -121,8 +121,8 @@
       "introSite": "No hay entrada que comprar: la inscripción se hace directamente en el sitio web de abajo.",
       "site": "Inscribirse en {site}"
     },
-    "seatLimitPerson": "Máximo {n} asientos por persona para este espectáculo, carrito incluido.",
-    "limitPerson": "Máximo {n} asientos por persona para este espectáculo.",
+    "seatLimitPerson": "Máximo {n} asientos por persona para este evento, carrito incluido.",
+    "limitPerson": "Máximo {n} asientos por persona para este evento.",
     "limitOrder": "Máximo {n} asientos por pedido."
   },
   "portal": {
@@ -252,7 +252,7 @@
     "accountInviteTitle": "Encuentra todas tus entradas",
     "accountInviteText": "Con una cuenta, tus datos se rellenan en cada compra y todas tus entradas están en un mismo lugar, incluidas las compradas sin cuenta con la misma dirección de correo.",
     "accountInviteCta": "Crear mi cuenta",
-    "max_per_person": "Ya has reservado asientos gratuitos para este espectáculo: se ha alcanzado el máximo por persona, reservas anteriores incluidas."
+    "max_per_person": "Ya has reservado asientos gratuitos para este evento: se ha alcanzado el máximo por persona, reservas anteriores incluidas."
   },
   "account": {
     "title": "Mi cuenta",

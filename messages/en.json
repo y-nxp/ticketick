@@ -122,8 +122,8 @@
       "introSite": "No ticket to buy: registration is done directly on the website below.",
       "site": "Register on {site}"
     },
-    "seatLimitPerson": "Maximum {n} seats per person for this show, cart included.",
-    "limitPerson": "Maximum {n} seats per person for this show.",
+    "seatLimitPerson": "Maximum {n} seats per person for this event, cart included.",
+    "limitPerson": "Maximum {n} seats per person for this event.",
     "limitOrder": "Maximum {n} seats per order."
   },
   "portal": {
@@ -253,7 +253,7 @@
     "accountInviteTitle": "Keep all your tickets in one place",
     "accountInviteText": "With an account, your details are filled in at every purchase and all your tickets are in one place, including those bought without an account with the same email address.",
     "accountInviteCta": "Create my account",
-    "max_per_person": "You have already booked free seats for this show: the per-person maximum is reached, previous bookings included."
+    "max_per_person": "You have already booked free seats for this event: the per-person maximum is reached, previous bookings included."
   },
   "account": {
     "title": "My account",
