@@ -8,6 +8,7 @@ import { reportRecipients, sendOrganizerReport } from "@/lib/reports/report";
 import { REPORT_SECTIONS, type ReportSection } from "@/lib/reports/summary";
 import { prisma } from "@/lib/prisma";
 import { consume } from "@/lib/rate-limit";
+import { lastClosedPeriod } from "@/lib/resellers/report";
 
 const MAX_RECIPIENTS = 10;
 
@@ -28,7 +29,14 @@ async function ownedOrganizer(formData: FormData) {
   if (!id || !(await assertOrganizerAccess(id, organizerId))) return null;
   const organizer = await prisma.organizer.findUnique({
     where: { id },
-    select: { id: true, reportFrequency: true, reportEmails: true, notifyEmails: true },
+    select: {
+      id: true,
+      reportFrequency: true,
+      reportWeekday: true,
+      reportHour: true,
+      reportEmails: true,
+      notifyEmails: true,
+    },
   });
   return organizer ? { user, organizer } : null;
 }
@@ -39,20 +47,37 @@ export async function saveReportSettings(_prev: FormState, formData: FormData): 
   const frequency = z
     .enum(["NONE", "DAILY", "WEEKLY"])
     .safeParse(readText(formData, "frequency") || "NONE");
-  if (!frequency.success) return failure("invalid");
+  const weekday = z.coerce.number().int().min(1).max(7).safeParse(readText(formData, "weekday") || "1");
+  const hour = z.coerce.number().int().min(0).max(23).safeParse(readText(formData, "hour") || "7");
+  if (!frequency.success || !weekday.success || !hour.success) return failure("invalid");
   const emails = readEmails(readText(formData, "emails"));
   if (!emails) return failure("emails");
   const sections = readSectionList(formData);
   if (sections.length === 0) return failure("sections");
 
+  const { reportFrequency, reportWeekday, reportHour } = actor.organizer;
+  const rescheduled =
+    reportFrequency !== frequency.data || reportWeekday !== weekday.data || reportHour !== hour.data;
   await prisma.organizer.update({
     where: { id: actor.organizer.id },
     data: {
       reportFrequency: frequency.data,
+      reportWeekday: weekday.data,
+      reportHour: hour.data,
       reportEmails: emails,
       reportSections: sections,
-      // Nouvelle fréquence : le premier rapport automatique part à la prochaine échéance.
-      ...(actor.organizer.reportFrequency !== frequency.data ? { lastReportAt: new Date() } : {}),
+      // Nouvel horaire : rien pour une échéance déjà passée, la prochaine part à l'heure choisie.
+      ...(rescheduled
+        ? {
+            lastReportAt:
+              frequency.data === "NONE"
+                ? null
+                : (lastClosedPeriod(frequency.data, new Date(), {
+                    weekday: weekday.data,
+                    hour: hour.data,
+                  })?.to ?? null),
+          }
+        : {}),
     },
   });
   revalidatePath("/admin/reports");

@@ -15,9 +15,8 @@ import { getOrganizerReport, readSections, type ReportSection } from "./summary"
 
 /**
  * Rapport d'un organisateur : ventes, invitations et places restantes des
- * dates à venir, selon les parties choisies. Envoyé à la demande ou chaque
- * matin (lundi pour l'hebdomadaire), à l'heure des récapitulatifs des points
- * de vente. Les « nouveaux » billets comptent depuis le rapport automatique
+ * dates à venir, selon les parties choisies. Envoyé à la demande, ou chaque
+ * jour ou chaque semaine au jour et à l'heure choisis. Les « nouveaux » billets comptent depuis le rapport automatique
  * précédent ; un envoi à la demande ne déplace pas ce point de départ.
  */
 
@@ -175,11 +174,20 @@ export async function sendOrganizerReport(
 export async function sendDueOrganizerReports(now = new Date()): Promise<number> {
   const organizers = await prisma.organizer.findMany({
     where: { reportFrequency: { in: ["DAILY", "WEEKLY"] } },
-    select: { id: true, reportFrequency: true, lastReportAt: true },
+    select: {
+      id: true,
+      reportFrequency: true,
+      reportWeekday: true,
+      reportHour: true,
+      lastReportAt: true,
+    },
   });
   let n = 0;
   for (const organizer of organizers) {
-    const period = lastClosedPeriod(organizer.reportFrequency as "DAILY" | "WEEKLY", now);
+    const period = lastClosedPeriod(organizer.reportFrequency as "DAILY" | "WEEKLY", now, {
+      weekday: organizer.reportWeekday,
+      hour: organizer.reportHour,
+    });
     if (!period) continue;
     if (organizer.lastReportAt && organizer.lastReportAt >= period.to) continue;
     // Réservé avant l'envoi : deux instances ne l'envoient pas deux fois.

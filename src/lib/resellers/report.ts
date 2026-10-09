@@ -53,25 +53,41 @@ function offsetMs(date: Date): number {
   return Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi, p.s) - Math.floor(date.getTime() / 1000) * 1000;
 }
 
-/** Minuit à Zurich du jour (local) de `date`, décalé de `days` jours. */
-export function localMidnight(date: Date, days = 0): Date {
+/** Minuit à Zurich du jour (local) de `date`, décalé de `days` jours (ou `hour` heures ce jour-là). */
+export function localMidnight(date: Date, days = 0, hour = 0): Date {
   const p = zoned(date);
-  const guess = Date.UTC(p.y, p.m - 1, p.d + days);
+  const guess = Date.UTC(p.y, p.m - 1, p.d + days, hour);
   let time = guess - offsetMs(new Date(guess));
   const corrected = guess - offsetMs(new Date(time));
   if (corrected !== time) time = corrected;
   return new Date(time);
 }
 
+/** Jour (1 = lundi … 7 = dimanche, pour l'hebdomadaire) et heure d'envoi, à Zurich. */
+export interface ReportSchedule {
+  weekday: number;
+  hour: number;
+}
+
+const DEFAULT_SCHEDULE: ReportSchedule = { weekday: 1, hour: SEND_HOUR };
+
+/** Minuit du jour d'envoi le plus récent : aujourd'hui, ou le dernier jour choisi. */
+function lastBoundary(frequency: "DAILY" | "WEEKLY", now: Date, schedule: ReportSchedule): Date {
+  if (frequency === "DAILY") return localMidnight(now);
+  return localMidnight(now, -((zoned(now).weekday + 1 - schedule.weekday + 7) % 7));
+}
+
+const sendTime = (boundary: Date, schedule: ReportSchedule) =>
+  localMidnight(boundary, 0, schedule.hour);
+
 /** Fin de la dernière période close, si l'heure d'envoi est passée. */
 export function lastClosedPeriod(
   frequency: "DAILY" | "WEEKLY",
   now: Date,
+  schedule: ReportSchedule = DEFAULT_SCHEDULE,
 ): { from: Date; to: Date } | null {
-  const local = zoned(now);
-  const to =
-    frequency === "DAILY" ? localMidnight(now) : localMidnight(now, -local.weekday);
-  if (now.getTime() < to.getTime() + SEND_HOUR * 60 * 60 * 1000) return null;
+  const to = lastBoundary(frequency, now, schedule);
+  if (now < sendTime(to, schedule)) return null;
   const from = frequency === "DAILY" ? localMidnight(to, -1) : localMidnight(to, -7);
   return { from, to };
 }
@@ -81,15 +97,15 @@ export function nextReportAt(
   frequency: "DAILY" | "WEEKLY",
   lastReportAt: Date | null,
   now = new Date(),
+  schedule: ReportSchedule = DEFAULT_SCHEDULE,
 ): Date {
-  const closed = lastClosedPeriod(frequency, now);
+  const closed = lastClosedPeriod(frequency, now, schedule);
   if (closed && (!lastReportAt || lastReportAt < closed.to)) return now;
-  const local = zoned(now);
-  const current =
-    frequency === "DAILY" ? localMidnight(now) : localMidnight(now, -local.weekday);
-  const sendAt = (boundary: Date) => new Date(boundary.getTime() + SEND_HOUR * 60 * 60 * 1000);
-  if (now < sendAt(current) && (!lastReportAt || lastReportAt < current)) return sendAt(current);
-  return sendAt(frequency === "DAILY" ? localMidnight(now, 1) : localMidnight(now, 7 - local.weekday));
+  const current = lastBoundary(frequency, now, schedule);
+  if (now < sendTime(current, schedule) && (!lastReportAt || lastReportAt < current)) {
+    return sendTime(current, schedule);
+  }
+  return sendTime(localMidnight(current, frequency === "DAILY" ? 1 : 7), schedule);
 }
 
 export async function sendResellerReport(

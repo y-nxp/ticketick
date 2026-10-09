@@ -1716,8 +1716,8 @@
       "reportTitle": "Email report",
       "reportStatus": {
         "NONE": "No automatic report.",
-        "DAILY": "Daily report, every morning at 7 am.",
-        "WEEKLY": "Weekly report, Monday at 7 am."
+        "DAILY": "Daily report, every day at {time}.",
+        "WEEKLY": "Weekly report, every {weekday} at {time}."
       },
       "nextReport": "next send: {date}",
       "reportRecipients": "Recipients: {emails}",
@@ -1734,8 +1734,11 @@
       "frequencies": {
         "NONE": "Never",
         "DAILY": "Every day",
-        "WEEKLY": "Every week (Monday)"
+        "WEEKLY": "Every week"
       },
+      "weekday": "Day",
+      "weekdayHint": "For the weekly report.",
+      "hour": "Time",
       "emails": "Recipients",
       "emailsHint": "One address per line, up to 10. Empty: the organizer’s copy addresses ({emails}).",
       "emailsHintEmpty": "One address per line, up to 10.",

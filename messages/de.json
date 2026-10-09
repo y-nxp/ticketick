@@ -1716,8 +1716,8 @@
       "reportTitle": "Bericht per E-Mail",
       "reportStatus": {
         "NONE": "Kein automatischer Bericht.",
-        "DAILY": "Täglicher Bericht, jeden Morgen um 7 Uhr.",
-        "WEEKLY": "Wöchentlicher Bericht, montags um 7 Uhr."
+        "DAILY": "Täglicher Bericht, jeden Tag um {time}.",
+        "WEEKLY": "Wöchentlicher Bericht, jeden {weekday} um {time}."
       },
       "nextReport": "nächster Versand: {date}",
       "reportRecipients": "Empfänger: {emails}",
@@ -1734,8 +1734,11 @@
       "frequencies": {
         "NONE": "Nie",
         "DAILY": "Täglich",
-        "WEEKLY": "Wöchentlich (Montag)"
+        "WEEKLY": "Jede Woche"
       },
+      "weekday": "Versandtag",
+      "weekdayHint": "Für den wöchentlichen Bericht.",
+      "hour": "Versandzeit",
       "emails": "Empfänger",
       "emailsHint": "Eine Adresse pro Zeile, höchstens 10. Leer: Kopieadressen des Veranstalters ({emails}).",
       "emailsHintEmpty": "Eine Adresse pro Zeile, höchstens 10.",

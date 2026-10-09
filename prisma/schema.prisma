@@ -330,6 +330,10 @@ model Organizer {
 
   /// Rapport de l'organisateur par e-mail : ventes, invitations, places restantes.
   reportFrequency  ReportFrequency @default(NONE)
+  /// Jour du rapport hebdomadaire : 1 = lundi … 7 = dimanche.
+  reportWeekday    Int             @default(1)
+  /// Heure d'envoi à Zurich, 0 à 23.
+  reportHour       Int             @default(7)
   /// Vide : le rapport part aux adresses de copie (`notifyEmails`).
   reportEmails     String[]        @default([])
   /// Parties du rapport : "sales", "invitations", "remaining".

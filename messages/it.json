@@ -1716,8 +1716,8 @@
       "reportTitle": "Rapporto via e-mail",
       "reportStatus": {
         "NONE": "Nessun rapporto automatico.",
-        "DAILY": "Rapporto giornaliero, ogni mattina alle 7.",
-        "WEEKLY": "Rapporto settimanale, il lunedì alle 7."
+        "DAILY": "Rapporto giornaliero, ogni giorno alle {time}.",
+        "WEEKLY": "Rapporto settimanale, ogni {weekday} alle {time}."
       },
       "nextReport": "prossimo invio: {date}",
       "reportRecipients": "Destinatari: {emails}",
@@ -1734,8 +1734,11 @@
       "frequencies": {
         "NONE": "Mai",
         "DAILY": "Ogni giorno",
-        "WEEKLY": "Ogni settimana (lunedì)"
+        "WEEKLY": "Ogni settimana"
       },
+      "weekday": "Giorno di invio",
+      "weekdayHint": "Per il rapporto settimanale.",
+      "hour": "Ora di invio",
       "emails": "Destinatari",
       "emailsHint": "Un indirizzo per riga, al massimo 10. Vuoto: indirizzi in copia dell’organizzatore ({emails}).",
       "emailsHintEmpty": "Un indirizzo per riga, al massimo 10.",

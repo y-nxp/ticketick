@@ -48,12 +48,18 @@ export function SendReportNow({
 export function ReportSettings({
   organizerId,
   frequency,
+  weekday,
+  hour,
+  weekdays,
   emails,
   sections,
   fallback,
 }: {
   organizerId: string;
   frequency: string;
+  weekday: number;
+  hour: number;
+  weekdays: readonly { value: string; label: string }[];
   emails: string;
   sections: readonly string[];
   fallback: string;
@@ -64,7 +70,7 @@ export function ReportSettings({
   return (
     <form {...formProps} className="space-y-4 border-t border-border pt-5">
       <input type="hidden" name="organizerId" value={organizerId} />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <Field label={t("frequency")} hint={t("frequencyHint")}>
           <Select
             key={frequency}
@@ -76,13 +82,27 @@ export function ReportSettings({
             }))}
           />
         </Field>
-        <Field
-          label={t("emails")}
-          hint={fallback ? t("emailsHint", { emails: fallback }) : t("emailsHintEmpty")}
-        >
-          <TextArea name="emails" rows={3} defaultValue={emails} />
+        <Field label={t("weekday")} hint={t("weekdayHint")}>
+          <Select key={weekday} name="weekday" defaultValue={String(weekday)} options={weekdays} />
+        </Field>
+        <Field label={t("hour")}>
+          <Select
+            key={hour}
+            name="hour"
+            defaultValue={String(hour)}
+            options={Array.from({ length: 24 }, (_, h) => ({
+              value: String(h),
+              label: `${String(h).padStart(2, "0")}:00`,
+            }))}
+          />
         </Field>
       </div>
+      <Field
+        label={t("emails")}
+        hint={fallback ? t("emailsHint", { emails: fallback }) : t("emailsHintEmpty")}
+      >
+        <TextArea name="emails" rows={3} defaultValue={emails} />
+      </Field>
       <fieldset key={sections.join(",")} className="space-y-2">
         <legend className="text-sm font-medium">{t("sections")}</legend>
         <div className="flex flex-wrap gap-x-6 gap-y-2">

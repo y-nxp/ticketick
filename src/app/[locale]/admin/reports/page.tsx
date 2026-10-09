@@ -69,6 +69,8 @@ export default async function ReportsPage({
       notifyEmails: true,
       reportEmails: true,
       reportFrequency: true,
+      reportWeekday: true,
+      reportHour: true,
       reportSections: true,
       lastReportAt: true,
       lastReportSentAt: true,
@@ -102,6 +104,14 @@ export default async function ReportsPage({
   });
   const sinceLabel = formatDate(since, intl, { weekday: undefined, year: undefined });
   const frequency = organizer.reportFrequency;
+  const schedule = { weekday: organizer.reportWeekday, hour: organizer.reportHour };
+  const weekdays = [1, 2, 3, 4, 5, 6, 7].map((d) => ({
+    value: String(d),
+    label: new Intl.DateTimeFormat(intl, { weekday: "long", timeZone: "UTC" }).format(
+      new Date(Date.UTC(2024, 0, d)),
+    ),
+  }));
+  const time = `${String(schedule.hour).padStart(2, "0")}:00`;
   const recipients = reportRecipients(organizer);
   const pill = (active: boolean) =>
     `rounded-full border px-3 py-1 text-sm transition-colors ${
@@ -294,10 +304,13 @@ export default async function ReportsPage({
         <div>
           <h2 className="text-lg">{t("reportTitle")}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            {t(`reportStatus.${frequency}`)}
+            {t(`reportStatus.${frequency}`, {
+              weekday: weekdays[schedule.weekday - 1]?.label ?? "",
+              time,
+            })}
             {frequency !== "NONE"
               ? ` · ${t("nextReport", {
-                  date: formatDate(nextReportAt(frequency, organizer.lastReportAt), intl, {
+                  date: formatDate(nextReportAt(frequency, organizer.lastReportAt, new Date(), schedule), intl, {
                     weekday: "long",
                     day: "numeric",
                     month: "long",
@@ -318,6 +331,9 @@ export default async function ReportsPage({
             <ReportSettings
               organizerId={organizerId}
               frequency={frequency}
+              weekday={schedule.weekday}
+              hour={schedule.hour}
+              weekdays={weekdays}
               emails={organizer.reportEmails.join("\n")}
               sections={readSections(organizer.reportSections)}
               fallback={organizer.notifyEmails.join(", ")}
