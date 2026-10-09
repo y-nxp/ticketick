@@ -432,7 +432,7 @@ function tariffsFor(concert: Concert): TariffInput[] {
         name: YOUTH_NAME,
         priceCents: 0,
         quantity: counts.CAT2 + counts.CAT3,
-        maxPerOrder: 2,
+        maxPerOrder: 10,
         seatZones: ["CAT2", "CAT3"],
         youth: true,
       },
@@ -445,7 +445,7 @@ function tariffsFor(concert: Concert): TariffInput[] {
       quantity: capacity,
       maxPerOrder: 10,
     },
-    { name: YOUTH_NAME, priceCents: 0, quantity: capacity, maxPerOrder: 2, youth: true },
+    { name: YOUTH_NAME, priceCents: 0, quantity: capacity, maxPerOrder: 10, youth: true },
   ];
 }
 
@@ -1375,7 +1375,7 @@ async function sellLariviere(organizerId: string): Promise<string> {
           priceCents: 0,
           currency: "CHF",
           quantity: capacity,
-          maxPerOrder: 2,
+          maxPerOrder: 10,
           maxPerPaidTicket: 2,
           requiresAttendee: true,
           maxAgeYears: 25,
