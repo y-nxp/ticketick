@@ -553,7 +553,7 @@
       "discounts": "Rabais",
       "seatPlans": "Plans de salle",
       "payments": "Encaissement",
-      "invitations": "Invitations"
+      "reports": "Rapports"
     },
     "overview": {
       "title": "Vue d’ensemble",
@@ -1671,19 +1671,32 @@
       "copy": "Copier",
       "copied": "Copié"
     },
-    "invitations": {
-      "title": "Invitations",
-      "subtitle": "Places mises de côté pour les invités, réservations offertes ou payées, et places restant en vente, pour les dates à venir.",
+    "reports": {
+      "title": "Rapports",
+      "subtitle": "Ventes, invitations et places restantes des dates à venir, date par date.",
       "organizer": "Organisateur",
+      "filter": "Afficher",
+      "views": {
+        "all": "Tout",
+        "sales": "Ventes",
+        "invitations": "Invitations",
+        "remaining": "Places restantes"
+      },
       "noOrganizer": "Aucun organisateur n’a de date à venir.",
       "empty": "Aucune date à venir.",
       "guestHeld": "Places invités libres",
       "guestHeldHint": "Mises de côté, pas encore attribuées",
       "offered": "Offertes",
       "paid": "Payées",
-      "sold": "Vendues",
+      "sold": "Billets vendus",
+      "soldNew": "Nouveaux",
+      "soldNewHint": "{count, plural, =0 {Aucun nouveau depuis le {date}} one {# nouveau depuis le {date}} other {# nouveaux depuis le {date}}}",
+      "revenue": "Encaissé",
+      "pending": "En attente",
+      "pendingHint": "{count, plural, one {# billet en attente de paiement} other {# billets en attente de paiement}}",
+      "invited": "Invités attribués",
+      "invitedHint": "{offered} offertes · {paid} payées ({amount})",
       "onSale": "En vente",
-      "soldHint": "{count, plural, one {# billet vendu} other {# billets vendus}}",
       "date": "Date",
       "seated": "Places numérotées",
       "freeSeating": "Placement libre",
@@ -1709,11 +1722,15 @@
       "nextReport": "prochain envoi : {date}",
       "reportRecipients": "Destinataires : {emails}",
       "noRecipients": "Aucun destinataire : « Envoyer maintenant » l’envoie à votre adresse.",
-      "sendNow": "Envoyer maintenant",
+      "sendNow": {
+        "all": "Envoyer le rapport maintenant",
+        "sales": "Envoyer les ventes maintenant",
+        "invitations": "Envoyer les invitations maintenant",
+        "remaining": "Envoyer les places restantes maintenant"
+      },
       "sending": "Envoi…",
       "sent": "Rapport envoyé à {emails}.",
       "frequency": "Envoi automatique",
-      "frequencyHint": "Le rapport donne l’état au moment de l’envoi, date par date.",
       "frequencies": {
         "NONE": "Jamais",
         "DAILY": "Chaque jour",
@@ -1729,8 +1746,11 @@
         "invalid": "Réglage non valable.",
         "emails": "Une adresse n’est pas valable, ou il y en a plus de 10.",
         "throttled": "Trop d’envois. Réessayez dans une heure.",
-        "notSent": "Le rapport n’a pas pu être envoyé."
-      }
+        "notSent": "Le rapport n’a pas pu être envoyé.",
+        "sections": "Choisissez au moins une partie du rapport."
+      },
+      "frequencyHint": "Le rapport donne l’état au moment de l’envoi, date par date. « Nouveaux » : depuis l’envoi précédent.",
+      "sections": "Contenu du rapport automatique"
     }
   },
   "pay": {
@@ -1970,20 +1990,29 @@
     },
     "current": "Votre place actuelle"
   },
-  "inviteReport": {
-    "subject": "Invitations {name} — état au {date}",
-    "heading": "Invitations — {name}",
+  "organizerReport": {
+    "subject": "Rapport {name} — état au {date}",
+    "heading": "Rapport — {name}",
     "asOf": "État au {date}",
+    "salesTitle": "Ventes",
+    "invitationsTitle": "Invitations",
+    "remainingTitle": "Places restantes",
     "date": "Date",
+    "sold": "Billets vendus",
+    "soldNew": "Nouveaux",
+    "soldNewSince": "Nouveaux depuis le {date}",
+    "revenue": "Encaissé",
+    "revenueReseller": "dont points de vente",
+    "pending": "En attente de paiement",
     "guestHeld": "Invités libres",
     "offered": "Offertes",
     "paid": "Payées",
     "paidAmount": "Montant payé",
-    "sold": "Billets vendus",
     "onSale": "En vente",
     "empty": "Aucune date à venir.",
     "totals": "Total des dates à venir",
-    "footer": "Places invités libres : mises de côté, pas encore attribuées. Payées : réservations réglées hors billetterie (virement, espèces…).",
-    "open": "Ouvrir les invitations"
+    "footerSales": "Billets vendus : en ligne et aux points de vente.",
+    "footerInvitations": "Invités libres : places mises de côté, pas encore attribuées. Payées : invitations réglées hors billetterie (virement, espèces…).",
+    "open": "Ouvrir les rapports"
   }
 }

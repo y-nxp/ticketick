@@ -553,7 +553,7 @@
       "discounts": "Rabatte",
       "seatPlans": "Saalpläne",
       "payments": "Zahlungen",
-      "invitations": "Einladungen"
+      "reports": "Berichte"
     },
     "overview": {
       "title": "Übersicht",
@@ -1671,19 +1671,32 @@
       "copy": "Kopieren",
       "copied": "Kopiert"
     },
-    "invitations": {
-      "title": "Einladungen",
-      "subtitle": "Für Gäste zurückgehaltene Plätze, offerierte oder bezahlte Reservierungen und noch verfügbare Plätze der kommenden Daten.",
+    "reports": {
+      "title": "Berichte",
+      "subtitle": "Verkäufe, Einladungen und verbleibende Plätze der kommenden Termine, Termin für Termin.",
       "organizer": "Veranstalter",
+      "filter": "Anzeigen",
+      "views": {
+        "all": "Alles",
+        "sales": "Verkäufe",
+        "invitations": "Einladungen",
+        "remaining": "Verbleibende Plätze"
+      },
       "noOrganizer": "Kein Veranstalter hat ein kommendes Datum.",
       "empty": "Keine kommenden Daten.",
       "guestHeld": "Freie Gästeplätze",
       "guestHeldHint": "Zurückgehalten, noch nicht vergeben",
       "offered": "Offeriert",
       "paid": "Bezahlt",
-      "sold": "Verkauft",
+      "sold": "Verkaufte Tickets",
+      "soldNew": "Neu",
+      "soldNewHint": "{count, plural, =0 {Keine neuen seit {date}} one {# neues seit {date}} other {# neue seit {date}}}",
+      "revenue": "Eingenommen",
+      "pending": "Ausstehend",
+      "pendingHint": "{count, plural, one {# Ticket wartet auf Zahlung} other {# Tickets warten auf Zahlung}}",
+      "invited": "Vergebene Einladungen",
+      "invitedHint": "{offered} offeriert · {paid} bezahlt ({amount})",
       "onSale": "Im Verkauf",
-      "soldHint": "{count, plural, one {# Ticket verkauft} other {# Tickets verkauft}}",
       "date": "Datum",
       "seated": "Nummerierte Plätze",
       "freeSeating": "Freie Platzwahl",
@@ -1709,11 +1722,15 @@
       "nextReport": "nächster Versand: {date}",
       "reportRecipients": "Empfänger: {emails}",
       "noRecipients": "Keine Empfänger: «Jetzt senden» schickt ihn an Ihre Adresse.",
-      "sendNow": "Jetzt senden",
+      "sendNow": {
+        "all": "Bericht jetzt senden",
+        "sales": "Verkäufe jetzt senden",
+        "invitations": "Einladungen jetzt senden",
+        "remaining": "Verbleibende Plätze jetzt senden"
+      },
       "sending": "Wird gesendet…",
       "sent": "Bericht an {emails} gesendet.",
       "frequency": "Automatischer Versand",
-      "frequencyHint": "Der Bericht zeigt den Stand zum Zeitpunkt des Versands, Datum für Datum.",
       "frequencies": {
         "NONE": "Nie",
         "DAILY": "Täglich",
@@ -1729,8 +1746,11 @@
         "invalid": "Ungültige Einstellung.",
         "emails": "Eine Adresse ist ungültig, oder es sind mehr als 10.",
         "throttled": "Zu viele Sendungen. Versuchen Sie es in einer Stunde erneut.",
-        "notSent": "Der Bericht konnte nicht gesendet werden."
-      }
+        "notSent": "Der Bericht konnte nicht gesendet werden.",
+        "sections": "Wählen Sie mindestens einen Teil des Berichts."
+      },
+      "frequencyHint": "Der Bericht zeigt den Stand beim Versand, Termin für Termin. «Neu»: seit dem vorherigen Versand.",
+      "sections": "Inhalt des automatischen Berichts"
     }
   },
   "pay": {
@@ -1970,20 +1990,29 @@
     },
     "current": "Ihr aktueller Platz"
   },
-  "inviteReport": {
-    "subject": "Einladungen {name} — Stand {date}",
-    "heading": "Einladungen — {name}",
+  "organizerReport": {
+    "subject": "Bericht {name} — Stand {date}",
+    "heading": "Bericht — {name}",
     "asOf": "Stand {date}",
-    "date": "Datum",
+    "salesTitle": "Verkäufe",
+    "invitationsTitle": "Einladungen",
+    "remainingTitle": "Verbleibende Plätze",
+    "date": "Termin",
+    "sold": "Verkaufte Tickets",
+    "soldNew": "Neu",
+    "soldNewSince": "Neu seit {date}",
+    "revenue": "Eingenommen",
+    "revenueReseller": "davon Vorverkaufsstellen",
+    "pending": "Zahlung ausstehend",
     "guestHeld": "Freie Gästeplätze",
     "offered": "Offeriert",
     "paid": "Bezahlt",
     "paidAmount": "Bezahlter Betrag",
-    "sold": "Verkaufte Tickets",
     "onSale": "Im Verkauf",
-    "empty": "Keine kommenden Daten.",
-    "totals": "Total der kommenden Daten",
-    "footer": "Freie Gästeplätze: zurückgehalten, noch nicht vergeben. Bezahlt: ausserhalb der Ticketing-Plattform beglichene Reservierungen (Überweisung, bar…).",
-    "open": "Einladungen öffnen"
+    "empty": "Keine kommenden Termine.",
+    "totals": "Total der kommenden Termine",
+    "footerSales": "Verkaufte Tickets: online und bei Vorverkaufsstellen.",
+    "footerInvitations": "Freie Gästeplätze: reserviert, noch nicht vergeben. Bezahlt: ausserhalb des Ticketshops beglichene Einladungen (Überweisung, bar…).",
+    "open": "Berichte öffnen"
   }
 }

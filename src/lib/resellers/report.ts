@@ -206,16 +206,20 @@ async function mailReport(input: {
     subject: t("subject", { name: input.resellerName, period: periodLabel }),
     heading: input.resellerName,
     period: periodLabel,
-    columns: [t("show"), t("tickets"), t("amount"), t("commission")],
-    rows: inPeriod.events
-      .filter((e) => e.tickets > 0 || e.pendingTickets > 0)
-      .map((e) => [
-        tr(e.title as Translated, locale),
-        String(e.tickets),
-        money(e.amountCents),
-        money(e.commissionCents),
-      ]),
-    emptyRows: t("empty"),
+    tables: [
+      {
+        columns: [t("show"), t("tickets"), t("amount"), t("commission")],
+        rows: inPeriod.events
+          .filter((e) => e.tickets > 0 || e.pendingTickets > 0)
+          .map((e) => [
+            tr(e.title as Translated, locale),
+            String(e.tickets),
+            money(e.amountCents),
+            money(e.commissionCents),
+          ]),
+        empty: t("empty"),
+      },
+    ],
     summaryTitle: t("periodTitle"),
     summary: [
       { label: t("tickets"), value: String(p.tickets) },

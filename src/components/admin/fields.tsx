@@ -126,10 +126,12 @@ export function Select({
 export function Checkbox({
   name,
   label,
+  value,
   defaultChecked,
 }: {
   name: string;
   label: string;
+  value?: string;
   defaultChecked?: boolean;
 }) {
   return (
@@ -137,6 +139,7 @@ export function Checkbox({
       <input
         type="checkbox"
         name={name}
+        value={value}
         defaultChecked={defaultChecked}
         className="size-4 rounded border-border accent-[var(--primary)]"
       />

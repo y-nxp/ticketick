@@ -553,7 +553,7 @@
       "discounts": "Discounts",
       "seatPlans": "Seating plans",
       "payments": "Payments",
-      "invitations": "Invitations"
+      "reports": "Reports"
     },
     "overview": {
       "title": "Overview",
@@ -1671,19 +1671,32 @@
       "copy": "Copy",
       "copied": "Copied"
     },
-    "invitations": {
-      "title": "Invitations",
-      "subtitle": "Seats set aside for guests, complimentary or paid reservations, and seats still on sale, for upcoming dates.",
+    "reports": {
+      "title": "Reports",
+      "subtitle": "Sales, invitations and remaining seats for upcoming dates, date by date.",
       "organizer": "Organizer",
+      "filter": "Show",
+      "views": {
+        "all": "All",
+        "sales": "Sales",
+        "invitations": "Invitations",
+        "remaining": "Remaining seats"
+      },
       "noOrganizer": "No organizer has an upcoming date.",
       "empty": "No upcoming dates.",
       "guestHeld": "Free guest seats",
       "guestHeldHint": "Set aside, not yet assigned",
       "offered": "Complimentary",
       "paid": "Paid",
-      "sold": "Sold",
+      "sold": "Tickets sold",
+      "soldNew": "New",
+      "soldNewHint": "{count, plural, =0 {None new since {date}} one {# new since {date}} other {# new since {date}}}",
+      "revenue": "Collected",
+      "pending": "Pending",
+      "pendingHint": "{count, plural, one {# ticket awaiting payment} other {# tickets awaiting payment}}",
+      "invited": "Guests assigned",
+      "invitedHint": "{offered} complimentary · {paid} paid ({amount})",
       "onSale": "On sale",
-      "soldHint": "{count, plural, one {# ticket sold} other {# tickets sold}}",
       "date": "Date",
       "seated": "Numbered seats",
       "freeSeating": "Unreserved seating",
@@ -1709,11 +1722,15 @@
       "nextReport": "next send: {date}",
       "reportRecipients": "Recipients: {emails}",
       "noRecipients": "No recipients: “Send now” sends it to your address.",
-      "sendNow": "Send now",
+      "sendNow": {
+        "all": "Send the report now",
+        "sales": "Send sales now",
+        "invitations": "Send invitations now",
+        "remaining": "Send remaining seats now"
+      },
       "sending": "Sending…",
       "sent": "Report sent to {emails}.",
       "frequency": "Automatic sending",
-      "frequencyHint": "The report shows the situation at the time of sending, date by date.",
       "frequencies": {
         "NONE": "Never",
         "DAILY": "Every day",
@@ -1729,8 +1746,11 @@
         "invalid": "Invalid setting.",
         "emails": "An address is not valid, or there are more than 10.",
         "throttled": "Too many sends. Try again in an hour.",
-        "notSent": "The report could not be sent."
-      }
+        "notSent": "The report could not be sent.",
+        "sections": "Choose at least one part of the report."
+      },
+      "frequencyHint": "The report shows the situation when it is sent, date by date. “New”: since the previous report.",
+      "sections": "Automatic report content"
     }
   },
   "pay": {
@@ -1970,20 +1990,29 @@
     },
     "current": "Your current seat"
   },
-  "inviteReport": {
-    "subject": "Invitations {name} — status on {date}",
-    "heading": "Invitations — {name}",
-    "asOf": "Status on {date}",
+  "organizerReport": {
+    "subject": "Report {name} — as of {date}",
+    "heading": "Report — {name}",
+    "asOf": "As of {date}",
+    "salesTitle": "Sales",
+    "invitationsTitle": "Invitations",
+    "remainingTitle": "Remaining seats",
     "date": "Date",
-    "guestHeld": "Free guest seats",
+    "sold": "Tickets sold",
+    "soldNew": "New",
+    "soldNewSince": "New since {date}",
+    "revenue": "Collected",
+    "revenueReseller": "of which points of sale",
+    "pending": "Awaiting payment",
+    "guestHeld": "Guest seats free",
     "offered": "Complimentary",
     "paid": "Paid",
     "paidAmount": "Amount paid",
-    "sold": "Tickets sold",
     "onSale": "On sale",
     "empty": "No upcoming dates.",
     "totals": "Total for upcoming dates",
-    "footer": "Free guest seats: set aside, not yet assigned. Paid: reservations settled outside the ticketing (transfer, cash…).",
-    "open": "Open invitations"
+    "footerSales": "Tickets sold: online and at points of sale.",
+    "footerInvitations": "Guest seats free: set aside, not yet assigned. Paid: invitations settled outside the ticket shop (bank transfer, cash…).",
+    "open": "Open reports"
   }
 }

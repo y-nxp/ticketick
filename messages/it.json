@@ -553,7 +553,7 @@
       "discounts": "Sconti",
       "seatPlans": "Piante di sala",
       "payments": "Incassi",
-      "invitations": "Inviti"
+      "reports": "Rapporti"
     },
     "overview": {
       "title": "Panoramica",
@@ -1671,19 +1671,32 @@
       "copy": "Copiare",
       "copied": "Copiato"
     },
-    "invitations": {
-      "title": "Inviti",
-      "subtitle": "Posti riservati agli ospiti, prenotazioni offerte o pagate e posti ancora in vendita, per le date future.",
+    "reports": {
+      "title": "Rapporti",
+      "subtitle": "Vendite, inviti e posti rimanenti delle prossime date, data per data.",
       "organizer": "Organizzatore",
+      "filter": "Mostra",
+      "views": {
+        "all": "Tutto",
+        "sales": "Vendite",
+        "invitations": "Inviti",
+        "remaining": "Posti rimanenti"
+      },
       "noOrganizer": "Nessun organizzatore ha date future.",
       "empty": "Nessuna data futura.",
       "guestHeld": "Posti ospiti liberi",
       "guestHeldHint": "Riservati, non ancora assegnati",
       "offered": "Offerti",
       "paid": "Pagati",
-      "sold": "Venduti",
+      "sold": "Biglietti venduti",
+      "soldNew": "Nuovi",
+      "soldNewHint": "{count, plural, =0 {Nessuno nuovo dal {date}} one {# nuovo dal {date}} other {# nuovi dal {date}}}",
+      "revenue": "Incassato",
+      "pending": "In attesa",
+      "pendingHint": "{count, plural, one {# biglietto in attesa di pagamento} other {# biglietti in attesa di pagamento}}",
+      "invited": "Inviti assegnati",
+      "invitedHint": "{offered} offerti · {paid} pagati ({amount})",
       "onSale": "In vendita",
-      "soldHint": "{count, plural, one {# biglietto venduto} other {# biglietti venduti}}",
       "date": "Data",
       "seated": "Posti numerati",
       "freeSeating": "Posti liberi",
@@ -1709,11 +1722,15 @@
       "nextReport": "prossimo invio: {date}",
       "reportRecipients": "Destinatari: {emails}",
       "noRecipients": "Nessun destinatario: «Invia ora» lo invia al tuo indirizzo.",
-      "sendNow": "Invia ora",
+      "sendNow": {
+        "all": "Invia il rapporto ora",
+        "sales": "Invia le vendite ora",
+        "invitations": "Invia gli inviti ora",
+        "remaining": "Invia i posti rimanenti ora"
+      },
       "sending": "Invio…",
       "sent": "Rapporto inviato a {emails}.",
       "frequency": "Invio automatico",
-      "frequencyHint": "Il rapporto mostra la situazione al momento dell’invio, data per data.",
       "frequencies": {
         "NONE": "Mai",
         "DAILY": "Ogni giorno",
@@ -1729,8 +1746,11 @@
         "invalid": "Impostazione non valida.",
         "emails": "Un indirizzo non è valido, oppure sono più di 10.",
         "throttled": "Troppi invii. Riprova tra un’ora.",
-        "notSent": "Non è stato possibile inviare il rapporto."
-      }
+        "notSent": "Non è stato possibile inviare il rapporto.",
+        "sections": "Scegli almeno una parte del rapporto."
+      },
+      "frequencyHint": "Il rapporto mostra la situazione al momento dell’invio, data per data. «Nuovi»: dall’invio precedente.",
+      "sections": "Contenuto del rapporto automatico"
     }
   },
   "pay": {
@@ -1970,20 +1990,29 @@
     },
     "current": "Il vostro posto attuale"
   },
-  "inviteReport": {
-    "subject": "Inviti {name} — situazione al {date}",
-    "heading": "Inviti — {name}",
+  "organizerReport": {
+    "subject": "Rapporto {name} — situazione al {date}",
+    "heading": "Rapporto — {name}",
     "asOf": "Situazione al {date}",
+    "salesTitle": "Vendite",
+    "invitationsTitle": "Inviti",
+    "remainingTitle": "Posti rimanenti",
     "date": "Data",
+    "sold": "Biglietti venduti",
+    "soldNew": "Nuovi",
+    "soldNewSince": "Nuovi dal {date}",
+    "revenue": "Incassato",
+    "revenueReseller": "di cui punti vendita",
+    "pending": "In attesa di pagamento",
     "guestHeld": "Posti ospiti liberi",
     "offered": "Offerti",
     "paid": "Pagati",
     "paidAmount": "Importo pagato",
-    "sold": "Biglietti venduti",
     "onSale": "In vendita",
-    "empty": "Nessuna data futura.",
-    "totals": "Totale delle date future",
-    "footer": "Posti ospiti liberi: riservati, non ancora assegnati. Pagati: prenotazioni saldate fuori dalla biglietteria (bonifico, contanti…).",
-    "open": "Apri gli inviti"
+    "empty": "Nessuna data in arrivo.",
+    "totals": "Totale delle prossime date",
+    "footerSales": "Biglietti venduti: online e nei punti vendita.",
+    "footerInvitations": "Posti ospiti liberi: messi da parte, non ancora assegnati. Pagati: inviti saldati fuori dalla biglietteria (bonifico, contanti…).",
+    "open": "Apri i rapporti"
   }
 }

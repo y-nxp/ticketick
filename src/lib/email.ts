@@ -668,16 +668,22 @@ export async function sendResellerAgentInvitationEmail(payload: {
   });
 }
 
-/** Rapport en tableau (point de vente, invitations) : libellés et montants déjà formatés. */
+/** Tableau d'un rapport : une ligne par spectacle ou par date, valeurs déjà formatées. */
+export interface ReportTable {
+  title?: string;
+  columns: string[];
+  rows: string[][];
+  empty: string;
+}
+
+/** Rapport en tableaux (point de vente, organisateur) : libellés et montants déjà formatés. */
 export interface TableReportPayload {
   to: string;
   bcc?: string[];
   subject: string;
   heading: string;
   period: string;
-  columns: string[];
-  rows: string[][];
-  emptyRows: string;
+  tables: ReportTable[];
   summaryTitle: string;
   summary: { label: string; value: string }[];
   footer: string;
@@ -692,19 +698,34 @@ export function sendResellerReportEmail(payload: TableReportPayload) {
 export async function sendTableReportEmail(payload: TableReportPayload, etiquette: string) {
   const cell = "padding:6px 8px;border-bottom:1px solid #e5e7eb";
   const right = `${cell};text-align:right;white-space:nowrap`;
-  const table = payload.rows.length
-    ? [
-        `<table style="border-collapse:collapse;width:100%;font-size:13px">`,
-        `<tr>${payload.columns
-          .map((c, i) => `<th style="${i === 0 ? cell : right};text-align:${i === 0 ? "left" : "right"};color:#6b7280;font-weight:600">${echapper(c)}</th>`)
-          .join("")}</tr>`,
-        ...payload.rows.map(
-          (r) =>
-            `<tr>${r.map((v, i) => `<td style="${i === 0 ? cell : right}">${echapper(v)}</td>`).join("")}</tr>`,
-        ),
-        `</table>`,
-      ].join("")
-    : `<p style="color:#6b7280">${echapper(payload.emptyRows)}</p>`;
+  const tableHtml = (table: ReportTable) =>
+    [
+      table.title
+        ? `<p style="font-weight:600;margin:20px 0 6px">${echapper(table.title)}</p>`
+        : "",
+      table.rows.length
+        ? [
+            `<table style="border-collapse:collapse;width:100%;font-size:13px">`,
+            `<tr>${table.columns
+              .map((c, i) => `<th style="${i === 0 ? cell : right};text-align:${i === 0 ? "left" : "right"};color:#6b7280;font-weight:600">${echapper(c)}</th>`)
+              .join("")}</tr>`,
+            ...table.rows.map(
+              (r) =>
+                `<tr>${r.map((v, i) => `<td style="${i === 0 ? cell : right}">${echapper(v)}</td>`).join("")}</tr>`,
+            ),
+            `</table>`,
+          ].join("")
+        : `<p style="color:#6b7280">${echapper(table.empty)}</p>`,
+    ].join("");
+  const tableText = (table: ReportTable) => [
+    ...(table.title ? [table.title] : []),
+    ...(table.rows.length
+      ? table.rows.map(
+          (r) => `${r[0]} — ${table.columns.slice(1).map((c, i) => `${c} ${r[i + 1]}`).join(" · ")}`,
+        )
+      : [table.empty]),
+    "",
+  ];
   const summary = [
     `<table style="border-collapse:collapse;font-size:13px">`,
     ...payload.summary.map(
@@ -716,7 +737,7 @@ export async function sendTableReportEmail(payload: TableReportPayload, etiquett
   const html = [
     `<p style="font-size:16px;font-weight:600;margin:0">${echapper(payload.heading)}</p>`,
     `<p style="color:#6b7280;margin:2px 0 16px">${echapper(payload.period)}</p>`,
-    table,
+    ...payload.tables.map(tableHtml),
     `<p style="font-weight:600;margin:20px 0 6px">${echapper(payload.summaryTitle)}</p>`,
     summary,
     `<p style="margin-top:20px"><a href="${payload.url}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#6C5CE7;color:#fff;text-decoration:none;font-weight:600">${echapper(payload.button)}</a></p>`,
@@ -726,12 +747,7 @@ export async function sendTableReportEmail(payload: TableReportPayload, etiquett
     payload.heading,
     payload.period,
     "",
-    ...(payload.rows.length
-      ? payload.rows.map(
-          (r) => `${r[0]} — ${payload.columns.slice(1).map((c, i) => `${c} ${r[i + 1]}`).join(" · ")}`,
-        )
-      : [payload.emptyRows]),
-    "",
+    ...payload.tables.flatMap(tableText),
     payload.summaryTitle,
     ...payload.summary.map((s) => `${s.label} : ${s.value}`),
     "",
