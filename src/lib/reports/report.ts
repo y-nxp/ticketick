@@ -5,7 +5,6 @@ import de from "../../../messages/de.json";
 import en from "../../../messages/en.json";
 import fr from "../../../messages/fr.json";
 import it from "../../../messages/it.json";
-import { publicAppOrigin } from "@/lib/app-url";
 import { sendTableReportEmail, type ReportTable } from "@/lib/email";
 import { byLocale, intlLocale } from "@/lib/i18n-fallback";
 import { prisma } from "@/lib/prisma";
@@ -18,7 +17,8 @@ import { getOrganizerReport, readSections, type ReportSection } from "./summary"
  * Rapport d'un organisateur : ventes, invitations et places restantes des
  * dates à venir, selon les parties choisies. Envoyé à la demande ou chaque
  * matin (lundi pour l'hebdomadaire), à l'heure des récapitulatifs des points
- * de vente. Les « nouveaux » billets comptent depuis l'envoi précédent.
+ * de vente. Les « nouveaux » billets comptent depuis le rapport automatique
+ * précédent ; un envoi à la demande ne déplace pas ce point de départ.
  */
 
 const MESSAGES = { fr, en, de, it };
@@ -31,14 +31,19 @@ export function reportRecipients(organizer: {
   return organizer.reportEmails.length > 0 ? organizer.reportEmails : organizer.notifyEmails;
 }
 
-/** Début des « nouveaux » : l'envoi précédent, sinon une semaine. */
+/** Début des « nouveaux » : le rapport automatique précédent, sinon une semaine. */
 export function reportSince(lastSentAt: Date | null, now = new Date()): Date {
   return lastSentAt ?? new Date(now.getTime() - WEEK_MS);
 }
 
 export async function sendOrganizerReport(
   organizerId: string,
-  options: { recipients?: string[]; sections?: ReportSection[] } = {},
+  options: {
+    recipients?: string[];
+    sections?: ReportSection[];
+    /** Envoi du planificateur : début de la période si aucun rapport automatique n'est encore parti. */
+    period?: { from: Date };
+  } = {},
 ): Promise<boolean> {
   const organizer = await prisma.organizer.findUnique({
     where: { id: organizerId },
@@ -76,7 +81,10 @@ export async function sendOrganizerReport(
     }).format(date);
 
   const now = new Date();
-  const since = reportSince(organizer.lastReportSentAt, now);
+  const since =
+    options.period && !organizer.lastReportSentAt
+      ? options.period.from
+      : reportSince(organizer.lastReportSentAt, now);
   const { sessions, totals } = await getOrganizerReport(organizerId, { since, now });
   const label = (s: (typeof sessions)[number]) =>
     `${tr(s.eventTitle as Translated, locale)} — ${format(s.startsAt, "session")}`;
@@ -151,12 +159,10 @@ export async function sendOrganizerReport(
         ...(sections.includes("sales") ? [t("footerSales")] : []),
         ...(sections.includes("invitations") ? [t("footerInvitations")] : []),
       ].join(" "),
-      url: `${publicAppOrigin()}/${locale}/admin/reports`,
-      button: t("open"),
     },
     "rapport organisateur",
   );
-  if (result.sent) {
+  if (result.sent && options.period) {
     await prisma.organizer.update({
       where: { id: organizerId },
       data: { lastReportSentAt: now },
@@ -186,7 +192,7 @@ export async function sendDueOrganizerReports(now = new Date()): Promise<number>
     });
     if (count !== 1) continue;
     try {
-      if (await sendOrganizerReport(organizer.id)) n += 1;
+      if (await sendOrganizerReport(organizer.id, { period })) n += 1;
     } catch (error) {
       console.error("[rapports] envoi impossible", organizer.id, error);
     }

@@ -1749,7 +1749,7 @@
         "notSent": "Le rapport n’a pas pu être envoyé.",
         "sections": "Choisissez au moins une partie du rapport."
       },
-      "frequencyHint": "Le rapport donne l’état au moment de l’envoi, date par date. « Nouveaux » : depuis l’envoi précédent.",
+      "frequencyHint": "Le rapport donne l’état au moment de l’envoi, date par date. « Nouveaux » : depuis le rapport automatique précédent.",
       "sections": "Contenu du rapport automatique"
     }
   },
@@ -2012,7 +2012,6 @@
     "empty": "Aucune date à venir.",
     "totals": "Total des dates à venir",
     "footerSales": "Billets vendus : en ligne et aux points de vente.",
-    "footerInvitations": "Invités libres : places mises de côté, pas encore attribuées. Payées : invitations réglées hors billetterie (virement, espèces…).",
-    "open": "Ouvrir les rapports"
+    "footerInvitations": "Invités libres : places mises de côté, pas encore attribuées. Payées : invitations réglées hors billetterie (virement, espèces…)."
   }
 }

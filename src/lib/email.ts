@@ -687,8 +687,7 @@ export interface TableReportPayload {
   summaryTitle: string;
   summary: { label: string; value: string }[];
   footer: string;
-  url: string;
-  button: string;
+  link?: { url: string; button: string };
 }
 
 export function sendResellerReportEmail(payload: TableReportPayload) {
@@ -740,7 +739,9 @@ export async function sendTableReportEmail(payload: TableReportPayload, etiquett
     ...payload.tables.map(tableHtml),
     `<p style="font-weight:600;margin:20px 0 6px">${echapper(payload.summaryTitle)}</p>`,
     summary,
-    `<p style="margin-top:20px"><a href="${payload.url}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#6C5CE7;color:#fff;text-decoration:none;font-weight:600">${echapper(payload.button)}</a></p>`,
+    payload.link
+      ? `<p style="margin-top:20px"><a href="${payload.link.url}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#6C5CE7;color:#fff;text-decoration:none;font-weight:600">${echapper(payload.link.button)}</a></p>`
+      : "",
     `<p style="color:#6b7280;font-size:12px">${echapper(payload.footer)}</p>`,
   ].join("");
   const text = [
@@ -751,8 +752,7 @@ export async function sendTableReportEmail(payload: TableReportPayload, etiquett
     payload.summaryTitle,
     ...payload.summary.map((s) => `${s.label} : ${s.value}`),
     "",
-    payload.url,
-    "",
+    ...(payload.link ? [payload.link.url, ""] : []),
     payload.footer,
   ].join("\n");
   return envoyer({

@@ -1749,7 +1749,7 @@
         "notSent": "The report could not be sent.",
         "sections": "Choose at least one part of the report."
       },
-      "frequencyHint": "The report shows the situation when it is sent, date by date. “New”: since the previous report.",
+      "frequencyHint": "The report shows the situation when it is sent, date by date. “New”: since the previous automatic report.",
       "sections": "Automatic report content"
     }
   },
@@ -2012,7 +2012,6 @@
     "empty": "No upcoming dates.",
     "totals": "Total for upcoming dates",
     "footerSales": "Tickets sold: online and at points of sale.",
-    "footerInvitations": "Guest seats free: set aside, not yet assigned. Paid: invitations settled outside the ticket shop (bank transfer, cash…).",
-    "open": "Open reports"
+    "footerInvitations": "Guest seats free: set aside, not yet assigned. Paid: invitations settled outside the ticket shop (bank transfer, cash…)."
   }
 }

@@ -1749,7 +1749,7 @@
         "notSent": "Der Bericht konnte nicht gesendet werden.",
         "sections": "Wählen Sie mindestens einen Teil des Berichts."
       },
-      "frequencyHint": "Der Bericht zeigt den Stand beim Versand, Termin für Termin. «Neu»: seit dem vorherigen Versand.",
+      "frequencyHint": "Der Bericht zeigt den Stand beim Versand, Termin für Termin. «Neu»: seit dem vorherigen automatischen Bericht.",
       "sections": "Inhalt des automatischen Berichts"
     }
   },
@@ -2012,7 +2012,6 @@
     "empty": "Keine kommenden Termine.",
     "totals": "Total der kommenden Termine",
     "footerSales": "Verkaufte Tickets: online und bei Vorverkaufsstellen.",
-    "footerInvitations": "Freie Gästeplätze: reserviert, noch nicht vergeben. Bezahlt: ausserhalb des Ticketshops beglichene Einladungen (Überweisung, bar…).",
-    "open": "Berichte öffnen"
+    "footerInvitations": "Freie Gästeplätze: reserviert, noch nicht vergeben. Bezahlt: ausserhalb des Ticketshops beglichene Einladungen (Überweisung, bar…)."
   }
 }

@@ -1749,7 +1749,7 @@
         "notSent": "Non è stato possibile inviare il rapporto.",
         "sections": "Scegli almeno una parte del rapporto."
       },
-      "frequencyHint": "Il rapporto mostra la situazione al momento dell’invio, data per data. «Nuovi»: dall’invio precedente.",
+      "frequencyHint": "Il rapporto mostra la situazione al momento dell’invio, data per data. «Nuovi»: dal rapporto automatico precedente.",
       "sections": "Contenuto del rapporto automatico"
     }
   },
@@ -2012,7 +2012,6 @@
     "empty": "Nessuna data in arrivo.",
     "totals": "Totale delle prossime date",
     "footerSales": "Biglietti venduti: online e nei punti vendita.",
-    "footerInvitations": "Posti ospiti liberi: messi da parte, non ancora assegnati. Pagati: inviti saldati fuori dalla biglietteria (bonifico, contanti…).",
-    "open": "Apri i rapporti"
+    "footerInvitations": "Posti ospiti liberi: messi da parte, non ancora assegnati. Pagati: inviti saldati fuori dalla biglietteria (bonifico, contanti…)."
   }
 }

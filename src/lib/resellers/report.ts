@@ -235,8 +235,7 @@ async function mailReport(input: {
       },
     ],
     footer: t("footer"),
-    url: input.url,
-    button: input.audience === "pos" ? t("openPos") : t("openAdmin"),
+    link: { url: input.url, button: input.audience === "pos" ? t("openPos") : t("openAdmin") },
   });
   return result.sent;
 }

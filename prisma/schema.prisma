@@ -336,7 +336,7 @@ model Organizer {
   reportSections   String[]        @default(["sales", "invitations", "remaining"])
   /// Fin de la période du dernier rapport envoyé automatiquement.
   lastReportAt     DateTime?
-  /// Dernier envoi, automatique ou à la demande : point de départ des « nouveaux ».
+  /// Dernier rapport automatique envoyé : point de départ des « nouveaux ».
   lastReportSentAt DateTime?
 
   user   User?   @relation(fields: [userId], references: [id])
