@@ -51,7 +51,11 @@ export interface TicketCard {
   optionBlocks?: TicketOptionBlock[];
   /** Mention de la réservation (« Réservation Illyria »). */
   note?: string;
+  /** « Vendu par …, en espèces, le … à … » pour une vente en point de vente. */
+  soldBy?: string;
 }
+
+export type TicketSale = { by: string; method: "cash" | "card"; at: Date };
 
 export function venueLines(venue?: VenueBits | null): string[] {
   if (!venue) return [];
@@ -170,6 +174,7 @@ export function toTicketCard(input: {
   valid?: boolean;
   optionBlocks?: TicketOptionBlock[];
   note?: string | null;
+  sale?: TicketSale | null;
 }): TicketCard {
   const fallback = ticketResponsible(input.organizerSlug);
   const fromRow = readTitle(input.ticketDisclaimer, input.locale);
@@ -210,7 +215,26 @@ export function toTicketCard(input: {
     valid: input.valid !== false,
     optionBlocks: input.optionBlocks?.length ? input.optionBlocks : undefined,
     note: input.note?.trim() || undefined,
+    soldBy: input.sale ? soldByLabel(input.sale, input.locale) : undefined,
   };
+}
+
+function soldByLabel(sale: TicketSale, locale: string): string {
+  const date = plainSpaces(
+    new Intl.DateTimeFormat("de-CH", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      timeZone: EVENT_TIME_ZONE,
+    }).format(sale.at),
+  );
+  const time = formatClock(sale.at, locale);
+  const cash = sale.method === "cash";
+  if (locale === "de") return `Verkauft von ${sale.by}, ${cash ? "bar" : "mit Karte"}, am ${date} um ${time}`;
+  if (locale === "it") return `Venduto da ${sale.by}, ${cash ? "in contanti" : "con carta"}, il ${date} alle ${time}`;
+  if (locale === "en") return `Sold by ${sale.by}, ${cash ? "in cash" : "by card"}, on ${date} at ${time}`;
+  if (locale === "es") return `Vendido por ${sale.by}, ${cash ? "en efectivo" : "con tarjeta"}, el ${date} a las ${time}`;
+  return `Vendu par ${sale.by}, ${cash ? "en espèces" : "par carte"}, le ${date} à ${time}`;
 }
 
 function seatingLabel(locale: string): string {

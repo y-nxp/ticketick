@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { TicketPlus } from "lucide-react";
-import { PosEventsTable, PosTotalsCards } from "@/components/resellers/pos-stats";
+import { PosEventsTable, PosSettlement, PosTotalsCards } from "@/components/resellers/pos-stats";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { requireResellerAgent } from "@/lib/auth/dal";
@@ -35,6 +35,7 @@ export default async function PosOverviewPage({
         </Link>
       </header>
       <PosTotalsCards stats={stats} locale={locale} />
+      <PosSettlement stats={stats} locale={locale} />
       <section className="space-y-3">
         <h2 className="text-lg">{t("overview.shows")}</h2>
         <PosEventsTable

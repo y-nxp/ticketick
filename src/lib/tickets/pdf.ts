@@ -313,6 +313,7 @@ const { regular, bold, italic, copy, total, image, qr: qrImage } = ctx;
     }
   }
 
+  let end = y;
   if (ticket.contractor) {
     y -= 8;
     page.drawText(pdfSafe(copy.contractor), {
@@ -322,7 +323,7 @@ const { regular, bold, italic, copy, total, image, qr: qrImage } = ctx;
       font: bold,
       color: MUTED,
     });
-    drawWrapped(page, pdfSafe(ticket.contractor), {
+    end = drawWrapped(page, pdfSafe(ticket.contractor), {
       x: margin,
       y: y - 14,
       maxWidth: contentW,
@@ -330,6 +331,17 @@ const { regular, bold, italic, copy, total, image, qr: qrImage } = ctx;
       font: bold,
       color: INK,
       lineHeight: 14,
+    });
+  }
+  if (ticket.soldBy) {
+    return drawWrapped(page, pdfSafe(ticket.soldBy), {
+      x: margin,
+      y: end - (ticket.contractor ? 6 : 16),
+      maxWidth: contentW,
+      size: 10,
+      font: regular,
+      color: INK,
+      lineHeight: 13,
     });
   }
   return y;

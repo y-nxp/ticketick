@@ -67,6 +67,68 @@ export async function PosTotalsCards({ stats, locale }: { stats: PosStats; local
   );
 }
 
+/** Ce que chacun doit à l'autre, espèces et carte séparées. */
+export async function PosSettlement({ stats, locale }: { stats: PosStats; locale: string }) {
+  const t = await getTranslations("pos.stats.settlement");
+  const money = (cents: number) => formatPrice(cents, `${locale}-CH`);
+  const { totals } = stats;
+  const onSiteCents = totals.cashCents + totals.terminalCents;
+  const rows = [
+    {
+      label: totals.terminalCents > 0 ? t("cashTerminal") : t("cash"),
+      sales: onSiteCents,
+      commission: totals.onSiteCommissionCents,
+      result: t("owed", { amount: money(onSiteCents - totals.onSiteCommissionCents) }),
+    },
+    {
+      label: t("card"),
+      sales: totals.onlineCents,
+      commission: totals.onlineCommissionCents,
+      result: t("due", { amount: money(totals.onlineCommissionCents) }),
+    },
+  ];
+  return (
+    <section className="space-y-3">
+      <div>
+        <h2 className="text-lg">{t("title")}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t("hint")}</p>
+      </div>
+      <div className="overflow-x-auto rounded-card border border-border">
+        <table className="w-full min-w-[40rem] text-sm">
+          <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
+            <tr>
+              <th className="px-4 py-3 font-medium">{t("method")}</th>
+              <th className="px-4 py-3 text-right font-medium">{t("sales")}</th>
+              <th className="px-4 py-3 text-right font-medium">{t("commission")}</th>
+              <th className="px-4 py-3 text-right font-medium">{t("result")}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {rows.map((row) => (
+              <tr key={row.label}>
+                <td className="px-4 py-3 font-medium">{row.label}</td>
+                <td className="px-4 py-3 text-right tabular-nums">{money(row.sales)}</td>
+                <td className="px-4 py-3 text-right tabular-nums">{money(row.commission)}</td>
+                <td className="px-4 py-3 text-right tabular-nums">{row.result}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot className="border-t border-border bg-muted/30">
+            <tr>
+              <td className="px-4 py-3 font-semibold" colSpan={3}>
+                {stats.balanceCents < 0 ? t("netOwed") : t("netDue")}
+              </td>
+              <td className="px-4 py-3 text-right font-semibold tabular-nums">
+                {money(Math.abs(stats.balanceCents))}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 /** Ventes par spectacle attribué ; `sellable` ajoute un lien de vente (espace du point de vente). */
 export async function PosEventsTable({
   events,

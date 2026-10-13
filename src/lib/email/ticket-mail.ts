@@ -324,6 +324,7 @@ function carteHtml(
       <p style="margin:8px 0 0;font-size:13px;color:#4b5563">${adresse}</p>
       <p style="margin:8px 0 0;font-size:13px">${echapper(t.holder)} ${echapper(ticket.holderName)}</p>
       <p style="margin:4px 0 0;font-size:13px;color:#4b5563">${echapper(ticket.seating)}</p>
+      ${ticket.soldBy ? `<p style="margin:8px 0 0;font-size:12px;color:#4b5563">${echapper(ticket.soldBy)}</p>` : ""}
       ${optionBlocksHtml(ticket)}
     </td>
   </tr>

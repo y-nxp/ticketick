@@ -1835,7 +1835,22 @@
       "rule": "Vereinbarte Provision",
       "next": "Nächstes Datum: {date}",
       "last": "Letztes Datum: {date}",
-      "ruleOverridden": "für diese Veranstaltung"
+      "ruleOverridden": "für diese Veranstaltung",
+      "settlement": {
+        "title": "abrechnung mit dem veranstalter",
+        "hint": "Bar: Sie behalten Ihre Kommission und überweisen den Rest. Karte: Der Veranstalter hat kassiert und schuldet Ihnen Ihre Kommission.",
+        "method": "Zahlungsart",
+        "sales": "Verkäufe",
+        "commission": "Ihre Kommission",
+        "result": "Ergebnis",
+        "cash": "Bar",
+        "cashTerminal": "Bar und Terminal",
+        "card": "Karte (vom Veranstalter kassiert)",
+        "owed": "{amount} zu überweisen",
+        "due": "{amount} vom Veranstalter geschuldet",
+        "netOwed": "Saldo: Sie schulden dem Veranstalter",
+        "netDue": "Saldo: Der Veranstalter schuldet Ihnen"
+      }
     },
     "sell": {
       "title": "Verkaufen",

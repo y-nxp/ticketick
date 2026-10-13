@@ -1835,7 +1835,22 @@
       "rule": "Commission prévue",
       "next": "Prochaine date : {date}",
       "last": "Dernière date : {date}",
-      "ruleOverridden": "propre à ce spectacle"
+      "ruleOverridden": "propre à ce spectacle",
+      "settlement": {
+        "title": "décompte avec l'organisateur",
+        "hint": "Espèces : vous gardez votre commission et reversez le reste. Carte : l'organisateur a encaissé et vous doit votre commission.",
+        "method": "Encaissement",
+        "sales": "Ventes",
+        "commission": "Votre commission",
+        "result": "Résultat",
+        "cash": "Espèces",
+        "cashTerminal": "Espèces et terminal",
+        "card": "Carte (encaissée par l'organisateur)",
+        "owed": "{amount} à reverser",
+        "due": "{amount} dus par l'organisateur",
+        "netOwed": "Solde : vous devez à l'organisateur",
+        "netDue": "Solde : l'organisateur vous doit"
+      }
     },
     "sell": {
       "title": "Vendre",

@@ -1835,7 +1835,22 @@
       "rule": "Agreed commission",
       "next": "Next date: {date}",
       "last": "Last date: {date}",
-      "ruleOverridden": "specific to this show"
+      "ruleOverridden": "specific to this show",
+      "settlement": {
+        "title": "settlement with the organiser",
+        "hint": "Cash: you keep your commission and pay over the rest. Card: the organiser collected the payment and owes you your commission.",
+        "method": "Payment",
+        "sales": "Sales",
+        "commission": "Your commission",
+        "result": "Result",
+        "cash": "Cash",
+        "cashTerminal": "Cash and terminal",
+        "card": "Card (collected by the organiser)",
+        "owed": "{amount} to pay over",
+        "due": "{amount} owed by the organiser",
+        "netOwed": "Balance: you owe the organiser",
+        "netDue": "Balance: the organiser owes you"
+      }
     },
     "sell": {
       "title": "Sell",

@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
-import { PosTotalsCards, ruleLabel } from "@/components/resellers/pos-stats";
+import { PosSettlement, PosTotalsCards, ruleLabel } from "@/components/resellers/pos-stats";
 import { Link } from "@/i18n/navigation";
 import { commissionRule } from "@/lib/resellers/commission";
 import { getManagedReseller } from "@/lib/resellers/data";
@@ -58,6 +58,7 @@ export default async function ResellerPage({
       </header>
 
       <PosTotalsCards stats={stats} locale={locale} />
+      <PosSettlement stats={stats} locale={locale} />
 
       <section className="space-y-4">
         <div>

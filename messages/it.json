@@ -1835,7 +1835,22 @@
       "rule": "Commissione prevista",
       "next": "Prossima data: {date}",
       "last": "Ultima data: {date}",
-      "ruleOverridden": "propria di questo spettacolo"
+      "ruleOverridden": "propria di questo spettacolo",
+      "settlement": {
+        "title": "conteggio con l'organizzatore",
+        "hint": "Contanti: trattenete la vostra commissione e versate il resto. Carta: l'organizzatore ha incassato e vi deve la vostra commissione.",
+        "method": "Incasso",
+        "sales": "Vendite",
+        "commission": "La vostra commissione",
+        "result": "Risultato",
+        "cash": "Contanti",
+        "cashTerminal": "Contanti e terminale",
+        "card": "Carta (incassata dall'organizzatore)",
+        "owed": "{amount} da versare",
+        "due": "{amount} dovuti dall'organizzatore",
+        "netOwed": "Saldo: dovete all'organizzatore",
+        "netDue": "Saldo: l'organizzatore vi deve"
+      }
     },
     "sell": {
       "title": "Vendere",

@@ -5,7 +5,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { optionBlocksForTicket } from "@/lib/tickets/option-block";
 import { buildTicketsPdf, type TicketPdfCard } from "@/lib/tickets/pdf";
-import { toTicketCard } from "@/lib/tickets/payload";
+import { toTicketCard, type TicketSale } from "@/lib/tickets/payload";
 
 const orderOptionSelect = {
   title: true,
@@ -98,6 +98,36 @@ export const ticketOrderSelect = Prisma.validator<Prisma.TicketSelect>()({
   },
 });
 
+const saleSelect = {
+  createdAt: true,
+  paymentMethod: true,
+  reseller: { select: { name: true } },
+  charges: {
+    where: { status: "DONE" as const },
+    orderBy: { createdAt: "asc" as const },
+    take: 1,
+    select: { method: true, settledAt: true },
+  },
+} satisfies Prisma.OrderSelect;
+
+/** Vente faite par un point de vente : qui, comment et quand, pour le billet. */
+function saleOf(order: {
+  status: string;
+  createdAt: Date;
+  paymentMethod: string;
+  reseller: { name: string } | null;
+  charges: { method: string; settledAt: Date | null }[];
+}): TicketSale | null {
+  if (!order.reseller || order.status !== "PAID") return null;
+  const charge = order.charges[0];
+  const method = charge?.method ?? order.paymentMethod;
+  return {
+    by: order.reseller.name,
+    method: method === "CASH" ? "cash" : "card",
+    at: charge?.settledAt ?? order.createdAt,
+  };
+}
+
 export async function paidTicketsForPdf(
   reference: string,
 ): Promise<{ locale: string; cards: TicketPdfCard[] } | null> {
@@ -117,6 +147,7 @@ export async function ticketsForPdf(
       locale: true,
       reference: true,
       ticketNote: true,
+      ...saleSelect,
       options: { select: orderOptionSelect },
       tickets: {
         orderBy: { createdAt: "asc" },
@@ -151,6 +182,7 @@ export async function ticketsForPdf(
       order.status,
       order.options,
       order.ticketNote,
+      saleOf(order),
     ),
   };
 }
@@ -164,7 +196,11 @@ export async function paidOrderForMail(orderId: string) {
       lastName: true,
       locale: true,
       reference: true,
-      reseller: { select: { email: true, notifyEmails: true } },
+      status: true,
+      createdAt: true,
+      paymentMethod: true,
+      charges: saleSelect.charges,
+      reseller: { select: { name: true, email: true, notifyEmails: true } },
       options: { select: orderOptionSelect },
       tickets: {
         where: { status: { in: ["VALID", "USED"] } },
@@ -200,6 +236,8 @@ export async function paidOrderForMail(orderId: string) {
       order.locale,
       "PAID",
       order.options,
+      null,
+      saleOf(order),
     ),
   };
 }
@@ -248,6 +286,7 @@ function mapTickets(
   orderStatus?: string,
   orderOptions: Parameters<typeof optionBlocksForTicket>[0] = [],
   note?: string | null,
+  sale?: TicketSale | null,
 ) {
   return tickets.map((ticket) => {
     const session = ticket.ticketType.session;
@@ -283,6 +322,7 @@ function mapTickets(
         locale,
       ),
       note,
+      sale,
     });
   });
 }

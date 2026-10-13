@@ -18,6 +18,10 @@ export interface PosTotals {
   terminalCents: number;
   onlineCents: number;
   commissionCents: number;
+  /** Commission sur les ventes encaissées par le point de vente (espèces, terminal). */
+  onSiteCommissionCents: number;
+  /** Commission sur les ventes payées par carte en ligne chez l'organisateur. */
+  onlineCommissionCents: number;
   pendingTickets: number;
 }
 
@@ -52,6 +56,8 @@ export function emptyTotals(): PosTotals {
     terminalCents: 0,
     onlineCents: 0,
     commissionCents: 0,
+    onSiteCommissionCents: 0,
+    onlineCommissionCents: 0,
     pendingTickets: 0,
   };
 }
@@ -124,12 +130,22 @@ export async function resellerStats(
       row.tickets += valid;
       row.amountCents += order.totalCents;
       row.commissionCents += order.commissionCents;
+      let onSite = 0;
+      let online = 0;
       for (const charge of order.charges) {
         if (charge.status !== "DONE") continue;
         if (charge.method === "CASH") row.cashCents += charge.amountCents;
         else if (charge.method === "TERMINAL") row.terminalCents += charge.amountCents;
         else if (charge.method === "LINK") row.onlineCents += charge.amountCents;
+        if (charge.method === "LINK") online += charge.amountCents;
+        else if (charge.method === "CASH" || charge.method === "TERMINAL") onSite += charge.amountCents;
       }
+      const onlineShare =
+        online + onSite > 0
+          ? Math.round((order.commissionCents * online) / (online + onSite))
+          : 0;
+      row.onlineCommissionCents += onlineShare;
+      row.onSiteCommissionCents += order.commissionCents - onlineShare;
     }
     byEvent.set(eventId, row);
   }
