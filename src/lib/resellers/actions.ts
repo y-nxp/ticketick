@@ -25,6 +25,8 @@ import type { AttendeeInput } from "@/lib/orders/attendees";
 import { payPath, rotatePayToken } from "@/lib/orders/charges";
 import { prisma } from "@/lib/prisma";
 import { consume } from "@/lib/rate-limit";
+import { readLayout, type SeatLayout } from "@/lib/seating/layout";
+import { syncSessionSeats } from "@/lib/seating/seats";
 import { ticketPdfPath } from "@/lib/tickets/download";
 import { localMidnight, sendResellerReport } from "./report";
 import { sellAtPos, type PosMethod } from "./sale";
@@ -403,7 +405,7 @@ export async function sellAtPosAction(
   if (!parsed.success) return { ok: false, error: "invalid" };
   const data = parsed.data;
 
-  const lines: { ticketTypeId: string; quantity: number }[] = [];
+  const lines: { ticketTypeId: string; quantity: number; seatKeys?: string[] }[] = [];
   const attendees: AttendeeInput[] = [];
   for (const [key, value] of formData.entries()) {
     if (typeof value !== "string") continue;
@@ -413,7 +415,9 @@ export async function sellAtPosAction(
       if (!Number.isInteger(quantity) || quantity < 0 || quantity > 100) {
         return { ok: false, error: "quantity" };
       }
-      if (quantity > 0) lines.push({ ticketTypeId: qty[1]!, quantity });
+      const seats = readText(formData, `seats.${qty[1]}`);
+      const seatKeys = seats ? seats.split(",").filter(Boolean).slice(0, 100) : undefined;
+      if (quantity > 0) lines.push({ ticketTypeId: qty[1]!, quantity, seatKeys });
       continue;
     }
     const holder = /^attendee\.([^.]+)\.(\d+)\.name$/.exec(key);
@@ -463,6 +467,35 @@ export async function sellAtPosAction(
     pdfUrl: ticketPdfPath(result.reference),
     emailed: Boolean(data.email) && mail.sent,
   };
+}
+
+/** Plan d'une séance attribuée au point de vente et sièges qui ne sont plus libres. */
+export async function getPosSeatState(
+  sessionId: string,
+): Promise<{ layout: SeatLayout; unavailable: string[] } | null> {
+  const agent = await requireResellerAgent();
+  if (typeof sessionId !== "string" || sessionId.length === 0 || sessionId.length > 64) {
+    return null;
+  }
+  const session = await prisma.eventSession.findFirst({
+    where: {
+      id: sessionId,
+      status: { in: ["PUBLISHED", "SOLD_OUT"] },
+      event: {
+        status: { in: ["PUBLISHED", "SOLD_OUT"] },
+        resellers: { some: { resellerId: agent.resellerId } },
+      },
+    },
+    select: { seatPlan: { select: { layout: true } } },
+  });
+  const layout = readLayout(session?.seatPlan?.layout);
+  if (!layout) return null;
+  await syncSessionSeats(sessionId);
+  const taken = await prisma.sessionSeat.findMany({
+    where: { sessionId, status: { not: "AVAILABLE" } },
+    select: { seatKey: true },
+  });
+  return { layout, unavailable: taken.map((s) => s.seatKey) };
 }
 
 /** Nouveau QR pour un paiement en ligne en attente ; l'ancien lien ne marche plus. */

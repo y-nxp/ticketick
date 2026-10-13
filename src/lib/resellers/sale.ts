@@ -28,7 +28,8 @@ export type PosSaleError =
   | "notOnSale"
   | "companion_requires_paid"
   | "companion_limit"
-  | "cardMissing";
+  | "cardMissing"
+  | "quantity";
 
 export type PosSaleResult =
   | {
@@ -45,7 +46,8 @@ export async function sellAtPos(input: {
   agentId: string;
   resellerId: string;
   sessionId: string;
-  lines: { ticketTypeId: string; quantity: number }[];
+  /** `seatKeys` : sièges choisis sur le plan ; absents, ils sont attribués d'office. */
+  lines: { ticketTypeId: string; quantity: number; seatKeys?: string[] }[];
   method: PosMethod;
   holderName: string;
   email: string;
@@ -113,6 +115,13 @@ export async function sellAtPos(input: {
 
   const lines = input.lines.filter((l) => l.quantity > 0);
   if (lines.length === 0) return { ok: false, error: "empty" };
+  const seatKeys = lines.flatMap((l) => l.seatKeys ?? []);
+  if (
+    new Set(seatKeys).size !== seatKeys.length ||
+    lines.some((l) => l.seatKeys?.length && l.seatKeys.length !== l.quantity)
+  ) {
+    return { ok: false, error: "quantity" };
+  }
   const types = new Map(session.ticketTypes.map((tt) => [tt.id, tt]));
   const now = new Date();
   for (const line of lines) {

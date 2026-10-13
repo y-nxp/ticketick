@@ -1877,7 +1877,6 @@
       "attendeeAgeHint": "Named ticket, under {age} on the day of the show",
       "attendeeHint": "Named ticket",
       "quantityFor": "Quantity for {name}",
-      "seatedHint": "Numbered seating: the best available seats are assigned automatically.",
       "attendeesTitle": "Ticket holders (ID checked at the entrance)",
       "attendeeName": "first and last name",
       "attendeeBirthDate": "Date of birth",
@@ -1924,6 +1923,13 @@
         "companion_requires_paid": "Free seats require at least one paid ticket.",
         "companion_limit": "Too many free seats for the number of paid tickets.",
         "cardMissing": "Online payment is not available for this organiser."
+      },
+      "seatMode": {
+        "title": "Seats",
+        "plan": "Choose on the seating plan",
+        "planHint": "Tap the seats you want on the plan.",
+        "auto": "Automatic allocation",
+        "autoHint": "Enter the quantities: the best free seats are allocated."
       }
     },
     "sales": {

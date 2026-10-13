@@ -10,6 +10,7 @@ import { Link } from "@/i18n/navigation";
 import { sellAtPosAction } from "@/lib/resellers/actions";
 import type { PosSaleState } from "@/lib/resellers/types";
 import { formatPrice } from "@/lib/utils";
+import { PosSeatPicker, type SeatPick } from "./seat-picker";
 
 interface Row {
   id: string;
@@ -20,9 +21,11 @@ interface Row {
   companion: boolean;
   requiresAttendee: boolean;
   maxAgeYears: number | null;
+  zones: string[];
 }
 
 type Method = "CASH" | "TERMINAL" | "ONLINE";
+type SeatMode = "plan" | "auto";
 
 const inputClass =
   "h-11 w-full rounded-control border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring";
@@ -55,12 +58,21 @@ function SaleRound({
   onNext: () => void;
 }) {
   const t = useTranslations("pos.sell");
-  const [qty, setQty] = React.useState<Record<string, number>>({});
+  const [typed, setQty] = React.useState<Record<string, number>>({});
+  const [mode, setMode] = React.useState<SeatMode>(seated ? "plan" : "auto");
+  const [picks, setPicks] = React.useState<SeatPick[]>([]);
   const [method, setMethod] = React.useState<Method>(methods[0]!);
   const [state, action, pending] = useActionState<PosSaleState, FormData>(
     sellAtPosAction,
     undefined,
   );
+  const onPlan = seated && mode === "plan";
+  const qty: Record<string, number> = onPlan
+    ? picks.reduce<Record<string, number>>(
+        (acc, p) => ({ ...acc, [p.ticketTypeId]: (acc[p.ticketTypeId] ?? 0) + 1 }),
+        {},
+      )
+    : typed;
   const total = rows.reduce((sum, r) => sum + r.priceCents * (qty[r.id] ?? 0), 0);
   const count = rows.reduce((sum, r) => sum + (qty[r.id] ?? 0), 0);
   const nominative = rows.filter((r) => r.requiresAttendee && (qty[r.id] ?? 0) > 0);
@@ -134,6 +146,59 @@ function SaleRound({
       <input type="hidden" name="sessionId" value={sessionId} />
       <input type="hidden" name="locale" value={locale} />
 
+      {seated ? (
+        <fieldset>
+          <legend className="text-sm font-medium">{t("seatMode.title")}</legend>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {(["plan", "auto"] as const).map((m) => (
+              <label
+                key={m}
+                className={`flex cursor-pointer items-start gap-2.5 rounded-control border p-3 text-sm transition-colors ${
+                  mode === m ? "border-primary bg-primary/5" : "border-border hover:bg-muted"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="seatMode"
+                  value={m}
+                  checked={mode === m}
+                  onChange={() => setMode(m)}
+                  className="mt-0.5 accent-[var(--primary)]"
+                />
+                <span>
+                  <span className="block font-medium">{t(`seatMode.${m}`)}</span>
+                  <span className="block text-xs text-muted-foreground">{t(`seatMode.${m}Hint`)}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
+
+      {onPlan ? (
+        <>
+          <PosSeatPicker
+            sessionId={sessionId}
+            locale={locale}
+            rows={rows}
+            picks={picks}
+            onChange={setPicks}
+            refreshKey={state}
+          />
+          {rows.map((row) =>
+            qty[row.id] ? (
+              <React.Fragment key={row.id}>
+                <input type="hidden" name={`qty.${row.id}`} value={qty[row.id]} />
+                <input
+                  type="hidden"
+                  name={`seats.${row.id}`}
+                  value={picks.filter((p) => p.ticketTypeId === row.id).map((p) => p.key).join(",")}
+                />
+              </React.Fragment>
+            ) : null,
+          )}
+        </>
+      ) : (
       <div className="overflow-x-auto rounded-control border border-border">
         <table className="w-full min-w-[28rem] text-sm">
           <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
@@ -186,7 +251,7 @@ function SaleRound({
           </tbody>
         </table>
       </div>
-      {seated ? <p className="text-xs text-muted-foreground">{t("seatedHint")}</p> : null}
+      )}
 
       {nominative.length > 0 ? (
         <fieldset className="space-y-3">

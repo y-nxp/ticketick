@@ -76,6 +76,7 @@ export default async function PosSessionPage({
             companion: tt.maxPerPaidTicket != null,
             requiresAttendee: tt.requiresAttendee,
             maxAgeYears: tt.maxAgeYears,
+            zones: tt.seatZones,
           }))}
         />
       )}

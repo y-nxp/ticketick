@@ -1877,7 +1877,6 @@
       "attendeeAgeHint": "Nominatif, moins de {age} ans le jour du spectacle",
       "attendeeHint": "Nominatif",
       "quantityFor": "Quantité pour {name}",
-      "seatedHint": "Placement numéroté : les meilleures places disponibles sont attribuées automatiquement.",
       "attendeesTitle": "Bénéficiaires (pièce d'identité demandée à l'entrée)",
       "attendeeName": "prénom et nom",
       "attendeeBirthDate": "Date de naissance",
@@ -1924,6 +1923,13 @@
         "companion_requires_paid": "Les places gratuites demandent au moins un billet payant.",
         "companion_limit": "Trop de places gratuites pour le nombre de billets payants.",
         "cardMissing": "Le paiement en ligne n'est pas disponible pour cet organisateur."
+      },
+      "seatMode": {
+        "title": "Places",
+        "plan": "Choisir sur le plan",
+        "planHint": "Touchez les places voulues sur le plan.",
+        "auto": "Attribution automatique",
+        "autoHint": "Indiquez les quantités : les meilleures places libres sont attribuées."
       }
     },
     "sales": {

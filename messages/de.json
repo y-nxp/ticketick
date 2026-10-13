@@ -1877,7 +1877,6 @@
       "attendeeAgeHint": "Personalisiert, unter {age} Jahren am Tag der Veranstaltung",
       "attendeeHint": "Personalisiert",
       "quantityFor": "Anzahl für {name}",
-      "seatedHint": "Nummerierte Plätze: Die besten freien Plätze werden automatisch zugeteilt.",
       "attendeesTitle": "Begünstigte (Ausweis am Eingang)",
       "attendeeName": "Vor- und Nachname",
       "attendeeBirthDate": "Geburtsdatum",
@@ -1924,6 +1923,13 @@
         "companion_requires_paid": "Gratisplätze erfordern mindestens ein bezahltes Ticket.",
         "companion_limit": "Zu viele Gratisplätze für die Anzahl bezahlter Tickets.",
         "cardMissing": "Die Online-Zahlung ist für diesen Veranstalter nicht verfügbar."
+      },
+      "seatMode": {
+        "title": "Plätze",
+        "plan": "Auf dem Saalplan wählen",
+        "planHint": "Tippen Sie die gewünschten Plätze auf dem Plan an.",
+        "auto": "Automatische Zuteilung",
+        "autoHint": "Geben Sie die Anzahl an: Die besten freien Plätze werden zugeteilt."
       }
     },
     "sales": {

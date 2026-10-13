@@ -24,7 +24,8 @@ import { recordResellerSale } from "./reseller-ledger";
 
 export interface ReservationInput {
   sessionId: string;
-  lines: { ticketTypeId: string; quantity: number }[];
+  /** `seatKeys` : sièges choisis sur le plan, sinon attribués d'office. */
+  lines: { ticketTypeId: string; quantity: number; seatKeys?: string[] }[];
   /** Nom et prénom, facultatif. */
   holderName: string;
   /** Mention imprimée sur chaque billet, facultative. */
@@ -154,7 +155,9 @@ export async function createReservation(
             sessionId: session.id,
             layout,
             lines: lines.map((l) => ({
-              ...l,
+              ticketTypeId: l.ticketTypeId,
+              quantity: l.quantity,
+              keys: l.seatKeys,
               zones: types.get(l.ticketTypeId)!.seatZones,
             })),
             fromInvites,
@@ -249,9 +252,10 @@ export class NoSeatsError extends Error {
 export class SeatRaceError extends Error {}
 
 /**
- * Attribue des sièges de la zone du tarif : côte à côte dans un même rang
- * quand c'est possible, sinon les premiers dans l'ordre du plan. Sièges libres
- * par défaut ; avec `fromInvites`, uniquement les places bloquées.
+ * Attribue des sièges de la zone du tarif : ceux choisis sur le plan (`keys`),
+ * sinon côte à côte dans un même rang quand c'est possible, puis les premiers
+ * dans l'ordre du plan. Sièges libres par défaut ; avec `fromInvites`,
+ * uniquement les places bloquées.
  */
 export async function assignSeats(
   tx: Prisma.TransactionClient,
@@ -259,7 +263,7 @@ export async function assignSeats(
     orderId: string;
     sessionId: string;
     layout: SeatLayout;
-    lines: { ticketTypeId: string; quantity: number; zones: string[] }[];
+    lines: { ticketTypeId: string; quantity: number; zones: string[]; keys?: string[] }[];
     fromInvites?: boolean;
   },
 ): Promise<Map<string, string[]>> {
@@ -280,13 +284,23 @@ export async function assignSeats(
     rows.set(key, [...(rows.get(key) ?? []), seat]);
   }
 
+  const seatByKey = new Map(input.layout.seats.map((s) => [s.key, s]));
   const out = new Map<string, string[]>();
-  for (const line of input.lines) {
+  // Les sièges choisis passent d'abord : l'attribution d'office ne doit pas les prendre.
+  const ordered = [...input.lines].sort((a, b) => Number(!a.keys?.length) - Number(!b.keys?.length));
+  for (const line of ordered) {
     const eligible = (seat: SeatLayout["seats"][number]) =>
       free.has(seat.key) && zoneAllowed(line.zones, seat.zone);
 
     let picked: string[] | null = null;
-    for (const row of rows.values()) {
+    if (line.keys?.length) {
+      const chosen = line.keys.map((key) => seatByKey.get(key));
+      if (chosen.length !== line.quantity || !chosen.every((s) => s && eligible(s))) {
+        throw new NoSeatsError(line.ticketTypeId);
+      }
+      picked = [...line.keys];
+    }
+    for (const row of picked ? [] : rows.values()) {
       for (let start = 0; start + line.quantity <= row.length; start++) {
         const run = row.slice(start, start + line.quantity);
         if (run.every(eligible)) {
