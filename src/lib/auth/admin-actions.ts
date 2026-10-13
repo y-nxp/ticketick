@@ -176,7 +176,10 @@ export async function setUserActive(
  * Sans ce contrôle, la dernière rétrogradation rendrait le backoffice
  * inaccessible et il faudrait repasser par le serveur pour en ressortir.
  */
-/** Ouvre le backoffice sous l'identité d'un organisateur. */
+/**
+ * Ouvre l'espace d'un organisateur ou du vendeur d'un point de vente actif,
+ * sous son identité : une vente faite ainsi compte pour le point de vente.
+ */
 export async function impersonateUser(
   _state: AdminActionState | undefined,
   formData: FormData,
@@ -193,18 +196,19 @@ export async function impersonateUser(
       role: true,
       active: true,
       organizer: { select: { id: true } },
+      reseller: { select: { active: true } },
     },
   });
   if (!target || !target.active) return { error: "notFound" };
-  if (target.role !== "ORGANIZER" || !target.organizer) {
-    return { error: "invalid" };
-  }
+  const organizer = target.role === "ORGANIZER" && target.organizer != null;
+  const agent = target.role === "RESELLER_AGENT" && target.reseller?.active === true;
+  if (!organizer && !agent) return { error: "invalid" };
 
   await destroySession();
   await createSession(target.id, { impersonatorId: admin.id });
 
   const locale = await getLocale();
-  redirect({ href: "/admin", locale });
+  redirect({ href: agent ? "/pos" : "/admin", locale });
   return { ok: true };
 }
 
@@ -219,7 +223,10 @@ export async function stopImpersonation() {
   await destroySession();
   await createSession(adminId, { secondFactor: true });
 
-  redirect({ href: "/admin", locale: await getLocale() });
+  redirect({
+    href: user.resellerId ? `/admin/resellers/${user.resellerId}` : "/admin",
+    locale: await getLocale(),
+  });
 }
 
 async function isLastAdmin(): Promise<boolean> {

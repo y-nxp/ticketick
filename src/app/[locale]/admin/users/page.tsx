@@ -66,7 +66,9 @@ export default async function AdminUsersPage({
                     : "—",
                   sessions: user._count.sessions,
                   canImpersonate:
-                    user.role === "ORGANIZER" && Boolean(user.organizer),
+                    user.active &&
+                    ((user.role === "ORGANIZER" && Boolean(user.organizer)) ||
+                      (user.role === "RESELLER_AGENT" && user.reseller?.active === true)),
                 }}
               />
             ))}

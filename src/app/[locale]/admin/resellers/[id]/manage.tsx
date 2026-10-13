@@ -3,10 +3,11 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import { Mail, Plus, Send, Trash2, UserMinus } from "lucide-react";
+import { LogIn, Mail, Plus, Send, Trash2, UserMinus } from "lucide-react";
 import { Field, TextInput } from "@/components/admin/fields";
 import { Button } from "@/components/ui/button";
 import type { FormState } from "@/lib/admin/types";
+import { impersonateUser, type AdminActionState } from "@/lib/auth/admin-actions";
 import {
   assignResellerEvent,
   inviteResellerAgent,
@@ -196,6 +197,32 @@ export function RevokeAgentButton({ resellerId, userId }: { resellerId: string; 
         {t("revoke")}
       </button>
       <ErrorLine state={state} />
+    </form>
+  );
+}
+
+export function ImpersonateAgentButton({ userId }: { userId: string }) {
+  const t = useTranslations("admin");
+  const [state, action, pending] = useActionState<AdminActionState | undefined, FormData>(
+    impersonateUser,
+    undefined,
+  );
+  return (
+    <form action={action}>
+      <input type="hidden" name="userId" value={userId} />
+      <button
+        type="submit"
+        disabled={pending}
+        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline disabled:opacity-50"
+      >
+        <LogIn className="size-3.5" />
+        {t("users.impersonate")}
+      </button>
+      {state?.error ? (
+        <p role="alert" className="text-xs text-destructive">
+          {t(`users.errors.${state.error}`)}
+        </p>
+      ) : null}
     </form>
   );
 }

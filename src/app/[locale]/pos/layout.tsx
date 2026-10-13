@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { LayoutDashboard, ListOrdered, TicketPlus } from "lucide-react";
+import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
 import { Link } from "@/i18n/navigation";
 import { requireResellerAgent } from "@/lib/auth/dal";
 import { prisma } from "@/lib/prisma";
@@ -38,7 +39,16 @@ export default async function PosLayout({ children }: { children: React.ReactNod
             ))}
           </ul>
         </nav>
-        <div className="min-w-0 flex-1">{children}</div>
+        <div className="min-w-0 flex-1">
+          {agent.impersonator ? (
+            <ImpersonationBanner
+              name={agent.name ?? agent.email}
+              email={agent.email}
+              note={t("impersonationNote", { name: reseller.name })}
+            />
+          ) : null}
+          {children}
+        </div>
       </div>
     </div>
   );

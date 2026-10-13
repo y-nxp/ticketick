@@ -11,6 +11,7 @@ import { ResellerForm } from "../reseller-form";
 import {
   AssignEventForm,
   EventCommissionEditor,
+  ImpersonateAgentButton,
   InviteAgentForm,
   RevokeAgentButton,
   SendReportButtons,
@@ -170,6 +171,9 @@ export default async function ResellerPage({
                       : t("activated")
                     : t("invitationPending")}
                 </span>
+                {admin && reseller.active && agent.active ? (
+                  <ImpersonateAgentButton userId={agent.id} />
+                ) : null}
                 <RevokeAgentButton resellerId={reseller.id} userId={agent.id} />
               </li>
             ))}

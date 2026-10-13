@@ -193,6 +193,7 @@ export async function getAdminUsers() {
       lastLoginAt: true,
       createdAt: true,
       organizer: { select: { id: true, name: true } },
+      reseller: { select: { active: true } },
       doorOrganizerId: true,
       statsOrganizerId: true,
       _count: { select: { sessions: true, orders: true } },

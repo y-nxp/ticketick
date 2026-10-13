@@ -77,7 +77,7 @@ export async function getManagedReseller(id: string) {
       active: true,
       agents: {
         orderBy: { createdAt: "asc" },
-        select: { id: true, email: true, name: true, passwordHash: true, lastLoginAt: true },
+        select: { id: true, email: true, name: true, passwordHash: true, lastLoginAt: true, active: true },
       },
     },
   });

@@ -1997,7 +1997,8 @@
       "payLinkGone": "This payment is no longer open.",
       "newQr": "New QR code",
       "refresh": "Check the payment"
-    }
+    },
+    "impersonationNote": "Sales made here count for {name}, commission included."
   },
   "change": {
     "title": "Change your seats",
