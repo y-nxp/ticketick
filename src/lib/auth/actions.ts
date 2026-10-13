@@ -7,7 +7,14 @@ import * as z from "zod";
 import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
 import { clientIpFrom } from "@/lib/rate-limit";
-import { createSession, destroySession } from "./session";
+import {
+  cancelChallenge,
+  checkCode,
+  needsSecondFactor,
+  resendCode,
+  startChallenge,
+} from "./second-factor";
+import { clearChallengeCookie, createSession, destroySession } from "./session";
 
 /**
  * Actions d'authentification.
@@ -35,14 +42,14 @@ export interface LoginState {
 const ATTEMPTS = { max: 8, windowMs: 15 * 60 * 1000 };
 const attempts = new Map<string, number[]>();
 
-function tooManyAttempts(keys: string[]): boolean {
+function tooManyAttempts(keys: string[], limit = ATTEMPTS): boolean {
   const now = Date.now();
   return keys.some((key) => {
     const recent = (attempts.get(key) ?? []).filter(
-      (t) => now - t < ATTEMPTS.windowMs,
+      (t) => now - t < limit.windowMs,
     );
     attempts.set(key, recent);
-    return recent.length >= ATTEMPTS.max;
+    return recent.length >= limit.max;
   });
 }
 
@@ -117,6 +124,20 @@ export async function login(
 
   clearAttempts(keys);
 
+  if (needsSecondFactor(user.role)) {
+    const next = safeNext(formData.get("next"));
+    try {
+      if (!(await startChallenge(user.id, next === "/" ? null : next))) {
+        return { error: "throttled" };
+      }
+    } catch (error) {
+      console.error("[auth] envoi du code de connexion impossible", error);
+      return { error: "unavailable" };
+    }
+    // La page de connexion lit le cookie de la demande et affiche la saisie du code.
+    return redirect({ href: "/login", locale });
+  }
+
   await prisma.user.update({
     where: { id: user.id },
     data: { lastLoginAt: new Date() },
@@ -129,6 +150,71 @@ export async function login(
   return redirect({ href: afterLoginHref(user.role, formData.get("next")), locale });
 }
 
+export interface CodeState {
+  error?: "wrong" | "expired" | "throttled" | "unavailable";
+  resent?: "sent" | "wait" | "limit";
+  /** Horodatage de la réponse : le formulaire n'affiche que la plus récente. */
+  at?: number;
+}
+
+/**
+ * Plus large que pour le mot de passe : la limite qui protège le code est
+ * celle de chaque demande (cinq essais), celle-ci ne freine qu'un balayage.
+ */
+const CODE_ATTEMPTS = { max: 20, windowMs: 15 * 60 * 1000 };
+
+/** Deuxième étape : le code reçu par courriel ouvre la session. */
+export async function verifyLoginCode(
+  _state: CodeState | undefined,
+  formData: FormData,
+): Promise<CodeState> {
+  const locale = await getLocale();
+  const at = Date.now();
+  const ipKey = [`code-ip:${await clientIp()}`];
+  if (tooManyAttempts(ipKey, CODE_ATTEMPTS)) return { error: "throttled", at };
+
+  const code = formData.get("code");
+  let result;
+  try {
+    result = await checkCode(typeof code === "string" ? code : "");
+  } catch (error) {
+    console.error("[auth] vérification du code impossible", error);
+    return { error: "unavailable", at };
+  }
+  if (!result.ok) {
+    recordAttempt(ipKey);
+    if (result.error === "expired") await clearChallengeCookie();
+    return { error: result.error, at };
+  }
+
+  await clearChallengeCookie();
+  await prisma.user.update({ where: { id: result.userId }, data: { lastLoginAt: new Date() } });
+  await createSession(result.userId, { secondFactor: true });
+  return redirect({ href: afterLoginHref(result.role, result.next), locale });
+}
+
+export async function resendLoginCode(): Promise<CodeState> {
+  const at = Date.now();
+  try {
+    const result = await resendCode();
+    if (result === "expired") {
+      await clearChallengeCookie();
+      return { error: "expired", at };
+    }
+    return { resent: result, at };
+  } catch (error) {
+    console.error("[auth] renvoi du code impossible", error);
+    return { error: "unavailable", at };
+  }
+}
+
+/** Retour au formulaire de connexion, pour un autre compte ou après expiration. */
+export async function restartLogin(): Promise<void> {
+  const locale = await getLocale();
+  await cancelChallenge();
+  await clearChallengeCookie();
+  redirect({ href: "/login", locale });
+}
 export async function logout(): Promise<void> {
   const locale = await getLocale();
   await destroySession();

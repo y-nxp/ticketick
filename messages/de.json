@@ -535,6 +535,27 @@
       "expiredTitle": "Link abgelaufen",
       "expiredBody": "Dieser Link wurde bereits verwendet oder ist abgelaufen.",
       "askAgain": "Neuen Link anfordern"
+    },
+    "code": {
+      "title": "anmeldecode",
+      "subtitle": "Wir haben soeben einen Code an {email} gesendet. Er ist {minutes} Minuten gültig.",
+      "label": "6-stelliger Code",
+      "submit": "Bestätigen",
+      "pending": "Wird geprüft…",
+      "spam": "Nichts erhalten? Sehen Sie im Spam-Ordner nach oder fordern Sie einen neuen Code an.",
+      "resend": "Neuen Code senden",
+      "restart": "Anmeldung neu beginnen",
+      "resent": {
+        "sent": "Ein neuer Code ist unterwegs. Der bisherige gilt nicht mehr.",
+        "wait": "Bitte warten Sie etwa dreissig Sekunden, bevor Sie einen neuen Code anfordern.",
+        "limit": "Für diese Anmeldung gibt es keinen weiteren Code: Beginnen Sie die Anmeldung neu."
+      },
+      "errors": {
+        "wrong": "Dieser Code stimmt nicht. Prüfen Sie die zuletzt erhaltene E-Mail.",
+        "expired": "Dieser Code ist abgelaufen oder wurde zu oft falsch eingegeben. Beginnen Sie die Anmeldung neu.",
+        "throttled": "Zu viele Versuche. Versuchen Sie es in einigen Minuten erneut.",
+        "unavailable": "Der Dienst ist vorübergehend nicht verfügbar. Versuchen Sie es gleich noch einmal."
+      }
     }
   },
   "admin": {

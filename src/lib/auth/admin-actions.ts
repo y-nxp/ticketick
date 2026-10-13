@@ -201,7 +201,7 @@ export async function impersonateUser(
   }
 
   await destroySession();
-  await createSession(target.id, admin.id);
+  await createSession(target.id, { impersonatorId: admin.id });
 
   const locale = await getLocale();
   redirect({ href: "/admin", locale });
@@ -217,7 +217,7 @@ export async function stopImpersonation() {
 
   const adminId = user.impersonator.id;
   await destroySession();
-  await createSession(adminId);
+  await createSession(adminId, { secondFactor: true });
 
   redirect({ href: "/admin", locale: await getLocale() });
 }

@@ -535,6 +535,27 @@
       "expiredTitle": "Link expired",
       "expiredBody": "This link has already been used or has passed its validity period.",
       "askAgain": "Request a new link"
+    },
+    "code": {
+      "title": "sign-in code",
+      "subtitle": "We have just sent a code to {email}. It is valid for {minutes} minutes.",
+      "label": "6-digit code",
+      "submit": "Confirm",
+      "pending": "Checking…",
+      "spam": "Nothing received? Check your spam folder, or ask for a new code.",
+      "resend": "Send a new code",
+      "restart": "Start signing in again",
+      "resent": {
+        "sent": "A new code is on its way. The previous one no longer works.",
+        "wait": "Please wait about thirty seconds before asking for another code.",
+        "limit": "No more new codes for this sign-in: start signing in again."
+      },
+      "errors": {
+        "wrong": "This code is not correct. Check the latest email you received.",
+        "expired": "This code has expired or was entered wrongly too many times. Start signing in again.",
+        "throttled": "Too many attempts. Try again in a few minutes.",
+        "unavailable": "The service is temporarily unavailable. Try again in a moment."
+      }
     }
   },
   "admin": {

@@ -51,9 +51,39 @@ model Session {
   impersonator   User?   @relation("SessionImpersonator", fields: [impersonatorId], references: [id], onDelete: SetNull)
   impersonatorId String?
 
+  /// Code reçu par courriel saisi à la connexion. Sans lui, la session ne
+  /// vaut rien pour les comptes qui l'exigent (personnel, organisateurs,
+  /// points de vente).
+  secondFactorAt DateTime?
+
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Code de connexion envoyé par courriel après un mot de passe correct.
+///
+/// Seule une empreinte du code est conservée ; le navigateur ne porte que
+/// l'identifiant de la demande, dans un cookie signé.
+model LoginChallenge {
+  id     String @id @default(cuid())
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  codeHash  String
+  expiresAt DateTime
+  /// Codes faux saisis : au-delà de la limite, la demande est close.
+  attempts  Int       @default(0)
+  sends     Int       @default(1)
+  sentAt    DateTime  @default(now())
+  /// Page demandée avant la connexion, déjà filtrée.
+  next      String?
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
   @@index([expiresAt])
 }
 
@@ -249,6 +279,7 @@ model User {
   impersonations     Session[]                @relation("SessionImpersonator")
   passwordResets     PasswordResetToken[]
   emailVerifications EmailVerificationToken[]
+  loginChallenges    LoginChallenge[]
 
   /// Accès "amis du festival" (session PWA)
   isFestivalFriend Boolean @default(false)

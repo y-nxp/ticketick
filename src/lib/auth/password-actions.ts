@@ -99,7 +99,7 @@ export async function changePassword(
   // nouvelle est ouverte aussitôt pour ne pas éjecter la personne qui vient
   // légitimement de le modifier.
   await destroyAllSessions(user.id);
-  await createSession(user.id);
+  await createSession(user.id, { secondFactor: true });
 
   return { ok: true };
 }

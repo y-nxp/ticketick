@@ -59,10 +59,15 @@ export async function readSessionId(
   }
 }
 
-/** Ouvre une session et dépose le cookie correspondant. */
+/**
+ * Ouvre une session et dépose le cookie correspondant.
+ *
+ * `secondFactor` : la personne vient de saisir le code reçu par courriel, ou
+ * en avait déjà saisi un dans la session qu'elle remplace.
+ */
 export async function createSession(
   userId: string,
-  impersonatorId?: string,
+  options: { impersonatorId?: string; secondFactor?: boolean } = {},
 ): Promise<void> {
   const expiresAt = new Date(Date.now() + DURATION_MS);
   const headerList = await headers();
@@ -70,7 +75,8 @@ export async function createSession(
   const session = await prisma.session.create({
     data: {
       userId,
-      impersonatorId: impersonatorId ?? null,
+      impersonatorId: options.impersonatorId ?? null,
+      secondFactorAt: options.secondFactor ? new Date() : null,
       expiresAt,
       userAgent: headerList.get("user-agent")?.slice(0, 255) ?? null,
       ipAddress: clientIp(headerList),
@@ -117,6 +123,39 @@ export async function currentSessionToken(): Promise<string | undefined> {
 }
 
 export const sessionCookieName = COOKIE_NAME;
+
+const CHALLENGE_COOKIE = "ticketick_login_code";
+
+/** Mémorise la demande de code en cours, le temps de sa validité. */
+export async function setChallengeCookie(challengeId: string, expiresAt: Date): Promise<void> {
+  const token = await new SignJWT({ cid: challengeId })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(expiresAt)
+    .sign(secretKey());
+  (await cookies()).set(CHALLENGE_COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    expires: expiresAt,
+    path: "/",
+  });
+}
+
+export async function readChallengeId(): Promise<string | undefined> {
+  const token = (await cookies()).get(CHALLENGE_COOKIE)?.value;
+  if (!token) return undefined;
+  try {
+    const { payload } = await jwtVerify(token, secretKey(), { algorithms: ["HS256"] });
+    return typeof payload.cid === "string" ? payload.cid : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export async function clearChallengeCookie(): Promise<void> {
+  (await cookies()).delete(CHALLENGE_COOKIE);
+}
 
 function clientIp(headerList: Headers): string | null {
   const ip = clientIpFrom(headerList);

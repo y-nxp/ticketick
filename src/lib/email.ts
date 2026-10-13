@@ -505,6 +505,82 @@ export async function sendEmailConfirmation(payload: {
   });
 }
 
+const CODE_TEXTES: Record<
+  string,
+  { sujet: (code: string) => string; bonjour: string; corps: string; expire: (m: number) => string; ignorer: string }
+> = {
+  fr: {
+    sujet: (code) => `${code} est votre code de connexion ticketick`,
+    bonjour: "Bonjour",
+    corps: "Voici le code à saisir pour terminer votre connexion à ticketick :",
+    expire: (m) => `Ce code est valable ${m} minutes et ne sert qu'une fois.`,
+    ignorer:
+      "Si vous n'êtes pas en train de vous connecter, quelqu'un connaît votre mot de passe : changez-le sans tarder et ne communiquez ce code à personne.",
+  },
+  en: {
+    sujet: (code) => `${code} is your ticketick sign-in code`,
+    bonjour: "Hello",
+    corps: "Here is the code to enter to finish signing in to ticketick:",
+    expire: (m) => `This code is valid for ${m} minutes and works only once.`,
+    ignorer:
+      "If you are not signing in right now, someone knows your password: change it straight away and do not share this code with anyone.",
+  },
+  de: {
+    sujet: (code) => `${code} ist Ihr ticketick-Anmeldecode`,
+    bonjour: "Guten Tag",
+    corps: "Mit diesem Code schliessen Sie Ihre Anmeldung bei ticketick ab:",
+    expire: (m) => `Dieser Code ist ${m} Minuten gültig und funktioniert nur einmal.`,
+    ignorer:
+      "Falls Sie sich gerade nicht anmelden, kennt jemand Ihr Passwort: Ändern Sie es umgehend und geben Sie diesen Code niemandem weiter.",
+  },
+  it: {
+    sujet: (code) => `${code} è il tuo codice di accesso ticketick`,
+    bonjour: "Buongiorno",
+    corps: "Ecco il codice da inserire per completare l'accesso a ticketick:",
+    expire: (m) => `Il codice è valido ${m} minuti e funziona una sola volta.`,
+    ignorer:
+      "Se non stai effettuando l'accesso, qualcuno conosce la tua password: cambiala subito e non comunicare questo codice a nessuno.",
+  },
+};
+
+export async function sendLoginCodeEmail(payload: {
+  to: string;
+  name: string | null;
+  locale: string;
+  code: string;
+  expiresInMinutes: number;
+}) {
+  const l = byLocale(CODE_TEXTES, payload.locale);
+  const salutation = payload.name ? `${l.bonjour} ${payload.name},` : `${l.bonjour},`;
+  const text = [
+    salutation,
+    "",
+    l.corps,
+    "",
+    payload.code,
+    "",
+    l.expire(payload.expiresInMinutes),
+    "",
+    l.ignorer,
+    "",
+    "ticketick.ch",
+  ].join("\n");
+  const html = [
+    `<p>${echapper(salutation)}</p>`,
+    `<p>${echapper(l.corps)}</p>`,
+    `<p style="margin:20px 0;font-size:32px;font-weight:700;letter-spacing:6px;color:#2A2C30">${echapper(payload.code)}</p>`,
+    `<p style="color:#6b7280;font-size:13px">${echapper(l.expire(payload.expiresInMinutes))}</p>`,
+    `<p style="color:#6b7280;font-size:13px">${echapper(l.ignorer)}</p>`,
+  ].join("");
+  return envoyer({
+    to: payload.to,
+    subject: l.sujet(payload.code),
+    text,
+    html: `<div style="font:14px/1.6 system-ui,sans-serif;color:#2A2C30">${html}</div>`,
+    etiquette: "code de connexion",
+  });
+}
+
 const INVITATION_TEXTES: Record<
   string,
   {

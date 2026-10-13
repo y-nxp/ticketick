@@ -395,6 +395,27 @@
       "expiredTitle": "Enlace caducado",
       "expiredBody": "Este enlace ya se ha utilizado o ha superado su periodo de validez.",
       "askAgain": "Solicitar un nuevo enlace"
+    },
+    "code": {
+      "title": "código de acceso",
+      "subtitle": "Acabamos de enviar un código a {email}. Es válido durante {minutes} minutos.",
+      "label": "Código de 6 cifras",
+      "submit": "Confirmar",
+      "pending": "Comprobando…",
+      "spam": "¿No has recibido nada? Revisa la carpeta de correo no deseado o pide un código nuevo.",
+      "resend": "Enviar un código nuevo",
+      "restart": "Volver a iniciar sesión",
+      "resent": {
+        "sent": "Te hemos enviado un código nuevo. El anterior ya no funciona.",
+        "wait": "Espera unos treinta segundos antes de pedir otro código.",
+        "limit": "No hay más códigos para este inicio de sesión: vuelve a empezar."
+      },
+      "errors": {
+        "wrong": "El código no es correcto. Revisa el último correo recibido.",
+        "expired": "El código ha caducado o se ha introducido mal demasiadas veces. Vuelve a iniciar sesión.",
+        "throttled": "Demasiados intentos. Inténtalo de nuevo dentro de unos minutos.",
+        "unavailable": "El servicio no está disponible en este momento. Inténtalo de nuevo en un instante."
+      }
     }
   },
   "friends": {

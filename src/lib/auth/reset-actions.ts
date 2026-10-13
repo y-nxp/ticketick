@@ -218,7 +218,8 @@ export async function resetPassword(
     // compromis, l'intrus ne doit pas survivre au changement. Une nouvelle est
     // ouverte pour la personne qui vient de le faire.
     await destroyAllSessions(ligne.userId);
-    await createSession(ligne.userId);
+    // Le lien est arrivé dans la boîte, comme le code l'aurait fait.
+    await createSession(ligne.userId, { secondFactor: true });
   } catch (error) {
     console.error("[auth] réinitialisation impossible", error);
     return { error: "unavailable" };

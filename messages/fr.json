@@ -535,6 +535,27 @@
       "expiredTitle": "Lien expiré",
       "expiredBody": "Ce lien a déjà servi ou a dépassé sa durée de validité.",
       "askAgain": "Demander un nouveau lien"
+    },
+    "code": {
+      "title": "code de connexion",
+      "subtitle": "Nous venons d'envoyer un code à {email}. Il est valable {minutes} minutes.",
+      "label": "Code à 6 chiffres",
+      "submit": "Valider",
+      "pending": "Vérification…",
+      "spam": "Rien reçu ? Regardez dans les indésirables, ou demandez un nouveau code.",
+      "resend": "Envoyer un nouveau code",
+      "restart": "Recommencer la connexion",
+      "resent": {
+        "sent": "Un nouveau code vient de partir. L'ancien ne fonctionne plus.",
+        "wait": "Patientez une trentaine de secondes avant de redemander un code.",
+        "limit": "Plus de nouveau code pour cette connexion : recommencez la connexion."
+      },
+      "errors": {
+        "wrong": "Ce code n'est pas le bon. Vérifiez le dernier courriel reçu.",
+        "expired": "Ce code a expiré ou a été trop souvent mal saisi. Recommencez la connexion.",
+        "throttled": "Trop d'essais. Réessayez dans quelques minutes.",
+        "unavailable": "Le service est momentanément indisponible. Réessayez dans un instant."
+      }
     }
   },
   "admin": {

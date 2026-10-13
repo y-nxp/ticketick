@@ -7,6 +7,7 @@ import type { UserRole } from "@prisma/client";
 // visiteur germanophone sur la version française de la page de connexion.
 import { redirect } from "@/i18n/navigation";
 import { prisma } from "@/lib/prisma";
+import { needsSecondFactor } from "./second-factor";
 import { currentSessionToken, readSessionId } from "./session";
 
 /**
@@ -58,6 +59,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       where: { id: sessionId },
       select: {
         expiresAt: true,
+        secondFactorAt: true,
         impersonatorId: true,
         impersonator: {
           select: { id: true, email: true, name: true, active: true },
@@ -102,6 +104,17 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   // Un compte désactivé perd l'accès immédiatement, sans attendre que ses
   // sessions expirent.
   if (!session.user.active) return null;
+
+  // Vérifié à chaque requête plutôt qu'à la seule connexion : couvre les
+  // sessions ouvertes avant l'exigence du code et les comptes promus depuis.
+  // L'administrateur qui consulte un compte a déjà saisi le sien.
+  if (
+    needsSecondFactor(session.user.role) &&
+    !session.secondFactorAt &&
+    !session.impersonatorId
+  ) {
+    return null;
+  }
 
   // Champs listés un à un : ce qui sort d'ici peut remonter jusqu'à un
   // composant client, et rien ne doit s'y ajouter par inadvertance.

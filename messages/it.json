@@ -535,6 +535,27 @@
       "expiredTitle": "Link scaduto",
       "expiredBody": "Questo link è già stato usato o ha superato la durata di validità.",
       "askAgain": "Richiedi un nuovo link"
+    },
+    "code": {
+      "title": "codice di accesso",
+      "subtitle": "Abbiamo appena inviato un codice a {email}. È valido {minutes} minuti.",
+      "label": "Codice di 6 cifre",
+      "submit": "Conferma",
+      "pending": "Verifica…",
+      "spam": "Non hai ricevuto nulla? Controlla la posta indesiderata o chiedi un nuovo codice.",
+      "resend": "Invia un nuovo codice",
+      "restart": "Ricomincia l'accesso",
+      "resent": {
+        "sent": "È in arrivo un nuovo codice. Quello precedente non funziona più.",
+        "wait": "Attendi una trentina di secondi prima di chiedere un altro codice.",
+        "limit": "Nessun altro codice per questo accesso: ricomincia l'accesso."
+      },
+      "errors": {
+        "wrong": "Il codice non è corretto. Controlla l'ultima e-mail ricevuta.",
+        "expired": "Il codice è scaduto o è stato inserito male troppe volte. Ricomincia l'accesso.",
+        "throttled": "Troppi tentativi. Riprova tra qualche minuto.",
+        "unavailable": "Il servizio è momentaneamente non disponibile. Riprova tra un attimo."
+      }
     }
   },
   "admin": {
