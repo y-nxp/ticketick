@@ -910,7 +910,7 @@ function CheckoutInner() {
                   }}
                   icon={<CreditCard className="size-5" />}
                   title={t("card")}
-                  hint={t("cardHint")}
+                  hint={t("cardHint", { provider: offer.cardProvider ?? "other" })}
                 />
               ) : null}
               {offer.paypal ? (

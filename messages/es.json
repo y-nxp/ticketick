@@ -172,7 +172,7 @@
     "phone": "Teléfono",
     "paymentMethod": "Forma de pago",
     "card": "Tarjeta de crédito",
-    "cardHint": "Pago seguro con tarjeta a través de PostFinance Checkout",
+    "cardHint": "{provider, select, postfinance {Pago seguro con tarjeta a través de PostFinance Checkout} stripe {Pago seguro con tarjeta a través de Stripe} other {Pago seguro con tarjeta}}",
     "iban": "Transferencia bancaria (IBAN)",
     "ibanHint": "Recibirás las instrucciones de pago por correo electrónico. Las entradas se emiten al recibir la transferencia.",
     "payNow": "Pagar {amount}",

@@ -173,7 +173,7 @@
     "phone": "Phone",
     "paymentMethod": "Payment method",
     "card": "Credit card",
-    "cardHint": "Secure card payment via PostFinance Checkout",
+    "cardHint": "{provider, select, postfinance {Secure card payment via PostFinance Checkout} stripe {Secure card payment via Stripe} other {Secure card payment}}",
     "iban": "Bank transfer (IBAN)",
     "ibanHint": "You will receive payment instructions by email. Tickets are issued after the transfer is received.",
     "payNow": "Pay {amount}",

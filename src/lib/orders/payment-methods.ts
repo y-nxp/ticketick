@@ -1,5 +1,6 @@
 import "server-only";
 
+import { pickCardProvider, type CardProvider } from "@/lib/payment/card-account";
 import { mockPaymentsAllowed } from "@/lib/payment/config";
 import { prisma } from "@/lib/prisma";
 
@@ -21,7 +22,11 @@ export type PaymentOffer = { card: boolean; iban: boolean; paypal: boolean };
  */
 export type PaymentBlock = "notActivated" | "mixedOrganizers";
 
-export type CartPayments = PaymentOffer & { blocked?: PaymentBlock };
+export type CartPayments = PaymentOffer & {
+  blocked?: PaymentBlock;
+  /** Prestataire qui encaissera la carte ; absent en simulation. */
+  cardProvider?: CardProvider | null;
+};
 
 export function inheritPayment(
   event: { acceptCard: boolean; acceptIban: boolean; acceptPaypal: boolean },
@@ -80,7 +85,7 @@ export async function resolveCartPayments(
     return { card: false, iban: false, paypal: false, blocked: "mixedOrganizers" };
   }
 
-  const ready = await organizerPayments(organizerIds[0]!);
+  const { cardProvider, ...ready } = await organizerPayments(organizerIds[0]!);
   const wanted = intersectOffers(
     rows.map((r) => inheritPayment(r.session.event, r.session)),
   );
@@ -88,6 +93,7 @@ export async function resolveCartPayments(
     card: wanted.card && ready.card,
     iban: wanted.iban && ready.iban,
     paypal: wanted.paypal && ready.paypal,
+    cardProvider,
   };
   if (!ready.card && !ready.iban && !ready.paypal) {
     return { ...offer, blocked: "notActivated" };
@@ -99,22 +105,30 @@ export async function resolveCartPayments(
  * Moyens que l'organisateur a activés. La simulation (essai et poste de
  * développement seulement) remplace la carte et le virement manquants.
  */
-export async function organizerPayments(organizerId: string): Promise<PaymentOffer> {
+export async function organizerPayments(
+  organizerId: string,
+): Promise<PaymentOffer & { cardProvider: CardProvider | null }> {
   const organizer = await prisma.organizer.findUnique({
     where: { id: organizerId },
     select: {
       bankIban: true,
       bankBeneficiary: true,
+      cardProvider: true,
       postfinance: { select: { enabled: true } },
       stripe: { select: { enabled: true } },
       paypal: { select: { enabled: true } },
     },
   });
   const mock = mockPaymentsAllowed();
+  const cardProvider = pickCardProvider({
+    preferred: organizer?.cardProvider ?? null,
+    postfinance: Boolean(organizer?.postfinance?.enabled),
+    stripe: Boolean(organizer?.stripe?.enabled),
+  });
   return {
-    card:
-      Boolean(organizer?.postfinance?.enabled) || Boolean(organizer?.stripe?.enabled) || mock,
+    card: cardProvider !== null || mock,
     iban: Boolean(organizer?.bankIban && organizer.bankBeneficiary) || mock,
     paypal: Boolean(organizer?.paypal?.enabled),
+    cardProvider,
   };
 }

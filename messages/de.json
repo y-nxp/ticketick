@@ -173,7 +173,7 @@
     "phone": "Telefon",
     "paymentMethod": "Zahlungsart",
     "card": "Kreditkarte",
-    "cardHint": "Sichere Kartenzahlung über PostFinance Checkout",
+    "cardHint": "{provider, select, postfinance {Sichere Kartenzahlung über PostFinance Checkout} stripe {Sichere Kartenzahlung über Stripe} other {Sichere Kartenzahlung}}",
     "iban": "Banküberweisung (IBAN)",
     "ibanHint": "Sie erhalten die Zahlungsanweisungen per E-Mail. Tickets werden nach Zahlungseingang ausgestellt.",
     "payNow": "{amount} bezahlen",
