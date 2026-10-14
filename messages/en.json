@@ -2082,10 +2082,29 @@
     "footerInvitations": "Guest seats free: set aside, not yet assigned. Paid: invitations settled outside the ticket shop (bank transfer, cash…)."
   },
   "consent": {
-    "title": "Audience measurement and advertising",
-    "text": "With your consent, we measure audience (Google Analytics) and how well our ads perform (Google, Meta). Cart and checkout work either way.",
-    "accept": "Accept",
+    "title": "ticketick respects your privacy",
+    "text": "We keep data sharing with third parties to the strict minimum, and you decide. Cart and checkout work either way.",
+    "learnMore": "Learn more",
+    "acceptAll": "Accept all",
     "decline": "Decline",
-    "learnMore": "Learn more"
+    "customize": "Set my choices",
+    "save": "Save my choices",
+    "alwaysOn": "Always on",
+    "base": {
+      "title": "Basic features",
+      "text": "Needed for the site: cart, session, language and connection security. They do not require consent."
+    },
+    "statistics": {
+      "title": "Statistics",
+      "text": "Measure and analyse how the site is used (Google Analytics), to improve it."
+    },
+    "ads": {
+      "title": "Targeting and advertising",
+      "text": "Measure how well our ads and organisers' ads perform (Google Ads, Meta pixel). When you buy, Meta also receives your email, name and phone number in encrypted form."
+    },
+    "personalization": {
+      "title": "Personalised advertising",
+      "text": "Let Google and Meta tailor the ads you see elsewhere to your visits on ticketick. Also turns on “Targeting and advertising”."
+    }
   }
 }

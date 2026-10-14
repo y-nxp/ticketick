@@ -1,5 +1,5 @@
 import type { AnalyticsConfig } from "./config";
-import type { Consent } from "./consent";
+import { googleConsentState, type Consent } from "./consent";
 
 // Les identifiants sont validés par `analyticsConfig` : ils s'insèrent tels quels.
 
@@ -18,11 +18,11 @@ export function siteTagsSnippet(config: AnalyticsConfig): string {
  * refuse tout par défaut ; le choix enregistré du visiteur l'emporte.
  */
 export function googleInitSnippet(config: AnalyticsConfig, consent: Consent | null): string {
-  const state = consent === "granted" ? "granted" : "denied";
+  const state = JSON.stringify({ ...googleConsentState(consent), wait_for_update: 500 });
   return [
     "window.dataLayer=window.dataLayer||[];",
     "function gtag(){dataLayer.push(arguments);}window.gtag=gtag;",
-    `gtag('consent','default',{ad_storage:'${state}',ad_user_data:'${state}',ad_personalization:'${state}',analytics_storage:'${state}',wait_for_update:500});`,
+    `gtag('consent','default',${state});`,
     "gtag('set','ads_data_redaction',true);",
     "gtag('js',new Date());",
     ...googleIds(config).map((id) => `gtag('config','${id}');`),

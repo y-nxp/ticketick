@@ -498,10 +498,29 @@
     "current": "Tu localidad actual"
   },
   "consent": {
-    "title": "Medición de audiencia y publicidad",
-    "text": "Con su consentimiento, medimos la audiencia (Google Analytics) y la eficacia de nuestros anuncios (Google, Meta). El carrito y el pago funcionan en cualquier caso.",
-    "accept": "Aceptar",
+    "title": "ticketick respeta su privacidad",
+    "text": "Limitamos al mínimo imprescindible el intercambio de datos con terceros, y usted decide. El carrito y el pago funcionan en cualquier caso.",
+    "learnMore": "Más información",
+    "acceptAll": "Aceptar todo",
     "decline": "Rechazar",
-    "learnMore": "Más información"
+    "customize": "Definir mis opciones",
+    "save": "Guardar mis opciones",
+    "alwaysOn": "Siempre activo",
+    "base": {
+      "title": "Funciones básicas",
+      "text": "Necesarias para el sitio: carrito, sesión, idioma y seguridad de la conexión. No requieren consentimiento."
+    },
+    "statistics": {
+      "title": "Estadísticas",
+      "text": "Medir y analizar el uso del sitio (Google Analytics) para mejorarlo."
+    },
+    "ads": {
+      "title": "Segmentación y publicidad",
+      "text": "Medir la eficacia de nuestros anuncios y de los de los organizadores (Google Ads, píxel de Meta). Al comprar, Meta también recibe su correo, su nombre y su teléfono en forma cifrada."
+    },
+    "personalization": {
+      "title": "Publicidad personalizada",
+      "text": "Permitir que Google y Meta adapten a sus visitas en ticketick los anuncios que ve en otros sitios. También activa «Segmentación y publicidad»."
+    }
   }
 }

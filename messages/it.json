@@ -2082,10 +2082,29 @@
     "footerInvitations": "Posti ospiti liberi: messi da parte, non ancora assegnati. Pagati: inviti saldati fuori dalla biglietteria (bonifico, contanti…)."
   },
   "consent": {
-    "title": "Misurazione dell'audience e pubblicità",
-    "text": "Con il vostro consenso misuriamo l'audience (Google Analytics) e l'efficacia dei nostri annunci (Google, Meta). Carrello e pagamento funzionano in ogni caso.",
-    "accept": "Accetta",
+    "title": "ticketick rispetta la vostra privacy",
+    "text": "Limitiamo allo stretto necessario la condivisione di dati con terzi, e siete voi a scegliere. Carrello e pagamento funzionano in ogni caso.",
+    "learnMore": "Per saperne di più",
+    "acceptAll": "Accetta tutto",
     "decline": "Rifiuta",
-    "learnMore": "Per saperne di più"
+    "customize": "Definisci le mie scelte",
+    "save": "Salva le mie scelte",
+    "alwaysOn": "Sempre attivo",
+    "base": {
+      "title": "Funzionalità di base",
+      "text": "Necessarie al sito: carrello, sessione, lingua e sicurezza della connessione. Non richiedono consenso."
+    },
+    "statistics": {
+      "title": "Statistiche",
+      "text": "Misurare e analizzare l'uso del sito (Google Analytics), per migliorarlo."
+    },
+    "ads": {
+      "title": "Targeting e pubblicità",
+      "text": "Misurare l'efficacia dei nostri annunci e di quelli degli organizzatori (Google Ads, pixel Meta). Al momento dell'acquisto, Meta riceve anche la vostra e-mail, il nome e il telefono in forma cifrata."
+    },
+    "personalization": {
+      "title": "Pubblicità personalizzata",
+      "text": "Consentire a Google e Meta di adattare alle vostre visite su ticketick gli annunci che vedete altrove. Attiva anche «Targeting e pubblicità»."
+    }
   }
 }

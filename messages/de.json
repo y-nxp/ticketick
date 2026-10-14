@@ -2082,10 +2082,29 @@
     "footerInvitations": "Freie Gästeplätze: reserviert, noch nicht vergeben. Bezahlt: ausserhalb des Ticketshops beglichene Einladungen (Überweisung, bar…)."
   },
   "consent": {
-    "title": "Reichweitenmessung und Werbung",
-    "text": "Mit Ihrer Zustimmung messen wir die Reichweite (Google Analytics) und die Wirkung unserer Anzeigen (Google, Meta). Warenkorb und Bezahlung funktionieren in jedem Fall.",
-    "accept": "Akzeptieren",
+    "title": "ticketick respektiert Ihre Privatsphäre",
+    "text": "Wir geben Daten nur im unbedingt nötigen Umfang an Dritte weiter, und Sie entscheiden. Warenkorb und Bezahlung funktionieren in jedem Fall.",
+    "learnMore": "Mehr erfahren",
+    "acceptAll": "Alle akzeptieren",
     "decline": "Ablehnen",
-    "learnMore": "Mehr erfahren"
+    "customize": "Auswahl festlegen",
+    "save": "Auswahl speichern",
+    "alwaysOn": "Immer aktiv",
+    "base": {
+      "title": "Grundfunktionen",
+      "text": "Für die Website nötig: Warenkorb, Sitzung, Sprache und Verbindungssicherheit. Sie erfordern keine Zustimmung."
+    },
+    "statistics": {
+      "title": "Statistiken",
+      "text": "Die Nutzung der Website messen und auswerten (Google Analytics), um sie zu verbessern."
+    },
+    "ads": {
+      "title": "Targeting und Werbung",
+      "text": "Die Wirkung unserer Anzeigen und jener der Veranstalter messen (Google Ads, Meta-Pixel). Bei einem Kauf erhält Meta zudem Ihre E-Mail, Ihren Namen und Ihre Telefonnummer in verschlüsselter Form."
+    },
+    "personalization": {
+      "title": "Personalisierte Werbung",
+      "text": "Google und Meta erlauben, die Anzeigen, die Sie anderswo sehen, an Ihre Besuche auf ticketick anzupassen. Aktiviert auch «Targeting und Werbung»."
+    }
   }
 }

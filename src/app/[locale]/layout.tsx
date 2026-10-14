@@ -92,7 +92,7 @@ export default async function LocaleLayout({
         {googleIds(analytics).length > 0 ? (
           <script dangerouslySetInnerHTML={{ __html: googleInitSnippet(analytics, consent) }} />
         ) : null}
-        {analytics.metaPixelId && consent === "granted" ? (
+        {analytics.metaPixelId && consent?.ads ? (
           <script dangerouslySetInnerHTML={{ __html: metaInitSnippet(analytics.metaPixelId) }} />
         ) : null}
       </head>

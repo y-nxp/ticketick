@@ -385,7 +385,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
       {
         title: "6. Cookies",
         paragraphs: [
-          "Des cookies ou technologies similaires sont nécessaires au panier, à la session, à la langue et à la sécurité ; ils ne demandent pas d’accord. Les cookies de mesure d’audience et de publicité (Google Analytics, Google Ads, pixel Meta) ne sont déposés qu’avec votre accord, donné ou refusé dans le bandeau affiché à votre première visite. Vous pouvez changer d’avis à tout moment avec le lien « Cookies » en bas de page. Sans accord, Google ne reçoit que des signaux anonymes, sans cookie.",
+          "Des cookies ou technologies similaires sont nécessaires au panier, à la session, à la langue et à la sécurité ; ils ne demandent pas d’accord. Les cookies de mesure d’audience et de publicité (Google Analytics, Google Ads, pixel Meta) ne sont déposés qu’avec votre accord, donné ou refusé dans la fenêtre affichée à votre première visite, par finalité : statistiques, ciblage et publicité, publicité personnalisée. Vous pouvez changer d’avis à tout moment avec le lien « Cookies » en bas de page. Sans accord, Google ne reçoit que des signaux anonymes, sans cookie.",
         ],
       },
       {
@@ -463,7 +463,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
       {
         title: "6. Cookies",
         paragraphs: [
-          "Cookies or similar technologies are needed for the cart, session, language and security; they do not require consent. Audience measurement and advertising cookies (Google Analytics, Google Ads, Meta pixel) are only set with your consent, given or refused in the banner shown on your first visit. You can change your mind at any time with the “Cookies” link at the bottom of the page. Without consent, Google only receives anonymous, cookieless signals.",
+          "Cookies or similar technologies are needed for the cart, session, language and security; they do not require consent. Audience measurement and advertising cookies (Google Analytics, Google Ads, Meta pixel) are only set with your consent, given or refused in the window shown on your first visit, for each purpose: statistics, targeting and advertising, personalised advertising. You can change your mind at any time with the “Cookies” link at the bottom of the page. Without consent, Google only receives anonymous, cookieless signals.",
         ],
       },
       {
@@ -541,7 +541,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
       {
         title: "6. Cookies",
         paragraphs: [
-          "Cookies oder ähnliche Technologien sind für Warenkorb, Sitzung, Sprache und Sicherheit nötig; sie erfordern keine Zustimmung. Cookies für Reichweitenmessung und Werbung (Google Analytics, Google Ads, Meta-Pixel) werden nur mit Ihrer Zustimmung gesetzt, die Sie im Banner bei Ihrem ersten Besuch erteilen oder verweigern. Sie können Ihre Wahl jederzeit über den Link «Cookies» unten auf der Seite ändern. Ohne Zustimmung erhält Google nur anonyme Signale ohne Cookies.",
+          "Cookies oder ähnliche Technologien sind für Warenkorb, Sitzung, Sprache und Sicherheit nötig; sie erfordern keine Zustimmung. Cookies für Reichweitenmessung und Werbung (Google Analytics, Google Ads, Meta-Pixel) werden nur mit Ihrer Zustimmung gesetzt, die Sie im Fenster bei Ihrem ersten Besuch je Zweck erteilen oder verweigern: Statistiken, Targeting und Werbung, personalisierte Werbung. Sie können Ihre Wahl jederzeit über den Link «Cookies» unten auf der Seite ändern. Ohne Zustimmung erhält Google nur anonyme Signale ohne Cookies.",
         ],
       },
       {
@@ -619,7 +619,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
       {
         title: "6. Cookie",
         paragraphs: [
-          "Cookie o tecnologie simili sono necessari per carrello, sessione, lingua e sicurezza; non richiedono consenso. I cookie di misurazione dell’audience e pubblicitari (Google Analytics, Google Ads, pixel Meta) sono depositati solo con il vostro consenso, dato o rifiutato nel banner mostrato alla prima visita. Potete cambiare idea in qualsiasi momento con il link «Cookie» in fondo alla pagina. Senza consenso, Google riceve solo segnali anonimi, senza cookie.",
+          "Cookie o tecnologie simili sono necessari per carrello, sessione, lingua e sicurezza; non richiedono consenso. I cookie di misurazione dell’audience e pubblicitari (Google Analytics, Google Ads, pixel Meta) sono depositati solo con il vostro consenso, dato o rifiutato nella finestra mostrata alla prima visita, per finalità: statistiche, targeting e pubblicità, pubblicità personalizzata. Potete cambiare idea in qualsiasi momento con il link «Cookie» in fondo alla pagina. Senza consenso, Google riceve solo segnali anonimi, senza cookie.",
         ],
       },
       {

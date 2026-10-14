@@ -100,7 +100,7 @@ export default async function CheckoutSuccessPage({
         }
       : null;
 
-  if (purchase && paid && parseConsent(cookieStore.get(CONSENT_COOKIE)?.value) === "granted") {
+  if (purchase && paid && parseConsent(cookieStore.get(CONSENT_COOKIE)?.value)?.ads) {
     const requestHeaders = await headers();
     const ip = clientIpFrom(requestHeaders);
     const buyer = {

@@ -4,15 +4,22 @@ import * as React from "react";
 import Script from "next/script";
 import { usePathname } from "@/i18n/navigation";
 import type { AnalyticsConfig } from "@/lib/analytics/config";
-import { CONSENT_CHANGED_EVENT, type Consent } from "@/lib/analytics/consent";
+import { CONSENT_CHANGED_EVENT, googleConsentState, type Consent } from "@/lib/analytics/consent";
 import { googleIds, metaInitSnippet } from "@/lib/analytics/snippets";
 import { trackSitePageView } from "@/lib/analytics/track";
-import { ConsentBanner } from "./consent-banner";
+import { ConsentDialog } from "./consent-dialog";
 
 /**
- * Charge Google et Meta selon le choix du visiteur, et affiche le bandeau
- * tant qu'il n'a pas choisi. Rien sur le widget posé chez les organisateurs :
- * la page d'accueil de l'iframe n'est pas la leur.
+ * Pages où la fenêtre ne s'ouvre pas d'elle-même : écrans du personnel, où
+ * elle bloquerait le travail, et pages légales, qu'elle cacherait. Le lien
+ * « Cookies » du pied de page la rouvre partout.
+ */
+const NO_PROMPT = ["/admin", "/door", "/pos", "/privacy", "/terms"];
+
+/**
+ * Charge Google et Meta selon le choix du visiteur, et ouvre la fenêtre de
+ * choix tant qu'il n'a pas répondu. Rien sur le widget posé chez les
+ * organisateurs : la page d'accueil de l'iframe n'est pas la leur.
  */
 export function Analytics({
   config,
@@ -28,13 +35,8 @@ export function Analytics({
     const onChange = (e: Event) => {
       const next = (e as CustomEvent<Consent>).detail;
       setConsent(next);
-      window.gtag?.("consent", "update", {
-        ad_storage: next,
-        ad_user_data: next,
-        ad_personalization: next,
-        analytics_storage: next,
-      });
-      window.fbq?.("consent", next === "granted" ? "grant" : "revoke");
+      window.gtag?.("consent", "update", googleConsentState(next));
+      window.fbq?.("consent", next.ads ? "grant" : "revoke");
     };
     window.addEventListener(CONSENT_CHANGED_EVENT, onChange);
     return () => window.removeEventListener(CONSENT_CHANGED_EVENT, onChange);
@@ -54,7 +56,8 @@ export function Analytics({
 
   const google = googleIds(config);
   // Accord déjà connu au rendu : le pixel est amorcé dans <head> par la mise en page.
-  const loadMetaHere = Boolean(config.metaPixelId) && consent === "granted" && initialConsent !== "granted";
+  const loadMetaHere = Boolean(config.metaPixelId) && Boolean(consent?.ads) && !initialConsent?.ads;
+  const prompt = consent === null && !NO_PROMPT.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   return (
     <>
@@ -66,7 +69,7 @@ export function Analytics({
           {metaInitSnippet(config.metaPixelId)}
         </Script>
       ) : null}
-      <ConsentBanner open={consent === null} />
+      <ConsentDialog open={prompt} current={consent} />
     </>
   );
 }
