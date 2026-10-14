@@ -938,7 +938,9 @@
         "validityInvalid": "Période de validité invalide : la fin doit suivre le début.",
         "discountHasOrders": "Ce rabais a déjà été accordé sur des commandes : désactivez-le plutôt.",
         "phoneInvalid": "Numéro de téléphone invalide.",
-        "urlInvalid": "Adresse du site invalide : elle doit commencer par https://."
+        "urlInvalid": "Adresse du site invalide : elle doit commencer par https://.",
+        "metaPixelInvalid": "L’ID du pixel Meta ne contient que des chiffres (8 à 20).",
+        "ga4IdInvalid": "L’ID Google Analytics doit avoir la forme G-XXXXXXXXXX."
       }
     },
     "settings": {
@@ -983,7 +985,12 @@
         "notifyEmailsHint": "Une adresse par ligne. Chaque vente leur envoie le même e-mail que l’acheteur.",
         "eventCount": "{count} spectacle(s)",
         "description": "Présentation",
-        "descriptionHint": "En tête de la page hébergée. Une traduction manquante affiche le français (l’anglais pour l’espagnol)."
+        "descriptionHint": "En tête de la page hébergée. Une traduction manquante affiche le français (l’anglais pour l’espagnol).",
+        "metaPixelId": "Pixel Meta de l’organisateur",
+        "metaPixelIdHint": "Facultatif. Chiffres seulement, dans le gestionnaire d’événements de Meta.",
+        "ga4MeasurementId": "Google Analytics de l’organisateur",
+        "ga4MeasurementIdHint": "Facultatif. ID de mesure du flux Web, au format G-…",
+        "trackingHint": "Ces outils ne reçoivent que les visites et les ventes des spectacles de cet organisateur, après accord du visiteur aux cookies. L’organisateur est responsable de leur usage."
       },
       "venues": {
         "title": "Lieux",

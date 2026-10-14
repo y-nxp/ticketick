@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { organizerBrandFromRow } from "@/lib/branding/theme";
+import { organizerTagsFromRow } from "@/lib/analytics/organizer-tags";
 import type {
   Category,
   EventItem,
@@ -120,6 +121,7 @@ function mapOrganizer(o: RawEvent["organizer"]): Organizer {
     website: o.website ?? undefined,
     brand: organizerBrandFromRow(o),
     friendsAppEnabled: o.friendsAppEnabled,
+    tracking: organizerTagsFromRow(o),
   };
 }
 

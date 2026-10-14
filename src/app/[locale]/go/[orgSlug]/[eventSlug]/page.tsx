@@ -48,7 +48,7 @@ export default async function OrganizerEventPage({
 
   return (
     <OrganizerShell organizer={event.organizer}>
-      <ViewItemTracker id={event.id} name={t(event.title, "fr")} />
+      <ViewItemTracker id={event.id} name={t(event.title, "fr")} organizer={event.organizer.tracking} />
       {jsonLd.length ? (
         <script
           type="application/ld+json"

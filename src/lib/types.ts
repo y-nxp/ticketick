@@ -1,3 +1,5 @@
+import type { OrganizerTags } from "@/lib/analytics/organizer-tags";
+
 /**
  * Contenu saisi dans l'admin. L'espagnol est facultatif : les visiteurs
  * hispanophones lisent l'anglais tant qu'il manque.
@@ -91,6 +93,7 @@ export interface Organizer {
   website?: string;
   brand: OrganizerBrand;
   friendsAppEnabled: boolean;
+  tracking: OrganizerTags;
 }
 
 /**

@@ -338,6 +338,23 @@ function OrganizerForm({
           className="w-full rounded-control border border-border bg-background px-3 py-2 font-mono text-xs outline-none focus:border-ring"
         />
       </Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label={t("metaPixelId")} hint={t("metaPixelIdHint")}>
+          <TextInput
+            name="metaPixelId"
+            defaultValue={organizer?.metaPixelId ?? ""}
+            placeholder="1234567890123456"
+          />
+        </Field>
+        <Field label={t("ga4MeasurementId")} hint={t("ga4MeasurementIdHint")}>
+          <TextInput
+            name="ga4MeasurementId"
+            defaultValue={organizer?.ga4MeasurementId ?? ""}
+            placeholder="G-XXXXXXXXXX"
+          />
+        </Field>
+      </div>
+      <p className="text-xs text-muted-foreground">{t("trackingHint")}</p>
       <Field label={t("notifyEmails")} hint={t("notifyEmailsHint")}>
         <textarea
           name="notifyEmails"

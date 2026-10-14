@@ -938,7 +938,9 @@
         "validityInvalid": "Periodo di validità non valido: la fine deve seguire l’inizio.",
         "discountHasOrders": "Questo sconto è già stato concesso su ordini: disattivarlo invece.",
         "phoneInvalid": "Numero di telefono non valido.",
-        "urlInvalid": "Indirizzo del sito non valido: deve iniziare con https://."
+        "urlInvalid": "Indirizzo del sito non valido: deve iniziare con https://.",
+        "metaPixelInvalid": "L’ID del pixel Meta contiene solo cifre (da 8 a 20).",
+        "ga4IdInvalid": "L’ID Google Analytics deve avere la forma G-XXXXXXXXXX."
       }
     },
     "settings": {
@@ -983,7 +985,12 @@
         "notifyEmailsHint": "Un indirizzo per riga. Ogni vendita invia la stessa e-mail dell’acquirente.",
         "eventCount": "{count} spettacolo/i",
         "description": "Presentazione",
-        "descriptionHint": "In cima alla pagina ospitata. Se manca una traduzione compare il testo francese (l’inglese per lo spagnolo)."
+        "descriptionHint": "In cima alla pagina ospitata. Se manca una traduzione compare il testo francese (l’inglese per lo spagnolo).",
+        "metaPixelId": "Pixel Meta dell’organizzatore",
+        "metaPixelIdHint": "Facoltativo. Solo cifre, dal Gestione eventi di Meta.",
+        "ga4MeasurementId": "Google Analytics dell’organizzatore",
+        "ga4MeasurementIdHint": "Facoltativo. ID di misurazione dello stream web, nel formato G-…",
+        "trackingHint": "Questi strumenti ricevono solo le visite e le vendite degli eventi di questo organizzatore, dopo il consenso del visitatore ai cookie. L’organizzatore è responsabile del loro utilizzo."
       },
       "venues": {
         "title": "Luoghi",

@@ -61,10 +61,10 @@ const venueById = Object.fromEntries(venues.map((v) => [v.id, v]));
 const noBrand = { nav: [], scheme: "light" as const };
 
 export const organizers: Organizer[] = [
-  { id: "o-live", slug: "live-nation-ch", name: "Live Nation Suisse", friendsAppEnabled: true, brand: noBrand },
-  { id: "o-mjf", slug: "montreux-jazz", name: "Montreux Jazz Festival", friendsAppEnabled: true, brand: noBrand },
-  { id: "o-theatre", slug: "scenes-romandes", name: "Scènes Romandes", friendsAppEnabled: false, brand: noBrand },
-  { id: "o-comedy", slug: "swiss-comedy", name: "Swiss Comedy Club", friendsAppEnabled: false, brand: noBrand },
+  { id: "o-live", slug: "live-nation-ch", name: "Live Nation Suisse", friendsAppEnabled: true, brand: noBrand, tracking: {} },
+  { id: "o-mjf", slug: "montreux-jazz", name: "Montreux Jazz Festival", friendsAppEnabled: true, brand: noBrand, tracking: {} },
+  { id: "o-theatre", slug: "scenes-romandes", name: "Scènes Romandes", friendsAppEnabled: false, brand: noBrand, tracking: {} },
+  { id: "o-comedy", slug: "swiss-comedy", name: "Swiss Comedy Club", friendsAppEnabled: false, brand: noBrand, tracking: {} },
 ];
 
 const orgById = Object.fromEntries(organizers.map((o) => [o.id, o]));

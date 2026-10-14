@@ -78,6 +78,7 @@ function trackedItems(lines: CartLine[]): TrackedItem[] {
     name: `${l.eventTitle} — ${l.ticketName}`,
     priceCents: l.unitPriceCents,
     quantity: l.quantity,
+    organizer: l.organizerTags,
   }));
 }
 

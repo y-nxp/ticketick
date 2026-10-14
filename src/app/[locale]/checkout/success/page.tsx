@@ -15,6 +15,7 @@ import { AccountInvite } from "@/components/checkout/account-invite";
 import { PurchaseTracker } from "@/components/analytics/trackers";
 import { CONSENT_COOKIE, parseConsent } from "@/lib/analytics/consent";
 import { sendMetaPurchase } from "@/lib/analytics/meta-capi";
+import { organizerTagsFromRow } from "@/lib/analytics/organizer-tags";
 import { publicAppOrigin } from "@/lib/app-url";
 import { clientIpFrom } from "@/lib/rate-limit";
 import { t as tr, type Translated } from "@/lib/types";
@@ -60,7 +61,19 @@ export default async function CheckoutSuccessPage({
               quantity: true,
               unitPriceCents: true,
               ticketType: {
-                select: { name: true, session: { select: { event: { select: { title: true } } } } },
+                select: {
+                  name: true,
+                  session: {
+                    select: {
+                      event: {
+                        select: {
+                          title: true,
+                          organizer: { select: { metaPixelId: true, ga4MeasurementId: true } },
+                        },
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -82,6 +95,7 @@ export default async function CheckoutSuccessPage({
             name: `${tr(i.ticketType.session.event.title as Translated, "fr")} — ${tr(i.ticketType.name as Translated, "fr")}`,
             priceCents: i.unitPriceCents,
             quantity: i.quantity,
+            organizer: organizerTagsFromRow(i.ticketType.session.event.organizer),
           })),
         }
       : null;

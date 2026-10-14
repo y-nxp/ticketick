@@ -1,12 +1,39 @@
 "use client";
 
 import * as React from "react";
-import { trackPurchase, trackViewItem, type TrackedItem } from "@/lib/analytics/track";
+import type { OrganizerTags } from "@/lib/analytics/organizer-tags";
+import {
+  trackOrganizerPageView,
+  trackPurchase,
+  trackViewItem,
+  type TrackedItem,
+} from "@/lib/analytics/track";
 
-export function ViewItemTracker({ id, name }: { id: string; name: string }) {
+/** Page d'un événement : vue pour ticketick, et page vue + vue pour l'organisateur. */
+export function ViewItemTracker({
+  id,
+  name,
+  organizer,
+}: {
+  id: string;
+  name: string;
+  organizer: OrganizerTags;
+}) {
+  const { metaPixelId, ga4Id } = organizer;
   React.useEffect(() => {
-    trackViewItem({ id, name });
-  }, [id, name]);
+    const tags = { metaPixelId, ga4Id };
+    trackOrganizerPageView(tags);
+    trackViewItem({ id, name }, tags);
+  }, [id, name, metaPixelId, ga4Id]);
+  return null;
+}
+
+/** Page d'accueil `/go/…` d'un organisateur. */
+export function OrganizerPageTracker({ organizer }: { organizer: OrganizerTags }) {
+  const { metaPixelId, ga4Id } = organizer;
+  React.useEffect(() => {
+    trackOrganizerPageView({ metaPixelId, ga4Id });
+  }, [metaPixelId, ga4Id]);
   return null;
 }
 

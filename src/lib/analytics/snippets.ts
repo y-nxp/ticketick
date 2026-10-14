@@ -7,6 +7,11 @@ export function googleIds(config: AnalyticsConfig): string[] {
   return [config.ga4Id, config.googleAdsId].filter((id): id is string => Boolean(id));
 }
 
+/** Outils de ticketick, auxquels `track.ts` adresse nommément chaque événement. */
+export function siteTagsSnippet(config: AnalyticsConfig): string {
+  return `window.__ttTags=${JSON.stringify({ google: googleIds(config), meta: config.metaPixelId })};`;
+}
+
 /**
  * Amorce de gtag, posée dans <head> pour exister avant les composants : un
  * événement émis au montage d'une page ne doit pas se perdre. Consent Mode v2

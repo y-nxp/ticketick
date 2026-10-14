@@ -938,7 +938,9 @@
         "validityInvalid": "Ungültiger Gültigkeitszeitraum: Das Ende muss nach dem Beginn liegen.",
         "discountHasOrders": "Dieser Rabatt wurde bereits auf Bestellungen gewährt: stattdessen deaktivieren.",
         "phoneInvalid": "Ungültige Telefonnummer.",
-        "urlInvalid": "Ungültige Website-Adresse: Sie muss mit https:// beginnen."
+        "urlInvalid": "Ungültige Website-Adresse: Sie muss mit https:// beginnen.",
+        "metaPixelInvalid": "Die Meta-Pixel-ID besteht nur aus Ziffern (8 bis 20).",
+        "ga4IdInvalid": "Die Google-Analytics-ID muss die Form G-XXXXXXXXXX haben."
       }
     },
     "settings": {
@@ -983,7 +985,12 @@
         "notifyEmailsHint": "Eine Adresse pro Zeile. Jeder Verkauf sendet dieselbe E-Mail wie an die Käuferin oder den Käufer.",
         "eventCount": "{count} Veranstaltung(en)",
         "description": "Beschreibung",
-        "descriptionHint": "Oben auf der gehosteten Seite. Fehlt eine Übersetzung, erscheint der französische Text (für Spanisch der englische)."
+        "descriptionHint": "Oben auf der gehosteten Seite. Fehlt eine Übersetzung, erscheint der französische Text (für Spanisch der englische).",
+        "metaPixelId": "Meta-Pixel des Veranstalters",
+        "metaPixelIdHint": "Optional. Nur Ziffern, aus dem Meta Events Manager.",
+        "ga4MeasurementId": "Google Analytics des Veranstalters",
+        "ga4MeasurementIdHint": "Optional. Mess-ID des Web-Datenstreams, im Format G-…",
+        "trackingHint": "Diese Tools erhalten nur Besuche und Verkäufe der Veranstaltungen dieses Veranstalters, nachdem der Besucher Cookies akzeptiert hat. Für ihre Nutzung ist der Veranstalter verantwortlich."
       },
       "venues": {
         "title": "Orte",

@@ -38,6 +38,8 @@ export async function getReferenceData() {
         producerLogoUrl: true,
         ticketDisclaimer: true,
         contractor: true,
+        metaPixelId: true,
+        ga4MeasurementId: true,
         user: { select: { email: true } },
         _count: { select: { events: true } },
       },

@@ -57,7 +57,7 @@ export default async function EventPage({
 
   return (
     <div className="container-page py-8">
-      <ViewItemTracker id={event.id} name={t(event.title, "fr")} />
+      <ViewItemTracker id={event.id} name={t(event.title, "fr")} organizer={event.organizer.tracking} />
       {jsonLd.length ? (
         <script
           type="application/ld+json"

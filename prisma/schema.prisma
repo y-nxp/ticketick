@@ -348,6 +348,11 @@ model Organizer {
   /// (« Organisateur et contractant : … »). Si vide : ligne absente.
   contractor       String?
 
+  /// Pixel Meta de l'organisateur, déclenché sur ses seuls événements.
+  metaPixelId      String?
+  /// ID de mesure Google Analytics (G-…) de l'organisateur, mêmes limites.
+  ga4MeasurementId String?
+
   /// Active la PWA "amis du festival" pour cet organisateur
   friendsAppEnabled Boolean @default(false)
 

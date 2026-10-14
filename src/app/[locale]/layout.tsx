@@ -19,7 +19,7 @@ import { siteOpenGraph } from "@/lib/seo/site";
 import { Analytics } from "@/components/analytics/analytics";
 import { analyticsConfig, hasAnalytics } from "@/lib/analytics/config";
 import { CONSENT_COOKIE, parseConsent } from "@/lib/analytics/consent";
-import { googleIds, googleInitSnippet, metaInitSnippet } from "@/lib/analytics/snippets";
+import { googleIds, googleInitSnippet, metaInitSnippet, siteTagsSnippet } from "@/lib/analytics/snippets";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -88,6 +88,7 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${inter.variable} ${jost.variable} h-full`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {analyticsOn ? <script dangerouslySetInnerHTML={{ __html: siteTagsSnippet(analytics) }} /> : null}
         {googleIds(analytics).length > 0 ? (
           <script dangerouslySetInnerHTML={{ __html: googleInitSnippet(analytics, consent) }} />
         ) : null}

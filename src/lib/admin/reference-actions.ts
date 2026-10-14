@@ -11,6 +11,7 @@ import {
   parseOrganizerScheme,
 } from "@/lib/branding/theme";
 import { saveUploadedImage, UploadError } from "@/lib/uploads";
+import { organizerTagsInput } from "@/lib/analytics/organizer-tags";
 import {
   failure,
   readOptionalText,
@@ -84,6 +85,12 @@ export async function saveOrganizer(
     .map((adresse) => adresse.trim().toLowerCase())
     .filter((adresse) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(adresse));
 
+  const tags = organizerTagsInput.safeParse({
+    metaPixelId: data.get("metaPixelId")?.toString() ?? "",
+    ga4MeasurementId: data.get("ga4MeasurementId")?.toString() ?? "",
+  });
+  if (!tags.success) return failure(tags.error.issues[0]?.message ?? "unavailable");
+
   const disclaimer = readTranslated(data, "ticketDisclaimer");
   const description = readTranslated(data, "description");
 
@@ -110,6 +117,8 @@ export async function saveOrganizer(
       ? disclaimer
       : Prisma.DbNull) as Prisma.InputJsonValue,
     contractor: readOptionalText(data, "contractor") ?? null,
+    metaPixelId: tags.data.metaPixelId,
+    ga4MeasurementId: tags.data.ga4MeasurementId,
   };
 
   try {

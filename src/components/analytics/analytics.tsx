@@ -6,6 +6,7 @@ import { usePathname } from "@/i18n/navigation";
 import type { AnalyticsConfig } from "@/lib/analytics/config";
 import { CONSENT_CHANGED_EVENT, type Consent } from "@/lib/analytics/consent";
 import { googleIds, metaInitSnippet } from "@/lib/analytics/snippets";
+import { trackSitePageView } from "@/lib/analytics/track";
 import { ConsentBanner } from "./consent-banner";
 
 /**
@@ -46,7 +47,7 @@ export function Analytics({
       firstPath.current = false;
       return;
     }
-    window.fbq?.("track", "PageView");
+    trackSitePageView();
   }, [pathname]);
 
   if (pathname.startsWith("/embed")) return null;

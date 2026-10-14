@@ -191,6 +191,7 @@ export function SeatedSelector({
           requiresAttendee: tt.requiresAttendee,
           maxAgeYears: tt.maxAgeYears,
           maxPerOrder: tt.maxPerOrder,
+          organizerTags: event.organizer.tracking,
         },
         keys.length,
       );

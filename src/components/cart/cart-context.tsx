@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import type { OrganizerTags } from "@/lib/analytics/organizer-tags";
 import { trackAddToCart } from "@/lib/analytics/track";
 
 export interface CartLine {
@@ -24,6 +25,8 @@ export interface CartLine {
   maxAgeYears?: number;
   /** Plafond du tarif pour la commande : le « + » du panier s'y arrête. */
   maxPerOrder?: number;
+  /** Outils de mesure de l'organisateur du spectacle. */
+  organizerTags?: OrganizerTags;
 }
 
 interface CartState {
@@ -118,6 +121,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         name: `${line.eventTitle} — ${line.ticketName}`,
         priceCents: line.unitPriceCents,
         quantity: line.seats?.length || quantity,
+        organizer: line.organizerTags,
       },
       line.currency,
     );

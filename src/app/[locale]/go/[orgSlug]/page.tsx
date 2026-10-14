@@ -12,6 +12,7 @@ import {
 import { t } from "@/lib/types";
 import { routing } from "@/i18n/routing";
 import { pageAlternates, siteOpenGraph } from "@/lib/seo/site";
+import { OrganizerPageTracker } from "@/components/analytics/trackers";
 
 export const dynamic = "force-dynamic";
 
@@ -54,6 +55,7 @@ export default async function OrganizerPortalPage({
 
   return (
     <OrganizerShell organizer={organizer}>
+      <OrganizerPageTracker organizer={organizer.tracking} />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className="organizer-kicker">{tp("tickets")}</p>

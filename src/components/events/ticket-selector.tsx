@@ -89,6 +89,7 @@ function QuantitySelector({ event, session, locale }: SelectorProps) {
             requiresAttendee: tt.requiresAttendee,
             maxAgeYears: tt.maxAgeYears,
             maxPerOrder: tt.maxPerOrder,
+            organizerTags: event.organizer.tracking,
           },
           n,
         );

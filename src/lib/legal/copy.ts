@@ -377,6 +377,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
         paragraphs: [
           "Uniquement pour fournir le service : prestataires de paiement (PostFinance, Stripe, PayPal), envoi d’e-mail, et l’organisateur du spectacle concerné (liste des titulaires de billets, contrôle d’accès).",
           "Avec votre accord seulement : Google (Google Analytics, Google Ads) et Meta (Facebook, Instagram) reçoivent des données d’usage du site — pages vues, ajouts au panier, achats et leur montant — pour mesurer l’audience et l’efficacité de nos annonces. Lors d’un achat, Meta reçoit aussi votre e-mail, votre nom et votre téléphone sous forme hachée (chiffrement irréversible), pour rattacher la vente à une annonce. Ces sociétés peuvent traiter ces données hors de Suisse, notamment aux États-Unis.",
+          "Un organisateur peut aussi relier ses pages de spectacle à son propre pixel Meta ou à son propre Google Analytics. Avec votre accord seulement, ces outils reçoivent alors les visites, les ajouts au panier et les achats concernant ses spectacles, jamais ceux des autres organisateurs ni vos coordonnées. L’organisateur est responsable de l’usage qu’il en fait.",
           "Ces tiers n’utilisent vos données que pour la prestation demandée. Nous pouvons aussi les communiquer si la loi ou une ordonnance l’exige.",
           "Nous ne vendons pas vos données et ne prenons aucune décision fondée uniquement sur un traitement automatisé.",
         ],
@@ -454,6 +455,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
         paragraphs: [
           "Only to provide the service: payment providers (PostFinance, Stripe, PayPal), email delivery, and the organiser of the event (ticket holders, door control).",
           "Only with your consent: Google (Google Analytics, Google Ads) and Meta (Facebook, Instagram) receive site usage data — pages viewed, cart additions, purchases and their amount — to measure audience and how well our ads perform. When you buy, Meta also receives your email, name and phone number in hashed form (irreversible encryption), to link the sale to an ad. These companies may process this data outside Switzerland, notably in the United States.",
+          "An organiser may also connect their event pages to their own Meta pixel or Google Analytics. Only with your consent, these tools then receive visits, cart additions and purchases for that organiser’s events — never those of other organisers, nor your contact details. The organiser is responsible for how they use them.",
           "Those parties may use your data only for that task. We may also disclose data if the law or a court order requires it.",
           "We do not sell your data and make no decision based solely on automated processing.",
         ],
@@ -531,6 +533,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
         paragraphs: [
           "Nur zur Leistungserbringung: Zahlungsanbieter (PostFinance, Stripe, PayPal), E-Mail-Versand und der Veranstalter der Vorstellung (Ticketinhaber, Einlass).",
           "Nur mit Ihrer Zustimmung: Google (Google Analytics, Google Ads) und Meta (Facebook, Instagram) erhalten Nutzungsdaten der Website — aufgerufene Seiten, Warenkorb, Käufe und deren Betrag —, um die Reichweite und die Wirkung unserer Anzeigen zu messen. Bei einem Kauf erhält Meta zudem Ihre E-Mail-Adresse, Ihren Namen und Ihre Telefonnummer in gehashter Form (unumkehrbare Verschlüsselung), um den Verkauf einer Anzeige zuzuordnen. Diese Unternehmen können die Daten ausserhalb der Schweiz bearbeiten, namentlich in den USA.",
+          "Ein Veranstalter kann seine Veranstaltungsseiten zudem mit seinem eigenen Meta-Pixel oder Google Analytics verbinden. Nur mit Ihrer Zustimmung erhalten diese Tools dann Besuche, Warenkorb-Ergänzungen und Käufe zu seinen Veranstaltungen — nie jene anderer Veranstalter und nie Ihre Kontaktdaten. Für deren Nutzung ist der Veranstalter verantwortlich.",
           "Diese Dritten nutzen die Daten nur für diese Aufgabe. Eine Weitergabe kann auch gesetzlich oder gerichtlich angeordnet sein.",
           "Wir verkaufen Ihre Daten nicht und treffen keine Entscheidungen, die ausschliesslich auf einer automatisierten Bearbeitung beruhen.",
         ],
@@ -608,6 +611,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
         paragraphs: [
           "Solo per erogare il servizio: prestatori di pagamento (PostFinance, Stripe, PayPal), invio e-mail e l’organizzatore dello spettacolo (titolari dei biglietti, controllo accessi).",
           "Solo con il vostro consenso: Google (Google Analytics, Google Ads) e Meta (Facebook, Instagram) ricevono dati d’uso del sito — pagine visitate, aggiunte al carrello, acquisti e relativo importo — per misurare l’audience e l’efficacia dei nostri annunci. In caso di acquisto, Meta riceve anche e-mail, nome e telefono in forma hash (cifratura irreversibile), per collegare la vendita a un annuncio. Queste società possono trattare i dati fuori dalla Svizzera, in particolare negli Stati Uniti.",
+          "Un organizzatore può inoltre collegare le pagine dei suoi eventi al proprio pixel Meta o al proprio Google Analytics. Solo con il vostro consenso, questi strumenti ricevono allora le visite, le aggiunte al carrello e gli acquisti relativi ai suoi eventi — mai quelli di altri organizzatori né i vostri dati di contatto. L’organizzatore è responsabile del loro utilizzo.",
           "Tali terzi usano i dati solo per quella prestazione. Possiamo comunicarli anche se la legge o un’ordinanza lo esige.",
           "Non vendiamo i dati e non prendiamo decisioni fondate unicamente su un trattamento automatizzato.",
         ],
