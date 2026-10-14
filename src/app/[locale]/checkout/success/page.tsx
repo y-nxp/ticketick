@@ -1,4 +1,5 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { after } from "next/server";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { AlertTriangle, CheckCircle2, FileDown, Printer } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -11,6 +12,12 @@ import { parseGoOrigin, SHOP_ORIGIN_COOKIE } from "@/lib/shop-origin";
 import { ticketPdfPath } from "@/lib/tickets/download";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { AccountInvite } from "@/components/checkout/account-invite";
+import { PurchaseTracker } from "@/components/analytics/trackers";
+import { CONSENT_COOKIE, parseConsent } from "@/lib/analytics/consent";
+import { sendMetaPurchase } from "@/lib/analytics/meta-capi";
+import { publicAppOrigin } from "@/lib/app-url";
+import { clientIpFrom } from "@/lib/rate-limit";
+import { t as tr, type Translated } from "@/lib/types";
 
 export default async function CheckoutSuccessPage({
   params,
@@ -38,23 +45,80 @@ export default async function CheckoutSuccessPage({
         where: { reference: ref },
         select: {
           status: true,
+          paymentMethod: true,
+          totalCents: true,
+          currency: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
           payment: { select: { status: true } },
           _count: { select: { tickets: true } },
+          items: {
+            select: {
+              ticketTypeId: true,
+              quantity: true,
+              unitPriceCents: true,
+              ticketType: {
+                select: { name: true, session: { select: { event: { select: { title: true } } } } },
+              },
+            },
+          },
         },
       })
     : null;
   const refundDue = paid ? isRefundDue(paid) : false;
+  const cookieStore = await cookies();
+
+  const purchase =
+    ref && paid?.status === "PAID" && !refundDue
+      ? {
+          reference: ref,
+          valueCents: paid.totalCents,
+          currency: paid.currency,
+          paymentType: paid.paymentMethod,
+          items: paid.items.map((i) => ({
+            id: i.ticketTypeId,
+            name: `${tr(i.ticketType.session.event.title as Translated, "fr")} — ${tr(i.ticketType.name as Translated, "fr")}`,
+            priceCents: i.unitPriceCents,
+            quantity: i.quantity,
+          })),
+        }
+      : null;
+
+  if (purchase && paid && parseConsent(cookieStore.get(CONSENT_COOKIE)?.value) === "granted") {
+    const requestHeaders = await headers();
+    const ip = clientIpFrom(requestHeaders);
+    const buyer = {
+      email: paid.email,
+      phone: paid.phone,
+      firstName: paid.firstName,
+      lastName: paid.lastName,
+      ip: ip === "inconnue" ? null : ip,
+      userAgent: requestHeaders.get("user-agent"),
+      fbp: cookieStore.get("_fbp")?.value ?? null,
+      fbc: cookieStore.get("_fbc")?.value ?? null,
+    };
+    after(() =>
+      sendMetaPurchase({
+        ...purchase,
+        ...buyer,
+        sourceUrl: `${publicAppOrigin()}/${locale}/checkout/success`,
+      }),
+    );
+  }
   const pdfHref =
     ref && paid?.status === "PAID" && paid._count.tickets > 0
       ? ticketPdfPath(ref)
       : null;
-  const origin = parseGoOrigin((await cookies()).get(SHOP_ORIGIN_COOKIE)?.value);
+  const origin = parseGoOrigin(cookieStore.get(SHOP_ORIGIN_COOKIE)?.value);
   const shopHome = origin ? `/go/${origin.orgSlug}` : "/";
   const signedIn = Boolean(await getCurrentUser());
 
   return (
     <div className="container-page max-w-2xl py-20 text-center">
       <CartClearer />
+      {purchase ? <PurchaseTracker {...purchase} /> : null}
       {refundDue ? (
         <>
           <div className="mx-auto grid size-16 place-items-center rounded-full bg-[var(--warning)]/12">

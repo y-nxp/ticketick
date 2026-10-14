@@ -335,7 +335,7 @@ const terms: Record<LegalLocale, LegalDoc> = {
 
 const privacy: Record<LegalLocale, LegalDoc> = {
   fr: {
-    updated: "Dernière mise à jour : 14 septembre 2026",
+    updated: "Dernière mise à jour : 14 octobre 2026",
     lead: "Il faut distinguer les données que vous nous confiez pour utiliser ticketick.ch (compte, commande, support) et celles que l’organisateur traite pour son spectacle (liste des spectateurs, contrôle d’accès). Cette politique décrit le traitement effectué par ticketick, selon la nLPD et, le cas échéant, le RGPD.",
     sections: [
       {
@@ -376,14 +376,15 @@ const privacy: Record<LegalLocale, LegalDoc> = {
         title: "5. Quand partageons-nous vos données ?",
         paragraphs: [
           "Uniquement pour fournir le service : prestataires de paiement (PostFinance, Stripe, PayPal), envoi d’e-mail, et l’organisateur du spectacle concerné (liste des titulaires de billets, contrôle d’accès).",
+          "Avec votre accord seulement : Google (Google Analytics, Google Ads) et Meta (Facebook, Instagram) reçoivent des données d’usage du site — pages vues, ajouts au panier, achats et leur montant — pour mesurer l’audience et l’efficacité de nos annonces. Lors d’un achat, Meta reçoit aussi votre e-mail, votre nom et votre téléphone sous forme hachée (chiffrement irréversible), pour rattacher la vente à une annonce. Ces sociétés peuvent traiter ces données hors de Suisse, notamment aux États-Unis.",
           "Ces tiers n’utilisent vos données que pour la prestation demandée. Nous pouvons aussi les communiquer si la loi ou une ordonnance l’exige.",
-          "Nous ne vendons pas vos données et n’effectuons pas de profilage automatisé ni de décision fondée uniquement sur un traitement automatisé.",
+          "Nous ne vendons pas vos données et ne prenons aucune décision fondée uniquement sur un traitement automatisé.",
         ],
       },
       {
         title: "6. Cookies",
         paragraphs: [
-          "Des cookies ou technologies similaires sont nécessaires au panier, à la session, à la langue et à la sécurité. D’autres, facultatifs, peuvent servir à mesurer l’audience. Vous pouvez limiter les cookies non essentiels dans votre navigateur ; le service de commande peut alors être dégradé.",
+          "Des cookies ou technologies similaires sont nécessaires au panier, à la session, à la langue et à la sécurité ; ils ne demandent pas d’accord. Les cookies de mesure d’audience et de publicité (Google Analytics, Google Ads, pixel Meta) ne sont déposés qu’avec votre accord, donné ou refusé dans le bandeau affiché à votre première visite. Vous pouvez changer d’avis à tout moment avec le lien « Cookies » en bas de page. Sans accord, Google ne reçoit que des signaux anonymes, sans cookie.",
         ],
       },
       {
@@ -411,7 +412,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
     ],
   },
   en: {
-    updated: "Last updated: 14 September 2026",
+    updated: "Last updated: 14 October 2026",
     lead: "Distinguish the data you give us to use ticketick.ch (account, order, support) from data the organiser processes for its event (attendee list, door control). This policy covers processing by ticketick under the nFADP and, where applicable, the GDPR.",
     sections: [
       {
@@ -452,14 +453,15 @@ const privacy: Record<LegalLocale, LegalDoc> = {
         title: "5. When do we share your data?",
         paragraphs: [
           "Only to provide the service: payment providers (PostFinance, Stripe, PayPal), email delivery, and the organiser of the event (ticket holders, door control).",
+          "Only with your consent: Google (Google Analytics, Google Ads) and Meta (Facebook, Instagram) receive site usage data — pages viewed, cart additions, purchases and their amount — to measure audience and how well our ads perform. When you buy, Meta also receives your email, name and phone number in hashed form (irreversible encryption), to link the sale to an ad. These companies may process this data outside Switzerland, notably in the United States.",
           "Those parties may use your data only for that task. We may also disclose data if the law or a court order requires it.",
-          "We do not sell your data and do not carry out automated profiling or decisions based solely on automated processing.",
+          "We do not sell your data and make no decision based solely on automated processing.",
         ],
       },
       {
         title: "6. Cookies",
         paragraphs: [
-          "Cookies or similar technologies are needed for the cart, session, language and security. Optional ones may measure audience. You can restrict non-essential cookies in your browser; checkout may then work less well.",
+          "Cookies or similar technologies are needed for the cart, session, language and security; they do not require consent. Audience measurement and advertising cookies (Google Analytics, Google Ads, Meta pixel) are only set with your consent, given or refused in the banner shown on your first visit. You can change your mind at any time with the “Cookies” link at the bottom of the page. Without consent, Google only receives anonymous, cookieless signals.",
         ],
       },
       {
@@ -487,7 +489,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
     ],
   },
   de: {
-    updated: "Letzte Aktualisierung: 14. September 2026",
+    updated: "Letzte Aktualisierung: 14. Oktober 2026",
     lead: "Unterscheiden Sie die Daten, die Sie uns für ticketick.ch anvertrauen (Konto, Bestellung, Support), von denen, die der Veranstalter für seine Vorstellung bearbeitet (Zuschauerliste, Einlass). Diese Richtlinie beschreibt die Bearbeitung durch ticketick nach nDSG und, soweit anwendbar, DSGVO.",
     sections: [
       {
@@ -528,14 +530,15 @@ const privacy: Record<LegalLocale, LegalDoc> = {
         title: "5. Wann geben wir Daten weiter?",
         paragraphs: [
           "Nur zur Leistungserbringung: Zahlungsanbieter (PostFinance, Stripe, PayPal), E-Mail-Versand und der Veranstalter der Vorstellung (Ticketinhaber, Einlass).",
+          "Nur mit Ihrer Zustimmung: Google (Google Analytics, Google Ads) und Meta (Facebook, Instagram) erhalten Nutzungsdaten der Website — aufgerufene Seiten, Warenkorb, Käufe und deren Betrag —, um die Reichweite und die Wirkung unserer Anzeigen zu messen. Bei einem Kauf erhält Meta zudem Ihre E-Mail-Adresse, Ihren Namen und Ihre Telefonnummer in gehashter Form (unumkehrbare Verschlüsselung), um den Verkauf einer Anzeige zuzuordnen. Diese Unternehmen können die Daten ausserhalb der Schweiz bearbeiten, namentlich in den USA.",
           "Diese Dritten nutzen die Daten nur für diese Aufgabe. Eine Weitergabe kann auch gesetzlich oder gerichtlich angeordnet sein.",
-          "Wir verkaufen Ihre Daten nicht und treffen keine automatisierten Einzelentscheidungen oder Profilings.",
+          "Wir verkaufen Ihre Daten nicht und treffen keine Entscheidungen, die ausschliesslich auf einer automatisierten Bearbeitung beruhen.",
         ],
       },
       {
         title: "6. Cookies",
         paragraphs: [
-          "Cookies oder ähnliche Technologien sind für Warenkorb, Sitzung, Sprache und Sicherheit nötig. Optionale können die Reichweite messen. Nicht notwendige Cookies können Sie im Browser einschränken; der Bestellvorgang kann dann eingeschränkt sein.",
+          "Cookies oder ähnliche Technologien sind für Warenkorb, Sitzung, Sprache und Sicherheit nötig; sie erfordern keine Zustimmung. Cookies für Reichweitenmessung und Werbung (Google Analytics, Google Ads, Meta-Pixel) werden nur mit Ihrer Zustimmung gesetzt, die Sie im Banner bei Ihrem ersten Besuch erteilen oder verweigern. Sie können Ihre Wahl jederzeit über den Link «Cookies» unten auf der Seite ändern. Ohne Zustimmung erhält Google nur anonyme Signale ohne Cookies.",
         ],
       },
       {
@@ -563,7 +566,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
     ],
   },
   it: {
-    updated: "Ultimo aggiornamento: 14 settembre 2026",
+    updated: "Ultimo aggiornamento: 14 ottobre 2026",
     lead: "Vanno distinti i dati che ci affidate per usare ticketick.ch (conto, ordine, supporto) da quelli che l’organizzatore tratta per il suo spettacolo (elenco spettatori, controllo accessi). Questa politica descrive il trattamento di ticketick, secondo la nLPD e, se del caso, il RGPD.",
     sections: [
       {
@@ -604,14 +607,15 @@ const privacy: Record<LegalLocale, LegalDoc> = {
         title: "5. Quando condividiamo i dati?",
         paragraphs: [
           "Solo per erogare il servizio: prestatori di pagamento (PostFinance, Stripe, PayPal), invio e-mail e l’organizzatore dello spettacolo (titolari dei biglietti, controllo accessi).",
+          "Solo con il vostro consenso: Google (Google Analytics, Google Ads) e Meta (Facebook, Instagram) ricevono dati d’uso del sito — pagine visitate, aggiunte al carrello, acquisti e relativo importo — per misurare l’audience e l’efficacia dei nostri annunci. In caso di acquisto, Meta riceve anche e-mail, nome e telefono in forma hash (cifratura irreversibile), per collegare la vendita a un annuncio. Queste società possono trattare i dati fuori dalla Svizzera, in particolare negli Stati Uniti.",
           "Tali terzi usano i dati solo per quella prestazione. Possiamo comunicarli anche se la legge o un’ordinanza lo esige.",
-          "Non vendiamo i dati e non effettuiamo profilazione automatizzata né decisioni fondate unicamente su un trattamento automatizzato.",
+          "Non vendiamo i dati e non prendiamo decisioni fondate unicamente su un trattamento automatizzato.",
         ],
       },
       {
         title: "6. Cookie",
         paragraphs: [
-          "Cookie o tecnologie simili sono necessari per carrello, sessione, lingua e sicurezza. Altri, facoltativi, possono misurare l’audience. Potete limitare i cookie non essenziali nel browser; l’ordine può allora funzionare peggio.",
+          "Cookie o tecnologie simili sono necessari per carrello, sessione, lingua e sicurezza; non richiedono consenso. I cookie di misurazione dell’audience e pubblicitari (Google Analytics, Google Ads, pixel Meta) sono depositati solo con il vostro consenso, dato o rifiutato nel banner mostrato alla prima visita. Potete cambiare idea in qualsiasi momento con il link «Cookie» in fondo alla pagina. Senza consenso, Google riceve solo segnali anonimi, senza cookie.",
         ],
       },
       {

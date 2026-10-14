@@ -59,6 +59,10 @@ jobs:
           LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
           LITELLM_API_URL: ${{ vars.LITELLM_API_URL }}
           PARTNER_API_SECRET: ${{ secrets.PARTNER_API_SECRET }}
+          GA4_MEASUREMENT_ID: ${{ vars.GA4_MEASUREMENT_ID }}
+          GOOGLE_ADS_ID: ${{ vars.GOOGLE_ADS_ID }}
+          META_PIXEL_ID: ${{ vars.META_PIXEL_ID }}
+          META_CAPI_TOKEN: ${{ secrets.META_CAPI_TOKEN }}
           GB10_SSH_PRIVATE_KEY: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
           BACKUP_REMOTE: ${{ vars.BACKUP_REMOTE }}
           BACKUP_RCLONE_CONF: ${{ secrets.BACKUP_RCLONE_CONF }}
@@ -87,6 +91,11 @@ jobs:
           status LITELLM_API_KEY conseillé "lecture de la légende par l'IA"
           echo "── SAV téléphonique"
           status PARTNER_API_SECRET conseillé "clé partagée avec Clouboard (API partenaire)"
+          echo "── Mesure d'audience et publicité"
+          status GA4_MEASUREMENT_ID conseillé "variable, ID de mesure Google Analytics (G-…)"
+          status GOOGLE_ADS_ID conseillé "variable, balise Google Ads (AW-…)"
+          status META_PIXEL_ID conseillé "variable, ID du pixel Meta"
+          status META_CAPI_TOKEN conseillé "secret, jeton de l'API Conversions de Meta"
           echo "── Sauvegardes (quotidiennes sur le serveur dans tous les cas)"
           status BACKUP_REMOTE conseillé "variable, destination rclone hors serveur (ex. swissbackup-crypt:ticketick)"
           status BACKUP_RCLONE_CONF conseillé "secret, contenu de rclone.conf pour cette destination"
@@ -278,6 +287,10 @@ jobs:
           LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
           PLAN_AI_MODEL: ${{ vars.PLAN_AI_MODEL }}
           PARTNER_API_SECRET: ${{ secrets.PARTNER_API_SECRET }}
+          GA4_MEASUREMENT_ID: ${{ vars.GA4_MEASUREMENT_ID }}
+          GOOGLE_ADS_ID: ${{ vars.GOOGLE_ADS_ID }}
+          META_PIXEL_ID: ${{ vars.META_PIXEL_ID }}
+          META_CAPI_TOKEN: ${{ secrets.META_CAPI_TOKEN }}
           SITE_ADDRESS: ${{ vars.PROD_SITE_ADDRESS || 'ticketick.ch' }}
           WWW_ADDRESS: ${{ vars.PROD_WWW_ADDRESS || 'www.ticketick.ch' }}
           BACKUP_REMOTE: ${{ vars.BACKUP_REMOTE }}
@@ -303,7 +316,8 @@ jobs:
           write NEXT_PUBLIC_APP_URL STRIPE_SECRET_KEY STRIPE_PUBLISHABLE_KEY STRIPE_WEBHOOK_SECRET \
             PF_CHECKOUT_SPACE_ID PF_CHECKOUT_USER PF_CHECKOUT_SECRET \
             SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS MAIL_FROM MAIL_TO \
-            LITELLM_API_URL LITELLM_API_KEY PLAN_AI_MODEL PARTNER_API_SECRET > bundle/app.env
+            LITELLM_API_URL LITELLM_API_KEY PLAN_AI_MODEL PARTNER_API_SECRET \
+            GA4_MEASUREMENT_ID GOOGLE_ADS_ID META_PIXEL_ID META_CAPI_TOKEN > bundle/app.env
           write IMAGE_APP IMAGE_TOOLS SITE_ADDRESS WWW_ADDRESS BACKUP_REMOTE REGISTRY_USER > bundle/release.env
           printf '%s' "$REGISTRY_TOKEN" > bundle/registry-token
 

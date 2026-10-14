@@ -9,6 +9,7 @@ import {
   submitOrganizerInquiry,
   type InquiryState,
 } from "@/lib/organizer/inquiry-actions";
+import { trackOrganizerLead } from "@/lib/analytics/track";
 
 type Format = "ONE_DAY" | "MULTI_DAY" | "MULTI_SESSION" | "UNSURE";
 type Etape = "format" | "details" | "email" | "phone";
@@ -33,8 +34,13 @@ export function InquiryChat() {
     submitOrganizerInquiry,
     undefined,
   );
+  const sent = Boolean(state && "ok" in state);
 
-  if (state && "ok" in state) {
+  React.useEffect(() => {
+    if (sent) trackOrganizerLead();
+  }, [sent]);
+
+  if (sent) {
     return (
       <div className="space-y-3">
         <Bulle>

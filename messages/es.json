@@ -333,7 +333,8 @@
     "organizers": "Organizadores",
     "help": "Centro de ayuda",
     "rights": "Todos los derechos reservados.",
-    "madeIn": "Diseñado y gestionado en Suiza"
+    "madeIn": "Diseñado y gestionado en Suiza",
+    "cookieSettings": "Cookies"
   },
   "auth": {
     "signIn": "Iniciar sesión",
@@ -495,5 +496,12 @@
       "failed": "No se ha podido hacer el cambio. Recarga la página e inténtalo de nuevo."
     },
     "current": "Tu localidad actual"
+  },
+  "consent": {
+    "title": "Medición de audiencia y publicidad",
+    "text": "Con su consentimiento, medimos la audiencia (Google Analytics) y la eficacia de nuestros anuncios (Google, Meta). El carrito y el pago funcionan en cualquier caso.",
+    "accept": "Aceptar",
+    "decline": "Rechazar",
+    "learnMore": "Más información"
   }
 }

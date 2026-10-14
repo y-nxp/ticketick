@@ -15,11 +15,14 @@ import { Header } from "./header";
 export function AppShell({
   accountSlot,
   shopOrigin,
+  cookieSettings = false,
   children,
 }: {
   accountSlot: React.ReactNode;
   /** Cookie `/go/…` : garder la charte organisateur au checkout. */
   shopOrigin?: string | null;
+  /** Mesure d'audience active : le pied de page permet de revoir son choix. */
+  cookieSettings?: boolean;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -31,7 +34,7 @@ export function AppShell({
     <>
       <Header accountSlot={accountSlot} />
       <main className="flex-1">{children}</main>
-      <Footer />
+      <Footer cookieSettings={cookieSettings} />
     </>
   );
 }

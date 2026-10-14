@@ -10,6 +10,7 @@ import { getEventBySlug } from "@/lib/data/events";
 import { eventAlternates, eventJsonLd, jsonLdScript } from "@/lib/seo/event";
 import { eventTags, t } from "@/lib/types";
 import { siteOpenGraph } from "@/lib/seo/site";
+import { ViewItemTracker } from "@/components/analytics/trackers";
 
 // Le stock évolue en continu : la page est rendue à la demande plutôt que
 // figée au build, où la base n'est de toute façon pas joignable.
@@ -56,6 +57,7 @@ export default async function EventPage({
 
   return (
     <div className="container-page py-8">
+      <ViewItemTracker id={event.id} name={t(event.title, "fr")} />
       {jsonLd.length ? (
         <script
           type="application/ld+json"

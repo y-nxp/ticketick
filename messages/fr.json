@@ -473,7 +473,8 @@
     "organizers": "Organisateurs",
     "help": "Centre d'aide",
     "rights": "Tous droits réservés.",
-    "madeIn": "Conçu et opéré en Suisse"
+    "madeIn": "Conçu et opéré en Suisse",
+    "cookieSettings": "Cookies"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -2072,5 +2073,12 @@
     "totals": "Total des dates à venir",
     "footerSales": "Billets vendus : en ligne et aux points de vente.",
     "footerInvitations": "Invités libres : places mises de côté, pas encore attribuées. Payées : invitations réglées hors billetterie (virement, espèces…)."
+  },
+  "consent": {
+    "title": "Mesure d'audience et publicité",
+    "text": "Avec votre accord, nous mesurons l'audience (Google Analytics) et l'efficacité de nos annonces (Google, Meta). Le panier et le paiement fonctionnent dans tous les cas.",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "learnMore": "En savoir plus"
   }
 }

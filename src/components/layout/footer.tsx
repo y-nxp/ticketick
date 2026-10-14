@@ -1,8 +1,11 @@
+"use client";
+
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { CONSENT_OPEN_EVENT } from "@/lib/analytics/consent";
 import { Logo } from "./logo";
 
-export function Footer() {
+export function Footer({ cookieSettings = false }: { cookieSettings?: boolean }) {
   const t = useTranslations("footer");
   const year = new Date().getFullYear();
 
@@ -30,7 +33,15 @@ export function Footer() {
       <div className="border-t border-border/70">
         <div className="container-page flex flex-col items-center justify-between gap-2 py-5 text-xs text-muted-foreground sm:flex-row">
           <p>© {year} ticketick.ch — {t("rights")}</p>
-          <p>ticketick.ch · ticketick.io</p>
+          {cookieSettings ? (
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new Event(CONSENT_OPEN_EVENT))}
+              className="transition-colors hover:text-foreground"
+            >
+              {t("cookieSettings")}
+            </button>
+          ) : null}
         </div>
       </div>
     </footer>

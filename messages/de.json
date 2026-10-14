@@ -473,7 +473,8 @@
     "organizers": "Veranstalter",
     "help": "Hilfezentrum",
     "rights": "Alle Rechte vorbehalten.",
-    "madeIn": "Konzipiert und betrieben in der Schweiz"
+    "madeIn": "Konzipiert und betrieben in der Schweiz",
+    "cookieSettings": "Cookies"
   },
   "auth": {
     "signIn": "Anmelden",
@@ -2072,5 +2073,12 @@
     "totals": "Total der kommenden Termine",
     "footerSales": "Verkaufte Tickets: online und bei Vorverkaufsstellen.",
     "footerInvitations": "Freie Gästeplätze: reserviert, noch nicht vergeben. Bezahlt: ausserhalb des Ticketshops beglichene Einladungen (Überweisung, bar…)."
+  },
+  "consent": {
+    "title": "Reichweitenmessung und Werbung",
+    "text": "Mit Ihrer Zustimmung messen wir die Reichweite (Google Analytics) und die Wirkung unserer Anzeigen (Google, Meta). Warenkorb und Bezahlung funktionieren in jedem Fall.",
+    "accept": "Akzeptieren",
+    "decline": "Ablehnen",
+    "learnMore": "Mehr erfahren"
   }
 }

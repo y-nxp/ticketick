@@ -36,6 +36,8 @@ import type { CartPayments } from "@/lib/orders/payment-methods";
 import { formatHoldClock } from "@/lib/orders/reservation";
 import { getAccountBuyer } from "@/lib/auth/buyer-actions";
 import { clearBuyer, readBuyer, writeBuyer } from "@/lib/checkout/buyer";
+import { trackBeginCheckout, trackPurchase, type TrackedItem } from "@/lib/analytics/track";
+import type { CartLine } from "@/components/cart/cart-context";
 
 type Method = "CARD" | "IBAN" | "PAYPAL";
 
@@ -69,6 +71,15 @@ interface SeatHold {
 }
 
 const HOLD_KEY = "ticketick.hold.v1";
+
+function trackedItems(lines: CartLine[]): TrackedItem[] {
+  return lines.map((l) => ({
+    id: l.ticketTypeId,
+    name: `${l.eventTitle} — ${l.ticketName}`,
+    priceCents: l.unitPriceCents,
+    quantity: l.quantity,
+  }));
+}
 
 type HoldOutcome =
   | { ok: true; hold: SeatHold }
@@ -270,6 +281,13 @@ function CheckoutInner() {
     if (!hydrated || lines.length === 0) return;
     if (isStackedLayout()) window.scrollTo({ top: 0, behavior: "smooth" });
   }, [hydrated, lines.length]);
+
+  const checkoutTracked = React.useRef(false);
+  React.useEffect(() => {
+    if (!hydrated || lines.length === 0 || checkoutTracked.current) return;
+    checkoutTracked.current = true;
+    trackBeginCheckout(trackedItems(lines), lines[0].currency);
+  }, [hydrated, lines]);
 
   React.useEffect(() => {
     let ignore = false;
@@ -532,6 +550,13 @@ function CheckoutInner() {
 
       // Virement IBAN : confirmation immédiate avec instructions. La rétention
       // est devenue une commande due : un prochain panier ne doit pas la viser.
+      trackPurchase({
+        reference: data.reference,
+        valueCents: data.totalCents,
+        currency: data.currency,
+        items: trackedItems(lines),
+        paymentType: "IBAN",
+      });
       setResult(data);
       clear();
       clearHold();

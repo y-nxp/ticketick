@@ -12,20 +12,28 @@ const isDev = process.env.NODE_ENV === "development";
 
 // Sans nonce : un nonce imposerait le rendu dynamique de toutes les pages.
 // Les scripts en ligne restent donc permis (amorce de Next.js, thème,
-// JSON-LD), mais aucune origine tierce ne peut fournir de script, et les
-// cadres, connexions, formulaires et plugins sont bornés.
+// JSON-LD), et seuls Google (gtag) et Meta (pixel) peuvent fournir un script
+// tiers ; les cadres, connexions, formulaires et plugins sont bornés.
+// Ces origines restent autorisées même sans identifiant de mesure : la CSP
+// est figée au build, les identifiants sont lus au démarrage.
 // 'wasm-unsafe-eval' : décodeurs d'images de pdf.js (import de plans).
+const analyticsScripts = "https://www.googletagmanager.com https://connect.facebook.net";
+const analyticsConnect =
+  "https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.g.doubleclick.net https://www.google.com https://www.facebook.com https://connect.facebook.net";
+const analyticsImages =
+  "https://*.google-analytics.com https://*.googletagmanager.com https://*.g.doubleclick.net https://www.google.com https://www.google.ch https://www.facebook.com";
+
 function csp(frameAncestors: string): string {
   return [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${analyticsScripts}${isDev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://images.unsplash.com",
+    `img-src 'self' data: blob: https://images.unsplash.com ${analyticsImages}`,
     "font-src 'self' data:",
-    `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
+    `connect-src 'self' ${analyticsConnect}${isDev ? " ws: wss:" : ""}`,
     "media-src 'self' blob:",
     "worker-src 'self' blob:",
-    "frame-src 'self' https://www.openstreetmap.org",
+    "frame-src 'self' https://www.openstreetmap.org https://td.doubleclick.net https://www.googletagmanager.com",
     "manifest-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",

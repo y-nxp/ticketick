@@ -11,6 +11,7 @@ import { getEventBySlug } from "@/lib/data/events";
 import { eventAlternates, eventJsonLd, jsonLdScript } from "@/lib/seo/event";
 import { eventTags, t } from "@/lib/types";
 import { siteOpenGraph } from "@/lib/seo/site";
+import { ViewItemTracker } from "@/components/analytics/trackers";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,7 @@ export default async function OrganizerEventPage({
 
   return (
     <OrganizerShell organizer={event.organizer}>
+      <ViewItemTracker id={event.id} name={t(event.title, "fr")} />
       {jsonLd.length ? (
         <script
           type="application/ld+json"

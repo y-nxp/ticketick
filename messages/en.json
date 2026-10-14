@@ -473,7 +473,8 @@
     "organizers": "Organizers",
     "help": "Help center",
     "rights": "All rights reserved.",
-    "madeIn": "Designed and operated in Switzerland"
+    "madeIn": "Designed and operated in Switzerland",
+    "cookieSettings": "Cookies"
   },
   "auth": {
     "signIn": "Sign in",
@@ -2072,5 +2073,12 @@
     "totals": "Total for upcoming dates",
     "footerSales": "Tickets sold: online and at points of sale.",
     "footerInvitations": "Guest seats free: set aside, not yet assigned. Paid: invitations settled outside the ticket shop (bank transfer, cash…)."
+  },
+  "consent": {
+    "title": "Audience measurement and advertising",
+    "text": "With your consent, we measure audience (Google Analytics) and how well our ads perform (Google, Meta). Cart and checkout work either way.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "learnMore": "Learn more"
   }
 }

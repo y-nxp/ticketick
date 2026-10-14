@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { trackAddToCart } from "@/lib/analytics/track";
 
 export interface CartLine {
   ticketTypeId: string;
@@ -111,6 +112,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       ];
     });
     setAddedRevision((n) => n + 1);
+    trackAddToCart(
+      {
+        id: line.ticketTypeId,
+        name: `${line.eventTitle} — ${line.ticketName}`,
+        priceCents: line.unitPriceCents,
+        quantity: line.seats?.length || quantity,
+      },
+      line.currency,
+    );
   }, []);
 
   const updateQuantity: CartState["updateQuantity"] = React.useCallback(
