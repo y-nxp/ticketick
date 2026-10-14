@@ -1678,7 +1678,8 @@
         "invalid": "Modulo incompleto, ricarichi la pagina.",
         "quantity": "Numero di posti non valido.",
         "ticketsNotSent": "L'invio dei biglietti non è riuscito.",
-        "changeNothing": "Nessun biglietto da cambiare: servono posti numerati validi per un concerto futuro."
+        "changeNothing": "Nessun biglietto da cambiare: servono posti numerati validi per un concerto futuro.",
+        "cancelNoticeNotSent": "Non è stato possibile inviare l'e-mail di annullamento."
       },
       "changeLink": "Cambio posti da parte del cliente",
       "changeLinkHint": "Il cliente riceve un link per scegliere da sé altri posti sulla pianta. Un posto più caro si paga con carta (solo la differenza); un posto meno caro non viene rimborsato. Valido al massimo 14 giorni, fino al concerto, per un solo cambio.",
@@ -1690,7 +1691,17 @@
       "changeLinkExpired": "L'ultimo link è scaduto il {date}.",
       "changeLinkUrl": "Link per il cambio posti",
       "copy": "Copiare",
-      "copied": "Copiato"
+      "copied": "Copiato",
+      "cancelNotice": "Biglietti annullati",
+      "cancelNoticeHint": "Avvisate il cliente via e-mail. Il messaggio indica se è in corso un rimborso, se i biglietti pagati non sono rimborsati o se erano gratuiti. Togliete la spunta ai biglietti sostituiti da un cambio di posti.",
+      "cancelNoticeSend": "Inviare un'e-mail al cliente",
+      "cancelNoticeConfirm": "Inviare a {email} l'avviso di annullamento di {count, plural, one {questo biglietto} other {questi # biglietti}}?",
+      "cancelNoticeDone": {
+        "refund": "E-mail inviata: il cliente sa che il rimborso è in corso.",
+        "noRefund": "E-mail inviata: il cliente sa che i biglietti non sono rimborsati.",
+        "free": "E-mail inviata: biglietti gratuiti, nessun rimborso.",
+        "unpaid": "E-mail inviata: biglietti non pagati, nessun rimborso."
+      }
     },
     "reports": {
       "title": "Rapporti",

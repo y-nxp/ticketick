@@ -11,6 +11,7 @@ import { isAbandonedCardHold, isRefundDue } from "@/lib/orders/reservation";
 import { t as translate, type Translated } from "@/lib/types";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { OrderActions } from "../order-actions";
+import { CancellationNotice } from "./cancellation-notice";
 import { OrderEditor } from "./order-editor";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +52,10 @@ export default async function AdminOrderDetailPage({
   const fmt = `${locale}-CH`;
   const short = { weekday: undefined, year: undefined } as const;
   const openCharge = order.charges[0];
+  const cancelled =
+    readOnly || hold || !order.email
+      ? []
+      : order.tickets.filter((ticket) => ticket.status === "CANCELLED");
 
   return (
     <div>
@@ -292,6 +297,18 @@ export default async function AdminOrderDetailPage({
           paid={order.status === "PAID"}
         />
       )}
+
+      {cancelled.length > 0 ? (
+        <CancellationNotice
+          orderId={order.id}
+          email={order.email}
+          tickets={cancelled.map((ticket) => ({
+            id: ticket.id,
+            code: ticket.code,
+            label: [ticket.seatLabel, ticket.attendeeName].filter(Boolean).join(" · "),
+          }))}
+        />
+      ) : null}
 
       {edit ? (
         <OrderEditor

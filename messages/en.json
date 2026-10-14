@@ -1678,7 +1678,8 @@
         "invalid": "Incomplete form, reload the page.",
         "quantity": "Invalid number of seats.",
         "ticketsNotSent": "Sending the tickets failed.",
-        "changeNothing": "No ticket to change: valid numbered seats for an upcoming concert are needed."
+        "changeNothing": "No ticket to change: valid numbered seats for an upcoming concert are needed.",
+        "cancelNoticeNotSent": "The cancellation email could not be sent."
       },
       "changeLink": "Seat change by the customer",
       "changeLinkHint": "The customer receives a link to choose other seats on the plan. A more expensive seat is paid by card (the difference only); a cheaper seat is not refunded. Valid for up to 14 days, until the concert, for a single change.",
@@ -1690,7 +1691,17 @@
       "changeLinkExpired": "The last link expired on {date}.",
       "changeLinkUrl": "Seat change link",
       "copy": "Copy",
-      "copied": "Copied"
+      "copied": "Copied",
+      "cancelNotice": "Cancelled tickets",
+      "cancelNoticeHint": "Let the customer know by email. The message says whether a refund is under way, whether paid tickets are not refunded, or whether they were free. Untick tickets replaced by a seat change.",
+      "cancelNoticeSend": "Send an email to the customer",
+      "cancelNoticeConfirm": "Send {email} the cancellation notice for {count, plural, one {this ticket} other {these # tickets}}?",
+      "cancelNoticeDone": {
+        "refund": "Email sent: the customer knows the refund is under way.",
+        "noRefund": "Email sent: the customer knows the tickets are not refunded.",
+        "free": "Email sent: free tickets, no refund.",
+        "unpaid": "Email sent: unpaid tickets, no refund."
+      }
     },
     "reports": {
       "title": "Reports",

@@ -1678,7 +1678,8 @@
         "invalid": "Unvollständiges Formular, laden Sie die Seite neu.",
         "quantity": "Ungültige Anzahl Plätze.",
         "ticketsNotSent": "Das Senden der Tickets ist fehlgeschlagen.",
-        "changeNothing": "Kein Ticket zu ändern: Es braucht gültige nummerierte Plätze für ein kommendes Konzert."
+        "changeNothing": "Kein Ticket zu ändern: Es braucht gültige nummerierte Plätze für ein kommendes Konzert.",
+        "cancelNoticeNotSent": "Die Stornierungs-E-Mail konnte nicht gesendet werden."
       },
       "changeLink": "Platzwechsel durch den Kunden",
       "changeLinkHint": "Der Kunde erhält einen Link, um selbst andere Plätze auf dem Saalplan zu wählen. Ein teurerer Platz wird per Karte bezahlt (nur die Differenz); ein günstigerer Platz wird nicht erstattet. Höchstens 14 Tage gültig, bis zum Konzert, für eine einzige Änderung.",
@@ -1690,7 +1691,17 @@
       "changeLinkExpired": "Der letzte Link ist am {date} abgelaufen.",
       "changeLinkUrl": "Link für den Platzwechsel",
       "copy": "Kopieren",
-      "copied": "Kopiert"
+      "copied": "Kopiert",
+      "cancelNotice": "Stornierte Tickets",
+      "cancelNoticeHint": "Informieren Sie die Kundin oder den Kunden per E-Mail. Die Nachricht sagt, ob eine Rückerstattung läuft, ob bezahlte Tickets nicht erstattet werden oder ob sie kostenlos waren. Entfernen Sie das Häkchen bei Tickets, die durch einen Platzwechsel ersetzt wurden.",
+      "cancelNoticeSend": "E-Mail an die Kundschaft senden",
+      "cancelNoticeConfirm": "Die Stornierung {count, plural, one {dieses Tickets} other {dieser # Tickets}} an {email} senden?",
+      "cancelNoticeDone": {
+        "refund": "E-Mail gesendet: Die Kundschaft weiss, dass die Rückerstattung läuft.",
+        "noRefund": "E-Mail gesendet: Die Kundschaft weiss, dass die Tickets nicht erstattet werden.",
+        "free": "E-Mail gesendet: kostenlose Tickets, keine Rückerstattung.",
+        "unpaid": "E-Mail gesendet: unbezahlte Tickets, keine Rückerstattung."
+      }
     },
     "reports": {
       "title": "Berichte",

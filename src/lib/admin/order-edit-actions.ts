@@ -20,6 +20,7 @@ import {
 } from "@/lib/admin/form";
 import {
   payUrlFor,
+  sendCancellationEmail,
   sendCreditNoteEmail,
   sendPaymentLinkEmail,
   sendSeatChangeLinkEmail,
@@ -340,4 +341,20 @@ export async function resendTicketsAction(
   if (!hasEmail(owned.order.email)) return failure("emailMissing");
   const sent = await sendPaidOrderTickets(owned.order.id, { copyOrganizer: false });
   return sent.sent ? success("ticketsSent") : failure("ticketsNotSent");
+}
+
+export async function notifyCancellationAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const owned = await ownedOrder(readText(formData, "orderId"));
+  if (!owned) return failure("notFound");
+  if (!hasEmail(owned.order.email)) return failure("emailMissing");
+  const ticketIds = formData
+    .getAll("ticket")
+    .filter((v): v is string => typeof v === "string" && v.length > 0 && v.length < 40);
+  if (ticketIds.length === 0) return failure("empty");
+  const sent = await sendCancellationEmail({ orderId: owned.order.id, ticketIds });
+  if (!sent.case) return failure("notFound");
+  return sent.sent ? success(sent.case) : failure("cancelNoticeNotSent");
 }

@@ -1678,7 +1678,8 @@
         "invalid": "Formulaire incomplet, rechargez la page.",
         "quantity": "Nombre de places invalide.",
         "ticketsNotSent": "L'envoi des billets a échoué.",
-        "changeNothing": "Aucun billet à changer : il faut des places numérotées valables pour un concert à venir."
+        "changeNothing": "Aucun billet à changer : il faut des places numérotées valables pour un concert à venir.",
+        "cancelNoticeNotSent": "L'e-mail d'annulation n'a pas pu être envoyé."
       },
       "changeLink": "Changement de places par le client",
       "changeLinkHint": "Le client reçoit un lien pour choisir lui-même d'autres places sur le plan. Une place plus chère se paie par carte (la différence seulement) ; une place moins chère n'est pas remboursée. Valable 14 jours au plus, jusqu'au concert, pour un seul changement.",
@@ -1690,7 +1691,17 @@
       "changeLinkExpired": "Le dernier lien a expiré le {date}.",
       "changeLinkUrl": "Lien de changement",
       "copy": "Copier",
-      "copied": "Copié"
+      "copied": "Copié",
+      "cancelNotice": "Billets annulés",
+      "cancelNoticeHint": "Prévenez le client par e-mail. Le message dit si un remboursement est en cours, si les billets payés ne sont pas remboursés, ou s'ils étaient gratuits. Décochez les billets remplacés par un changement de places.",
+      "cancelNoticeSend": "Envoyer un e-mail au client",
+      "cancelNoticeConfirm": "Envoyer à {email} l'annonce de l'annulation de {count, plural, one {ce billet} other {ces # billets}} ?",
+      "cancelNoticeDone": {
+        "refund": "E-mail envoyé : le client sait que son remboursement est en cours.",
+        "noRefund": "E-mail envoyé : le client sait que ses billets ne sont pas remboursés.",
+        "free": "E-mail envoyé : billets gratuits, pas de remboursement.",
+        "unpaid": "E-mail envoyé : billets non réglés, pas de remboursement."
+      }
     },
     "reports": {
       "title": "Rapports",

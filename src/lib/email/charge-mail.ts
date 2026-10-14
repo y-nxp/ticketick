@@ -3,6 +3,7 @@ import "server-only";
 import { envoyer, echapper } from "@/lib/email";
 import { byLocale, intlLocale } from "@/lib/i18n-fallback";
 import { publicAppOrigin } from "@/lib/app-url";
+import { cancellationOutcome, type CancellationCase } from "@/lib/orders/cancellation";
 import { prisma } from "@/lib/prisma";
 import { t as translate, type Translated } from "@/lib/types";
 import { formatDate, formatPrice } from "@/lib/utils";
@@ -245,6 +246,210 @@ export async function sendCreditNoteEmail(chargeId: string): Promise<{ sent: boo
     etiquette: "note de crédit",
   });
 }
+
+/**
+ * Annonce au client les billets annulés choisis dans la fiche : remboursement
+ * en cours, payés sans remboursement, gratuits ou jamais réglés.
+ */
+export async function sendCancellationEmail(input: {
+  orderId: string;
+  ticketIds: string[];
+}): Promise<{ sent: boolean; case?: CancellationCase }> {
+  const order = await prisma.order.findUnique({
+    where: { id: input.orderId },
+    select: {
+      email: true,
+      firstName: true,
+      lastName: true,
+      locale: true,
+      reference: true,
+      currency: true,
+      payment: { select: { status: true, amountCents: true } },
+      items: { select: { ticketTypeId: true, unitPriceCents: true } },
+      charges: {
+        where: { status: { not: "CANCELLED" } },
+        select: { kind: true, status: true, amountCents: true, ticketIds: true },
+      },
+      tickets: {
+        where: { id: { in: input.ticketIds }, status: "CANCELLED" },
+        orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          ticketTypeId: true,
+          seatLabel: true,
+          ticketType: {
+            select: {
+              name: true,
+              session: {
+                select: {
+                  startsAt: true,
+                  venue: { select: { name: true, city: true } },
+                  event: {
+                    select: {
+                      title: true,
+                      organizer: { select: { name: true, email: true } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  const organizer = order?.tickets[0]?.ticketType.session.event.organizer;
+  if (!order?.email || !organizer) return { sent: false };
+
+  const priceOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
+  const { case: kind, refundCents } = cancellationOutcome({
+    tickets: order.tickets.map((t) => ({ id: t.id, priceCents: priceOf.get(t.ticketTypeId) ?? 0 })),
+    payment: order.payment,
+    charges: order.charges,
+  });
+
+  const locale = order.locale;
+  const t = byLocale(CANCEL_TEXTES, locale);
+  const name = `${order.firstName} ${order.lastName}`.trim();
+  const refund = formatPrice(refundCents, intlLocale(locale), order.currency);
+  const lines = order.tickets.map((ticket) => {
+    const session = ticket.ticketType.session;
+    return {
+      event: translate(session.event.title as Translated, locale),
+      when: dateTime(session.startsAt, locale),
+      venue: session.venue ? `${session.venue.name}, ${session.venue.city}` : "",
+      tariff: translate(ticket.ticketType.name as Translated, locale),
+      seat: ticket.seatLabel ?? "",
+    };
+  });
+  const paragraphs = [t.bonjour(name), t.corps(organizer.name, order.reference, lines.length)];
+  const after = [
+    kind === "refund" ? t.refund(refund) : t[kind],
+    t.questions,
+  ];
+  const html = layout({
+    locale,
+    organizer: organizer.name,
+    title: t.titre(lines.length),
+    paragraphs,
+    lines,
+    ...(kind === "refund" ? { totalLabel: t.total, total: refund } : {}),
+    after,
+    closing: t.salutations,
+  });
+  const text = [
+    ...paragraphs,
+    "",
+    ...lines.map((l) => [l.event, l.when, l.venue, l.tariff, l.seat].filter(Boolean).join(" — ")),
+    ...(kind === "refund" ? [`${t.total} ${refund}`] : []),
+    "",
+    ...after,
+    "",
+    t.salutations,
+    organizer.name,
+  ].join("\n");
+
+  const result = await envoyer({
+    to: order.email,
+    bcc: [organizer.email].filter((a) => a && a !== order.email),
+    subject: t.sujet(organizer.name, order.reference),
+    text,
+    html,
+    fromName: organizer.name,
+    replyTo: organizer.email,
+    etiquette: "annulation de billets",
+  });
+  return { sent: result.sent, case: kind };
+}
+
+const CANCEL_TEXTES = {
+  fr: {
+    sujet: (org: string, ref: string) => `${org} — annulation de billets (${ref})`,
+    titre: (n: number) => (n > 1 ? "Vos billets sont annulés" : "Votre billet est annulé"),
+    bonjour: (nom: string) => (nom ? `Bonjour ${nom},` : "Bonjour,"),
+    corps: (org: string, ref: string, n: number) =>
+      n > 1
+        ? `${org} a annulé les billets ci-dessous de votre commande ${ref}. Ils ne sont plus valables à l'entrée.`
+        : `${org} a annulé le billet ci-dessous de votre commande ${ref}. Il n'est plus valable à l'entrée.`,
+    total: "Montant remboursé",
+    refund: (m: string) =>
+      `Le remboursement de ${m} est en cours : vous recevrez l'argent prochainement.`,
+    noRefund: "Cette annulation ne donne pas lieu à un remboursement.",
+    free: "Ces billets étaient gratuits : aucun paiement n'ayant été effectué, il n'y a pas de remboursement.",
+    unpaid: "Aucun paiement n'ayant été effectué pour ces billets, il n'y a pas de remboursement.",
+    questions: "Une question ? Répondez simplement à ce message.",
+    salutations: "Avec nos meilleures salutations,",
+  },
+  en: {
+    sujet: (org: string, ref: string) => `${org} — tickets cancelled (${ref})`,
+    titre: (n: number) => (n > 1 ? "Your tickets are cancelled" : "Your ticket is cancelled"),
+    bonjour: (nom: string) => (nom ? `Hello ${nom},` : "Hello,"),
+    corps: (org: string, ref: string, n: number) =>
+      n > 1
+        ? `${org} has cancelled the tickets below from your order ${ref}. They are no longer valid at the door.`
+        : `${org} has cancelled the ticket below from your order ${ref}. It is no longer valid at the door.`,
+    total: "Amount refunded",
+    refund: (m: string) =>
+      `The refund of ${m} is under way: you will receive the money shortly.`,
+    noRefund: "This cancellation does not give rise to a refund.",
+    free: "These tickets were free: as no payment was made, there is no refund.",
+    unpaid: "As no payment was made for these tickets, there is no refund.",
+    questions: "Any question? Simply reply to this message.",
+    salutations: "Best regards,",
+  },
+  de: {
+    sujet: (org: string, ref: string) => `${org} — Stornierung von Tickets (${ref})`,
+    titre: (n: number) => (n > 1 ? "Ihre Tickets sind storniert" : "Ihr Ticket ist storniert"),
+    bonjour: (nom: string) => (nom ? `Guten Tag ${nom},` : "Guten Tag,"),
+    corps: (org: string, ref: string, n: number) =>
+      n > 1
+        ? `${org} hat die untenstehenden Tickets Ihrer Bestellung ${ref} storniert. Sie sind am Eingang nicht mehr gültig.`
+        : `${org} hat das untenstehende Ticket Ihrer Bestellung ${ref} storniert. Es ist am Eingang nicht mehr gültig.`,
+    total: "Rückerstatteter Betrag",
+    refund: (m: string) =>
+      `Die Rückerstattung von ${m} ist in Bearbeitung: Sie erhalten das Geld in Kürze.`,
+    noRefund: "Diese Stornierung führt zu keiner Rückerstattung.",
+    free: "Diese Tickets waren kostenlos: Da keine Zahlung erfolgt ist, gibt es keine Rückerstattung.",
+    unpaid: "Da für diese Tickets keine Zahlung erfolgt ist, gibt es keine Rückerstattung.",
+    questions: "Fragen? Antworten Sie einfach auf diese Nachricht.",
+    salutations: "Freundliche Grüsse",
+  },
+  it: {
+    sujet: (org: string, ref: string) => `${org} — annullamento di biglietti (${ref})`,
+    titre: (n: number) =>
+      n > 1 ? "I vostri biglietti sono annullati" : "Il vostro biglietto è annullato",
+    bonjour: (nom: string) => (nom ? `Buongiorno ${nom},` : "Buongiorno,"),
+    corps: (org: string, ref: string, n: number) =>
+      n > 1
+        ? `${org} ha annullato i biglietti qui sotto del vostro ordine ${ref}. Non sono più validi all'ingresso.`
+        : `${org} ha annullato il biglietto qui sotto del vostro ordine ${ref}. Non è più valido all'ingresso.`,
+    total: "Importo rimborsato",
+    refund: (m: string) =>
+      `Il rimborso di ${m} è in corso: riceverete il denaro prossimamente.`,
+    noRefund: "Questo annullamento non dà luogo a un rimborso.",
+    free: "Questi biglietti erano gratuiti: non essendo stato effettuato alcun pagamento, non c'è rimborso.",
+    unpaid: "Non essendo stato effettuato alcun pagamento per questi biglietti, non c'è rimborso.",
+    questions: "Domande? Rispondete semplicemente a questo messaggio.",
+    salutations: "Cordiali saluti,",
+  },
+  es: {
+    sujet: (org: string, ref: string) => `${org} — anulación de entradas (${ref})`,
+    titre: (n: number) => (n > 1 ? "Tus entradas están anuladas" : "Tu entrada está anulada"),
+    bonjour: (nom: string) => (nom ? `Hola, ${nom}:` : "Hola:"),
+    corps: (org: string, ref: string, n: number) =>
+      n > 1
+        ? `${org} ha anulado las entradas siguientes de tu pedido ${ref}. Ya no son válidas en la entrada.`
+        : `${org} ha anulado la entrada siguiente de tu pedido ${ref}. Ya no es válida en la entrada.`,
+    total: "Importe reembolsado",
+    refund: (m: string) =>
+      `El reembolso de ${m} está en curso: recibirás el dinero próximamente.`,
+    noRefund: "Esta anulación no da lugar a reembolso.",
+    free: "Estas entradas eran gratuitas: al no haberse efectuado ningún pago, no hay reembolso.",
+    unpaid: "Al no haberse efectuado ningún pago por estas entradas, no hay reembolso.",
+    questions: "¿Alguna pregunta? Responde a este mensaje.",
+    salutations: "Un cordial saludo,",
+  },
+};
 
 export function payUrlFor(path: string): string {
   return `${publicAppOrigin()}${path}`;
