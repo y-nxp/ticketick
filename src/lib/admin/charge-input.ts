@@ -26,7 +26,7 @@ export async function deliverCharge(input: {
     return sent.sent ? "linkSent" : "linkNotSent";
   }
   if (input.sendTickets && hasEmail(input.email)) {
-    const sent = await sendPaidOrderTickets(input.orderId, { copyOrganizer: false });
+    const sent = await sendPaidOrderTickets(input.orderId);
     return sent.sent ? "ticketsSent" : "ticketsNotSent";
   }
   return undefined;

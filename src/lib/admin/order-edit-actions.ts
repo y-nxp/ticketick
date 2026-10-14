@@ -339,7 +339,7 @@ export async function resendTicketsAction(
   const owned = await ownedOrder(readText(formData, "orderId"));
   if (!owned) return failure("notFound");
   if (!hasEmail(owned.order.email)) return failure("emailMissing");
-  const sent = await sendPaidOrderTickets(owned.order.id, { copyOrganizer: false });
+  const sent = await sendPaidOrderTickets(owned.order.id);
   return sent.sent ? success("ticketsSent") : failure("ticketsNotSent");
 }
 

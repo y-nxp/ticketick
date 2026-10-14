@@ -217,7 +217,6 @@ export async function paidOrderForMail(orderId: string) {
   const holder = `${order.firstName} ${order.lastName}`.trim();
   return {
     email: order.email,
-    fromReseller: order.reseller != null,
     resellerEmails,
     buyerName: holder,
     reference: order.reference,

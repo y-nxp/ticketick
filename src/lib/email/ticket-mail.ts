@@ -196,19 +196,17 @@ export async function sendTicketCards(input: {
 
 /**
  * Envoie les billets valables d'une commande payée, avec copie à
- * l'organisateur sauf au renvoi depuis l'admin.
+ * l'organisateur et au point de vente, y compris au renvoi depuis l'admin.
  */
 export async function sendPaidOrderTickets(
   orderId: string,
-  options: { copyOrganizer?: boolean; viewNotice?: SeatView[] } = {},
+  options: { viewNotice?: SeatView[] } = {},
 ) {
   const order = await paidOrderForMail(orderId);
   if (!order) return { sent: false, mock: false };
-  // Les ventes d'un point de vente partent toujours en copie à l'organisateur.
-  const organizerCopy = options.copyOrganizer !== false || order.fromReseller;
-  const copies = [
-    ...new Set([...order.resellerEmails, ...(organizerCopy ? order.notifyEmails : [])]),
-  ].filter((adresse) => adresse !== order.email);
+  const copies = [...new Set([...order.resellerEmails, ...order.notifyEmails])].filter(
+    (adresse) => adresse !== order.email,
+  );
   const to = order.email || copies.shift();
   if (!to) return { sent: false, mock: false };
   return sendTicketCards({

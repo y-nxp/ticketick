@@ -14,6 +14,42 @@ import { formatDate, formatPrice } from "@/lib/utils";
  * places retirées.
  */
 
+/**
+ * Copies cachées d'un courriel au client : les mêmes que pour ses billets
+ * (adresses de copie de l'organisateur et, pour une vente en point de vente,
+ * celles du point de vente), plus les adresses données en sus.
+ */
+async function orderCopies(
+  orderId: string,
+  customer: string,
+  extra: string[] = [],
+): Promise<string[]> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      reseller: { select: { notifyEmails: true } },
+      items: {
+        select: {
+          ticketType: {
+            select: {
+              session: {
+                select: { event: { select: { organizer: { select: { notifyEmails: true } } } } },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  const all = [
+    ...extra,
+    ...(order?.reseller?.notifyEmails ?? []),
+    ...(order?.items.flatMap((i) => i.ticketType.session.event.organizer.notifyEmails) ?? []),
+  ].map((a) => a.trim().toLowerCase());
+  const own = customer.trim().toLowerCase();
+  return [...new Set(all)].filter((a) => a && a !== own);
+}
+
 async function chargeForMail(chargeId: string) {
   const charge = await prisma.orderCharge.findUnique({
     where: { id: chargeId },
@@ -23,6 +59,7 @@ async function chargeForMail(chargeId: string) {
       currency: true,
       dueAt: true,
       ticketIds: true,
+      orderId: true,
       order: {
         select: {
           email: true,
@@ -192,6 +229,7 @@ export async function sendPaymentLinkEmail(
 
   return envoyer({
     to: charge.order.email,
+    bcc: await orderCopies(charge.orderId, charge.order.email),
     subject: t.sujet(organizer.name, charge.number),
     text,
     html,
@@ -237,7 +275,7 @@ export async function sendCreditNoteEmail(chargeId: string): Promise<{ sent: boo
 
   return envoyer({
     to: charge.order.email,
-    bcc: [organizer.email].filter((a) => a && a !== charge.order.email),
+    bcc: await orderCopies(charge.orderId, charge.order.email, [organizer.email]),
     subject: t.titre(charge.number),
     text,
     html,
@@ -351,7 +389,7 @@ export async function sendCancellationEmail(input: {
 
   const result = await envoyer({
     to: order.email,
-    bcc: [organizer.email].filter((a) => a && a !== order.email),
+    bcc: await orderCopies(input.orderId, order.email, [organizer.email]),
     subject: t.sujet(organizer.name, order.reference),
     text,
     html,
@@ -545,6 +583,7 @@ export async function sendSeatChangeLinkEmail(input: {
 
   return envoyer({
     to: order.email,
+    bcc: await orderCopies(input.orderId, order.email),
     subject: t.sujet(organizer.name, order.reference),
     text,
     html,
