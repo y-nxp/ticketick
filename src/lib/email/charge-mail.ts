@@ -359,6 +359,12 @@ export async function sendCancellationEmail(input: {
     replyTo: organizer.email,
     etiquette: "annulation de billets",
   });
+  if (result.sent) {
+    await prisma.ticket.updateMany({
+      where: { id: { in: order.tickets.map((t) => t.id) } },
+      data: { cancelNoticeSentAt: new Date() },
+    });
+  }
   return { sent: result.sent, case: kind };
 }
 

@@ -365,6 +365,7 @@ const adminOrderSelect = {
       seatLabel: true,
       attendeeName: true,
       attendeeBirthDate: true,
+      cancelNoticeSentAt: true,
     },
   },
 } satisfies Prisma.OrderSelect;

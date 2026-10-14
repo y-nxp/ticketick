@@ -356,5 +356,6 @@ export async function notifyCancellationAction(
   if (ticketIds.length === 0) return failure("empty");
   const sent = await sendCancellationEmail({ orderId: owned.order.id, ticketIds });
   if (!sent.case) return failure("notFound");
+  refresh(owned.order.id);
   return sent.sent ? success(sent.case) : failure("cancelNoticeNotSent");
 }

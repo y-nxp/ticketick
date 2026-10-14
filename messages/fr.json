@@ -1693,7 +1693,7 @@
       "copy": "Copier",
       "copied": "Copié",
       "cancelNotice": "Billets annulés",
-      "cancelNoticeHint": "Prévenez le client par e-mail. Le message dit si un remboursement est en cours, si les billets payés ne sont pas remboursés, ou s'ils étaient gratuits. Décochez les billets remplacés par un changement de places.",
+      "cancelNoticeHint": "Prévenez le client par e-mail. Le message dit si un remboursement est en cours, si les billets payés ne sont pas remboursés, ou s'ils étaient gratuits. Les billets déjà annoncés ne sont pas cochés ; décochez aussi ceux remplacés par un changement de places.",
       "cancelNoticeSend": "Envoyer un e-mail au client",
       "cancelNoticeConfirm": "Envoyer à {email} l'annonce de l'annulation de {count, plural, one {ce billet} other {ces # billets}} ?",
       "cancelNoticeDone": {
@@ -1701,7 +1701,9 @@
         "noRefund": "E-mail envoyé : le client sait que ses billets ne sont pas remboursés.",
         "free": "E-mail envoyé : billets gratuits, pas de remboursement.",
         "unpaid": "E-mail envoyé : billets non réglés, pas de remboursement."
-      }
+      },
+      "cancelNoticeSentOn": "E-mail envoyé le {date}",
+      "cancelNoticeNotYet": "Pas encore annoncé"
     },
     "reports": {
       "title": "Rapports",

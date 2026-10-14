@@ -1693,7 +1693,7 @@
       "copy": "Copiare",
       "copied": "Copiato",
       "cancelNotice": "Biglietti annullati",
-      "cancelNoticeHint": "Avvisate il cliente via e-mail. Il messaggio indica se è in corso un rimborso, se i biglietti pagati non sono rimborsati o se erano gratuiti. Togliete la spunta ai biglietti sostituiti da un cambio di posti.",
+      "cancelNoticeHint": "Avvisate il cliente via e-mail. Il messaggio indica se è in corso un rimborso, se i biglietti pagati non sono rimborsati o se erano gratuiti. I biglietti già comunicati non sono spuntati; togliete la spunta anche a quelli sostituiti da un cambio di posti.",
       "cancelNoticeSend": "Inviare un'e-mail al cliente",
       "cancelNoticeConfirm": "Inviare a {email} l'avviso di annullamento di {count, plural, one {questo biglietto} other {questi # biglietti}}?",
       "cancelNoticeDone": {
@@ -1701,7 +1701,9 @@
         "noRefund": "E-mail inviata: il cliente sa che i biglietti non sono rimborsati.",
         "free": "E-mail inviata: biglietti gratuiti, nessun rimborso.",
         "unpaid": "E-mail inviata: biglietti non pagati, nessun rimborso."
-      }
+      },
+      "cancelNoticeSentOn": "E-mail inviata il {date}",
+      "cancelNoticeNotYet": "Non ancora comunicato"
     },
     "reports": {
       "title": "Rapporti",

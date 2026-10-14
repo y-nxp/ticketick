@@ -1693,7 +1693,7 @@
       "copy": "Kopieren",
       "copied": "Kopiert",
       "cancelNotice": "Stornierte Tickets",
-      "cancelNoticeHint": "Informieren Sie die Kundin oder den Kunden per E-Mail. Die Nachricht sagt, ob eine Rückerstattung läuft, ob bezahlte Tickets nicht erstattet werden oder ob sie kostenlos waren. Entfernen Sie das Häkchen bei Tickets, die durch einen Platzwechsel ersetzt wurden.",
+      "cancelNoticeHint": "Informieren Sie die Kundin oder den Kunden per E-Mail. Die Nachricht sagt, ob eine Rückerstattung läuft, ob bezahlte Tickets nicht erstattet werden oder ob sie kostenlos waren. Bereits mitgeteilte Tickets sind nicht angehakt; entfernen Sie das Häkchen auch bei Tickets, die durch einen Platzwechsel ersetzt wurden.",
       "cancelNoticeSend": "E-Mail an die Kundschaft senden",
       "cancelNoticeConfirm": "Die Stornierung {count, plural, one {dieses Tickets} other {dieser # Tickets}} an {email} senden?",
       "cancelNoticeDone": {
@@ -1701,7 +1701,9 @@
         "noRefund": "E-Mail gesendet: Die Kundschaft weiss, dass die Tickets nicht erstattet werden.",
         "free": "E-Mail gesendet: kostenlose Tickets, keine Rückerstattung.",
         "unpaid": "E-Mail gesendet: unbezahlte Tickets, keine Rückerstattung."
-      }
+      },
+      "cancelNoticeSentOn": "E-Mail gesendet am {date}",
+      "cancelNoticeNotYet": "Noch nicht mitgeteilt"
     },
     "reports": {
       "title": "Berichte",

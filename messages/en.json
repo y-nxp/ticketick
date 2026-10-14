@@ -1693,7 +1693,7 @@
       "copy": "Copy",
       "copied": "Copied",
       "cancelNotice": "Cancelled tickets",
-      "cancelNoticeHint": "Let the customer know by email. The message says whether a refund is under way, whether paid tickets are not refunded, or whether they were free. Untick tickets replaced by a seat change.",
+      "cancelNoticeHint": "Let the customer know by email. The message says whether a refund is under way, whether paid tickets are not refunded, or whether they were free. Tickets already notified are not ticked; also untick those replaced by a seat change.",
       "cancelNoticeSend": "Send an email to the customer",
       "cancelNoticeConfirm": "Send {email} the cancellation notice for {count, plural, one {this ticket} other {these # tickets}}?",
       "cancelNoticeDone": {
@@ -1701,7 +1701,9 @@
         "noRefund": "Email sent: the customer knows the tickets are not refunded.",
         "free": "Email sent: free tickets, no refund.",
         "unpaid": "Email sent: unpaid tickets, no refund."
-      }
+      },
+      "cancelNoticeSentOn": "Email sent on {date}",
+      "cancelNoticeNotYet": "Not notified yet"
     },
     "reports": {
       "title": "Reports",

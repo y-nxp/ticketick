@@ -306,6 +306,15 @@ export default async function AdminOrderDetailPage({
             id: ticket.id,
             code: ticket.code,
             label: [ticket.seatLabel, ticket.attendeeName].filter(Boolean).join(" · "),
+            noticeSent: ticket.cancelNoticeSentAt
+              ? formatDate(ticket.cancelNoticeSentAt, fmt, {
+                  day: "2-digit",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : null,
           }))}
         />
       ) : null}

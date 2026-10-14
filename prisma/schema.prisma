@@ -1001,20 +1001,22 @@ model OrderOption {
 }
 
 model Ticket {
-  id                String       @id @default(cuid())
-  code              String       @unique
-  order             Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId           String
-  ticketType        TicketType   @relation(fields: [ticketTypeId], references: [id])
-  ticketTypeId      String
-  attendeeName      String?
+  id                 String       @id @default(cuid())
+  code               String       @unique
+  order              Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId            String
+  ticketType         TicketType   @relation(fields: [ticketTypeId], references: [id])
+  ticketTypeId       String
+  attendeeName       String?
   /// Exigée par les gratuités d'âge ; montrée au contrôle d'entrée.
-  attendeeBirthDate DateTime?    @db.Date
-  seatKey           String?
-  seatLabel         String?
-  status            TicketStatus @default(VALID)
-  usedAt            DateTime?
-  createdAt         DateTime     @default(now())
+  attendeeBirthDate  DateTime?    @db.Date
+  seatKey            String?
+  seatLabel          String?
+  status             TicketStatus @default(VALID)
+  usedAt             DateTime?
+  /// Annulation annoncée au client par e-mail depuis la fiche commande.
+  cancelNoticeSentAt DateTime?
+  createdAt          DateTime     @default(now())
 
   @@index([orderId])
   @@index([ticketTypeId])

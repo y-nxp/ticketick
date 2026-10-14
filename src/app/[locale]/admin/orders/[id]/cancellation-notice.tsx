@@ -15,12 +15,18 @@ export function CancellationNotice({
 }: {
   orderId: string;
   email: string;
-  tickets: { id: string; code: string; label: string }[];
+  tickets: { id: string; code: string; label: string; noticeSent: string | null }[];
 }) {
   const t = useTranslations("admin.orderEdit");
-  const [picked, setPicked] = React.useState<string[]>(() => tickets.map((x) => x.id));
+  const [picked, setPicked] = React.useState<string[]>(() =>
+    tickets.filter((x) => !x.noticeSent).map((x) => x.id),
+  );
   const [state, action, pending] = useActionState<FormState, FormData>(
-    notifyCancellationAction,
+    async (prev, formData) => {
+      const result = await notifyCancellationAction(prev, formData);
+      if (result?.ok) setPicked([]);
+      return result;
+    },
     undefined,
   );
 
@@ -62,6 +68,11 @@ export function CancellationNotice({
                   <p className="truncate text-xs text-muted-foreground">{ticket.label}</p>
                 ) : null}
               </div>
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {ticket.noticeSent
+                  ? t("cancelNoticeSentOn", { date: ticket.noticeSent })
+                  : t("cancelNoticeNotYet")}
+              </span>
             </li>
           ))}
         </ul>
