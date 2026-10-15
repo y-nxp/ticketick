@@ -2083,7 +2083,7 @@
   },
   "consent": {
     "title": "ticketick respecte votre vie privée",
-    "text": "Nous limitons le partage de données avec des tiers au strict nécessaire, et c'est vous qui choisissez. Le panier et le paiement fonctionnent dans tous les cas.",
+    "text": "Vous choisissez ce que nous partageons avec des tiers. Le panier et le paiement fonctionnent dans tous les cas.",
     "learnMore": "En savoir plus",
     "acceptAll": "Accepter tout",
     "decline": "Refuser",
