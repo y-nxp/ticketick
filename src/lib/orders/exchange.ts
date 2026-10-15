@@ -24,7 +24,9 @@ import {
   cancelOpen,
   checkBasket,
   exchangeDue,
-  linkLimitError,
+  exchangeRuleError,
+  holderKey,
+  holdersKept,
   type BasketError,
   type BasketTariff,
 } from "./self-service-rules";
@@ -46,7 +48,8 @@ export type ExchangeError =
   | "accountRequired"
   | "attendeesMissing"
   | "attendeeInvalid"
-  | "attendeeTooOld";
+  | "attendeeTooOld"
+  | "attendeeLocked";
 
 const ATTENDEE_ERRORS: Record<AttendeeError, ExchangeError> = {
   attendee_missing: "attendeesMissing",
@@ -83,6 +86,8 @@ export interface ExchangeTarget {
 export interface ExchangeOptions {
   tickets: ExchangeTicket[];
   targets: ExchangeTarget[];
+  /** Depuis le compte : billets déjà échangés une fois, qui ne s'échangent plus. */
+  locked: number;
 }
 
 function upcomingTicketsWhere(orderId: string) {
@@ -100,6 +105,7 @@ const ticketSelect = {
   seatLabel: true,
   attendeeName: true,
   attendeeBirthDate: true,
+  selfChangedAt: true,
   ticketType: {
     select: {
       name: true,
@@ -211,16 +217,17 @@ export async function exchangeOptions(input: {
       items: { select: { ticketTypeId: true, unitPriceCents: true } },
     },
   });
-  if (!order || order.status !== "PAID" || order.resellerId) return { tickets: [], targets: [] };
-  const tickets = allowedForChange(
-    await prisma.ticket.findMany({
-      where: upcomingTicketsWhere(input.orderId),
-      orderBy: [{ ticketType: { session: { startsAt: "asc" } } }, { seatKey: "asc" }],
-      select: ticketSelect,
-    }),
-    input.viaAccount,
-  );
-  if (tickets.length === 0) return { tickets: [], targets: [] };
+  if (!order || order.status !== "PAID" || order.resellerId) {
+    return { tickets: [], targets: [], locked: 0 };
+  }
+  const upcoming = await prisma.ticket.findMany({
+    where: upcomingTicketsWhere(input.orderId),
+    orderBy: [{ ticketType: { session: { startsAt: "asc" } } }, { seatKey: "asc" }],
+    select: ticketSelect,
+  });
+  const tickets = allowedForChange(upcoming, input.viaAccount);
+  const locked = input.viaAccount ? upcoming.filter((t) => t.selfChangedAt).length : 0;
+  if (tickets.length === 0) return { tickets: [], targets: [], locked };
   const paidOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
   const organizerIds = [...new Set(tickets.map((t) => t.ticketType.session.event.organizerId))];
   return {
@@ -240,6 +247,7 @@ export async function exchangeOptions(input: {
           : null,
     })),
     targets: await targetSessions(organizerIds),
+    locked,
   };
 }
 
@@ -277,6 +285,7 @@ export async function applyExchange(input: {
   if (new Set(items.map((i) => i.sessionId)).size !== items.length) {
     return { ok: false, error: "notFound" };
   }
+  if (give.length === 0) return { ok: false, error: "nothingGiven" };
   const lines = items.flatMap((i) => i.lines);
   const chosen = lines.flatMap((l) => l.seatKeys ?? []);
   if (
@@ -348,6 +357,15 @@ export async function applyExchange(input: {
     }
   }
 
+  const day = (date: Date) => date.toISOString().slice(0, 10);
+  const kept = holdersKept(
+    given.flatMap((t) =>
+      t.attendeeName && t.attendeeBirthDate ? [holderKey(t.attendeeName, day(t.attendeeBirthDate))] : [],
+    ),
+    assigned.map((a) => holderKey(a.holder.name, day(a.holder.birthDate))),
+  );
+  if (!kept) return { ok: false, error: "attendeeLocked" };
+
   return run(() =>
     prisma.$transaction(async (tx) => {
       let order = await lockOrder(tx, access.orderId);
@@ -361,14 +379,18 @@ export async function applyExchange(input: {
         givenCents: given.map((t) => paidOf.get(t.ticketTypeId) ?? 0),
         lines: lines.map((l) => ({ priceCents: tariffOf.get(l.ticketTypeId)!.priceCents, quantity: l.quantity })),
       });
-      const limit = linkLimitError({
+      const rule = exchangeRuleError({
         viaAccount: access.viaAccount,
         givenCount: give.length,
         newCount: lines.reduce((sum, l) => sum + l.quantity, 0),
+        givenFree: given.filter((t) => (paidOf.get(t.ticketTypeId) ?? 0) === 0).length,
+        newFree: lines
+          .filter((l) => tariffOf.get(l.ticketTypeId)!.priceCents === 0)
+          .reduce((sum, l) => sum + l.quantity, 0),
         givenCents: quote.givenCents,
         newCents: quote.newCents,
       });
-      if (limit) throw new EditFailure(limit);
+      if (rule) throw new EditFailure(rule);
       const { dueCents } = quote;
 
       if (dueCents === 0 && give.length > 0) {
@@ -387,6 +409,10 @@ export async function applyExchange(input: {
               }
             : { method: "FREE" },
         actorId: access.actorId ?? "",
+      });
+      await tx.ticket.updateMany({
+        where: { id: { in: added.ticketIds } },
+        data: { selfChangedAt: new Date() },
       });
 
       if (assigned.length > 0) {

@@ -25,7 +25,7 @@ import {
 import {
   checkBasket,
   exchangeDue,
-  linkLimitError,
+  exchangeRuleError,
   tariffRoom,
 } from "@/lib/orders/self-service-rules";
 import { cn, formatPrice } from "@/lib/utils";
@@ -115,8 +115,11 @@ const ERRORS: string[] = [
   "notFound",
   "retry",
   "accountRequired",
-  "fewerSeats",
+  "nothingGiven",
+  "seatCount",
+  "freeSeats",
   "lowerValue",
+  "attendeeLocked",
 ];
 
 export function Exchanger({
@@ -187,11 +190,18 @@ export function Exchanger({
       s.lines.map((l) => ({ priceCents: l.tariff.priceCents, quantity: l.quantity })),
     ),
   });
-  // Par le lien, pas d'échange à la baisse : le serveur le refuse aussi.
-  const limit = linkLimitError({
+  const givenFree = given.filter((x) => x.paidCents === 0).length;
+  const newFree = shows.reduce(
+    (sum, s) => sum + s.lines.reduce((n, l) => n + (l.tariff.priceCents === 0 ? l.quantity : 0), 0),
+    0,
+  );
+  // Un échange billet pour billet : le serveur applique la même règle.
+  const rule = exchangeRuleError({
     viaAccount: !("token" in access),
     givenCount: given.length,
     newCount: seatCount,
+    givenFree,
+    newFree,
     givenCents: quote.givenCents,
     newCents: quote.newCents,
   });
@@ -210,10 +220,13 @@ export function Exchanger({
         : [],
     ),
   );
-  // Les bénéficiaires des billets rendus sont proposés d'avance, dans l'ordre.
+  // Les bénéficiaires des billets rendus passent sur les nouveaux billets
+  // nominatifs, dans l'ordre, sans pouvoir être changés : un échange ne
+  // transfère pas un billet à quelqu'un d'autre.
   const holders = given.flatMap((x) => (x.holder ? [x.holder] : []));
+  const holderLocked = (index: number) => index < holders.length;
   const attendeeOf = (slot: Slot, index: number) =>
-    attendees[slot.key] ?? holders[index] ?? NO_ATTENDEE;
+    holderLocked(index) ? holders[index]! : (attendees[slot.key] ?? NO_ATTENDEE);
   const attendeesDone = slots.every((slot, i) => attendeeComplete(attendeeOf(slot, i)));
 
   function setAttendee(slot: Slot, index: number, patch: Partial<Attendee>) {
@@ -223,7 +236,27 @@ export function Exchanger({
 
   const target = targets.find((s) => s.sessionId === sessionId) ?? null;
   const entry = cart[sessionId] ?? EMPTY;
-  const tariffs = target ? tariffsOf(target) : [];
+  // Pas plus de nouvelles places que de billets rendus, ni de places
+  // gratuites que de gratuites rendues.
+  const seatsLeft = given.length - seatCount;
+  const freeLeft = givenFree - newFree;
+  const countHere = (id: string) =>
+    target?.seated
+      ? entry.picks.filter((p) => p.ticketTypeId === id).length
+      : (entry.qty[id] ?? 0);
+  const tariffs = target
+    ? tariffsOf(target).map((tariff) => {
+        const here = countHere(tariff.id);
+        return {
+          ...tariff,
+          maxPerOrder: Math.min(
+            tariff.maxPerOrder,
+            here + seatsLeft,
+            tariff.priceCents === 0 ? here + freeLeft : Infinity,
+          ),
+        };
+      })
+    : [];
   const here = shows.find((s) => s.target.sessionId === sessionId) ?? null;
   const hereCheck = here ? checkOf(here) : null;
   const roomOf = (id: string, counts: Record<string, number>) =>
@@ -232,7 +265,7 @@ export function Exchanger({
     tickets.flatMap((x) => (x.sessionId === sessionId && x.seatKey ? [x.seatKey] : [])),
   );
 
-  const reachable = [true, true, target !== null, ready];
+  const reachable = [true, given.length > 0, given.length > 0 && target !== null, ready];
 
   function go(next: number) {
     if (!reachable[next]) return;
@@ -291,7 +324,7 @@ export function Exchanger({
         </div>
         <h2 className="mt-4 text-2xl">{t("doneTitle")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          {t(given.length > 0 ? "doneText" : "doneTextAdded")}
+          {t("doneText")}
         </p>
         <Button
           className="mt-6"
@@ -308,7 +341,7 @@ export function Exchanger({
   }
 
   function confirm() {
-    if (!ready || limit || !attendeesDone) return;
+    if (!ready || rule || !attendeesDone) return;
     const attendeesFor = (sid: string, ticketTypeId: string) =>
       slots.flatMap((slot, i) =>
         slot.sessionId === sid && slot.ticketTypeId === ticketTypeId ? [attendeeOf(slot, i)] : [],
@@ -465,7 +498,9 @@ export function Exchanger({
                 {t("selectedCount", { count: given.length })}
                 {given.length > 0 ? ` · ${price(quote.givenCents)}` : ""}
               </p>
-              <Button onClick={() => go(1)}>{t("next")}</Button>
+              <Button onClick={() => go(1)} disabled={given.length === 0}>
+                {t("next")}
+              </Button>
             </StepFooter>
           </>
         ) : null}
@@ -560,7 +595,7 @@ export function Exchanger({
                   {tariffs.map((tariff) => {
                     const n = entry.qty[tariff.id] ?? 0;
                     const max = roomOf(tariff.id, entry.qty);
-                    const soldOut = Math.min(tariff.available, tariff.maxPerOrder) === 0;
+                    const soldOut = tariff.available === 0;
                     const set = (value: number) => setQuantity(tariff.id, Math.min(max, value));
                     return (
                       <li key={tariff.id} className="flex items-center gap-3 px-3 py-3 text-sm">
@@ -616,7 +651,10 @@ export function Exchanger({
                 <Plus className="size-4" />
                 {t("otherShows")}
               </Button>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="text-sm text-muted-foreground">
+                  {t("seatsChosen", { chosen: seatCount, total: given.length })}
+                </span>
                 <span className="text-sm text-muted-foreground">
                   {t("due")} :{" "}
                   <span className="font-semibold text-foreground tabular-nums">{dueLabel}</span>
@@ -717,12 +755,14 @@ export function Exchanger({
                           label={tc("attendeeName")}
                           value={value.name}
                           autoComplete="off"
+                          readOnly={holderLocked(i)}
                           onChange={(name) => setAttendee(slot, i, { name })}
                         />
                         <Field
                           label={tc("attendeeBirthDate")}
                           type="date"
                           value={value.birthDate}
+                          readOnly={holderLocked(i)}
                           onChange={(birthDate) => setAttendee(slot, i, { birthDate })}
                           hint={
                             slot.maxAgeYears
@@ -730,6 +770,11 @@ export function Exchanger({
                               : undefined
                           }
                         />
+                        {holderLocked(i) ? (
+                          <p className="text-xs text-muted-foreground sm:col-span-2">
+                            {t("holderKept")}
+                          </p>
+                        ) : null}
                       </fieldset>
                     );
                   })}
@@ -752,7 +797,7 @@ export function Exchanger({
                 <span className="font-semibold">{t("due")}</span>
                 <span className="text-xl font-extrabold tabular-nums">{dueLabel}</span>
               </div>
-              {quote.newCents < quote.givenCents && !limit ? (
+              {quote.newCents < quote.givenCents && !rule ? (
                 <p className="text-xs text-muted-foreground">{t("noRefund")}</p>
               ) : null}
               {quote.dueCents > 0 && given.length > 0 ? (
@@ -766,9 +811,9 @@ export function Exchanger({
               <p role="alert" className="mt-3 text-sm text-destructive">
                 {failing.show.target.title} : {errorText(failing.check.error)}
               </p>
-            ) : limit ? (
+            ) : rule ? (
               <p role="alert" className="mt-3 text-sm text-destructive">
-                {errorText(limit)}
+                {errorText(rule)}
               </p>
             ) : !attendeesDone ? (
               <p className="mt-3 text-sm text-muted-foreground">{t("errors.attendeesMissing")}</p>
@@ -787,7 +832,7 @@ export function Exchanger({
                 <ArrowLeft className="size-4" />
                 {t("back")}
               </Button>
-              <Button onClick={confirm} disabled={pending || !ready || limit != null || !attendeesDone}>
+              <Button onClick={confirm} disabled={pending || !ready || rule != null || !attendeesDone}>
                 {pending
                   ? t("saving")
                   : quote.dueCents > 0
@@ -817,6 +862,7 @@ function Field({
   type = "text",
   autoComplete,
   hint,
+  readOnly = false,
 }: {
   label: string;
   value: string;
@@ -824,6 +870,7 @@ function Field({
   type?: string;
   autoComplete?: string;
   hint?: string;
+  readOnly?: boolean;
 }) {
   return (
     <label className="flex flex-col gap-1.5">
@@ -833,8 +880,9 @@ function Field({
         value={value}
         required
         autoComplete={autoComplete}
+        readOnly={readOnly}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 rounded-control border border-border bg-background px-3.5 text-sm outline-none focus:border-ring"
+        className="h-11 rounded-control border border-border bg-background px-3.5 text-sm outline-none focus:border-ring read-only:bg-muted read-only:text-muted-foreground"
       />
       {hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
     </label>

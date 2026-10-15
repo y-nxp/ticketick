@@ -127,25 +127,55 @@ export function tariffRoom(input: {
   return Math.max(0, room);
 }
 
-export type LinkLimitError = "fewerSeats" | "lowerValue";
+export type ExchangeRuleError = "nothingGiven" | "seatCount" | "freeSeats" | "lowerValue";
 
 /**
- * Par le lien, sans compte, un échange ne fait jamais perdre de valeur au
- * client : autant de places au moins, pour une valeur au moins égale. Sinon
- * quiconque obtient le lien pourrait faire rendre des billets payés contre
- * moins, sans remboursement. Depuis le compte, le client décide seul.
+ * Un échange, pas un achat : chaque billet rendu donne exactement un nouveau
+ * billet, sur le même spectacle ou un autre. Une différence en faveur du
+ * client ne paie jamais une place de plus, et une place gratuite ne se
+ * reprend qu'en rendant une place gratuite. Par le lien, sans compte, le
+ * nouveau choix vaut en outre au moins autant : quiconque obtient le lien ne
+ * peut pas faire perdre de valeur au client. Depuis le compte, une place
+ * moins chère reste possible, sans remboursement.
  */
-export function linkLimitError(input: {
+export function exchangeRuleError(input: {
   viaAccount: boolean;
   givenCount: number;
   newCount: number;
+  givenFree: number;
+  newFree: number;
   givenCents: number;
   newCents: number;
-}): LinkLimitError | null {
-  if (input.viaAccount) return null;
-  if (input.newCount < input.givenCount) return "fewerSeats";
-  if (input.newCents < input.givenCents) return "lowerValue";
+}): ExchangeRuleError | null {
+  if (input.givenCount === 0) return "nothingGiven";
+  if (input.newCount !== input.givenCount) return "seatCount";
+  if (input.newFree > input.givenFree) return "freeSeats";
+  if (!input.viaAccount && input.newCents < input.givenCents) return "lowerValue";
   return null;
+}
+
+/** Bénéficiaire comparable : nom sans casse ni espaces superflus, date AAAA-MM-JJ. */
+export function holderKey(name: string, birthDate: string): string {
+  return `${name.trim().replace(/\s+/g, " ").toLowerCase()}|${birthDate}`;
+}
+
+/**
+ * Un échange ne transfère pas un billet nominatif à quelqu'un d'autre : les
+ * bénéficiaires des billets rendus se retrouvent sur les nouveaux billets
+ * nominatifs, tant qu'il y en a. Au-delà (billet rendu non nominatif), le
+ * nom est libre.
+ */
+export function holdersKept(given: string[], named: string[]): boolean {
+  const left = [...named];
+  let kept = 0;
+  for (const key of given) {
+    const i = left.indexOf(key);
+    if (i >= 0) {
+      left.splice(i, 1);
+      kept++;
+    }
+  }
+  return kept >= Math.min(given.length, named.length);
 }
 
 /** Ce que le client paie : la hausse nette, jamais de remboursement. */

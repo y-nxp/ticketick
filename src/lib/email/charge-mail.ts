@@ -608,7 +608,7 @@ const CHANGE_TEXTES = {
     titre: "Changer de places ou de spectacle",
     bonjour: (nom: string) => (nom ? `Bonjour ${nom},` : "Bonjour,"),
     corps: (ref: string) =>
-      `Vous pouvez modifier vous-même votre commande ${ref} : choisir d'autres places, passer à un autre spectacle ou ajouter des billets. Vos billets actuels :`,
+      `Vous pouvez modifier vous-même votre commande ${ref} : échanger vos billets contre d'autres places ou un autre spectacle, billet pour billet. Vos billets actuels :`,
     bouton: "Changer mes billets",
     difference:
       "Si le nouveau choix coûte plus cher, vous ne payez que la différence, par carte. Il doit valoir au moins autant que vos billets actuels : aucun remboursement n'est fait.",
@@ -627,7 +627,7 @@ const CHANGE_TEXTES = {
     titre: "Change seats or show",
     bonjour: (nom: string) => (nom ? `Hello ${nom},` : "Hello,"),
     corps: (ref: string) =>
-      `You can change your order ${ref} yourself: choose other seats, switch to another show or add tickets. Your current tickets:`,
+      `You can change your order ${ref} yourself: exchange your tickets for other seats or another show, one for one. Your current tickets:`,
     bouton: "Change my tickets",
     difference:
       "If your new choice costs more, you only pay the difference, by card. It must be worth at least as much as your current tickets: nothing is refunded.",
@@ -646,7 +646,7 @@ const CHANGE_TEXTES = {
     titre: "Plätze oder Vorstellung ändern",
     bonjour: (nom: string) => (nom ? `Guten Tag ${nom},` : "Guten Tag,"),
     corps: (ref: string) =>
-      `Sie können Ihre Bestellung ${ref} selbst ändern: andere Plätze wählen, zu einer anderen Vorstellung wechseln oder Tickets hinzufügen. Ihre aktuellen Tickets:`,
+      `Sie können Ihre Bestellung ${ref} selbst ändern: Ihre Tickets eins zu eins gegen andere Plätze oder eine andere Vorstellung tauschen. Ihre aktuellen Tickets:`,
     bouton: "Meine Tickets ändern",
     difference:
       "Ist Ihre neue Wahl teurer, bezahlen Sie nur die Differenz, per Karte. Sie muss mindestens so viel wert sein wie Ihre aktuellen Tickets: Es wird nichts erstattet.",
@@ -665,7 +665,7 @@ const CHANGE_TEXTES = {
     titre: "Cambiare posti o spettacolo",
     bonjour: (nom: string) => (nom ? `Buongiorno ${nom},` : "Buongiorno,"),
     corps: (ref: string) =>
-      `Potete modificare voi stessi il vostro ordine ${ref}: scegliere altri posti, passare a un altro spettacolo o aggiungere biglietti. I vostri biglietti attuali:`,
+      `Potete modificare voi stessi il vostro ordine ${ref}: scambiare i vostri biglietti, uno per uno, con altri posti o un altro spettacolo. I vostri biglietti attuali:`,
     bouton: "Cambiare i miei biglietti",
     difference:
       "Se la nuova scelta costa di più, pagate solo la differenza, con carta. Deve valere almeno quanto i vostri biglietti attuali: non viene rimborsato nulla.",
@@ -684,7 +684,7 @@ const CHANGE_TEXTES = {
     titre: "Cambiar de localidades o de espectáculo",
     bonjour: (nom: string) => (nom ? `Hola, ${nom}:` : "Hola:"),
     corps: (ref: string) =>
-      `Puedes modificar tú mismo tu pedido ${ref}: elegir otras localidades, pasar a otro espectáculo o añadir entradas. Tus entradas actuales:`,
+      `Puedes modificar tú mismo tu pedido ${ref}: cambiar tus entradas, una por una, por otras localidades u otro espectáculo. Tus entradas actuales:`,
     bouton: "Cambiar mis entradas",
     difference:
       "Si tu nueva elección cuesta más, solo pagas la diferencia, con tarjeta. Debe valer al menos lo mismo que tus entradas actuales: no se reembolsa nada.",

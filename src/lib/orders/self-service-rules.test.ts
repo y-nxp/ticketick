@@ -5,7 +5,9 @@ import {
   changeOpen,
   checkBasket,
   exchangeDue,
-  linkLimitError,
+  exchangeRuleError,
+  holderKey,
+  holdersKept,
   tariffRoom,
 } from "./self-service-rules";
 
@@ -102,18 +104,61 @@ test("on ne paie que la hausse nette, jamais de remboursement", () => {
   );
 });
 
-test("par le lien, un échange ne fait pas perdre de places ni de valeur", () => {
-  const base = { viaAccount: false, givenCount: 2, newCount: 2, givenCents: 5000, newCents: 5000 };
-  assert.equal(linkLimitError(base), null);
-  assert.equal(linkLimitError({ ...base, newCount: 3, newCents: 6000 }), null);
-  assert.equal(linkLimitError({ ...base, newCount: 1, newCents: 6000 }), "fewerSeats");
-  assert.equal(linkLimitError({ ...base, newCents: 4000 }), "lowerValue");
-  assert.equal(linkLimitError({ ...base, givenCount: 0, givenCents: 0, newCount: 1, newCents: 0 }), null);
+test("un échange se fait billet pour billet, sans ajout", () => {
+  const base = {
+    viaAccount: false,
+    givenCount: 2,
+    newCount: 2,
+    givenFree: 0,
+    newFree: 0,
+    givenCents: 7000,
+    newCents: 7000,
+  };
+  assert.equal(exchangeRuleError(base), null);
+  assert.equal(exchangeRuleError({ ...base, newCents: 9000 }), null);
+  assert.equal(exchangeRuleError({ ...base, givenCount: 0, givenCents: 0 }), "nothingGiven");
+  assert.equal(exchangeRuleError({ ...base, newCount: 1 }), "seatCount");
+  // Une différence en sa faveur ne paie pas une place de plus.
+  assert.equal(exchangeRuleError({ ...base, givenCount: 1, newCount: 2 }), "seatCount");
 });
 
-test("depuis le compte, le client peut échanger à la baisse", () => {
-  assert.equal(
-    linkLimitError({ viaAccount: true, givenCount: 4, newCount: 1, givenCents: 20000, newCents: 1000 }),
-    null,
-  );
+test("une place gratuite ne se reprend qu'en rendant une place gratuite", () => {
+  const base = {
+    viaAccount: true,
+    givenCount: 2,
+    newCount: 2,
+    givenFree: 0,
+    newFree: 1,
+    givenCents: 7000,
+    newCents: 3500,
+  };
+  assert.equal(exchangeRuleError(base), "freeSeats");
+  assert.equal(exchangeRuleError({ ...base, givenFree: 1, givenCents: 3500 }), null);
+});
+
+test("par le lien, pas de place moins chère ; depuis le compte, sans remboursement", () => {
+  const base = {
+    viaAccount: false,
+    givenCount: 1,
+    newCount: 1,
+    givenFree: 0,
+    newFree: 0,
+    givenCents: 8000,
+    newCents: 3500,
+  };
+  assert.equal(exchangeRuleError(base), "lowerValue");
+  assert.equal(exchangeRuleError({ ...base, viaAccount: true }), null);
+});
+
+test("les bénéficiaires des billets rendus restent sur les nouveaux billets", () => {
+  const anna = holderKey("Anna  Muster", "2015-03-02");
+  const paul = holderKey("Paul Muster", "2013-07-09");
+  assert.equal(holderKey(" anna muster ", "2015-03-02"), anna);
+  assert.equal(holdersKept([anna], [anna]), true);
+  assert.equal(holdersKept([anna], [paul]), false);
+  // Billet rendu non nominatif : le nouveau nom est libre.
+  assert.equal(holdersKept([], [paul]), true);
+  assert.equal(holdersKept([anna], [paul, anna]), true);
+  assert.equal(holdersKept([anna, paul], [anna]), true);
+  assert.equal(holdersKept([anna, paul], [anna, anna]), false);
 });

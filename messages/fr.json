@@ -1081,7 +1081,7 @@
       "selfServiceHint": "Depuis son compte ticketick, le client peut changer ses billets ou rendre ses places gratuites. Le lien que vous envoyez depuis une commande fonctionne même si ces cases sont décochées.",
       "selfChange": "Changement de places ou de spectacle depuis le compte",
       "changeUntilHours": "Changement possible jusqu'à (heures avant)",
-      "changeUntilHoursHint": "Le client paie seulement la hausse ; jamais de remboursement.",
+      "changeUntilHoursHint": "Le client paie seulement la hausse ; jamais de remboursement. Chaque billet ne s'échange qu'une fois depuis le compte : pour un nouveau changement, envoyez-lui un lien depuis la commande.",
       "selfCancelFree": "Annulation des places gratuites depuis le compte",
       "cancelUntilHours": "Annulation possible jusqu'à (heures avant)",
       "cancelUntilHoursHint": "La place libérée repart dans la jauge. Le courriel de réservation le mentionne."
@@ -1715,7 +1715,7 @@
         "cancelNoticeNotSent": "L'e-mail d'annulation n'a pas pu être envoyé."
       },
       "changeLink": "Changement par le client",
-      "changeLinkHint": "Le client reçoit un lien pour choisir d'autres places, passer à un autre spectacle de l'organisateur ou ajouter des billets. Il paie seulement la hausse, par carte ; jamais de remboursement. Valable 72 heures au plus, jusqu'au spectacle, autant de fois que nécessaire. Si le client a un compte, il doit s'y connecter pour modifier.",
+      "changeLinkHint": "Le client reçoit un lien pour échanger ses billets, billet pour billet, contre d'autres places ou un autre spectacle de l'organisateur. Il paie seulement la hausse, par carte ; jamais de remboursement. Le lien permet aussi d'échanger un billet déjà échangé. Valable 72 heures au plus, jusqu'au spectacle. Si le client a un compte, il doit s'y connecter.",
       "changeLinkNoCard": "Aucun paiement par carte n'est configuré pour cet organisateur : seuls les changements sans supplément aboutiront.",
       "changeLinkSend": "Envoyer le lien au client",
       "changeLinkReplace": "Un lien est déjà ouvert. Le remplacer par un nouveau ? L'ancien ne fonctionnera plus.",
@@ -2048,7 +2048,7 @@
   },
   "change": {
     "title": "Changer mes billets",
-    "intro": "Commande {reference}. Passez à un autre spectacle, ajoutez des billets ou choisissez d'autres places.",
+    "intro": "Commande {reference}. Échangez vos billets contre d'autres places ou un autre spectacle.",
     "validUntil": "Lien valable jusqu'au {date}.",
     "pending": "Un changement précédent attend encore son paiement. Si vous confirmez un nouveau choix, il le remplace.",
     "yourSeats": "Vos places",
@@ -2079,16 +2079,16 @@
       "failed": "Le changement n'a pas pu être fait. Rechargez la page et réessayez.",
       "notFound": "Un de ces billets ne peut plus être changé. Rechargez la page.",
       "accountRequired": "Cette commande est liée à un compte : connectez-vous pour la modifier.",
-      "fewerSeats": "Avec ce lien, l'échange doit compter au moins autant de places que les billets rendus. Pour en rendre davantage, connectez-vous à votre compte ou contactez l'organisateur.",
-      "lowerValue": "Avec ce lien, le nouveau choix doit valoir au moins autant que les billets rendus. Pour une place moins chère, connectez-vous à votre compte ou contactez l'organisateur."
+      "lowerValue": "Avec ce lien, le nouveau choix doit valoir au moins autant que les billets rendus. Pour une place moins chère, contactez l'organisateur.",
+      "freeSeats": "Une place gratuite ne s'obtient qu'en échange d'une place gratuite."
     },
     "current": "Votre place actuelle",
     "nothingToChange": "Aucun billet de cette commande ne peut être changé pour le moment.",
     "seatsTitle": "Choisir d'autres places",
     "seatsIntro": "Choisissez une de vos places dans la liste, puis touchez la nouvelle place sur le plan.",
     "exchange": {
-      "title": "Changer de spectacle ou ajouter des billets",
-      "intro": "Rendez des billets, ajoutez-en, ou les deux : choisissez ensuite le spectacle et vos places. Vous payez seulement la différence si le nouveau choix coûte plus cher.",
+      "title": "Échanger mes billets",
+      "intro": "Choisissez les billets à rendre, puis le spectacle et vos nouvelles places : chaque billet rendu donne une nouvelle place. Vous payez seulement la différence si le nouveau choix coûte plus cher.",
       "giveTitle": "Quels billets rendez-vous ?",
       "freeTicket": "Gratuit",
       "targetTitle": "Choisissez le spectacle",
@@ -2123,8 +2123,11 @@
         "failed": "L'échange n'a pas pu être fait. Rechargez la page et réessayez.",
         "attendeeInvalid": "Indiquez le prénom et le nom du bénéficiaire, et une date de naissance valable.",
         "accountRequired": "Cette commande est liée à un compte : connectez-vous pour la modifier.",
-        "fewerSeats": "Avec ce lien, l'échange doit compter au moins autant de places que les billets rendus. Pour en rendre davantage, connectez-vous à votre compte ou contactez l'organisateur.",
-        "lowerValue": "Avec ce lien, le nouveau choix doit valoir au moins autant que les billets rendus. Pour une place moins chère, connectez-vous à votre compte ou contactez l'organisateur."
+        "lowerValue": "Avec ce lien, le nouveau choix doit valoir au moins autant que les billets rendus. Pour une place moins chère, contactez l'organisateur.",
+        "nothingGiven": "Choisissez au moins un billet à échanger.",
+        "seatCount": "Choisissez exactement autant de nouvelles places que de billets rendus.",
+        "freeSeats": "Une place gratuite ne s'obtient qu'en échange d'une place gratuite.",
+        "attendeeLocked": "Les bénéficiaires des billets rendus doivent rester les mêmes sur les nouveaux billets."
       },
       "stepsLabel": "Étapes de l'échange",
       "steps": {
@@ -2133,9 +2136,9 @@
         "seats": "Places",
         "confirm": "Confirmation"
       },
-      "giveHint": "Touchez les billets à échanger : leur valeur est déduite du nouveau choix. Pour seulement ajouter des billets, continuez sans en choisir.",
+      "giveHint": "Touchez les billets à échanger : leur valeur est déduite du nouveau choix.",
       "selectedCount": "{count, plural, =0 {Aucun billet choisi} one {1 billet choisi} other {# billets choisis}}",
-      "targetHint": "Tous les spectacles en vente de l'organisateur. Vous pouvez en choisir plusieurs : chacun s'ajoute à votre panier.",
+      "targetHint": "Tous les spectacles en vente de l'organisateur. Vous pouvez répartir vos billets sur plusieurs spectacles.",
       "seatsTitle": "Combien de places ?",
       "confirmTitle": "Vérifiez votre échange",
       "youGive": "Vous rendez",
@@ -2146,21 +2149,23 @@
       "back": "Retour",
       "currentSeats": "Vos places actuelles",
       "nothingGiven": "Aucun billet rendu.",
-      "doneTextAdded": "Vos nouveaux billets vous ont été envoyés par e-mail.",
       "cartTitle": "Votre panier",
       "cartSummary": "{seats, plural, one {1 place} other {# places}} · {shows, plural, one {1 spectacle} other {# spectacles}}",
       "inCart": "{count, plural, one {1 place choisie} other {# places choisies}}",
       "viewCart": "Voir le récapitulatif",
       "otherShows": "Ajouter un autre spectacle",
       "edit": "Modifier",
-      "remove": "Retirer du panier"
+      "remove": "Retirer du panier",
+      "seatsChosen": "Places : {chosen} sur {total}",
+      "holderKept": "Bénéficiaire repris du billet rendu : il ne peut pas être changé."
     },
     "loginTitle": "Connectez-vous pour modifier vos billets",
     "loginText": "Cette commande est liée à votre compte ticketick. Pour protéger vos billets, connectez-vous avec l'adresse e-mail de la commande : vous reviendrez ensuite sur cette page.",
     "loginButton": "Me connecter",
     "otherAccount": "Cette commande est liée à un autre compte que celui-ci ({email}). Déconnectez-vous, puis rouvrez ce lien et connectez-vous avec l'adresse e-mail de la commande.",
     "inviteText": "Créez votre compte ticketick avec l'adresse {email} : vous retrouverez vos billets et pourrez les modifier plus simplement la prochaine fois.",
-    "inviteButton": "Créer mon compte"
+    "inviteButton": "Créer mon compte",
+    "lockedNote": "{count, plural, one {Un billet de cette commande a déjà été échangé : il ne peut plus l'être ici.} other {# billets de cette commande ont déjà été échangés : ils ne peuvent plus l'être ici.}} Pour un nouveau changement, contactez l'organisateur."
   },
   "organizerReport": {
     "subject": "Rapport {name} — état au {date}",

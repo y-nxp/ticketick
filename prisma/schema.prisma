@@ -1031,6 +1031,10 @@ model Ticket {
   usedAt             DateTime?
   /// Annulation annoncée au client par e-mail depuis la fiche commande.
   cancelNoticeSentAt DateTime?
+  /// Billet issu d'un échange fait par le client (lien ou compte). Depuis le
+  /// compte, il ne s'échange plus : un nouveau changement passe par un lien
+  /// envoyé par l'organisateur.
+  selfChangedAt      DateTime?
   createdAt          DateTime     @default(now())
 
   @@index([orderId])
