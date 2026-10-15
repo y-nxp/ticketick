@@ -31,7 +31,7 @@ import {
   tariffForZone,
   type ChangeTariff,
 } from "./seat-change-quote";
-import { changeOpen, linkLimitError, type LinkLimitError } from "./self-service-rules";
+import { changeOpen, exchangeRuleError, type ExchangeRuleError } from "./self-service-rules";
 
 /**
  * Changement de places par le client, sur un lien envoyé depuis l'admin ou
@@ -48,7 +48,7 @@ import { changeOpen, linkLimitError, type LinkLimitError } from "./self-service-
 const LINK_HOURS = 72;
 export const PAY_HOURS = 2;
 
-export type ChangeError = EditError | AccessError | LinkLimitError;
+export type ChangeError = EditError | AccessError | ExchangeRuleError;
 
 function newChangeToken(): { token: string; tokenHash: string } {
   const token = randomBytes(24).toString("base64url");
@@ -69,9 +69,14 @@ function changeableWhere(orderId: string): Prisma.TicketWhereInput {
   };
 }
 
-/** Billets dont le spectacle accepte le changement par ce canal. */
+/**
+ * Billets dont le spectacle accepte le changement par ce canal. Depuis le
+ * compte, un billet déjà issu d'un échange ne s'échange plus ; le lien de
+ * l'organisateur, lui, le permet.
+ */
 export function allowedForChange<
   T extends {
+    selfChangedAt: Date | null;
     ticketType: {
       session: {
         startsAt: Date;
@@ -85,12 +90,14 @@ export function allowedForChange<
     };
   },
 >(tickets: T[], viaAccount: boolean): T[] {
-  return tickets.filter((t) =>
-    changeOpen({
-      startsAt: t.ticketType.session.startsAt,
-      event: t.ticketType.session.event,
-      viaAccount,
-    }),
+  return tickets.filter(
+    (t) =>
+      !(viaAccount && t.selfChangedAt) &&
+      changeOpen({
+        startsAt: t.ticketType.session.startsAt,
+        event: t.ticketType.session.event,
+        viaAccount,
+      }),
   );
 }
 
@@ -238,6 +245,7 @@ export async function changePageData(access: ChangeAccess): Promise<ChangePage> 
         ticketTypeId: true,
         seatKey: true,
         seatLabel: true,
+        selfChangedAt: true,
         ticketType: {
           select: {
             sessionId: true,
@@ -367,6 +375,7 @@ export async function applySeatChange(input: {
             seatKey: true,
             attendeeName: true,
             attendeeBirthDate: true,
+            selfChangedAt: true,
             ticketType: {
               select: {
                 sessionId: true,
@@ -408,6 +417,7 @@ export async function applySeatChange(input: {
         move: { ticketId: string; to: string };
         sessionId: string;
         tariff: ChangeTariff;
+        paidCents: number;
         delta: number;
       }[] = [];
       for (const move of input.moves) {
@@ -435,18 +445,21 @@ export async function applySeatChange(input: {
           move,
           sessionId: session.id,
           tariff,
+          paidCents: current.paidCents,
           delta: newPriceCents(current, tariff) - current.paidCents,
         });
       }
       const due = amountDue(plan.map((p) => p.delta));
-      const limit = linkLimitError({
+      const rule = exchangeRuleError({
         viaAccount: link.viaAccount,
         givenCount: plan.length,
         newCount: plan.length,
+        givenFree: plan.filter((p) => p.paidCents === 0).length,
+        newFree: plan.filter((p) => p.paidCents + p.delta === 0).length,
         givenCents: 0,
         newCents: plan.reduce((sum, p) => sum + p.delta, 0),
       });
-      if (limit) throw new EditFailure(limit);
+      if (rule) throw new EditFailure(rule);
       const oldIds = [...sources];
 
       if (due === 0) {
@@ -514,6 +527,10 @@ export async function applySeatChange(input: {
       const issued = await tx.ticket.findMany({
         where: { code: { in: codes } },
         select: { id: true, seatKey: true, ticketType: { select: { sessionId: true } } },
+      });
+      await tx.ticket.updateMany({
+        where: { id: { in: issued.map((t) => t.id) } },
+        data: { selfChangedAt: new Date() },
       });
       for (const p of plan) {
         const ticket = oldOf.get(p.move.ticketId)!;

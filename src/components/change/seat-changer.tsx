@@ -16,7 +16,7 @@ import {
   tariffForZone,
   type ChangeTariff,
 } from "@/lib/orders/seat-change-quote";
-import { linkLimitError } from "@/lib/orders/self-service-rules";
+import { exchangeRuleError } from "@/lib/orders/self-service-rules";
 import { seatLabel, zoneAllowed, type SeatLayout } from "@/lib/seating/layout";
 import { cn, formatPrice } from "@/lib/utils";
 
@@ -78,14 +78,19 @@ export function SeatChanger({
   );
   const due = amountDue(lines.map((l) => l.delta));
   const lower = lines.some((l) => l.delta < 0);
-  // Par le lien, pas de changement qui fasse perdre de la valeur : le serveur le refuse aussi.
-  const limit = linkLimitError({
-    viaAccount: !("token" in access),
-    givenCount: lines.length,
-    newCount: lines.length,
-    givenCents: 0,
-    newCents: lines.reduce((sum, l) => sum + l.delta, 0),
-  });
+  // Mêmes règles qu'un échange ; le serveur les applique aussi.
+  const limit =
+    lines.length === 0
+      ? null
+      : exchangeRuleError({
+          viaAccount: !("token" in access),
+          givenCount: lines.length,
+          newCount: lines.length,
+          givenFree: lines.filter((l) => l.ticket.paidCents === 0).length,
+          newFree: lines.filter((l) => l.ticket.paidCents + l.delta === 0).length,
+          givenCents: 0,
+          newCents: lines.reduce((sum, l) => sum + l.delta, 0),
+        });
 
   if (state?.ok && state.kind === "done") {
     return (
@@ -239,7 +244,7 @@ const ERRORS: string[] = [
   "notFound",
   "retry",
   "accountRequired",
-  "fewerSeats",
+  "freeSeats",
   "lowerValue",
 ];
 

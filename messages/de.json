@@ -1081,7 +1081,7 @@
       "selfServiceHint": "In ihrem ticketick-Konto können Kunden ihre Tickets ändern oder kostenlose Plätze zurückgeben. Der Link, den Sie aus einer Bestellung senden, funktioniert auch ohne diese Häkchen.",
       "selfChange": "Wechsel von Plätzen oder Vorstellung im Konto",
       "changeUntilHours": "Wechsel möglich bis (Stunden vorher)",
-      "changeUntilHoursHint": "Der Kunde bezahlt nur den Aufpreis; nie eine Rückerstattung.",
+      "changeUntilHoursHint": "Der Kunde bezahlt nur den Aufpreis; nie eine Rückerstattung. Jedes Ticket lässt sich im Konto nur einmal tauschen: Für eine weitere Änderung senden Sie ihm einen Link aus der Bestellung.",
       "selfCancelFree": "Stornierung kostenloser Plätze im Konto",
       "cancelUntilHours": "Stornierung möglich bis (Stunden vorher)",
       "cancelUntilHoursHint": "Der freie Platz geht zurück in die Kapazität. Die Buchungs-E-Mail erwähnt es."
@@ -1715,7 +1715,7 @@
         "cancelNoticeNotSent": "Die Stornierungs-E-Mail konnte nicht gesendet werden."
       },
       "changeLink": "Änderung durch den Kunden",
-      "changeLinkHint": "Der Kunde erhält einen Link, um andere Plätze zu wählen, zu einer anderen Vorstellung des Veranstalters zu wechseln oder Tickets hinzuzufügen. Er bezahlt nur den Aufpreis, per Karte; nie eine Rückerstattung. Höchstens 72 Stunden gültig, bis zur Vorstellung, beliebig oft. Hat der Kunde ein Konto, muss er sich für Änderungen anmelden.",
+      "changeLinkHint": "Der Kunde erhält einen Link, um seine Tickets eins zu eins gegen andere Plätze oder eine andere Vorstellung des Veranstalters zu tauschen. Er bezahlt nur den Aufpreis, per Karte; nie eine Rückerstattung. Mit dem Link lässt sich auch ein bereits getauschtes Ticket erneut tauschen. Höchstens 72 Stunden gültig, bis zur Vorstellung. Hat der Kunde ein Konto, muss er sich anmelden.",
       "changeLinkNoCard": "Für diesen Veranstalter ist keine Kartenzahlung eingerichtet: Nur Änderungen ohne Aufpreis sind möglich.",
       "changeLinkSend": "Link an den Kunden senden",
       "changeLinkReplace": "Es ist bereits ein Link offen. Durch einen neuen ersetzen? Der alte funktioniert dann nicht mehr.",
@@ -2048,7 +2048,7 @@
   },
   "change": {
     "title": "Meine Tickets ändern",
-    "intro": "Bestellung {reference}. Wechseln Sie zu einer anderen Vorstellung, fügen Sie Tickets hinzu oder wählen Sie andere Plätze.",
+    "intro": "Bestellung {reference}. Tauschen Sie Ihre Tickets gegen andere Plätze oder eine andere Vorstellung.",
     "validUntil": "Link gültig bis {date}.",
     "pending": "Eine frühere Änderung wartet noch auf die Zahlung. Wenn Sie eine neue Wahl bestätigen, ersetzt sie diese.",
     "yourSeats": "Ihre Plätze",
@@ -2079,16 +2079,16 @@
       "failed": "Die Änderung war nicht möglich. Laden Sie die Seite neu und versuchen Sie es erneut.",
       "notFound": "Eines dieser Tickets kann nicht mehr geändert werden. Laden Sie die Seite neu.",
       "accountRequired": "Diese Bestellung ist mit einem Konto verknüpft: Melden Sie sich an, um sie zu ändern.",
-      "fewerSeats": "Mit diesem Link muss der Umtausch mindestens so viele Plätze umfassen wie die zurückgegebenen Tickets. Um mehr zurückzugeben, melden Sie sich in Ihrem Konto an oder kontaktieren Sie den Veranstalter.",
-      "lowerValue": "Mit diesem Link muss die neue Wahl mindestens so viel wert sein wie die zurückgegebenen Tickets. Für einen günstigeren Platz melden Sie sich in Ihrem Konto an oder kontaktieren Sie den Veranstalter."
+      "lowerValue": "Mit diesem Link muss die neue Wahl mindestens so viel wert sein wie die zurückgegebenen Tickets. Für einen günstigeren Platz kontaktieren Sie den Veranstalter.",
+      "freeSeats": "Einen Gratisplatz erhalten Sie nur im Tausch gegen einen Gratisplatz."
     },
     "current": "Ihr aktueller Platz",
     "nothingToChange": "Derzeit kann kein Ticket dieser Bestellung geändert werden.",
     "seatsTitle": "Andere Plätze wählen",
     "seatsIntro": "Wählen Sie einen Ihrer Plätze in der Liste und tippen Sie dann auf den neuen Platz im Plan.",
     "exchange": {
-      "title": "Vorstellung wechseln oder Tickets hinzufügen",
-      "intro": "Geben Sie Tickets zurück, fügen Sie neue hinzu oder beides: Wählen Sie dann die Vorstellung und Ihre Plätze. Sie zahlen nur die Differenz, wenn die neue Wahl teurer ist.",
+      "title": "Meine Tickets tauschen",
+      "intro": "Wählen Sie die Tickets, die Sie zurückgeben, dann die Vorstellung und Ihre neuen Plätze: Jedes zurückgegebene Ticket ergibt einen neuen Platz. Sie zahlen nur die Differenz, wenn die neue Wahl teurer ist.",
       "giveTitle": "Welche Tickets geben Sie zurück?",
       "freeTicket": "Kostenlos",
       "targetTitle": "Wählen Sie die Vorstellung",
@@ -2123,8 +2123,11 @@
         "failed": "Der Tausch konnte nicht durchgeführt werden. Laden Sie die Seite neu und versuchen Sie es noch einmal.",
         "attendeeInvalid": "Geben Sie Vor- und Nachname der begünstigten Person sowie ein gültiges Geburtsdatum an.",
         "accountRequired": "Diese Bestellung ist mit einem Konto verknüpft: Melden Sie sich an, um sie zu ändern.",
-        "fewerSeats": "Mit diesem Link muss der Umtausch mindestens so viele Plätze umfassen wie die zurückgegebenen Tickets. Um mehr zurückzugeben, melden Sie sich in Ihrem Konto an oder kontaktieren Sie den Veranstalter.",
-        "lowerValue": "Mit diesem Link muss die neue Wahl mindestens so viel wert sein wie die zurückgegebenen Tickets. Für einen günstigeren Platz melden Sie sich in Ihrem Konto an oder kontaktieren Sie den Veranstalter."
+        "lowerValue": "Mit diesem Link muss die neue Wahl mindestens so viel wert sein wie die zurückgegebenen Tickets. Für einen günstigeren Platz kontaktieren Sie den Veranstalter.",
+        "nothingGiven": "Wählen Sie mindestens ein Ticket zum Tauschen.",
+        "seatCount": "Wählen Sie genau so viele neue Plätze, wie Sie Tickets zurückgeben.",
+        "freeSeats": "Einen Gratisplatz erhalten Sie nur im Tausch gegen einen Gratisplatz.",
+        "attendeeLocked": "Die Inhaber der zurückgegebenen Tickets müssen auf den neuen Tickets dieselben bleiben."
       },
       "stepsLabel": "Schritte des Tauschs",
       "steps": {
@@ -2133,9 +2136,9 @@
         "seats": "Plätze",
         "confirm": "Bestätigung"
       },
-      "giveHint": "Tippen Sie auf die Tickets, die Sie tauschen möchten: Ihr Wert wird von der neuen Wahl abgezogen. Um nur Tickets hinzuzufügen, fahren Sie ohne Auswahl fort.",
+      "giveHint": "Tippen Sie auf die Tickets, die Sie tauschen möchten: Ihr Wert wird von der neuen Wahl abgezogen.",
       "selectedCount": "{count, plural, =0 {Kein Ticket gewählt} one {1 Ticket gewählt} other {# Tickets gewählt}}",
-      "targetHint": "Alle Vorstellungen des Veranstalters im Verkauf. Sie können mehrere wählen: Jede kommt in Ihren Warenkorb.",
+      "targetHint": "Alle Vorstellungen des Veranstalters im Verkauf. Sie können Ihre Tickets auf mehrere Vorstellungen verteilen.",
       "seatsTitle": "Wie viele Plätze?",
       "confirmTitle": "Prüfen Sie Ihren Tausch",
       "youGive": "Sie geben zurück",
@@ -2146,21 +2149,23 @@
       "back": "Zurück",
       "currentSeats": "Ihre aktuellen Plätze",
       "nothingGiven": "Keine Tickets zurückgegeben.",
-      "doneTextAdded": "Ihre neuen Tickets wurden Ihnen per E-Mail zugeschickt.",
       "cartTitle": "Ihr Warenkorb",
       "cartSummary": "{seats, plural, one {1 Platz} other {# Plätze}} · {shows, plural, one {1 Vorstellung} other {# Vorstellungen}}",
       "inCart": "{count, plural, one {1 Platz gewählt} other {# Plätze gewählt}}",
       "viewCart": "Zur Übersicht",
       "otherShows": "Weitere Vorstellung hinzufügen",
       "edit": "Ändern",
-      "remove": "Aus dem Warenkorb entfernen"
+      "remove": "Aus dem Warenkorb entfernen",
+      "seatsChosen": "Plätze: {chosen} von {total}",
+      "holderKept": "Inhaber vom zurückgegebenen Ticket übernommen: Er kann nicht geändert werden."
     },
     "loginTitle": "Melden Sie sich an, um Ihre Tickets zu ändern",
     "loginText": "Diese Bestellung ist mit Ihrem ticketick-Konto verknüpft. Zum Schutz Ihrer Tickets melden Sie sich mit der E-Mail-Adresse der Bestellung an: Danach kehren Sie auf diese Seite zurück.",
     "loginButton": "Anmelden",
     "otherAccount": "Diese Bestellung ist mit einem anderen Konto als diesem ({email}) verknüpft. Melden Sie sich ab, öffnen Sie diesen Link erneut und melden Sie sich mit der E-Mail-Adresse der Bestellung an.",
     "inviteText": "Erstellen Sie Ihr ticketick-Konto mit der Adresse {email}: Dort finden Sie Ihre Tickets und können sie beim nächsten Mal einfacher ändern.",
-    "inviteButton": "Konto erstellen"
+    "inviteButton": "Konto erstellen",
+    "lockedNote": "{count, plural, one {Ein Ticket dieser Bestellung wurde bereits getauscht: Es kann hier nicht mehr getauscht werden.} other {# Tickets dieser Bestellung wurden bereits getauscht: Sie können hier nicht mehr getauscht werden.}} Für eine weitere Änderung kontaktieren Sie den Veranstalter."
   },
   "organizerReport": {
     "subject": "Bericht {name} — Stand {date}",

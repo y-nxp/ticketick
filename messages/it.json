@@ -1081,7 +1081,7 @@
       "selfServiceHint": "Dal suo conto ticketick, il cliente può cambiare i biglietti o restituire i posti gratuiti. Il link che inviate da un ordine funziona anche se queste caselle non sono spuntate.",
       "selfChange": "Cambio di posti o di spettacolo dal conto",
       "changeUntilHours": "Cambio possibile fino a (ore prima)",
-      "changeUntilHoursHint": "Il cliente paga solo l'aumento; mai un rimborso.",
+      "changeUntilHoursHint": "Il cliente paga solo l'aumento; mai un rimborso. Ogni biglietto si scambia una sola volta dall'account: per un nuovo cambio, inviategli un link dall'ordine.",
       "selfCancelFree": "Annullamento dei posti gratuiti dal conto",
       "cancelUntilHours": "Annullamento possibile fino a (ore prima)",
       "cancelUntilHoursHint": "Il posto liberato torna nella capienza. L'e-mail di prenotazione lo menziona."
@@ -1715,7 +1715,7 @@
         "cancelNoticeNotSent": "Non è stato possibile inviare l'e-mail di annullamento."
       },
       "changeLink": "Cambio da parte del cliente",
-      "changeLinkHint": "Il cliente riceve un link per scegliere altri posti, passare a un altro spettacolo dell'organizzatore o aggiungere biglietti. Paga solo l'aumento, con carta; mai un rimborso. Valido al massimo 72 ore, fino allo spettacolo, tutte le volte necessarie. Se il cliente ha un account, deve accedervi per modificare.",
+      "changeLinkHint": "Il cliente riceve un link per scambiare i suoi biglietti, uno per uno, con altri posti o un altro spettacolo dell'organizzatore. Paga solo l'aumento, con carta; mai un rimborso. Il link permette anche di scambiare di nuovo un biglietto già scambiato. Valido al massimo 72 ore, fino allo spettacolo. Se il cliente ha un account, deve accedervi.",
       "changeLinkNoCard": "Nessun pagamento con carta è configurato per questo organizzatore: andranno a buon fine solo i cambi senza supplemento.",
       "changeLinkSend": "Inviare il link al cliente",
       "changeLinkReplace": "Un link è già aperto. Sostituirlo con uno nuovo? Quello vecchio non funzionerà più.",
@@ -2048,7 +2048,7 @@
   },
   "change": {
     "title": "Cambiare i miei biglietti",
-    "intro": "Ordine {reference}. Passate a un altro spettacolo, aggiungete biglietti o scegliete altri posti.",
+    "intro": "Ordine {reference}. Scambiate i vostri biglietti con altri posti o un altro spettacolo.",
     "validUntil": "Link valido fino al {date}.",
     "pending": "Un cambio precedente attende ancora il pagamento. Se confermate una nuova scelta, lo sostituisce.",
     "yourSeats": "I vostri posti",
@@ -2079,16 +2079,16 @@
       "failed": "Il cambio non è stato possibile. Ricaricate la pagina e riprovate.",
       "notFound": "Uno di questi biglietti non può più essere cambiato. Ricaricate la pagina.",
       "accountRequired": "Questo ordine è collegato a un account: accedete per modificarlo.",
-      "fewerSeats": "Con questo link, lo scambio deve comprendere almeno tanti posti quanti i biglietti restituiti. Per restituirne di più, accedete al vostro account o contattate l'organizzatore.",
-      "lowerValue": "Con questo link, la nuova scelta deve valere almeno quanto i biglietti restituiti. Per un posto meno caro, accedete al vostro account o contattate l'organizzatore."
+      "lowerValue": "Con questo link, la nuova scelta deve valere almeno quanto i biglietti restituiti. Per un posto meno caro, contattate l'organizzatore.",
+      "freeSeats": "Un posto gratuito si ottiene solo in cambio di un posto gratuito."
     },
     "current": "Il vostro posto attuale",
     "nothingToChange": "Al momento nessun biglietto di questo ordine può essere cambiato.",
     "seatsTitle": "Scegliere altri posti",
     "seatsIntro": "Scegliete uno dei vostri posti nell'elenco, poi toccate il nuovo posto sulla pianta.",
     "exchange": {
-      "title": "Cambiare spettacolo o aggiungere biglietti",
-      "intro": "Restituite dei biglietti, aggiungetene altri o entrambe le cose: scegliete poi lo spettacolo e i vostri posti. Pagate solo la differenza se la nuova scelta costa di più.",
+      "title": "Scambiare i miei biglietti",
+      "intro": "Scegliete i biglietti da restituire, poi lo spettacolo e i nuovi posti: ogni biglietto restituito dà un nuovo posto. Pagate solo la differenza se la nuova scelta costa di più.",
       "giveTitle": "Quali biglietti restituite?",
       "freeTicket": "Gratuito",
       "targetTitle": "Scegliete lo spettacolo",
@@ -2123,8 +2123,11 @@
         "failed": "Il cambio non ha potuto essere fatto. Ricaricate la pagina e riprovate.",
         "attendeeInvalid": "Indicate nome e cognome del beneficiario e una data di nascita valida.",
         "accountRequired": "Questo ordine è collegato a un account: accedete per modificarlo.",
-        "fewerSeats": "Con questo link, lo scambio deve comprendere almeno tanti posti quanti i biglietti restituiti. Per restituirne di più, accedete al vostro account o contattate l'organizzatore.",
-        "lowerValue": "Con questo link, la nuova scelta deve valere almeno quanto i biglietti restituiti. Per un posto meno caro, accedete al vostro account o contattate l'organizzatore."
+        "lowerValue": "Con questo link, la nuova scelta deve valere almeno quanto i biglietti restituiti. Per un posto meno caro, contattate l'organizzatore.",
+        "nothingGiven": "Scegliete almeno un biglietto da scambiare.",
+        "seatCount": "Scegliete esattamente tanti nuovi posti quanti i biglietti restituiti.",
+        "freeSeats": "Un posto gratuito si ottiene solo in cambio di un posto gratuito.",
+        "attendeeLocked": "I titolari dei biglietti restituiti devono restare gli stessi sui nuovi biglietti."
       },
       "stepsLabel": "Fasi del cambio",
       "steps": {
@@ -2133,9 +2136,9 @@
         "seats": "Posti",
         "confirm": "Conferma"
       },
-      "giveHint": "Toccate i biglietti da cambiare: il loro valore viene dedotto dalla nuova scelta. Per aggiungere soltanto biglietti, continuate senza sceglierne.",
+      "giveHint": "Toccate i biglietti da scambiare: il loro valore viene dedotto dalla nuova scelta.",
       "selectedCount": "{count, plural, =0 {Nessun biglietto scelto} one {1 biglietto scelto} other {# biglietti scelti}}",
-      "targetHint": "Tutti gli spettacoli in vendita dell'organizzatore. Potete sceglierne diversi: ognuno si aggiunge al carrello.",
+      "targetHint": "Tutti gli spettacoli in vendita dell'organizzatore. Potete ripartire i biglietti su più spettacoli.",
       "seatsTitle": "Quanti posti?",
       "confirmTitle": "Verificate il cambio",
       "youGive": "Restituite",
@@ -2146,21 +2149,23 @@
       "back": "Indietro",
       "currentSeats": "I vostri posti attuali",
       "nothingGiven": "Nessun biglietto restituito.",
-      "doneTextAdded": "I nuovi biglietti vi sono stati inviati per e-mail.",
       "cartTitle": "Il vostro carrello",
       "cartSummary": "{seats, plural, one {1 posto} other {# posti}} · {shows, plural, one {1 spettacolo} other {# spettacoli}}",
       "inCart": "{count, plural, one {1 posto scelto} other {# posti scelti}}",
       "viewCart": "Vedi il riepilogo",
       "otherShows": "Aggiungi un altro spettacolo",
       "edit": "Modifica",
-      "remove": "Togli dal carrello"
+      "remove": "Togli dal carrello",
+      "seatsChosen": "Posti: {chosen} su {total}",
+      "holderKept": "Titolare ripreso dal biglietto restituito: non può essere cambiato."
     },
     "loginTitle": "Accedete per modificare i vostri biglietti",
     "loginText": "Questo ordine è collegato al vostro account ticketick. Per proteggere i vostri biglietti, accedete con l'indirizzo e-mail dell'ordine: tornerete poi su questa pagina.",
     "loginButton": "Accedi",
     "otherAccount": "Questo ordine è collegato a un account diverso da questo ({email}). Uscite, riaprite questo link e accedete con l'indirizzo e-mail dell'ordine.",
     "inviteText": "Create il vostro account ticketick con l'indirizzo {email}: ritroverete i vostri biglietti e potrete modificarli più facilmente la prossima volta.",
-    "inviteButton": "Crea il mio account"
+    "inviteButton": "Crea il mio account",
+    "lockedNote": "{count, plural, one {Un biglietto di questo ordine è già stato scambiato: non può più esserlo qui.} other {# biglietti di questo ordine sono già stati scambiati: non possono più esserlo qui.}} Per un nuovo cambio, contattate l'organizzatore."
   },
   "organizerReport": {
     "subject": "Rapporto {name} — situazione al {date}",

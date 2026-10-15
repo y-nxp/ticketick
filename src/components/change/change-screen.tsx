@@ -52,6 +52,11 @@ export async function ChangeScreen({
           </Link>
         </div>
       ) : null}
+      {exchange.locked > 0 ? (
+        <p className="mt-4 max-w-2xl rounded-card border border-border bg-secondary px-4 py-3 text-sm">
+          {t("lockedNote", { count: exchange.locked })}
+        </p>
+      ) : null}
       {data.pending ? (
         <p className="mt-4 rounded-card border border-border bg-secondary px-4 py-3 text-sm">
           {t("pending")}

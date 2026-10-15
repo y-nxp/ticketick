@@ -1081,7 +1081,7 @@
       "selfServiceHint": "From their ticketick account, customers can change their tickets or give back free seats. The link you send from an order works even when these boxes are unchecked.",
       "selfChange": "Change of seats or show from the account",
       "changeUntilHours": "Change possible until (hours before)",
-      "changeUntilHoursHint": "The customer only pays the increase; never a refund.",
+      "changeUntilHoursHint": "The customer only pays the increase; never a refund. Each ticket can be exchanged only once from the account: for another change, send them a link from the order.",
       "selfCancelFree": "Cancellation of free seats from the account",
       "cancelUntilHours": "Cancellation possible until (hours before)",
       "cancelUntilHoursHint": "The freed seat goes back into the capacity. The booking e-mail mentions it."
@@ -1715,7 +1715,7 @@
         "cancelNoticeNotSent": "The cancellation email could not be sent."
       },
       "changeLink": "Change by the customer",
-      "changeLinkHint": "The customer receives a link to choose other seats, switch to another show of the organiser or add tickets. They only pay the increase, by card; never a refund. Valid for up to 72 hours, until the show, as many times as needed. If the customer has an account, they must sign in to make changes.",
+      "changeLinkHint": "The customer receives a link to exchange their tickets, one for one, for other seats or another show of the organiser. They only pay the increase, by card; never a refund. The link also allows a ticket that was already exchanged to be exchanged again. Valid for up to 72 hours, until the show. If the customer has an account, they must sign in to it.",
       "changeLinkNoCard": "No card payment is set up for this organizer: only changes without a surcharge will go through.",
       "changeLinkSend": "Send the link to the customer",
       "changeLinkReplace": "A link is already open. Replace it with a new one? The old one will stop working.",
@@ -2048,7 +2048,7 @@
   },
   "change": {
     "title": "Change my tickets",
-    "intro": "Order {reference}. Switch to another show, add tickets or choose other seats.",
+    "intro": "Order {reference}. Exchange your tickets for other seats or another show.",
     "validUntil": "Link valid until {date}.",
     "pending": "A previous change is still awaiting payment. If you confirm a new choice, it replaces it.",
     "yourSeats": "Your seats",
@@ -2079,16 +2079,16 @@
       "failed": "The change could not be made. Reload the page and try again.",
       "notFound": "One of these tickets can no longer be changed. Reload the page.",
       "accountRequired": "This order is linked to an account: sign in to change it.",
-      "fewerSeats": "With this link, the exchange must include at least as many seats as the tickets returned. To return more, sign in to your account or contact the organiser.",
-      "lowerValue": "With this link, the new choice must be worth at least as much as the tickets returned. For a cheaper seat, sign in to your account or contact the organiser."
+      "lowerValue": "With this link, the new choice must be worth at least as much as the tickets given back. For a cheaper seat, contact the organiser.",
+      "freeSeats": "A free seat can only be obtained in exchange for a free seat."
     },
     "current": "Your current seat",
     "nothingToChange": "No ticket of this order can be changed at the moment.",
     "seatsTitle": "Choose other seats",
     "seatsIntro": "Pick one of your seats in the list, then tap the new seat on the plan.",
     "exchange": {
-      "title": "Change show or add tickets",
-      "intro": "Give back tickets, add new ones, or both: then choose the show and your seats. You only pay the difference if the new choice costs more.",
+      "title": "Exchange my tickets",
+      "intro": "Choose the tickets to give back, then the show and your new seats: each ticket given back gives one new seat. You only pay the difference if the new choice costs more.",
       "giveTitle": "Which tickets are you giving back?",
       "freeTicket": "Free",
       "targetTitle": "Choose the show",
@@ -2123,8 +2123,11 @@
         "failed": "The exchange could not be made. Reload the page and try again.",
         "attendeeInvalid": "Enter the beneficiary's first and last name, and a valid date of birth.",
         "accountRequired": "This order is linked to an account: sign in to change it.",
-        "fewerSeats": "With this link, the exchange must include at least as many seats as the tickets returned. To return more, sign in to your account or contact the organiser.",
-        "lowerValue": "With this link, the new choice must be worth at least as much as the tickets returned. For a cheaper seat, sign in to your account or contact the organiser."
+        "lowerValue": "With this link, the new choice must be worth at least as much as the tickets given back. For a cheaper seat, contact the organiser.",
+        "nothingGiven": "Choose at least one ticket to exchange.",
+        "seatCount": "Choose exactly as many new seats as tickets given back.",
+        "freeSeats": "A free seat can only be obtained in exchange for a free seat.",
+        "attendeeLocked": "The holders of the tickets given back must stay the same on the new tickets."
       },
       "stepsLabel": "Exchange steps",
       "steps": {
@@ -2133,9 +2136,9 @@
         "seats": "Seats",
         "confirm": "Confirmation"
       },
-      "giveHint": "Tap the tickets to exchange: their value is deducted from the new choice. To only add tickets, continue without selecting any.",
+      "giveHint": "Tap the tickets to exchange: their value is deducted from the new choice.",
       "selectedCount": "{count, plural, =0 {No ticket chosen} one {1 ticket chosen} other {# tickets chosen}}",
-      "targetHint": "All the organiser's shows on sale. You can choose several: each one is added to your basket.",
+      "targetHint": "All the organiser's shows on sale. You can spread your tickets over several shows.",
       "seatsTitle": "How many seats?",
       "confirmTitle": "Check your exchange",
       "youGive": "You give back",
@@ -2146,21 +2149,23 @@
       "back": "Back",
       "currentSeats": "Your current seats",
       "nothingGiven": "No tickets given back.",
-      "doneTextAdded": "Your new tickets have been sent to you by e-mail.",
       "cartTitle": "Your basket",
       "cartSummary": "{seats, plural, one {1 seat} other {# seats}} · {shows, plural, one {1 show} other {# shows}}",
       "inCart": "{count, plural, one {1 seat chosen} other {# seats chosen}}",
       "viewCart": "View summary",
       "otherShows": "Add another show",
       "edit": "Edit",
-      "remove": "Remove from basket"
+      "remove": "Remove from basket",
+      "seatsChosen": "Seats: {chosen} of {total}",
+      "holderKept": "Holder taken from the ticket given back: it cannot be changed."
     },
     "loginTitle": "Sign in to change your tickets",
     "loginText": "This order is linked to your ticketick account. To protect your tickets, sign in with the order's email address: you will then come back to this page.",
     "loginButton": "Sign in",
     "otherAccount": "This order is linked to another account than this one ({email}). Sign out, then reopen this link and sign in with the order's email address.",
     "inviteText": "Create your ticketick account with {email}: you will find your tickets there and can change them more easily next time.",
-    "inviteButton": "Create my account"
+    "inviteButton": "Create my account",
+    "lockedNote": "{count, plural, one {One ticket of this order has already been exchanged: it can no longer be exchanged here.} other {# tickets of this order have already been exchanged: they can no longer be exchanged here.}} For another change, contact the organiser."
   },
   "organizerReport": {
     "subject": "Report {name} — as of {date}",
