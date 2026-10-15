@@ -2092,7 +2092,7 @@
     "alwaysOn": "Toujours actif",
     "base": {
       "title": "Fonctionnalités de base",
-      "text": "Nécessaires au site : panier, session, langue et sécurité de la connexion. Elles ne demandent pas d'accord."
+      "text": "Nécessaires au site : panier, session, langue et sécurité de la connexion, ainsi que la mesure d'audience anonyme (Matomo, hébergé en Suisse, sans cookie). Elles ne demandent pas d'accord."
     },
     "statistics": {
       "title": "Statistiques",

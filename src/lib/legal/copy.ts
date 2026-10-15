@@ -335,7 +335,7 @@ const terms: Record<LegalLocale, LegalDoc> = {
 
 const privacy: Record<LegalLocale, LegalDoc> = {
   fr: {
-    updated: "Dernière mise à jour : 14 octobre 2026",
+    updated: "Dernière mise à jour : 15 octobre 2026",
     lead: "Il faut distinguer les données que vous nous confiez pour utiliser ticketick.ch (compte, commande, support) et celles que l’organisateur traite pour son spectacle (liste des spectateurs, contrôle d’accès). Cette politique décrit le traitement effectué par ticketick, selon la nLPD et, le cas échéant, le RGPD.",
     sections: [
       {
@@ -376,6 +376,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
         title: "5. Quand partageons-nous vos données ?",
         paragraphs: [
           "Uniquement pour fournir le service : prestataires de paiement (PostFinance, Stripe, PayPal), envoi d’e-mail, et l’organisateur du spectacle concerné (liste des titulaires de billets, contrôle d’accès).",
+          "Pour tous les visiteurs, sans cookie : nous mesurons l’audience avec Matomo, hébergé sur notre propre serveur en Suisse (Infomaniak) — pages vues, panier, achats et leur montant, appareil et pays approximatif. L’adresse IP est raccourcie avant tout enregistrement, aucune donnée n’est partagée avec des tiers et les données détaillées sont effacées après 13 mois. Ces statistiques ne servent qu’à améliorer le site.",
           "Avec votre accord seulement : Google (Google Analytics, Google Ads) et Meta (Facebook, Instagram) reçoivent des données d’usage du site — pages vues, ajouts au panier, achats et leur montant — pour mesurer l’audience et l’efficacité de nos annonces. Lors d’un achat, Meta reçoit aussi votre e-mail, votre nom et votre téléphone sous forme hachée (chiffrement irréversible), pour rattacher la vente à une annonce. Ces sociétés peuvent traiter ces données hors de Suisse, notamment aux États-Unis.",
           "Un organisateur peut aussi relier ses pages de spectacle à son propre pixel Meta ou à son propre Google Analytics. Avec votre accord seulement, ces outils reçoivent alors les visites, les ajouts au panier et les achats concernant ses spectacles, jamais ceux des autres organisateurs ni vos coordonnées. L’organisateur est responsable de l’usage qu’il en fait.",
           "Ces tiers n’utilisent vos données que pour la prestation demandée. Nous pouvons aussi les communiquer si la loi ou une ordonnance l’exige.",
@@ -385,7 +386,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
       {
         title: "6. Cookies",
         paragraphs: [
-          "Des cookies ou technologies similaires sont nécessaires au panier, à la session, à la langue et à la sécurité ; ils ne demandent pas d’accord. Les cookies de mesure d’audience et de publicité (Google Analytics, Google Ads, pixel Meta) ne sont déposés qu’avec votre accord, donné ou refusé dans la fenêtre affichée à votre première visite, par finalité : statistiques, ciblage et publicité, publicité personnalisée. Vous pouvez changer d’avis à tout moment avec le lien « Cookies » en bas de page. Sans accord, Google ne reçoit que des signaux anonymes, sans cookie.",
+          "Des cookies ou technologies similaires sont nécessaires au panier, à la session, à la langue et à la sécurité ; ils ne demandent pas d’accord. Les cookies de mesure d’audience et de publicité (Google Analytics, Google Ads, pixel Meta) ne sont déposés qu’avec votre accord, donné ou refusé dans la fenêtre affichée à votre première visite, par finalité : statistiques, ciblage et publicité, publicité personnalisée. Vous pouvez changer d’avis à tout moment avec le lien « Cookies » en bas de page. Sans accord, Google ne reçoit que des signaux anonymes, sans cookie. La mesure d’audience Matomo ne dépose aucun cookie.",
         ],
       },
       {
@@ -413,7 +414,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
     ],
   },
   en: {
-    updated: "Last updated: 14 October 2026",
+    updated: "Last updated: 15 October 2026",
     lead: "Distinguish the data you give us to use ticketick.ch (account, order, support) from data the organiser processes for its event (attendee list, door control). This policy covers processing by ticketick under the nFADP and, where applicable, the GDPR.",
     sections: [
       {
@@ -454,6 +455,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
         title: "5. When do we share your data?",
         paragraphs: [
           "Only to provide the service: payment providers (PostFinance, Stripe, PayPal), email delivery, and the organiser of the event (ticket holders, door control).",
+          "For all visitors, without cookies: we measure audience with Matomo, hosted on our own server in Switzerland (Infomaniak) — pages viewed, cart, purchases and their amount, device and approximate country. The IP address is shortened before anything is stored, no data is shared with third parties and detailed data is deleted after 13 months. These statistics are only used to improve the site.",
           "Only with your consent: Google (Google Analytics, Google Ads) and Meta (Facebook, Instagram) receive site usage data — pages viewed, cart additions, purchases and their amount — to measure audience and how well our ads perform. When you buy, Meta also receives your email, name and phone number in hashed form (irreversible encryption), to link the sale to an ad. These companies may process this data outside Switzerland, notably in the United States.",
           "An organiser may also connect their event pages to their own Meta pixel or Google Analytics. Only with your consent, these tools then receive visits, cart additions and purchases for that organiser’s events — never those of other organisers, nor your contact details. The organiser is responsible for how they use them.",
           "Those parties may use your data only for that task. We may also disclose data if the law or a court order requires it.",
@@ -463,7 +465,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
       {
         title: "6. Cookies",
         paragraphs: [
-          "Cookies or similar technologies are needed for the cart, session, language and security; they do not require consent. Audience measurement and advertising cookies (Google Analytics, Google Ads, Meta pixel) are only set with your consent, given or refused in the window shown on your first visit, for each purpose: statistics, targeting and advertising, personalised advertising. You can change your mind at any time with the “Cookies” link at the bottom of the page. Without consent, Google only receives anonymous, cookieless signals.",
+          "Cookies or similar technologies are needed for the cart, session, language and security; they do not require consent. Audience measurement and advertising cookies (Google Analytics, Google Ads, Meta pixel) are only set with your consent, given or refused in the window shown on your first visit, for each purpose: statistics, targeting and advertising, personalised advertising. You can change your mind at any time with the “Cookies” link at the bottom of the page. Without consent, Google only receives anonymous, cookieless signals. Matomo audience measurement sets no cookies.",
         ],
       },
       {
@@ -491,7 +493,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
     ],
   },
   de: {
-    updated: "Letzte Aktualisierung: 14. Oktober 2026",
+    updated: "Letzte Aktualisierung: 15. Oktober 2026",
     lead: "Unterscheiden Sie die Daten, die Sie uns für ticketick.ch anvertrauen (Konto, Bestellung, Support), von denen, die der Veranstalter für seine Vorstellung bearbeitet (Zuschauerliste, Einlass). Diese Richtlinie beschreibt die Bearbeitung durch ticketick nach nDSG und, soweit anwendbar, DSGVO.",
     sections: [
       {
@@ -532,6 +534,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
         title: "5. Wann geben wir Daten weiter?",
         paragraphs: [
           "Nur zur Leistungserbringung: Zahlungsanbieter (PostFinance, Stripe, PayPal), E-Mail-Versand und der Veranstalter der Vorstellung (Ticketinhaber, Einlass).",
+          "Für alle Besucher, ohne Cookies: Wir messen die Reichweite mit Matomo, gehostet auf unserem eigenen Server in der Schweiz (Infomaniak) — aufgerufene Seiten, Warenkorb, Käufe und deren Betrag, Gerät und ungefähres Land. Die IP-Adresse wird vor jeder Speicherung gekürzt, es werden keine Daten an Dritte weitergegeben, und die Detaildaten werden nach 13 Monaten gelöscht. Diese Statistiken dienen nur der Verbesserung der Website.",
           "Nur mit Ihrer Zustimmung: Google (Google Analytics, Google Ads) und Meta (Facebook, Instagram) erhalten Nutzungsdaten der Website — aufgerufene Seiten, Warenkorb, Käufe und deren Betrag —, um die Reichweite und die Wirkung unserer Anzeigen zu messen. Bei einem Kauf erhält Meta zudem Ihre E-Mail-Adresse, Ihren Namen und Ihre Telefonnummer in gehashter Form (unumkehrbare Verschlüsselung), um den Verkauf einer Anzeige zuzuordnen. Diese Unternehmen können die Daten ausserhalb der Schweiz bearbeiten, namentlich in den USA.",
           "Ein Veranstalter kann seine Veranstaltungsseiten zudem mit seinem eigenen Meta-Pixel oder Google Analytics verbinden. Nur mit Ihrer Zustimmung erhalten diese Tools dann Besuche, Warenkorb-Ergänzungen und Käufe zu seinen Veranstaltungen — nie jene anderer Veranstalter und nie Ihre Kontaktdaten. Für deren Nutzung ist der Veranstalter verantwortlich.",
           "Diese Dritten nutzen die Daten nur für diese Aufgabe. Eine Weitergabe kann auch gesetzlich oder gerichtlich angeordnet sein.",
@@ -541,7 +544,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
       {
         title: "6. Cookies",
         paragraphs: [
-          "Cookies oder ähnliche Technologien sind für Warenkorb, Sitzung, Sprache und Sicherheit nötig; sie erfordern keine Zustimmung. Cookies für Reichweitenmessung und Werbung (Google Analytics, Google Ads, Meta-Pixel) werden nur mit Ihrer Zustimmung gesetzt, die Sie im Fenster bei Ihrem ersten Besuch je Zweck erteilen oder verweigern: Statistiken, Targeting und Werbung, personalisierte Werbung. Sie können Ihre Wahl jederzeit über den Link «Cookies» unten auf der Seite ändern. Ohne Zustimmung erhält Google nur anonyme Signale ohne Cookies.",
+          "Cookies oder ähnliche Technologien sind für Warenkorb, Sitzung, Sprache und Sicherheit nötig; sie erfordern keine Zustimmung. Cookies für Reichweitenmessung und Werbung (Google Analytics, Google Ads, Meta-Pixel) werden nur mit Ihrer Zustimmung gesetzt, die Sie im Fenster bei Ihrem ersten Besuch je Zweck erteilen oder verweigern: Statistiken, Targeting und Werbung, personalisierte Werbung. Sie können Ihre Wahl jederzeit über den Link «Cookies» unten auf der Seite ändern. Ohne Zustimmung erhält Google nur anonyme Signale ohne Cookies. Die Reichweitenmessung mit Matomo setzt keine Cookies.",
         ],
       },
       {
@@ -569,7 +572,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
     ],
   },
   it: {
-    updated: "Ultimo aggiornamento: 14 ottobre 2026",
+    updated: "Ultimo aggiornamento: 15 ottobre 2026",
     lead: "Vanno distinti i dati che ci affidate per usare ticketick.ch (conto, ordine, supporto) da quelli che l’organizzatore tratta per il suo spettacolo (elenco spettatori, controllo accessi). Questa politica descrive il trattamento di ticketick, secondo la nLPD e, se del caso, il RGPD.",
     sections: [
       {
@@ -610,6 +613,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
         title: "5. Quando condividiamo i dati?",
         paragraphs: [
           "Solo per erogare il servizio: prestatori di pagamento (PostFinance, Stripe, PayPal), invio e-mail e l’organizzatore dello spettacolo (titolari dei biglietti, controllo accessi).",
+          "Per tutti i visitatori, senza cookie: misuriamo l’audience con Matomo, ospitato sul nostro server in Svizzera (Infomaniak) — pagine visitate, carrello, acquisti e relativo importo, dispositivo e paese approssimativo. L’indirizzo IP viene abbreviato prima di qualsiasi registrazione, nessun dato è condiviso con terzi e i dati dettagliati sono cancellati dopo 13 mesi. Queste statistiche servono solo a migliorare il sito.",
           "Solo con il vostro consenso: Google (Google Analytics, Google Ads) e Meta (Facebook, Instagram) ricevono dati d’uso del sito — pagine visitate, aggiunte al carrello, acquisti e relativo importo — per misurare l’audience e l’efficacia dei nostri annunci. In caso di acquisto, Meta riceve anche e-mail, nome e telefono in forma hash (cifratura irreversibile), per collegare la vendita a un annuncio. Queste società possono trattare i dati fuori dalla Svizzera, in particolare negli Stati Uniti.",
           "Un organizzatore può inoltre collegare le pagine dei suoi eventi al proprio pixel Meta o al proprio Google Analytics. Solo con il vostro consenso, questi strumenti ricevono allora le visite, le aggiunte al carrello e gli acquisti relativi ai suoi eventi — mai quelli di altri organizzatori né i vostri dati di contatto. L’organizzatore è responsabile del loro utilizzo.",
           "Tali terzi usano i dati solo per quella prestazione. Possiamo comunicarli anche se la legge o un’ordinanza lo esige.",
@@ -619,7 +623,7 @@ const privacy: Record<LegalLocale, LegalDoc> = {
       {
         title: "6. Cookie",
         paragraphs: [
-          "Cookie o tecnologie simili sono necessari per carrello, sessione, lingua e sicurezza; non richiedono consenso. I cookie di misurazione dell’audience e pubblicitari (Google Analytics, Google Ads, pixel Meta) sono depositati solo con il vostro consenso, dato o rifiutato nella finestra mostrata alla prima visita, per finalità: statistiche, targeting e pubblicità, pubblicità personalizzata. Potete cambiare idea in qualsiasi momento con il link «Cookie» in fondo alla pagina. Senza consenso, Google riceve solo segnali anonimi, senza cookie.",
+          "Cookie o tecnologie simili sono necessari per carrello, sessione, lingua e sicurezza; non richiedono consenso. I cookie di misurazione dell’audience e pubblicitari (Google Analytics, Google Ads, pixel Meta) sono depositati solo con il vostro consenso, dato o rifiutato nella finestra mostrata alla prima visita, per finalità: statistiche, targeting e pubblicità, pubblicità personalizzata. Potete cambiare idea in qualsiasi momento con il link «Cookie» in fondo alla pagina. Senza consenso, Google riceve solo segnali anonimi, senza cookie. La misurazione dell’audience con Matomo non deposita alcun cookie.",
         ],
       },
       {

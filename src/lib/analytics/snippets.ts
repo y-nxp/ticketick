@@ -29,6 +29,21 @@ export function googleInitSnippet(config: AnalyticsConfig, consent: Consent | nu
   ].join("");
 }
 
+/**
+ * Amorce de Matomo, sans cookie. Les pages vues partent du composant
+ * `MatomoTracker`, qui suit aussi les changements d'adresse.
+ */
+export function matomoInitSnippet(url: string, siteId: string): string {
+  return [
+    "var _paq=window._paq=window._paq||[];",
+    "_paq.push(['disableCookies']);",
+    "_paq.push(['enableLinkTracking']);",
+    `_paq.push(['setTrackerUrl','${url}/matomo.php']);`,
+    `_paq.push(['setSiteId','${siteId}']);`,
+    `(function(){var g=document.createElement('script');g.async=true;g.src='${url}/matomo.js';document.head.appendChild(g);})();`,
+  ].join("");
+}
+
 /** Code de base du pixel Meta, chargé seulement avec l'accord du visiteur. */
 export function metaInitSnippet(pixelId: string): string {
   return (

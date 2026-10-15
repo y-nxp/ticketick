@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import type { OrganizerTags } from "@/lib/analytics/organizer-tags";
+import { matomoCartUpdate } from "@/lib/analytics/matomo";
 import { trackAddToCart } from "@/lib/analytics/track";
 
 export interface CartLine {
@@ -76,9 +77,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
+  // Le panier relu du stockage n'est pas un changement du visiteur.
+  const cartLoaded = React.useRef(false);
   React.useEffect(() => {
     if (!hydrated) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+    if (!cartLoaded.current) {
+      cartLoaded.current = true;
+      return;
+    }
+    matomoCartUpdate(
+      lines.map((l) => ({
+        id: l.ticketTypeId,
+        name: `${l.eventTitle} — ${l.ticketName}`,
+        priceCents: l.unitPriceCents,
+        quantity: l.quantity,
+      })),
+    );
   }, [lines, hydrated]);
 
   const add: CartState["add"] = React.useCallback((line, quantity = 1) => {

@@ -17,9 +17,16 @@ import { cookies } from "next/headers";
 import { SHOP_ORIGIN_COOKIE } from "@/lib/shop-origin";
 import { siteOpenGraph } from "@/lib/seo/site";
 import { Analytics } from "@/components/analytics/analytics";
-import { analyticsConfig, hasAnalytics } from "@/lib/analytics/config";
+import { MatomoTracker } from "@/components/analytics/matomo-tracker";
+import { analyticsConfig, hasAnalytics, hasMatomo } from "@/lib/analytics/config";
 import { CONSENT_COOKIE, parseConsent } from "@/lib/analytics/consent";
-import { googleIds, googleInitSnippet, metaInitSnippet, siteTagsSnippet } from "@/lib/analytics/snippets";
+import {
+  googleIds,
+  googleInitSnippet,
+  matomoInitSnippet,
+  metaInitSnippet,
+  siteTagsSnippet,
+} from "@/lib/analytics/snippets";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -95,6 +102,11 @@ export default async function LocaleLayout({
         {analytics.metaPixelId && consent?.ads ? (
           <script dangerouslySetInnerHTML={{ __html: metaInitSnippet(analytics.metaPixelId) }} />
         ) : null}
+        {analytics.matomoUrl && analytics.matomoSiteId ? (
+          <script
+            dangerouslySetInnerHTML={{ __html: matomoInitSnippet(analytics.matomoUrl, analytics.matomoSiteId) }}
+          />
+        ) : null}
       </head>
       <body className="min-h-full flex flex-col antialiased">
         <NextIntlClientProvider>
@@ -113,6 +125,7 @@ export default async function LocaleLayout({
               {children}
             </AppShell>
             {analyticsOn ? <Analytics config={analytics} initialConsent={consent} /> : null}
+            {hasMatomo(analytics) ? <MatomoTracker /> : null}
           </CartProvider>
         </NextIntlClientProvider>
       </body>

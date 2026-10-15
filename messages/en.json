@@ -2092,7 +2092,7 @@
     "alwaysOn": "Always on",
     "base": {
       "title": "Basic features",
-      "text": "Needed for the site: cart, session, language and connection security. They do not require consent."
+      "text": "Needed for the site: cart, session, language and connection security, plus anonymous audience measurement (Matomo, hosted in Switzerland, no cookies). They do not require consent."
     },
     "statistics": {
       "title": "Statistics",

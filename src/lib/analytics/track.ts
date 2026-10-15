@@ -1,9 +1,11 @@
 "use client";
 
+import { matomoEvent, matomoOrder, matomoViewItem } from "./matomo";
 import type { OrganizerTags } from "./organizer-tags";
 
 /**
- * Événements de conversion, envoyés à Google (GA4, Google Ads) et à Meta.
+ * Événements de conversion, envoyés à Google (GA4, Google Ads) et à Meta,
+ * ainsi qu'à Matomo (`matomo.ts`), qui mesure sans consentement.
  *
  * `gtag` existe dès que Google est configuré : sans accord, Consent Mode
  * n'envoie que des signaux sans cookie. `fbq` n'existe qu'après l'accord du
@@ -128,6 +130,7 @@ export function trackOrganizerPageView(organizer: OrganizerTags): void {
 }
 
 export function trackViewItem(event: { id: string; name: string }, organizer?: OrganizerTags): void {
+  matomoViewItem(event);
   sendGoogle("view_item", { items: [{ item_id: event.id, item_name: event.name }] }, organizer);
   sendMeta(
     "ViewContent",
@@ -164,6 +167,7 @@ function checkoutParams(items: TrackedItem[], currency: string) {
 
 export function trackBeginCheckout(items: TrackedItem[], currency: string): void {
   const all = checkoutParams(items, currency);
+  matomoEvent("Panier", "Passage en caisse");
   sendGoogle("begin_checkout", all.google);
   sendMeta("InitiateCheckout", all.meta);
   for (const group of byOrganizer(items)) {
@@ -222,6 +226,7 @@ export function trackPurchase(order: {
   }
   if (sent.includes(order.reference)) return;
 
+  matomoOrder(order.reference, order.items, order.valueCents);
   const options = { eventID: purchaseEventId(order.reference) };
   const all = purchaseParams(order, order.items, order.valueCents);
   sendGoogle("purchase", all.google);
@@ -245,6 +250,7 @@ export function trackPurchase(order: {
 
 /** Demande de rendez-vous d'un organisateur. */
 export function trackOrganizerLead(): void {
+  matomoEvent("Organisateurs", "Demande de rendez-vous");
   sendGoogle("generate_lead", { lead_source: "organizer_inquiry" });
   sendMeta("Lead", { content_name: "organizer_inquiry" });
 }

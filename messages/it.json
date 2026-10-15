@@ -2092,7 +2092,7 @@
     "alwaysOn": "Sempre attivo",
     "base": {
       "title": "Funzionalità di base",
-      "text": "Necessarie al sito: carrello, sessione, lingua e sicurezza della connessione. Non richiedono consenso."
+      "text": "Necessarie al sito: carrello, sessione, lingua e sicurezza della connessione, oltre alla misurazione anonima dell'audience (Matomo, ospitato in Svizzera, senza cookie). Non richiedono consenso."
     },
     "statistics": {
       "title": "Statistiche",

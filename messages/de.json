@@ -2092,7 +2092,7 @@
     "alwaysOn": "Immer aktiv",
     "base": {
       "title": "Grundfunktionen",
-      "text": "Für die Website nötig: Warenkorb, Sitzung, Sprache und Verbindungssicherheit. Sie erfordern keine Zustimmung."
+      "text": "Für die Website nötig: Warenkorb, Sitzung, Sprache und Verbindungssicherheit sowie die anonyme Reichweitenmessung (Matomo, in der Schweiz gehostet, ohne Cookies). Sie erfordern keine Zustimmung."
     },
     "statistics": {
       "title": "Statistiken",

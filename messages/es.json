@@ -508,7 +508,7 @@
     "alwaysOn": "Siempre activo",
     "base": {
       "title": "Funciones básicas",
-      "text": "Necesarias para el sitio: carrito, sesión, idioma y seguridad de la conexión. No requieren consentimiento."
+      "text": "Necesarias para el sitio: carrito, sesión, idioma y seguridad de la conexión, además de la medición anónima de audiencia (Matomo, alojado en Suiza, sin cookies). No requieren consentimiento."
     },
     "statistics": {
       "title": "Estadísticas",

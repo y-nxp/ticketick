@@ -12,16 +12,15 @@ const isDev = process.env.NODE_ENV === "development";
 
 // Sans nonce : un nonce imposerait le rendu dynamique de toutes les pages.
 // Les scripts en ligne restent donc permis (amorce de Next.js, thème,
-// JSON-LD), et seuls Google (gtag) et Meta (pixel) peuvent fournir un script
-// tiers ; les cadres, connexions, formulaires et plugins sont bornés.
+// JSON-LD), et seuls Google (gtag), Meta (pixel) et Matomo peuvent fournir un
+// script tiers ; les cadres, connexions, formulaires et plugins sont bornés.
 // Ces origines restent autorisées même sans identifiant de mesure : la CSP
 // est figée au build, les identifiants sont lus au démarrage.
 // 'wasm-unsafe-eval' : décodeurs d'images de pdf.js (import de plans).
-const analyticsScripts = "https://www.googletagmanager.com https://connect.facebook.net";
-const analyticsConnect =
-  "https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.g.doubleclick.net https://www.google.com https://www.facebook.com https://connect.facebook.net";
-const analyticsImages =
-  "https://*.google-analytics.com https://*.googletagmanager.com https://*.g.doubleclick.net https://www.google.com https://www.google.ch https://www.facebook.com";
+const matomoOrigin = "https://stats.nextalp.com";
+const analyticsScripts = `https://www.googletagmanager.com https://connect.facebook.net ${matomoOrigin}`;
+const analyticsConnect = `https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.g.doubleclick.net https://www.google.com https://www.facebook.com https://connect.facebook.net ${matomoOrigin}`;
+const analyticsImages = `https://*.google-analytics.com https://*.googletagmanager.com https://*.g.doubleclick.net https://www.google.com https://www.google.ch https://www.facebook.com ${matomoOrigin}`;
 
 function csp(frameAncestors: string): string {
   return [
