@@ -73,6 +73,26 @@ if [ "$(docker inspect -f '{{.State.Running}}' ticketick-prod-db 2>/dev/null)" =
   "${COMPOSE[@]}" run --rm --no-deps -T backup now avant-deploiement
 fi
 
+# ── 4b. Journal de l'application : le conteneur remplacé emporte le sien.
+# Archivé ici pour pouvoir retrouver après coup une vente ou un paiement
+# d'avant le déploiement. Seulement ce qui est nouveau depuis la dernière
+# archive : un déploiement sans nouvelle image garde le même conteneur.
+LOGS="$APP_DIR/logs"
+mkdir -p "$LOGS"
+if docker inspect ticketick-prod-app > /dev/null 2>&1; then
+  SINCE=$(cat "$LOGS/.depuis" 2>/dev/null || echo "1970-01-01T00:00:00Z")
+  NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  ARCHIVE="$LOGS/app-$(date +%Y%m%d-%H%M%S).log.gz"
+  if docker logs --timestamps --since "$SINCE" ticketick-prod-app 2>&1 | gzip > "$ARCHIVE"; then
+    echo "$NOW" > "$LOGS/.depuis"
+    echo "🗒️  Journal de l'application archivé : logs/$(basename "$ARCHIVE")"
+  else
+    rm -f "$ARCHIVE"
+    echo "⚠ Archivage du journal impossible : le déploiement continue."
+  fi
+fi
+find "$LOGS" -name 'app-*.log.gz' -mtime +90 -delete
+
 # ── 5. Démarrage
 echo "🚀 Démarrage..."
 if ! "${COMPOSE[@]}" up -d --remove-orphans; then
