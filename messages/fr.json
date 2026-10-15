@@ -2127,7 +2127,8 @@
         "nothingGiven": "Choisissez au moins un billet à échanger.",
         "seatCount": "Choisissez exactement autant de nouvelles places que de billets rendus.",
         "freeSeats": "Une place gratuite ne s'obtient qu'en échange d'une place gratuite.",
-        "attendeeLocked": "Les bénéficiaires des billets rendus doivent rester les mêmes sur les nouveaux billets."
+        "attendeeLocked": "Les bénéficiaires des billets rendus doivent rester les mêmes sur les nouveaux billets.",
+        "companionLeft": "Une place gratuite resterait seule sur ce spectacle, sans la place payante qui l'accompagne. Échangez-les ensemble."
       },
       "stepsLabel": "Étapes de l'échange",
       "steps": {

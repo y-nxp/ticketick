@@ -2127,7 +2127,8 @@
         "nothingGiven": "Scegliete almeno un biglietto da scambiare.",
         "seatCount": "Scegliete esattamente tanti nuovi posti quanti i biglietti restituiti.",
         "freeSeats": "Un posto gratuito si ottiene solo in cambio di un posto gratuito.",
-        "attendeeLocked": "I titolari dei biglietti restituiti devono restare gli stessi sui nuovi biglietti."
+        "attendeeLocked": "I titolari dei biglietti restituiti devono restare gli stessi sui nuovi biglietti.",
+        "companionLeft": "Un posto gratuito resterebbe solo a questo spettacolo, senza il posto a pagamento a cui è legato. Scambiateli insieme."
       },
       "stepsLabel": "Fasi del cambio",
       "steps": {

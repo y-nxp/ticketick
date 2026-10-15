@@ -120,6 +120,7 @@ const ERRORS: string[] = [
   "freeSeats",
   "lowerValue",
   "attendeeLocked",
+  "companionLeft",
 ];
 
 export function Exchanger({

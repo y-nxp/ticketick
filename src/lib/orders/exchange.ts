@@ -23,6 +23,7 @@ import { allowedForChange, dropPendingChanges, PAY_HOURS } from "./seat-change";
 import {
   cancelOpen,
   checkBasket,
+  companionError,
   exchangeDue,
   exchangeRuleError,
   holderKey,
@@ -49,7 +50,8 @@ export type ExchangeError =
   | "attendeesMissing"
   | "attendeeInvalid"
   | "attendeeTooOld"
-  | "attendeeLocked";
+  | "attendeeLocked"
+  | "companionLeft";
 
 const ATTENDEE_ERRORS: Record<AttendeeError, ExchangeError> = {
   attendee_missing: "attendeesMissing",
@@ -271,6 +273,50 @@ export interface ExchangeItem {
   }[];
 }
 
+/**
+ * Séances quittées : ce qui y reste dans la commande, nouvelles places
+ * comprises, respecte encore les gratuités liées aux places payantes. Sinon
+ * la place payante partirait seule et la gratuité resterait (Cat 1 échangée
+ * pour un autre jour, place « moins de 25 ans » laissée sur la séance).
+ * Renvoie le tarif de la gratuité restée seule.
+ */
+async function companionLeftAlone(
+  orderId: string,
+  given: { id: string; ticketType: { sessionId: string } }[],
+  items: ExchangeItem[],
+): Promise<string | null> {
+  const sessionIds = [...new Set(given.map((t) => t.ticketType.sessionId))];
+  if (sessionIds.length === 0) return null;
+  const [kept, tariffs] = await Promise.all([
+    prisma.ticket.findMany({
+      where: {
+        orderId,
+        status: "VALID",
+        id: { notIn: given.map((t) => t.id) },
+        ticketType: { sessionId: { in: sessionIds } },
+      },
+      select: { ticketTypeId: true, ticketType: { select: { sessionId: true } } },
+    }),
+    prisma.ticketType.findMany({
+      where: { sessionId: { in: sessionIds } },
+      select: { id: true, sessionId: true, priceCents: true, maxPerPaidTicket: true, companionOfId: true },
+    }),
+  ]);
+  for (const sessionId of sessionIds) {
+    const error = companionError({
+      lines: [
+        ...kept
+          .filter((t) => t.ticketType.sessionId === sessionId)
+          .map((t) => ({ ticketTypeId: t.ticketTypeId, quantity: 1 })),
+        ...(items.find((i) => i.sessionId === sessionId)?.lines ?? []),
+      ],
+      tariffs: tariffs.filter((t) => t.sessionId === sessionId),
+    });
+    if (error) return error.ticketTypeId;
+  }
+  return null;
+}
+
 /** Un panier : plusieurs spectacles possibles, une seule différence à payer. */
 export async function applyExchange(input: {
   access: ChangeAccess;
@@ -310,6 +356,8 @@ export async function applyExchange(input: {
   if (owned.length === 0) return { ok: false, error: "notFound" };
   const given = owned.filter((t) => give.includes(t.id));
   if (given.length !== give.length) return { ok: false, error: "notFound" };
+  const left = await companionLeftAlone(access.orderId, given, items);
+  if (left) return { ok: false, error: "companionLeft", ticketTypeId: left };
   const organizerIds = [...new Set(owned.map((t) => t.ticketType.session.event.organizerId))];
   const open = new Map((await targetSessions(organizerIds)).map((s) => [s.sessionId, s]));
 

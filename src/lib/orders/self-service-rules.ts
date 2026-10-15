@@ -67,6 +67,38 @@ export type BasketError =
   | "companionRequiresPaid"
   | "companionLimit";
 
+export type CompanionTariff = Pick<
+  BasketTariff,
+  "id" | "priceCents" | "maxPerPaidTicket" | "companionOfId"
+>;
+
+/**
+ * Gratuités liées aux places payantes d'une même séance : au plus N par place
+ * payante (ou par place du tarif source). Sert aux nouveaux billets d'un
+ * échange comme à ceux qui restent dans la commande après l'échange.
+ */
+export function companionError(input: {
+  lines: { ticketTypeId: string; quantity: number }[];
+  tariffs: CompanionTariff[];
+}): { error: "companionRequiresPaid" | "companionLimit"; ticketTypeId: string } | null {
+  const byId = new Map(input.tariffs.map((t) => [t.id, t]));
+  const qty = new Map<string, number>();
+  for (const l of input.lines) qty.set(l.ticketTypeId, (qty.get(l.ticketTypeId) ?? 0) + l.quantity);
+  let paid = 0;
+  for (const [id, n] of qty) {
+    const tariff = byId.get(id);
+    if (tariff && tariff.maxPerPaidTicket == null && tariff.priceCents > 0) paid += n;
+  }
+  for (const [id, n] of qty) {
+    const tariff = byId.get(id);
+    if (!tariff || tariff.maxPerPaidTicket == null || n === 0) continue;
+    const base = tariff.companionOfId == null ? paid : (qty.get(tariff.companionOfId) ?? 0);
+    if (base === 0) return { error: "companionRequiresPaid", ticketTypeId: id };
+    if (n > base * tariff.maxPerPaidTicket) return { error: "companionLimit", ticketTypeId: id };
+  }
+  return null;
+}
+
 /** Nouveaux billets d'un échange : stock, plafond par commande, gratuités liées aux places payantes. */
 export function checkBasket(input: {
   lines: { ticketTypeId: string; quantity: number }[];
@@ -75,9 +107,7 @@ export function checkBasket(input: {
   const lines = input.lines.filter((l) => l.quantity > 0);
   if (lines.length === 0) return { ok: false, error: "empty" };
   const byId = new Map(input.tariffs.map((t) => [t.id, t]));
-  const qty = new Map(lines.map((l) => [l.ticketTypeId, l.quantity]));
 
-  let paid = 0;
   for (const line of lines) {
     const tariff = byId.get(line.ticketTypeId);
     if (!tariff) return { ok: false, error: "soldOut", ticketTypeId: line.ticketTypeId };
@@ -87,18 +117,9 @@ export function checkBasket(input: {
     if (line.quantity > tariff.maxPerOrder) {
       return { ok: false, error: "maxPerOrder", ticketTypeId: tariff.id };
     }
-    if (tariff.maxPerPaidTicket == null && tariff.priceCents > 0) paid += line.quantity;
   }
-  for (const line of lines) {
-    const tariff = byId.get(line.ticketTypeId)!;
-    if (tariff.maxPerPaidTicket == null) continue;
-    const base = tariff.companionOfId == null ? paid : (qty.get(tariff.companionOfId) ?? 0);
-    if (base === 0) return { ok: false, error: "companionRequiresPaid", ticketTypeId: tariff.id };
-    if (line.quantity > base * tariff.maxPerPaidTicket) {
-      return { ok: false, error: "companionLimit", ticketTypeId: tariff.id };
-    }
-  }
-  return { ok: true };
+  const companion = companionError({ lines, tariffs: input.tariffs });
+  return companion ? { ok: false, ...companion } : { ok: true };
 }
 
 /**

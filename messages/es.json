@@ -558,7 +558,8 @@
         "nothingGiven": "Elige al menos una entrada para cambiar.",
         "seatCount": "Elige exactamente tantas localidades nuevas como entradas devuelves.",
         "freeSeats": "Una localidad gratuita solo se obtiene a cambio de una localidad gratuita.",
-        "attendeeLocked": "Los titulares de las entradas devueltas deben seguir siendo los mismos en las nuevas entradas."
+        "attendeeLocked": "Los titulares de las entradas devueltas deben seguir siendo los mismos en las nuevas entradas.",
+        "companionLeft": "Una localidad gratuita quedaría sola en este espectáculo, sin la localidad de pago a la que va unida. Cámbialas juntas."
       },
       "stepsLabel": "Pasos del cambio",
       "steps": {
