@@ -588,83 +588,83 @@ export async function sendSeatChangeLinkEmail(input: {
     text,
     html,
     fromName: organizer.name,
-    etiquette: "changement de places",
+    etiquette: "changement de billets",
   });
 }
 
 const CHANGE_TEXTES = {
   fr: {
-    sujet: (org: string, ref: string) => `${org} — changer vos places (${ref})`,
-    titre: "Changer de places",
+    sujet: (org: string, ref: string) => `${org} — changer vos billets (${ref})`,
+    titre: "Changer de places ou de spectacle",
     bonjour: (nom: string) => (nom ? `Bonjour ${nom},` : "Bonjour,"),
     corps: (ref: string) =>
-      `Vous pouvez choisir vous-même d'autres places pour votre commande ${ref}, directement sur le plan de salle. Vos places actuelles :`,
-    bouton: "Choisir mes nouvelles places",
+      `Vous pouvez modifier vous-même votre commande ${ref} : choisir d'autres places, passer à un autre spectacle ou ajouter des billets. Vos billets actuels :`,
+    bouton: "Changer mes billets",
     difference:
-      "Pour une place plus chère, vous ne payez que la différence, par carte. Une place moins chère n'est pas remboursée.",
+      "Si le nouveau choix coûte plus cher, vous ne payez que la différence, par carte. Aucun remboursement n'est fait si le nouveau choix coûte moins cher.",
     anciens:
       "Vos billets actuels restent valables jusqu'au changement. Vous recevez ensuite vos nouveaux billets : les anciens ne sont plus acceptés à l'entrée.",
-    echeance: (d: string) => `Ce lien est valable jusqu'au ${d}, pour un seul changement.`,
+    echeance: (d: string) => `Ce lien est valable jusqu'au ${d}.`,
     questions: "Une question ? Répondez simplement à ce message.",
     salutations: "Avec nos meilleures salutations,",
   },
   en: {
-    sujet: (org: string, ref: string) => `${org} — change your seats (${ref})`,
-    titre: "Change your seats",
+    sujet: (org: string, ref: string) => `${org} — change your tickets (${ref})`,
+    titre: "Change seats or show",
     bonjour: (nom: string) => (nom ? `Hello ${nom},` : "Hello,"),
     corps: (ref: string) =>
-      `You can choose other seats for your order ${ref} yourself, directly on the seating plan. Your current seats:`,
-    bouton: "Choose my new seats",
+      `You can change your order ${ref} yourself: choose other seats, switch to another show or add tickets. Your current tickets:`,
+    bouton: "Change my tickets",
     difference:
-      "For a more expensive seat, you only pay the difference, by card. A cheaper seat is not refunded.",
+      "If your new choice costs more, you only pay the difference, by card. Nothing is refunded if it costs less.",
     anciens:
       "Your current tickets remain valid until the change. You then receive your new tickets: the old ones are no longer accepted at the door.",
-    echeance: (d: string) => `This link is valid until ${d}, for a single change.`,
+    echeance: (d: string) => `This link is valid until ${d}.`,
     questions: "Any question? Simply reply to this message.",
     salutations: "Best regards,",
   },
   de: {
-    sujet: (org: string, ref: string) => `${org} — Ihre Plätze ändern (${ref})`,
-    titre: "Plätze ändern",
+    sujet: (org: string, ref: string) => `${org} — Ihre Tickets ändern (${ref})`,
+    titre: "Plätze oder Vorstellung ändern",
     bonjour: (nom: string) => (nom ? `Guten Tag ${nom},` : "Guten Tag,"),
     corps: (ref: string) =>
-      `Sie können für Ihre Bestellung ${ref} selbst andere Plätze wählen, direkt auf dem Saalplan. Ihre aktuellen Plätze:`,
-    bouton: "Meine neuen Plätze wählen",
+      `Sie können Ihre Bestellung ${ref} selbst ändern: andere Plätze wählen, zu einer anderen Vorstellung wechseln oder Tickets hinzufügen. Ihre aktuellen Tickets:`,
+    bouton: "Meine Tickets ändern",
     difference:
-      "Für einen teureren Platz bezahlen Sie nur die Differenz, per Karte. Ein günstigerer Platz wird nicht erstattet.",
+      "Ist Ihre neue Wahl teurer, bezahlen Sie nur die Differenz, per Karte. Ist sie günstiger, wird nichts erstattet.",
     anciens:
       "Ihre aktuellen Tickets bleiben bis zur Änderung gültig. Danach erhalten Sie Ihre neuen Tickets: Die alten werden am Eingang nicht mehr akzeptiert.",
-    echeance: (d: string) => `Dieser Link ist bis ${d} gültig, für eine einzige Änderung.`,
+    echeance: (d: string) => `Dieser Link ist bis ${d} gültig.`,
     questions: "Fragen? Antworten Sie einfach auf diese Nachricht.",
     salutations: "Freundliche Grüsse",
   },
   it: {
-    sujet: (org: string, ref: string) => `${org} — cambiare i vostri posti (${ref})`,
-    titre: "Cambiare posti",
+    sujet: (org: string, ref: string) => `${org} — cambiare i vostri biglietti (${ref})`,
+    titre: "Cambiare posti o spettacolo",
     bonjour: (nom: string) => (nom ? `Buongiorno ${nom},` : "Buongiorno,"),
     corps: (ref: string) =>
-      `Potete scegliere voi stessi altri posti per il vostro ordine ${ref}, direttamente sulla pianta della sala. I vostri posti attuali:`,
-    bouton: "Scegliere i miei nuovi posti",
+      `Potete modificare voi stessi il vostro ordine ${ref}: scegliere altri posti, passare a un altro spettacolo o aggiungere biglietti. I vostri biglietti attuali:`,
+    bouton: "Cambiare i miei biglietti",
     difference:
-      "Per un posto più caro pagate solo la differenza, con carta. Un posto meno caro non viene rimborsato.",
+      "Se la nuova scelta costa di più, pagate solo la differenza, con carta. Se costa meno, non viene rimborsato nulla.",
     anciens:
       "I vostri biglietti attuali restano validi fino al cambio. Riceverete poi i nuovi biglietti: quelli vecchi non saranno più accettati all'ingresso.",
-    echeance: (d: string) => `Questo link è valido fino al ${d}, per un solo cambio.`,
+    echeance: (d: string) => `Questo link è valido fino al ${d}.`,
     questions: "Domande? Rispondete semplicemente a questo messaggio.",
     salutations: "Cordiali saluti,",
   },
   es: {
-    sujet: (org: string, ref: string) => `${org} — cambiar tus localidades (${ref})`,
-    titre: "Cambiar de localidades",
+    sujet: (org: string, ref: string) => `${org} — cambiar tus entradas (${ref})`,
+    titre: "Cambiar de localidades o de espectáculo",
     bonjour: (nom: string) => (nom ? `Hola, ${nom}:` : "Hola:"),
     corps: (ref: string) =>
-      `Puedes elegir tú mismo otras localidades para tu pedido ${ref}, directamente en el plano de la sala. Tus localidades actuales:`,
-    bouton: "Elegir mis nuevas localidades",
+      `Puedes modificar tú mismo tu pedido ${ref}: elegir otras localidades, pasar a otro espectáculo o añadir entradas. Tus entradas actuales:`,
+    bouton: "Cambiar mis entradas",
     difference:
-      "Por una localidad más cara solo pagas la diferencia, con tarjeta. Una localidad más barata no se reembolsa.",
+      "Si tu nueva elección cuesta más, solo pagas la diferencia, con tarjeta. Si cuesta menos, no se reembolsa nada.",
     anciens:
       "Tus entradas actuales siguen siendo válidas hasta el cambio. Después recibirás tus nuevas entradas: las antiguas ya no se aceptarán en la entrada.",
-    echeance: (d: string) => `Este enlace es válido hasta el ${d}, para un solo cambio.`,
+    echeance: (d: string) => `Este enlace es válido hasta el ${d}.`,
     questions: "¿Alguna pregunta? Responde a este mensaje.",
     salutations: "Un cordial saludo,",
   },

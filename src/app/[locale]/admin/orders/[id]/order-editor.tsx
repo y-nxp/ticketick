@@ -107,9 +107,7 @@ export function OrderEditor(props: EditorProps) {
         <>
           <RemovePanel {...props} />
           <AddPanel {...props} hasEmail={hasEmail} />
-          {props.seatedSessions.length > 0 ? (
-            <ChangeLinkPanel {...props} hasEmail={hasEmail} />
-          ) : null}
+          <ChangeLinkPanel {...props} hasEmail={hasEmail} />
         </>
       ) : null}
       {props.charges.length > 0 ? <ChargesPanel {...props} /> : null}
@@ -468,11 +466,9 @@ function ChangeLinkPanel({
     undefined,
   );
   const last = changeLink
-    ? changeLink.used
-      ? t("changeLinkUsed", { date: changeLink.used })
-      : changeLink.expired
-        ? t("changeLinkExpired", { date: changeLink.expires })
-        : t("changeLinkOpen", { sent: changeLink.sent, date: changeLink.expires })
+    ? changeLink.expired
+      ? t("changeLinkExpired", { date: changeLink.expires })
+      : t("changeLinkOpen", { sent: changeLink.sent, date: changeLink.expires })
     : null;
 
   return (
@@ -480,7 +476,7 @@ function ChangeLinkPanel({
       <form
         action={action}
         onSubmit={(e) => {
-          if (changeLink && !changeLink.used && !changeLink.expired) {
+          if (changeLink && !changeLink.expired) {
             if (!window.confirm(t("changeLinkReplace"))) e.preventDefault();
           }
         }}
@@ -492,6 +488,11 @@ function ChangeLinkPanel({
           <p className="text-xs text-muted-foreground">{t("changeLinkNoCard")}</p>
         ) : null}
         {last ? <p className="text-sm">{last}</p> : null}
+        {changeLink?.used ? (
+          <p className="text-sm text-muted-foreground">
+            {t("changeLinkUsed", { date: changeLink.used })}
+          </p>
+        ) : null}
         <div className="flex flex-wrap items-center gap-3">
           <Button type="submit" variant="outline" disabled={pending || !hasEmail}>
             <Shuffle className="size-4" />

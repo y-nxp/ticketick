@@ -312,6 +312,22 @@
       "name": "Indica nome e cognome.",
       "unavailable": "Servizio momentaneamente non disponibile. Riprova tra un istante.",
       "phoneInvalid": "Questo numero di telefono non è valido."
+    },
+    "manageTickets": "Gestire i miei biglietti",
+    "manage": {
+      "back": "Il mio conto",
+      "title": "Gestire i miei biglietti",
+      "cancelTitle": "Annullare posti gratuiti",
+      "cancelIntro": "Non potete venire? Restituite i vostri posti gratuiti perché altri possano approfittarne.",
+      "cancelUntil": "Annullabile fino al {date}",
+      "cancelConfirm": "{count, plural, one {Annullare questo posto?} other {Annullare questi # posti?}} L'operazione è definitiva.",
+      "cancelSelected": "{count, plural, =0 {Annullare la selezione} one {Annullare 1 posto} other {Annullare # posti}}",
+      "cancelAll": "Annullare tutto",
+      "cancelDone": "Posti annullati. Vi è stata inviata un'e-mail di conferma.",
+      "errors": {
+        "used": "Uno di questi posti è già stato controllato all'ingresso.",
+        "failed": "L'annullamento non ha potuto essere fatto. Ricaricate la pagina e riprovate."
+      }
     }
   },
   "organizer": {
@@ -940,7 +956,8 @@
         "phoneInvalid": "Numero di telefono non valido.",
         "urlInvalid": "Indirizzo del sito non valido: deve iniziare con https://.",
         "metaPixelInvalid": "L’ID del pixel Meta contiene solo cifre (da 8 a 20).",
-        "ga4IdInvalid": "L’ID Google Analytics deve avere la forma G-XXXXXXXXXX."
+        "ga4IdInvalid": "L’ID Google Analytics deve avere la forma G-XXXXXXXXXX.",
+        "hoursInvalid": "Indicate un termine tra 0 e 720 ore."
       }
     },
     "settings": {
@@ -1059,7 +1076,15 @@
       "contactUrl": "Sito per l’iscrizione",
       "contactUrlHint": "Facoltativo. Quando l’iscrizione avviene altrove (per esempio presso il luogo ospitante), la scheda rimanda a questo sito.",
       "contactNote": "Testo introduttivo",
-      "contactNoteHint": "Facoltativo. Sostituisce «Nessun biglietto da acquistare…» sopra i pulsanti, per esempio «Biglietteria presso il Gstaad Yacht Club»."
+      "contactNoteHint": "Facoltativo. Sostituisce «Nessun biglietto da acquistare…» sopra i pulsanti, per esempio «Biglietteria presso il Gstaad Yacht Club».",
+      "selfService": "Self-service per il cliente",
+      "selfServiceHint": "Dal suo conto ticketick, il cliente può cambiare i biglietti o restituire i posti gratuiti. Il link che inviate da un ordine funziona anche se queste caselle non sono spuntate.",
+      "selfChange": "Cambio di posti o di spettacolo dal conto",
+      "changeUntilHours": "Cambio possibile fino a (ore prima)",
+      "changeUntilHoursHint": "Il cliente paga solo l'aumento; mai un rimborso.",
+      "selfCancelFree": "Annullamento dei posti gratuiti dal conto",
+      "cancelUntilHours": "Annullamento possibile fino a (ore prima)",
+      "cancelUntilHoursHint": "Il posto liberato torna nella capienza. L'e-mail di prenotazione lo menziona."
     },
     "embed": {
       "title": "Integrare la biglietteria",
@@ -1689,13 +1714,13 @@
         "changeNothing": "Nessun biglietto da cambiare: servono posti numerati validi per un concerto futuro.",
         "cancelNoticeNotSent": "Non è stato possibile inviare l'e-mail di annullamento."
       },
-      "changeLink": "Cambio posti da parte del cliente",
-      "changeLinkHint": "Il cliente riceve un link per scegliere da sé altri posti sulla pianta. Un posto più caro si paga con carta (solo la differenza); un posto meno caro non viene rimborsato. Valido al massimo 14 giorni, fino al concerto, per un solo cambio.",
+      "changeLink": "Cambio da parte del cliente",
+      "changeLinkHint": "Il cliente riceve un link per scegliere altri posti, passare a un altro spettacolo dell'organizzatore o aggiungere biglietti. Paga solo l'aumento, con carta; mai un rimborso. Valido al massimo 14 giorni, fino allo spettacolo, tutte le volte necessarie.",
       "changeLinkNoCard": "Nessun pagamento con carta è configurato per questo organizzatore: andranno a buon fine solo i cambi senza supplemento.",
       "changeLinkSend": "Inviare il link al cliente",
       "changeLinkReplace": "Un link è già aperto. Sostituirlo con uno nuovo? Quello vecchio non funzionerà più.",
       "changeLinkOpen": "Link inviato il {sent}, valido fino al {date}.",
-      "changeLinkUsed": "Il cliente ha cambiato posti il {date}.",
+      "changeLinkUsed": "Ultimo cambio fatto dal cliente il {date}.",
       "changeLinkExpired": "L'ultimo link è scaduto il {date}.",
       "changeLinkUrl": "Link per il cambio posti",
       "copy": "Copiare",
@@ -2022,9 +2047,9 @@
     "impersonationNote": "Le vendite effettuate qui contano per {name}, commissione inclusa."
   },
   "change": {
-    "title": "Cambiare posti",
-    "intro": "Ordine {reference}. Scegliete uno dei vostri posti nell'elenco, poi toccate il nuovo posto sulla pianta.",
-    "validUntil": "Link valido fino al {date}, per un solo cambio.",
+    "title": "Cambiare i miei biglietti",
+    "intro": "Ordine {reference}. Passate a un altro spettacolo, aggiungete biglietti o scegliete altri posti.",
+    "validUntil": "Link valido fino al {date}.",
     "pending": "Un cambio precedente attende ancora il pagamento. Se confermate una nuova scelta, lo sostituisce.",
     "yourSeats": "I vostri posti",
     "hint": "Scegliete il posto da cambiare, poi quello nuovo sulla pianta.",
@@ -2043,19 +2068,60 @@
     "doneTitle": "Cambio confermato",
     "doneText": "I nuovi biglietti sono stati inviati a {email}. Quelli vecchi non sono più validi.",
     "download": "Scaricare i biglietti (PDF)",
-    "usedTitle": "Questo link è già stato usato",
-    "usedText": "I vostri posti sono stati cambiati. Per un'altra richiesta scriveteci a {contact}.",
     "expiredTitle": "Questo link non è più valido",
     "expiredText": "Per cambiare i vostri posti, scriveteci a {contact}.",
     "errors": {
       "seatsUnavailable": "Uno dei posti scelti è appena stato preso. Sceglietene un altro.",
       "soldOut": "Questa tariffa è esaurita per il posto scelto. Sceglietene un altro.",
       "expired": "Questo link non è più valido. Ricaricate la pagina.",
-      "used": "Questo link è già stato usato. Ricaricate la pagina.",
+      "used": "Uno di questi biglietti è già stato controllato all'ingresso.",
       "retry": "Il cambio non ha potuto essere registrato. Riprovate tra un istante.",
-      "failed": "Il cambio non è stato possibile. Ricaricate la pagina e riprovate."
+      "failed": "Il cambio non è stato possibile. Ricaricate la pagina e riprovate.",
+      "notFound": "Uno di questi biglietti non può più essere cambiato. Ricaricate la pagina."
     },
-    "current": "Il vostro posto attuale"
+    "current": "Il vostro posto attuale",
+    "nothingToChange": "Al momento nessun biglietto di questo ordine può essere cambiato.",
+    "seatsTitle": "Scegliere altri posti",
+    "seatsIntro": "Scegliete uno dei vostri posti nell'elenco, poi toccate il nuovo posto sulla pianta.",
+    "exchange": {
+      "title": "Cambiare spettacolo o aggiungere biglietti",
+      "intro": "Scegliete i biglietti da restituire, poi lo spettacolo e i posti desiderati. Pagate solo la differenza se la nuova scelta costa di più.",
+      "giveTitle": "Biglietti da restituire",
+      "freeTicket": "Gratuito",
+      "targetTitle": "Nuovo spettacolo",
+      "targetPlaceholder": "Scegliere uno spettacolo…",
+      "soldOutTariff": "esaurito",
+      "namedTariff": "nominativo, ripreso da un biglietto restituito",
+      "less": "Un posto in meno",
+      "more": "Un posto in più",
+      "seatsAssigned": "I posti vengono assegnati automaticamente, vicini se possibile. Potrete poi sceglierne altri sulla pianta.",
+      "givenValue": "Biglietti restituiti",
+      "newValue": "Nuovi biglietti",
+      "due": "Da pagare",
+      "free": "Senza supplemento",
+      "noRefund": "La differenza non viene rimborsata.",
+      "keepNote": "I vostri biglietti attuali restano validi fino al pagamento della differenza.",
+      "confirmFree": "Confermare il cambio",
+      "confirmPay": "Confermare e pagare {amount}",
+      "saving": "Salvataggio…",
+      "doneTitle": "Cambio confermato",
+      "doneText": "I nuovi biglietti vi sono stati inviati per e-mail. I biglietti restituiti non sono più validi.",
+      "continue": "Continuare",
+      "errors": {
+        "empty": "Scegliete almeno un biglietto da restituire e un nuovo posto.",
+        "soldOut": "Non restano abbastanza posti a questa tariffa.",
+        "maxPerOrder": "Questa tariffa è limitata per ordine.",
+        "companionRequiresPaid": "Questa tariffa si acquista con un posto a pagamento dello stesso spettacolo.",
+        "companionLimit": "Troppi posti a questa tariffa per il numero di posti a pagamento.",
+        "attendeesMissing": "I posti nominativi riprendono l'intestatario di un biglietto restituito: restituite altrettanti biglietti nominativi.",
+        "attendeeTooOld": "L'intestatario di un biglietto restituito supera l'età di questa tariffa.",
+        "seatsUnavailable": "Non ci sono abbastanza posti liberi per questa tariffa. Sceglietene un'altra.",
+        "expired": "Questo link non è più valido. Ricaricate la pagina.",
+        "notFound": "Uno di questi biglietti non può più essere cambiato. Ricaricate la pagina.",
+        "retry": "Il cambio non ha potuto essere registrato. Riprovate tra un istante.",
+        "failed": "Il cambio non ha potuto essere fatto. Ricaricate la pagina e riprovate."
+      }
+    }
   },
   "organizerReport": {
     "subject": "Rapporto {name} — situazione al {date}",

@@ -1,11 +1,11 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Ticket, Receipt, LogOut, ShieldCheck, FileDown, ScanLine } from "lucide-react";
+import { Ticket, Receipt, LogOut, ShieldCheck, FileDown, ScanLine, Repeat } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { requireAuth } from "@/lib/auth/dal";
 import { logout } from "@/lib/auth/actions";
-import { getMyOrders } from "@/lib/data/my-orders";
+import { getMyOrders, selfServiceOpen } from "@/lib/data/my-orders";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { t as translate, type Translated } from "@/lib/types";
 import { PasswordForm } from "./password-form";
@@ -133,7 +133,7 @@ export default async function AccountPage({
                   </div>
 
                   <ul className="mt-3 space-y-1 text-sm">
-                    {order.items.map((item, index) => (
+                    {order.items.filter((item) => item.quantity > 0).map((item, index) => (
                       <li key={index}>
                         {item.quantity} × {translate(
                           item.ticketType.session.event.title as Translated,
@@ -198,6 +198,14 @@ export default async function AccountPage({
                           <FileDown className="size-3.5" />
                           {t("downloadPdf")}
                         </a>
+                      ) : null}
+                      {selfServiceOpen(order) ? (
+                        <Link href={`/account/orders/${order.id}`} className="block">
+                          <Button size="sm" variant="outline">
+                            <Repeat className="size-3.5" />
+                            {t("manageTickets")}
+                          </Button>
+                        </Link>
                       ) : null}
                     </div>
                   ) : null}

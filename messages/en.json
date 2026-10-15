@@ -312,6 +312,22 @@
       "name": "Please enter your first and last name.",
       "unavailable": "Service temporarily unavailable. Please try again in a moment.",
       "phoneInvalid": "This phone number is not valid."
+    },
+    "manageTickets": "Manage my tickets",
+    "manage": {
+      "back": "My account",
+      "title": "Manage my tickets",
+      "cancelTitle": "Cancel free seats",
+      "cancelIntro": "Can't come? Give back your free seats so others can use them.",
+      "cancelUntil": "Can be cancelled until {date}",
+      "cancelConfirm": "{count, plural, one {Cancel this seat?} other {Cancel these # seats?}} This cannot be undone.",
+      "cancelSelected": "{count, plural, =0 {Cancel selection} one {Cancel 1 seat} other {Cancel # seats}}",
+      "cancelAll": "Cancel all",
+      "cancelDone": "Seats cancelled. A confirmation e-mail has been sent to you.",
+      "errors": {
+        "used": "One of these seats has already been scanned at the door.",
+        "failed": "The cancellation could not be made. Reload the page and try again."
+      }
     }
   },
   "organizer": {
@@ -940,7 +956,8 @@
         "phoneInvalid": "Invalid phone number.",
         "urlInvalid": "Invalid website address: it must start with https://.",
         "metaPixelInvalid": "The Meta pixel ID contains digits only (8 to 20).",
-        "ga4IdInvalid": "The Google Analytics ID must look like G-XXXXXXXXXX."
+        "ga4IdInvalid": "The Google Analytics ID must look like G-XXXXXXXXXX.",
+        "hoursInvalid": "Enter a delay between 0 and 720 hours."
       }
     },
     "settings": {
@@ -1059,7 +1076,15 @@
       "contactUrl": "Registration website",
       "contactUrlHint": "Optional. When registration happens elsewhere (for example with the host venue), the page links to this website.",
       "contactNote": "Introduction text",
-      "contactNoteHint": "Optional. Replaces “No ticket to buy…” above the buttons, for example “Tickets from the Gstaad Yacht Club”."
+      "contactNoteHint": "Optional. Replaces “No ticket to buy…” above the buttons, for example “Tickets from the Gstaad Yacht Club”.",
+      "selfService": "Customer self-service",
+      "selfServiceHint": "From their ticketick account, customers can change their tickets or give back free seats. The link you send from an order works even when these boxes are unchecked.",
+      "selfChange": "Change of seats or show from the account",
+      "changeUntilHours": "Change possible until (hours before)",
+      "changeUntilHoursHint": "The customer only pays the increase; never a refund.",
+      "selfCancelFree": "Cancellation of free seats from the account",
+      "cancelUntilHours": "Cancellation possible until (hours before)",
+      "cancelUntilHoursHint": "The freed seat goes back into the capacity. The booking e-mail mentions it."
     },
     "embed": {
       "title": "Embed ticketing",
@@ -1689,13 +1714,13 @@
         "changeNothing": "No ticket to change: valid numbered seats for an upcoming concert are needed.",
         "cancelNoticeNotSent": "The cancellation email could not be sent."
       },
-      "changeLink": "Seat change by the customer",
-      "changeLinkHint": "The customer receives a link to choose other seats on the plan. A more expensive seat is paid by card (the difference only); a cheaper seat is not refunded. Valid for up to 14 days, until the concert, for a single change.",
+      "changeLink": "Change by the customer",
+      "changeLinkHint": "The customer receives a link to choose other seats, switch to another show of the organiser or add tickets. They only pay the increase, by card; never a refund. Valid for up to 14 days, until the show, as many times as needed.",
       "changeLinkNoCard": "No card payment is set up for this organizer: only changes without a surcharge will go through.",
       "changeLinkSend": "Send the link to the customer",
       "changeLinkReplace": "A link is already open. Replace it with a new one? The old one will stop working.",
       "changeLinkOpen": "Link sent on {sent}, valid until {date}.",
-      "changeLinkUsed": "The customer changed seats on {date}.",
+      "changeLinkUsed": "Last change made by the customer on {date}.",
       "changeLinkExpired": "The last link expired on {date}.",
       "changeLinkUrl": "Seat change link",
       "copy": "Copy",
@@ -2022,9 +2047,9 @@
     "impersonationNote": "Sales made here count for {name}, commission included."
   },
   "change": {
-    "title": "Change your seats",
-    "intro": "Order {reference}. Pick one of your seats in the list, then tap the new seat on the plan.",
-    "validUntil": "Link valid until {date}, for a single change.",
+    "title": "Change my tickets",
+    "intro": "Order {reference}. Switch to another show, add tickets or choose other seats.",
+    "validUntil": "Link valid until {date}.",
     "pending": "A previous change is still awaiting payment. If you confirm a new choice, it replaces it.",
     "yourSeats": "Your seats",
     "hint": "Pick the seat to change, then the new one on the plan.",
@@ -2043,19 +2068,60 @@
     "doneTitle": "Change confirmed",
     "doneText": "Your new tickets have been sent to {email}. The old ones are no longer valid.",
     "download": "Download the tickets (PDF)",
-    "usedTitle": "This link has already been used",
-    "usedText": "Your seats have been changed. For any other request, write to us at {contact}.",
     "expiredTitle": "This link is no longer valid",
     "expiredText": "To change your seats, write to us at {contact}.",
     "errors": {
       "seatsUnavailable": "One of the chosen seats has just been taken. Please choose another.",
       "soldOut": "This tariff is sold out for the chosen seat. Please choose another.",
       "expired": "This link is no longer valid. Reload the page.",
-      "used": "This link has already been used. Reload the page.",
+      "used": "One of these tickets has already been scanned at the door.",
       "retry": "The change could not be saved. Try again in a moment.",
-      "failed": "The change could not be made. Reload the page and try again."
+      "failed": "The change could not be made. Reload the page and try again.",
+      "notFound": "One of these tickets can no longer be changed. Reload the page."
     },
-    "current": "Your current seat"
+    "current": "Your current seat",
+    "nothingToChange": "No ticket of this order can be changed at the moment.",
+    "seatsTitle": "Choose other seats",
+    "seatsIntro": "Pick one of your seats in the list, then tap the new seat on the plan.",
+    "exchange": {
+      "title": "Change show or add tickets",
+      "intro": "Choose the tickets to give back, then the show and seats you want. You only pay the difference if the new choice costs more.",
+      "giveTitle": "Tickets to give back",
+      "freeTicket": "Free",
+      "targetTitle": "New show",
+      "targetPlaceholder": "Choose a show…",
+      "soldOutTariff": "sold out",
+      "namedTariff": "named, taken from a ticket given back",
+      "less": "One seat less",
+      "more": "One seat more",
+      "seatsAssigned": "Seats are assigned automatically, side by side where possible. You can then choose others on the plan.",
+      "givenValue": "Tickets given back",
+      "newValue": "New tickets",
+      "due": "To pay",
+      "free": "No extra charge",
+      "noRefund": "The difference is not refunded.",
+      "keepNote": "Your current tickets remain valid until the difference is paid.",
+      "confirmFree": "Confirm the exchange",
+      "confirmPay": "Confirm and pay {amount}",
+      "saving": "Saving…",
+      "doneTitle": "Exchange confirmed",
+      "doneText": "Your new tickets have been sent to you by e-mail. The tickets given back are no longer valid.",
+      "continue": "Continue",
+      "errors": {
+        "empty": "Choose at least one ticket to give back and one new seat.",
+        "soldOut": "Not enough seats left at this price.",
+        "maxPerOrder": "This price is limited in seats per order.",
+        "companionRequiresPaid": "This price is sold with a paid seat for the same show.",
+        "companionLimit": "Too many seats at this price for the number of paid seats.",
+        "attendeesMissing": "Named seats take over the holder of a ticket given back: give back as many named tickets.",
+        "attendeeTooOld": "The holder of a ticket given back is over the age for this price.",
+        "seatsUnavailable": "Not enough free seats for this price. Choose another one.",
+        "expired": "This link is no longer valid. Reload the page.",
+        "notFound": "One of these tickets can no longer be changed. Reload the page.",
+        "retry": "The exchange could not be saved. Try again in a moment.",
+        "failed": "The exchange could not be made. Reload the page and try again."
+      }
+    }
   },
   "organizerReport": {
     "subject": "Report {name} — as of {date}",

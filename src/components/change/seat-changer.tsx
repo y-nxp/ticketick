@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SeatLegend, SeatMap, type SeatState } from "@/components/seating/seat-map";
 import {
   confirmSeatChangeAction,
+  type ClientAccess,
   type ConfirmChangeState,
 } from "@/lib/orders/seat-change-actions";
 import {
@@ -38,7 +39,7 @@ export interface ChangerSession {
 
 export function SeatChanger({
   header,
-  token,
+  access,
   locale,
   currency,
   email,
@@ -46,7 +47,7 @@ export function SeatChanger({
   sessions,
 }: {
   header: React.ReactNode;
-  token: string;
+  access: ClientAccess;
   locale: string;
   currency: string;
   email: string;
@@ -98,7 +99,7 @@ export function SeatChanger({
   function confirm() {
     const list = Object.entries(moves).map(([ticketId, to]) => ({ ticketId, to }));
     startTransition(async () => {
-      const result = await confirmSeatChangeAction(token, list);
+      const result = await confirmSeatChangeAction(access, list);
       if (result.ok && result.kind === "pay") {
         window.location.assign(result.url);
         return;
@@ -215,7 +216,7 @@ export function SeatChanger({
   );
 }
 
-const ERRORS: string[] = ["seatsUnavailable", "soldOut", "expired", "used", "retry"];
+const ERRORS: string[] = ["seatsUnavailable", "soldOut", "expired", "used", "notFound", "retry"];
 
 function SessionChanger({
   session,

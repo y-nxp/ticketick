@@ -6,6 +6,8 @@ import { publicAppOrigin } from "@/lib/app-url";
 import { ticketQrPng } from "@/lib/tickets/qr";
 import { buildTicketsPdf } from "@/lib/tickets/pdf";
 import { paidOrderForMail, ticketPdfPath } from "@/lib/tickets/download";
+import { prisma } from "@/lib/prisma";
+import { cancelOpen } from "@/lib/orders/self-service-rules";
 import {
   formatTicketPrice,
   readPublicFile,
@@ -26,6 +28,8 @@ export async function sendTicketCards(input: {
   preview?: boolean;
   /** Renvoi annonçant des places à visibilité réduite, avec l'adresse pour en changer. */
   viewNotice?: SeatView[];
+  /** Places gratuites annulables depuis le compte, jusqu'à N heures avant. */
+  freeCancelHours?: number | null;
 }) {
   const attachments: MailAttachment[] = await Promise.all(
     input.tickets.map(async (ticket, index) => ({
@@ -88,6 +92,9 @@ export async function sendTicketCards(input: {
   const totalCents = input.tickets.reduce((sum, ticket) => sum + ticket.priceCents, 0);
   const totalLabel = formatTicketPrice(totalCents, input.locale);
   const downloadHref = `${publicAppOrigin()}${ticketPdfPath(input.reference)}`;
+  const accountHref = `${publicAppOrigin()}${input.locale === "fr" ? "" : `/${input.locale}`}/account`;
+  const annulation =
+    input.freeCancelHours != null && !input.preview ? t.annulation(input.freeCancelHours) : null;
 
   const recapRows = input.tickets
     .map(
@@ -130,6 +137,11 @@ export async function sendTicketCards(input: {
         ? ""
         : `<p style="margin:0 0 28px"><a href="${echapper(downloadHref)}" style="display:inline-block;background:#6C5CE7;color:#fff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:10px">${echapper(t.pdfLien)}</a></p>`
     }
+    ${
+      annulation
+        ? `<p style="margin:0 0 24px;padding:12px 16px;background:#fff;border:1px solid #e5e7eb;border-radius:8px;line-height:1.5;font-size:14px">${echapper(annulation)} <a href="${echapper(accountHref)}" style="color:#6C5CE7;font-weight:700">${echapper(t.annulationLien)}</a></p>`
+        : ""
+    }
     <h2 style="margin:0 0 8px;font-size:16px">${echapper(t.recap)}</h2>
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;border-collapse:collapse">
       <tr>
@@ -166,6 +178,7 @@ export async function sendTicketCards(input: {
       : []),
     input.preview ? t.apercuCorps : t.corps,
     "",
+    ...(annulation ? [`${annulation} ${accountHref}`, ""] : []),
     t.recap,
     ...input.tickets.flatMap((ticket) => [
       `${ticket.eventTitle} — ${ticket.ticketName} — ${ticket.priceLabel}`,
@@ -217,7 +230,57 @@ export async function sendPaidOrderTickets(
     locale: order.locale,
     tickets: order.cards,
     viewNotice: options.viewNotice,
+    freeCancelHours: await freeCancelHours(orderId),
   });
+}
+
+/**
+ * Délai d'annulation à annoncer : la commande compte des places gratuites que
+ * le spectacle laisse rendre depuis le compte. Le plus long l'emporte.
+ */
+async function freeCancelHours(orderId: string): Promise<number | null> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      resellerId: true,
+      items: { select: { ticketTypeId: true, unitPriceCents: true } },
+      tickets: {
+        where: { status: "VALID" },
+        select: {
+          ticketTypeId: true,
+          ticketType: {
+            select: {
+              session: {
+                select: {
+                  startsAt: true,
+                  event: {
+                    select: {
+                      selfChange: true,
+                      changeUntilHours: true,
+                      selfCancelFree: true,
+                      cancelUntilHours: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  if (!order || order.resellerId) return null;
+  const paidOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
+  const hours = order.tickets
+    .filter((t) =>
+      cancelOpen({
+        startsAt: t.ticketType.session.startsAt,
+        event: t.ticketType.session.event,
+        paidCents: paidOf.get(t.ticketTypeId) ?? 0,
+      }),
+    )
+    .map((t) => t.ticketType.session.event.cancelUntilHours);
+  return hours.length > 0 ? Math.max(...hours) : null;
 }
 
 /** Renvoi demandé par l'acheteur (SAV téléphonique) : son adresse seule, sans copie. */
@@ -230,6 +293,7 @@ export async function sendOrderTicketsToBuyer(orderId: string) {
     reference: order.reference,
     locale: order.locale,
     tickets: order.cards,
+    freeCancelHours: await freeCancelHours(orderId),
   });
 }
 
@@ -388,6 +452,9 @@ function textes(locale: string) {
       bonjour: (nom: string) => `Bonjour ${nom},`,
       corps: "Merci pour votre commande. Présentez le QR à l’entrée : chaque billet n’est valable qu’une fois.",
       pdfLien: "Télécharger vos billets",
+      annulation: (h: number) =>
+        `Places gratuites : si vous ne pouvez pas venir, annulez-les depuis votre compte ticketick, jusqu’à ${h} h avant le spectacle, pour libérer la place. Pas encore de compte ? Créez-le avec cette adresse e-mail.`,
+      annulationLien: "Mon compte",
       apercuCorps:
         "Ceci est un aperçu : le QR n’ouvre aucune porte. Voici le rendu envoyé à l’acheteur.",
       reference: "Votre référence :",
@@ -415,6 +482,9 @@ function textes(locale: string) {
       bonjour: (nom: string) => `Hello ${nom},`,
       corps: "Thank you for your order. Show the QR at the entrance: each ticket is valid once.",
       pdfLien: "Download your tickets",
+      annulation: (h: number) =>
+        `Free seats: if you cannot come, cancel them from your ticketick account, up to ${h} hours before the show, to free the seat. No account yet? Create one with this e-mail address.`,
+      annulationLien: "My account",
       apercuCorps:
         "This is a preview: the QR code will not admit anyone. This is what the buyer receives.",
       reference: "Your reference:",
@@ -442,6 +512,9 @@ function textes(locale: string) {
       bonjour: (nom: string) => `Guten Tag ${nom},`,
       corps: "Danke für Ihre Bestellung. Zeigen Sie den QR-Code am Eingang: jedes Ticket gilt nur einmal.",
       pdfLien: "Tickets herunterladen",
+      annulation: (h: number) =>
+        `Kostenlose Plätze: Wenn Sie nicht kommen können, stornieren Sie sie bis ${h} Stunden vor der Vorstellung in Ihrem ticketick-Konto, damit der Platz frei wird. Noch kein Konto? Erstellen Sie es mit dieser E-Mail-Adresse.`,
+      annulationLien: "Mein Konto",
       apercuCorps:
         "Dies ist eine Vorschau: Der QR-Code öffnet keine Tür. So sieht die Nachricht an die Käuferin oder den Käufer aus.",
       reference: "Ihre Referenz:",
@@ -469,6 +542,9 @@ function textes(locale: string) {
       bonjour: (nom: string) => `Buongiorno ${nom},`,
       corps: "Grazie per l’ordine. Mostrate il QR all’ingresso: ogni biglietto è valido una sola volta.",
       pdfLien: "Scaricare i biglietti",
+      annulation: (h: number) =>
+        `Posti gratuiti: se non potete venire, annullateli dal vostro conto ticketick, fino a ${h} ore prima dello spettacolo, per liberare il posto. Non avete ancora un conto? Createlo con questo indirizzo e-mail.`,
+      annulationLien: "Il mio conto",
       apercuCorps:
         "Questa è un’anteprima: il QR non apre nessun ingresso. Ecco cosa riceve chi acquista.",
       reference: "Il vostro riferimento:",
@@ -496,6 +572,9 @@ function textes(locale: string) {
       bonjour: (nom: string) => `Hola, ${nom}:`,
       corps: "Gracias por tu pedido. Muestra el código QR en la entrada: cada entrada solo es válida una vez.",
       pdfLien: "Descargar tus entradas",
+      annulation: (h: number) =>
+        `Entradas gratuitas: si no puedes venir, anúlalas desde tu cuenta ticketick, hasta ${h} horas antes del espectáculo, para liberar la plaza. ¿Aún no tienes cuenta? Créala con esta dirección de correo.`,
+      annulationLien: "Mi cuenta",
       apercuCorps:
         "Esto es una vista previa: el código QR no da acceso. Así es lo que recibe quien compra.",
       reference: "Tu referencia:",

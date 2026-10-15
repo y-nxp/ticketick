@@ -1,6 +1,8 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import { eventRulesSelect } from "@/lib/orders/change-access";
+import { cancelOpen, changeOpen } from "@/lib/orders/self-service-rules";
 
 /**
  * Commandes et billets de la personne connectée.
@@ -31,6 +33,7 @@ export async function getMyOrders(userId: string) {
       },
       items: {
         select: {
+          ticketTypeId: true,
           quantity: true,
           unitPriceCents: true,
           ticketType: {
@@ -50,11 +53,35 @@ export async function getMyOrders(userId: string) {
       // Les billets n'existent qu'une fois le paiement confirmé : une commande
       // en attente de virement n'en a pas encore.
       tickets: {
-        select: { code: true, status: true },
+        select: {
+          code: true,
+          status: true,
+          ticketTypeId: true,
+          ticketType: {
+            select: {
+              session: { select: { startsAt: true, event: { select: eventRulesSelect } } },
+            },
+          },
+        },
         orderBy: { createdAt: "asc" },
       },
+      resellerId: true,
     },
   });
 }
 
 export type MyOrder = Awaited<ReturnType<typeof getMyOrders>>[number];
+
+/** Commande que le client peut gérer depuis son compte : changement ou annulation. */
+export function selfServiceOpen(order: MyOrder): boolean {
+  if (order.status !== "PAID" || order.resellerId) return false;
+  const paidOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
+  return order.tickets.some((ticket) => {
+    if (ticket.status !== "VALID") return false;
+    const { startsAt, event } = ticket.ticketType.session;
+    return (
+      changeOpen({ startsAt, event, viaAccount: true }) ||
+      cancelOpen({ startsAt, event, paidCents: paidOf.get(ticket.ticketTypeId) ?? 0 })
+    );
+  });
+}

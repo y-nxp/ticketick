@@ -7,6 +7,12 @@ import { readLayout, type SeatLayout } from "@/lib/seating/layout";
 import { claimSeats, syncSessionSeats } from "@/lib/seating/seats";
 import { issueMissingTickets } from "@/lib/tickets/issue";
 import type { Translated } from "@/lib/types";
+import {
+  eventRulesSelect,
+  markLinkUsed,
+  resolveAccess,
+  type ChangeAccess,
+} from "./change-access";
 import { hashHoldToken, takeStock } from "./create-order";
 import {
   assertEditable,
@@ -23,20 +29,23 @@ import {
   tariffForZone,
   type ChangeTariff,
 } from "./seat-change-quote";
+import { changeOpen } from "./self-service-rules";
 
 /**
- * Changement de places par le client, sur un lien envoyé depuis l'admin.
+ * Changement de places par le client, sur un lien envoyé depuis l'admin ou
+ * depuis son compte quand le spectacle le permet.
  *
  * Les nouvelles places remplacent les anciennes (nouveaux billets, nouveaux
  * codes). Sans différence à payer, le changement est immédiat. Sinon les
  * nouveaux billets attendent le paiement par carte : les anciens restent
- * valables jusque-là, et un lien abandonné ne change rien.
+ * valables jusque-là, et un choix abandonné ne change rien. Le lien sert
+ * autant de fois que voulu jusqu'à son échéance.
  */
 
 const LINK_DAYS = 14;
-const PAY_HOURS = 2;
+export const PAY_HOURS = 2;
 
-export type ChangeError = EditError | "expired" | "used";
+export type ChangeError = EditError | "expired";
 
 function newChangeToken(): { token: string; tokenHash: string } {
   const token = randomBytes(24).toString("base64url");
@@ -47,7 +56,7 @@ export function changePath(token: string, locale: string): string {
   return `${locale === "fr" ? "" : `/${locale}`}/change/${encodeURIComponent(token)}`;
 }
 
-/** Billets que le client peut changer : valables, placés, séance à venir. */
+/** Billets que le client peut déplacer sur le plan : valables, placés, séance à venir. */
 function changeableWhere(orderId: string): Prisma.TicketWhereInput {
   return {
     orderId,
@@ -57,9 +66,34 @@ function changeableWhere(orderId: string): Prisma.TicketWhereInput {
   };
 }
 
+/** Billets dont le spectacle accepte le changement par ce canal. */
+export function allowedForChange<
+  T extends {
+    ticketType: {
+      session: {
+        startsAt: Date;
+        event: {
+          selfChange: boolean;
+          changeUntilHours: number;
+          selfCancelFree: boolean;
+          cancelUntilHours: number;
+        };
+      };
+    };
+  },
+>(tickets: T[], viaAccount: boolean): T[] {
+  return tickets.filter((t) =>
+    changeOpen({
+      startsAt: t.ticketType.session.startsAt,
+      event: t.ticketType.session.event,
+      viaAccount,
+    }),
+  );
+}
+
 // ─────────────────────────────── Lien
 
-/** Nouveau lien ; le précédent, s'il n'a pas servi, ne fonctionne plus. */
+/** Nouveau lien ; le précédent ne fonctionne plus. */
 export async function createChangeLink(input: {
   orderId: string;
   actorId: string;
@@ -75,7 +109,11 @@ export async function createChangeLink(input: {
   if (order.resellerId) return { ok: false, error: "reseller" };
 
   const last = await prisma.ticket.findFirst({
-    where: changeableWhere(input.orderId),
+    where: {
+      orderId: input.orderId,
+      status: "VALID",
+      ticketType: { session: { startsAt: { gt: new Date() } } },
+    },
     orderBy: { ticketType: { session: { startsAt: "desc" } } },
     select: { ticketType: { select: { session: { select: { startsAt: true } } } } },
   });
@@ -86,7 +124,7 @@ export async function createChangeLink(input: {
   const expiresAt = startsAt < limit ? startsAt : limit;
   const { token, tokenHash } = newChangeToken();
   await prisma.$transaction([
-    prisma.orderChangeLink.deleteMany({ where: { orderId: input.orderId, usedAt: null } }),
+    prisma.orderChangeLink.deleteMany({ where: { orderId: input.orderId } }),
     prisma.orderChangeLink.create({
       data: { orderId: input.orderId, tokenHash, expiresAt, createdById: input.actorId },
     }),
@@ -94,18 +132,30 @@ export async function createChangeLink(input: {
   return { ok: true, token, expiresAt };
 }
 
-async function linkForToken(token: string) {
-  if (!token) return null;
-  return prisma.orderChangeLink.findUnique({
-    where: { tokenHash: hashHoldToken(token) },
-    select: { id: true, orderId: true, expiresAt: true, usedAt: true, createdById: true },
+/**
+ * Un choix précédent pas encore payé (places ou spectacle) : ses billets en
+ * attente sont annulés et leurs places repartent en vente.
+ */
+export async function dropPendingChanges(
+  tx: Prisma.TransactionClient,
+  orderId: string,
+): Promise<boolean> {
+  const order = await lockOrder(tx, orderId);
+  const previous = await tx.orderCharge.findMany({
+    where: { orderId, status: "OPEN", NOT: { replacesTicketIds: { isEmpty: true } } },
+    select: { id: true, ticketIds: true },
   });
-}
-
-function linkError(link: { expiresAt: Date; usedAt: Date | null }): ChangeError | null {
-  if (link.usedAt) return "used";
-  if (link.expiresAt <= new Date()) return "expired";
-  return null;
+  for (const charge of previous) {
+    const active = charge.ticketIds.filter((id) =>
+      order.tickets.some((t) => t.id === id && t.status === "PENDING"),
+    );
+    if (active.length > 0) await releaseTickets(tx, order, active, false);
+    await tx.orderCharge.update({
+      where: { id: charge.id },
+      data: { status: "CANCELLED", settledAt: new Date() },
+    });
+  }
+  return previous.length > 0;
 }
 
 // ─────────────────────────────── Page du client
@@ -130,24 +180,28 @@ export interface ChangeSession {
 
 export type ChangePage =
   | { state: "invalid" }
-  | { state: "used" | "expired"; locale: string; reference: string }
+  | { state: "expired"; locale: string; reference: string }
   | {
       state: "open";
+      orderId: string;
       locale: string;
       reference: string;
       email: string;
       currency: string;
-      expiresAt: Date;
+      /** Lien : échéance ; compte : aucune, le délai vient du spectacle. */
+      expiresAt: Date | null;
+      viaAccount: boolean;
       /** Une différence est déjà en attente de paiement : un nouveau choix l'annule. */
       pending: boolean;
       sessions: ChangeSession[];
     };
 
-export async function changePageData(token: string): Promise<ChangePage> {
-  const link = await linkForToken(token);
-  if (!link) return { state: "invalid" };
+export async function changePageData(access: ChangeAccess): Promise<ChangePage> {
+  const resolved = await resolveAccess(access);
+  if (!resolved.ok && !resolved.orderId) return { state: "invalid" };
+  const orderId = resolved.ok ? resolved.access.orderId : resolved.orderId!;
   const order = await prisma.order.findUnique({
-    where: { id: link.orderId },
+    where: { id: orderId },
     select: {
       id: true,
       reference: true,
@@ -159,22 +213,28 @@ export async function changePageData(token: string): Promise<ChangePage> {
     },
   });
   if (!order || order.status !== "PAID") return { state: "invalid" };
-  const closed = linkError(link);
-  if (closed === "used" || closed === "expired") {
-    return { state: closed, locale: order.locale, reference: order.reference };
-  }
+  if (!resolved.ok) return { state: "expired", locale: order.locale, reference: order.reference };
+  const { viaAccount, expiresAt } = resolved.access;
 
-  const tickets = await prisma.ticket.findMany({
-    where: changeableWhere(order.id),
-    orderBy: [{ ticketType: { session: { startsAt: "asc" } } }, { seatKey: "asc" }],
-    select: {
-      id: true,
-      ticketTypeId: true,
-      seatKey: true,
-      seatLabel: true,
-      ticketType: { select: { sessionId: true } },
-    },
-  });
+  const tickets = allowedForChange(
+    await prisma.ticket.findMany({
+      where: changeableWhere(order.id),
+      orderBy: [{ ticketType: { session: { startsAt: "asc" } } }, { seatKey: "asc" }],
+      select: {
+        id: true,
+        ticketTypeId: true,
+        seatKey: true,
+        seatLabel: true,
+        ticketType: {
+          select: {
+            sessionId: true,
+            session: { select: { startsAt: true, event: { select: eventRulesSelect } } },
+          },
+        },
+      },
+    }),
+    viaAccount,
+  );
   const sessionIds = [...new Set(tickets.map((t) => t.ticketType.sessionId))];
   const sessions = await prisma.eventSession.findMany({
     where: { id: { in: sessionIds } },
@@ -245,11 +305,13 @@ export async function changePageData(token: string): Promise<ChangePage> {
 
   return {
     state: "open",
+    orderId: order.id,
     locale: order.locale,
     reference: order.reference,
     email: order.email,
     currency: order.currency,
-    expiresAt: link.expiresAt,
+    expiresAt,
+    viaAccount,
     pending: pending > 0,
     sessions: out,
   };
@@ -263,7 +325,7 @@ export type ChangeResult =
   | { ok: false; error: ChangeError };
 
 export async function applySeatChange(input: {
-  token: string;
+  access: ChangeAccess;
   moves: { ticketId: string; to: string }[];
 }): Promise<ChangeResult> {
   if (input.moves.length === 0) return { ok: false, error: "empty" };
@@ -272,53 +334,35 @@ export async function applySeatChange(input: {
   if (targets.size !== input.moves.length || sources.size !== input.moves.length) {
     return { ok: false, error: "seatsUnavailable" };
   }
-  const link = await linkForToken(input.token);
-  if (!link) return { ok: false, error: "notFound" };
-  const closed = linkError(link);
-  if (closed) return { ok: false, error: closed };
+  const resolved = await resolveAccess(input.access);
+  if (!resolved.ok) return { ok: false, error: resolved.error };
+  const link = resolved.access;
 
   return run(() =>
     prisma.$transaction(async (tx) => {
       let order = await lockOrder(tx, link.orderId);
       assertEditable(order, true);
-      const fresh = await tx.orderChangeLink.findUniqueOrThrow({
-        where: { id: link.id },
-        select: { usedAt: true },
-      });
-      if (fresh.usedAt) throw new EditFailure("notEditable");
+      if (await dropPendingChanges(tx, order.id)) order = await lockOrder(tx, order.id);
 
-      // Un choix précédent pas encore payé : ses places repartent en vente.
-      const previous = await tx.orderCharge.findMany({
-        where: {
-          orderId: order.id,
-          status: "OPEN",
-          NOT: { replacesTicketIds: { isEmpty: true } },
-        },
-        select: { id: true, ticketIds: true },
-      });
-      for (const charge of previous) {
-        const active = charge.ticketIds.filter((id) =>
-          order.tickets.some((t) => t.id === id && t.status === "PENDING"),
-        );
-        if (active.length > 0) await releaseTickets(tx, order, active, false);
-        await tx.orderCharge.update({
-          where: { id: charge.id },
-          data: { status: "CANCELLED", settledAt: new Date() },
-        });
-      }
-      if (previous.length > 0) order = await lockOrder(tx, order.id);
-
-      const old = await tx.ticket.findMany({
-        where: { ...changeableWhere(order.id), id: { in: [...sources] } },
-        select: {
-          id: true,
-          ticketTypeId: true,
-          seatKey: true,
-          attendeeName: true,
-          attendeeBirthDate: true,
-          ticketType: { select: { sessionId: true } },
-        },
-      });
+      const old = allowedForChange(
+        await tx.ticket.findMany({
+          where: { ...changeableWhere(order.id), id: { in: [...sources] } },
+          select: {
+            id: true,
+            ticketTypeId: true,
+            seatKey: true,
+            attendeeName: true,
+            attendeeBirthDate: true,
+            ticketType: {
+              select: {
+                sessionId: true,
+                session: { select: { startsAt: true, event: { select: eventRulesSelect } } },
+              },
+            },
+          },
+        }),
+        link.viaAccount,
+      );
       if (old.length !== sources.size) throw new EditFailure("notFound");
       const oldOf = new Map(old.map((t) => [t.id, t]));
       const ownSeats = new Set(old.map((t) => `${t.ticketType.sessionId}/${t.seatKey}`));
@@ -467,10 +511,7 @@ export async function applySeatChange(input: {
       }
 
       if (due === 0) {
-        await tx.orderChangeLink.update({
-          where: { id: link.id },
-          data: { usedAt: new Date() },
-        });
+        await markLinkUsed(tx, link.linkId);
         return { ok: true as const, kind: "done" as const, orderId: order.id };
       }
 
@@ -482,7 +523,7 @@ export async function applySeatChange(input: {
         },
         ticketIds: issued.map((t) => t.id),
         fromInvites: false,
-        actorId: link.createdById ?? "",
+        actorId: link.actorId ?? "",
       });
       if (!charge.chargeId || !charge.token) throw new EditFailure("retry");
       await tx.orderCharge.update({
@@ -501,7 +542,7 @@ export async function applySeatChange(input: {
 
 /**
  * Différence payée : les anciens billets sont rendus à la vente et le lien
- * de changement ne sert plus. Dans la transaction de l'encaissement.
+ * note la date du changement. Dans la transaction de l'encaissement.
  */
 export async function releaseReplacedTickets(
   tx: Prisma.TransactionClient,
@@ -513,8 +554,5 @@ export async function releaseReplacedTickets(
     order.tickets.some((t) => t.id === id && (t.status === "VALID" || t.status === "PENDING")),
   );
   if (active.length > 0) await releaseTickets(tx, order, active, false);
-  await tx.orderChangeLink.updateMany({
-    where: { orderId, usedAt: null },
-    data: { usedAt: new Date() },
-  });
+  await tx.orderChangeLink.updateMany({ where: { orderId }, data: { usedAt: new Date() } });
 }

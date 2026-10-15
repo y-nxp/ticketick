@@ -310,6 +310,22 @@
       "name": "Indica tu nombre y apellido.",
       "unavailable": "Servicio momentáneamente no disponible. Inténtalo de nuevo en un instante.",
       "phoneInvalid": "Este número de teléfono no es válido."
+    },
+    "manageTickets": "Gestionar mis entradas",
+    "manage": {
+      "back": "Mi cuenta",
+      "title": "Gestionar mis entradas",
+      "cancelTitle": "Anular plazas gratuitas",
+      "cancelIntro": "¿No puedes venir? Devuelve tus plazas gratuitas para que otros las aprovechen.",
+      "cancelUntil": "Se puede anular hasta el {date}",
+      "cancelConfirm": "{count, plural, one {¿Anular esta plaza?} other {¿Anular estas # plazas?}} Es definitivo.",
+      "cancelSelected": "{count, plural, =0 {Anular la selección} one {Anular 1 plaza} other {Anular # plazas}}",
+      "cancelAll": "Anular todo",
+      "cancelDone": "Plazas anuladas. Te hemos enviado un correo de confirmación.",
+      "errors": {
+        "used": "Una de estas plazas ya se ha controlado en la entrada.",
+        "failed": "No se pudo hacer la anulación. Recarga la página e inténtalo de nuevo."
+      }
     }
   },
   "verifyEmail": {
@@ -462,9 +478,9 @@
     "home": "Ver los eventos"
   },
   "change": {
-    "title": "Cambiar de localidades",
-    "intro": "Pedido {reference}. Elige una de tus localidades en la lista y luego toca la nueva en el plano.",
-    "validUntil": "Enlace válido hasta el {date}, para un solo cambio.",
+    "title": "Cambiar mis entradas",
+    "intro": "Pedido {reference}. Pasa a otro espectáculo, añade entradas o elige otras localidades.",
+    "validUntil": "Enlace válido hasta el {date}.",
     "pending": "Un cambio anterior sigue pendiente de pago. Si confirmas una nueva elección, lo sustituye.",
     "yourSeats": "Tus localidades",
     "hint": "Elige la localidad que quieres cambiar y luego la nueva en el plano.",
@@ -483,19 +499,60 @@
     "doneTitle": "Cambio confirmado",
     "doneText": "Tus nuevas entradas se han enviado a {email}. Las antiguas ya no son válidas.",
     "download": "Descargar las entradas (PDF)",
-    "usedTitle": "Este enlace ya se ha usado",
-    "usedText": "Tus localidades se han cambiado. Para cualquier otra solicitud, escríbenos a {contact}.",
     "expiredTitle": "Este enlace ya no es válido",
     "expiredText": "Para cambiar tus localidades, escríbenos a {contact}.",
     "errors": {
       "seatsUnavailable": "Una de las localidades elegidas acaba de ocuparse. Elige otra.",
       "soldOut": "Esta tarifa está agotada para la localidad elegida. Elige otra.",
       "expired": "Este enlace ya no es válido. Recarga la página.",
-      "used": "Este enlace ya se ha usado. Recarga la página.",
+      "used": "Una de estas entradas ya se ha controlado en la entrada.",
       "retry": "No se ha podido guardar el cambio. Inténtalo de nuevo en un momento.",
-      "failed": "No se ha podido hacer el cambio. Recarga la página e inténtalo de nuevo."
+      "failed": "No se ha podido hacer el cambio. Recarga la página e inténtalo de nuevo.",
+      "notFound": "Una de estas entradas ya no se puede cambiar. Recarga la página."
     },
-    "current": "Tu localidad actual"
+    "current": "Tu localidad actual",
+    "nothingToChange": "Por ahora no se puede cambiar ninguna entrada de este pedido.",
+    "seatsTitle": "Elegir otras localidades",
+    "seatsIntro": "Elige una de tus localidades en la lista y toca la nueva en el plano.",
+    "exchange": {
+      "title": "Cambiar de espectáculo o añadir entradas",
+      "intro": "Elige las entradas que devuelves y luego el espectáculo y las localidades que quieres. Solo pagas la diferencia si la nueva elección cuesta más.",
+      "giveTitle": "Entradas que devuelves",
+      "freeTicket": "Gratis",
+      "targetTitle": "Nuevo espectáculo",
+      "targetPlaceholder": "Elegir un espectáculo…",
+      "soldOutTariff": "agotado",
+      "namedTariff": "nominativa, tomada de una entrada devuelta",
+      "less": "Una plaza menos",
+      "more": "Una plaza más",
+      "seatsAssigned": "Las localidades se asignan automáticamente, juntas si es posible. Después podrás elegir otras en el plano.",
+      "givenValue": "Entradas devueltas",
+      "newValue": "Nuevas entradas",
+      "due": "A pagar",
+      "free": "Sin suplemento",
+      "noRefund": "La diferencia no se reembolsa.",
+      "keepNote": "Tus entradas actuales siguen siendo válidas hasta que pagues la diferencia.",
+      "confirmFree": "Confirmar el cambio",
+      "confirmPay": "Confirmar y pagar {amount}",
+      "saving": "Guardando…",
+      "doneTitle": "Cambio confirmado",
+      "doneText": "Te hemos enviado tus nuevas entradas por correo. Las entradas devueltas ya no son válidas.",
+      "continue": "Continuar",
+      "errors": {
+        "empty": "Elige al menos una entrada para devolver y una nueva plaza.",
+        "soldOut": "No quedan suficientes plazas a esta tarifa.",
+        "maxPerOrder": "Esta tarifa está limitada por pedido.",
+        "companionRequiresPaid": "Esta tarifa se compra con una plaza de pago del mismo espectáculo.",
+        "companionLimit": "Demasiadas plazas a esta tarifa para el número de plazas de pago.",
+        "attendeesMissing": "Las plazas nominativas toman el titular de una entrada devuelta: devuelve otras tantas entradas nominativas.",
+        "attendeeTooOld": "El titular de una entrada devuelta supera la edad de esta tarifa.",
+        "seatsUnavailable": "No hay suficientes localidades libres para esta tarifa. Elige otra.",
+        "expired": "Este enlace ya no es válido. Recarga la página.",
+        "notFound": "Una de estas entradas ya no se puede cambiar. Recarga la página.",
+        "retry": "No se pudo guardar el cambio. Inténtalo de nuevo en un momento.",
+        "failed": "No se pudo hacer el cambio. Recarga la página e inténtalo de nuevo."
+      }
+    }
   },
   "consent": {
     "title": "ticketick respeta su privacidad",

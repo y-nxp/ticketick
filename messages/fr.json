@@ -312,6 +312,22 @@
       "name": "Indiquez votre prénom et votre nom.",
       "unavailable": "Service momentanément indisponible. Réessayez dans un instant.",
       "phoneInvalid": "Ce numéro de téléphone n’est pas valable."
+    },
+    "manageTickets": "Gérer mes billets",
+    "manage": {
+      "back": "Mon compte",
+      "title": "Gérer mes billets",
+      "cancelTitle": "Annuler des places gratuites",
+      "cancelIntro": "Vous ne pouvez pas venir ? Rendez vos places gratuites pour qu'elles profitent à d'autres.",
+      "cancelUntil": "Annulable jusqu'au {date}",
+      "cancelConfirm": "{count, plural, one {Annuler cette place ?} other {Annuler ces # places ?}} Cette action est définitive.",
+      "cancelSelected": "{count, plural, =0 {Annuler la sélection} one {Annuler 1 place} other {Annuler # places}}",
+      "cancelAll": "Tout annuler",
+      "cancelDone": "Places annulées. Un e-mail de confirmation vous a été envoyé.",
+      "errors": {
+        "used": "Une de ces places a déjà été contrôlée à l'entrée.",
+        "failed": "L'annulation n'a pas pu être faite. Rechargez la page et réessayez."
+      }
     }
   },
   "organizer": {
@@ -940,7 +956,8 @@
         "phoneInvalid": "Numéro de téléphone invalide.",
         "urlInvalid": "Adresse du site invalide : elle doit commencer par https://.",
         "metaPixelInvalid": "L’ID du pixel Meta ne contient que des chiffres (8 à 20).",
-        "ga4IdInvalid": "L’ID Google Analytics doit avoir la forme G-XXXXXXXXXX."
+        "ga4IdInvalid": "L’ID Google Analytics doit avoir la forme G-XXXXXXXXXX.",
+        "hoursInvalid": "Indiquez un délai entre 0 et 720 heures."
       }
     },
     "settings": {
@@ -1059,7 +1076,15 @@
       "contactUrl": "Site d’inscription",
       "contactUrlHint": "Facultatif. Quand l’inscription se fait ailleurs (par exemple chez le lieu d’accueil), la fiche renvoie vers ce site.",
       "contactNote": "Texte d’introduction",
-      "contactNoteHint": "Facultatif. Remplace « Pas de billet à acheter… » au-dessus des boutons, par exemple « Billetterie auprès du Gstaad Yacht Club »."
+      "contactNoteHint": "Facultatif. Remplace « Pas de billet à acheter… » au-dessus des boutons, par exemple « Billetterie auprès du Gstaad Yacht Club ».",
+      "selfService": "Libre-service du client",
+      "selfServiceHint": "Depuis son compte ticketick, le client peut changer ses billets ou rendre ses places gratuites. Le lien que vous envoyez depuis une commande fonctionne même si ces cases sont décochées.",
+      "selfChange": "Changement de places ou de spectacle depuis le compte",
+      "changeUntilHours": "Changement possible jusqu'à (heures avant)",
+      "changeUntilHoursHint": "Le client paie seulement la hausse ; jamais de remboursement.",
+      "selfCancelFree": "Annulation des places gratuites depuis le compte",
+      "cancelUntilHours": "Annulation possible jusqu'à (heures avant)",
+      "cancelUntilHoursHint": "La place libérée repart dans la jauge. Le courriel de réservation le mentionne."
     },
     "embed": {
       "title": "Intégrer la billetterie",
@@ -1689,13 +1714,13 @@
         "changeNothing": "Aucun billet à changer : il faut des places numérotées valables pour un concert à venir.",
         "cancelNoticeNotSent": "L'e-mail d'annulation n'a pas pu être envoyé."
       },
-      "changeLink": "Changement de places par le client",
-      "changeLinkHint": "Le client reçoit un lien pour choisir lui-même d'autres places sur le plan. Une place plus chère se paie par carte (la différence seulement) ; une place moins chère n'est pas remboursée. Valable 14 jours au plus, jusqu'au concert, pour un seul changement.",
+      "changeLink": "Changement par le client",
+      "changeLinkHint": "Le client reçoit un lien pour choisir d'autres places, passer à un autre spectacle de l'organisateur ou ajouter des billets. Il paie seulement la hausse, par carte ; jamais de remboursement. Valable 14 jours au plus, jusqu'au spectacle, autant de fois que nécessaire.",
       "changeLinkNoCard": "Aucun paiement par carte n'est configuré pour cet organisateur : seuls les changements sans supplément aboutiront.",
       "changeLinkSend": "Envoyer le lien au client",
       "changeLinkReplace": "Un lien est déjà ouvert. Le remplacer par un nouveau ? L'ancien ne fonctionnera plus.",
       "changeLinkOpen": "Lien envoyé le {sent}, valable jusqu'au {date}.",
-      "changeLinkUsed": "Le client a changé ses places le {date}.",
+      "changeLinkUsed": "Dernier changement fait par le client le {date}.",
       "changeLinkExpired": "Le dernier lien a expiré le {date}.",
       "changeLinkUrl": "Lien de changement",
       "copy": "Copier",
@@ -2022,9 +2047,9 @@
     "impersonationNote": "Les ventes faites ici comptent pour {name}, commission comprise."
   },
   "change": {
-    "title": "Changer de places",
-    "intro": "Commande {reference}. Choisissez une de vos places dans la liste, puis touchez la nouvelle place sur le plan.",
-    "validUntil": "Lien valable jusqu'au {date}, pour un seul changement.",
+    "title": "Changer mes billets",
+    "intro": "Commande {reference}. Passez à un autre spectacle, ajoutez des billets ou choisissez d'autres places.",
+    "validUntil": "Lien valable jusqu'au {date}.",
     "pending": "Un changement précédent attend encore son paiement. Si vous confirmez un nouveau choix, il le remplace.",
     "yourSeats": "Vos places",
     "hint": "Choisissez la place à changer, puis la nouvelle sur le plan.",
@@ -2043,19 +2068,60 @@
     "doneTitle": "Changement confirmé",
     "doneText": "Vos nouveaux billets ont été envoyés à {email}. Les anciens ne sont plus valables.",
     "download": "Télécharger les billets (PDF)",
-    "usedTitle": "Ce lien a déjà servi",
-    "usedText": "Vos places ont été changées. Pour une autre demande, écrivez-nous à {contact}.",
     "expiredTitle": "Ce lien n'est plus valable",
     "expiredText": "Pour changer vos places, écrivez-nous à {contact}.",
     "errors": {
       "seatsUnavailable": "Une des places choisies vient d'être prise. Choisissez-en une autre.",
       "soldOut": "Ce tarif est complet pour la place choisie. Choisissez-en une autre.",
       "expired": "Ce lien n'est plus valable. Rechargez la page.",
-      "used": "Ce lien a déjà servi. Rechargez la page.",
+      "used": "Un de ces billets a déjà été contrôlé à l'entrée.",
       "retry": "Le changement n'a pas pu être enregistré. Réessayez dans un instant.",
-      "failed": "Le changement n'a pas pu être fait. Rechargez la page et réessayez."
+      "failed": "Le changement n'a pas pu être fait. Rechargez la page et réessayez.",
+      "notFound": "Un de ces billets ne peut plus être changé. Rechargez la page."
     },
-    "current": "Votre place actuelle"
+    "current": "Votre place actuelle",
+    "nothingToChange": "Aucun billet de cette commande ne peut être changé pour le moment.",
+    "seatsTitle": "Choisir d'autres places",
+    "seatsIntro": "Choisissez une de vos places dans la liste, puis touchez la nouvelle place sur le plan.",
+    "exchange": {
+      "title": "Changer de spectacle ou ajouter des billets",
+      "intro": "Choisissez les billets à rendre, puis le spectacle et les places voulus. Vous payez seulement la différence si le nouveau choix coûte plus cher.",
+      "giveTitle": "Billets à rendre",
+      "freeTicket": "Gratuit",
+      "targetTitle": "Nouveau spectacle",
+      "targetPlaceholder": "Choisir un spectacle…",
+      "soldOutTariff": "complet",
+      "namedTariff": "nominatif, repris d'un billet rendu",
+      "less": "Une place de moins",
+      "more": "Une place de plus",
+      "seatsAssigned": "Les places sont attribuées automatiquement, côte à côte si possible. Vous pourrez ensuite en choisir d'autres sur le plan.",
+      "givenValue": "Billets rendus",
+      "newValue": "Nouveaux billets",
+      "due": "À payer",
+      "free": "Sans supplément",
+      "noRefund": "La différence n'est pas remboursée.",
+      "keepNote": "Vos billets actuels restent valables jusqu'au paiement de la différence.",
+      "confirmFree": "Confirmer l'échange",
+      "confirmPay": "Confirmer et payer {amount}",
+      "saving": "Enregistrement…",
+      "doneTitle": "Échange confirmé",
+      "doneText": "Vos nouveaux billets vous ont été envoyés par e-mail. Les billets rendus ne sont plus valables.",
+      "continue": "Continuer",
+      "errors": {
+        "empty": "Choisissez au moins un billet à rendre et une nouvelle place.",
+        "soldOut": "Il ne reste plus assez de places à ce tarif.",
+        "maxPerOrder": "Ce tarif est limité en nombre de places par commande.",
+        "companionRequiresPaid": "Ce tarif s'achète avec une place payante du même spectacle.",
+        "companionLimit": "Trop de places à ce tarif pour le nombre de places payantes.",
+        "attendeesMissing": "Les places nominatives reprennent le titulaire d'un billet rendu : rendez autant de billets nominatifs.",
+        "attendeeTooOld": "Le titulaire d'un billet rendu dépasse l'âge de ce tarif.",
+        "seatsUnavailable": "Plus assez de places libres pour ce tarif. Choisissez-en un autre.",
+        "expired": "Ce lien n'est plus valable. Rechargez la page.",
+        "notFound": "Un de ces billets ne peut plus être changé. Rechargez la page.",
+        "retry": "L'échange n'a pas pu être enregistré. Réessayez dans un instant.",
+        "failed": "L'échange n'a pas pu être fait. Rechargez la page et réessayez."
+      }
+    }
   },
   "organizerReport": {
     "subject": "Rapport {name} — état au {date}",

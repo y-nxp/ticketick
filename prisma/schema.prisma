@@ -529,6 +529,16 @@ model Event {
   /// Remplace la phrase d'introduction, ex. « Billetterie auprès du Gstaad Yacht Club ».
   contactNote  Json?
 
+  /// Depuis son compte, le client échange ses billets (places, spectacle du
+  /// même organisateur) jusqu'à `changeUntilHours` avant le début. Jamais de
+  /// remboursement : seule une hausse se paie.
+  selfChange       Boolean @default(false)
+  changeUntilHours Int     @default(24)
+  /// Depuis son compte, le client annule ses places gratuites jusqu'à
+  /// `cancelUntilHours` avant le début : la jauge se libère.
+  selfCancelFree   Boolean @default(false)
+  cancelUntilHours Int     @default(24)
+
   organizer   Organizer @relation(fields: [organizerId], references: [id])
   organizerId String
 
@@ -1118,7 +1128,8 @@ model OrderChangeLink {
   /// Empreinte SHA-256 du jeton : le lien seul ouvre la page.
   tokenHash   String    @unique
   expiresAt   DateTime
-  /// Changement fait (ou différence payée) : le lien ne sert plus.
+  /// Dernier changement fait (ou différence payée). Le lien reste valable
+  /// jusqu'à `expiresAt`.
   usedAt      DateTime?
   createdById String?
   createdAt   DateTime  @default(now())

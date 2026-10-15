@@ -242,7 +242,7 @@ export async function releaseTickets(
 }
 
 /** Plus aucun billet actif : la commande sort des ventes. */
-async function closeIfEmpty(
+export async function closeIfEmpty(
   tx: Prisma.TransactionClient,
   order: LockedOrder,
   removed: string[],
@@ -445,12 +445,16 @@ export async function addTicketsTx(
     fromInvites: boolean;
     settle: PaymentSettle;
     actorId: string;
+    /** Échange du client : la séance visée n'est pas forcément déjà dans la commande. */
+    anySession?: boolean;
   },
 ): Promise<{ chargeId?: string; token?: string; ticketIds: string[] }> {
-  const sessionIds = await tx.orderItem.findMany({
-    where: { orderId: order.id },
-    select: { ticketType: { select: { sessionId: true } } },
-  });
+  const sessionIds = input.anySession
+    ? []
+    : await tx.orderItem.findMany({
+        where: { orderId: order.id },
+        select: { ticketType: { select: { sessionId: true } } },
+      });
   const allowed = new Set(sessionIds.map((i) => i.ticketType.sessionId));
 
   const types = await tx.ticketType.findMany({

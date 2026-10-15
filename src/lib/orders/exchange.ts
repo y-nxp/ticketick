@@ -1,0 +1,410 @@
+import "server-only";
+
+import { prisma } from "@/lib/prisma";
+import type { Translated } from "@/lib/types";
+import { ageOn } from "./attendees";
+import {
+  eventRulesSelect,
+  markLinkUsed,
+  resolveAccess,
+  type ChangeAccess,
+} from "./change-access";
+import {
+  addTicketsTx,
+  assertEditable,
+  closeIfEmpty,
+  EditFailure,
+  lockOrder,
+  releaseTickets,
+  run,
+  type EditError,
+} from "./edit-order";
+import { allowedForChange, dropPendingChanges, PAY_HOURS } from "./seat-change";
+import {
+  cancelOpen,
+  checkBasket,
+  exchangeDue,
+  type BasketError,
+  type BasketTariff,
+} from "./self-service-rules";
+
+/**
+ * Échange par le client : il rend des billets et prend d'autres places, sur
+ * un autre spectacle du même organisateur ou le même, éventuellement plus
+ * nombreuses. Jamais de remboursement : il paie seulement la hausse. Les
+ * sièges sont attribués d'office ; il peut les changer ensuite sur le plan.
+ *
+ * Annulation : places gratuites seulement, depuis le compte, pour libérer la
+ * jauge quand le spectacle le permet.
+ */
+
+export type ExchangeError = EditError | BasketError | "expired" | "attendeeTooOld";
+
+export interface ExchangeTicket {
+  id: string;
+  ticketTypeId: string;
+  sessionId: string;
+  eventTitle: Translated;
+  startsAt: Date;
+  tariffName: Translated;
+  seatLabel: string | null;
+  paidCents: number;
+  /** Titulaire inscrit (nom et date de naissance) : reporté sur les places nominatives. */
+  holder: boolean;
+}
+
+export interface ExchangeTarget {
+  sessionId: string;
+  eventTitle: Translated;
+  startsAt: Date;
+  venue: string | null;
+  seated: boolean;
+  tariffs: (BasketTariff & { name: Translated; maxAgeYears: number | null })[];
+}
+
+export interface ExchangeOptions {
+  tickets: ExchangeTicket[];
+  targets: ExchangeTarget[];
+}
+
+function upcomingTicketsWhere(orderId: string) {
+  return {
+    orderId,
+    status: "VALID" as const,
+    ticketType: { session: { startsAt: { gt: new Date() } } },
+  };
+}
+
+const ticketSelect = {
+  id: true,
+  ticketTypeId: true,
+  seatLabel: true,
+  attendeeName: true,
+  attendeeBirthDate: true,
+  ticketType: {
+    select: {
+      name: true,
+      sessionId: true,
+      session: {
+        select: {
+          startsAt: true,
+          event: { select: { title: true, organizerId: true, ...eventRulesSelect } },
+        },
+      },
+    },
+  },
+} as const;
+
+/** Séances en vente de l'organisateur, avec leurs tarifs ouverts. */
+async function targetSessions(organizerIds: string[]): Promise<ExchangeTarget[]> {
+  if (organizerIds.length === 0) return [];
+  const now = new Date();
+  const sessions = await prisma.eventSession.findMany({
+    where: {
+      status: "PUBLISHED",
+      startsAt: { gt: now },
+      event: { status: "PUBLISHED", onlineSale: true, organizerId: { in: organizerIds } },
+    },
+    orderBy: { startsAt: "asc" },
+    select: {
+      id: true,
+      startsAt: true,
+      capacity: true,
+      sold: true,
+      seatPlanId: true,
+      venue: { select: { name: true, city: true } },
+      event: { select: { title: true } },
+      ticketTypes: {
+        orderBy: { priceCents: "desc" },
+        select: {
+          id: true,
+          name: true,
+          priceCents: true,
+          quantity: true,
+          sold: true,
+          maxPerOrder: true,
+          maxPerPaidTicket: true,
+          companionOfId: true,
+          requiresAttendee: true,
+          maxAgeYears: true,
+          salesStartAt: true,
+          salesEndAt: true,
+        },
+      },
+    },
+  });
+  const out: ExchangeTarget[] = [];
+  for (const session of sessions) {
+    const room = session.capacity == null ? Infinity : Math.max(0, session.capacity - session.sold);
+    const tariffs = session.ticketTypes
+      .filter(
+        (t) => (!t.salesStartAt || t.salesStartAt <= now) && (!t.salesEndAt || t.salesEndAt >= now),
+      )
+      .map((t) => ({
+        id: t.id,
+        name: t.name as Translated,
+        priceCents: t.priceCents,
+        available: Math.max(0, Math.min(t.quantity - t.sold, room)),
+        maxPerOrder: t.maxPerOrder,
+        maxPerPaidTicket: t.maxPerPaidTicket,
+        companionOfId: t.companionOfId,
+        requiresAttendee: t.requiresAttendee,
+        maxAgeYears: t.maxAgeYears,
+      }));
+    if (tariffs.length === 0) continue;
+    out.push({
+      sessionId: session.id,
+      eventTitle: session.event.title as Translated,
+      startsAt: session.startsAt,
+      venue: session.venue ? `${session.venue.name}, ${session.venue.city}` : null,
+      seated: session.seatPlanId != null,
+      tariffs,
+    });
+  }
+  return out;
+}
+
+export async function exchangeOptions(input: {
+  orderId: string;
+  viaAccount: boolean;
+}): Promise<ExchangeOptions> {
+  const order = await prisma.order.findUnique({
+    where: { id: input.orderId },
+    select: {
+      status: true,
+      resellerId: true,
+      items: { select: { ticketTypeId: true, unitPriceCents: true } },
+    },
+  });
+  if (!order || order.status !== "PAID" || order.resellerId) return { tickets: [], targets: [] };
+  const tickets = allowedForChange(
+    await prisma.ticket.findMany({
+      where: upcomingTicketsWhere(input.orderId),
+      orderBy: [{ ticketType: { session: { startsAt: "asc" } } }, { seatKey: "asc" }],
+      select: ticketSelect,
+    }),
+    input.viaAccount,
+  );
+  if (tickets.length === 0) return { tickets: [], targets: [] };
+  const paidOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
+  const organizerIds = [...new Set(tickets.map((t) => t.ticketType.session.event.organizerId))];
+  return {
+    tickets: tickets.map((t) => ({
+      id: t.id,
+      ticketTypeId: t.ticketTypeId,
+      sessionId: t.ticketType.sessionId,
+      eventTitle: t.ticketType.session.event.title as Translated,
+      startsAt: t.ticketType.session.startsAt,
+      tariffName: t.ticketType.name as Translated,
+      seatLabel: t.seatLabel,
+      paidCents: paidOf.get(t.ticketTypeId) ?? 0,
+      holder: !!(t.attendeeName && t.attendeeBirthDate),
+    })),
+    targets: await targetSessions(organizerIds),
+  };
+}
+
+export type ExchangeResult =
+  | { ok: true; kind: "done"; orderId: string }
+  | { ok: true; kind: "pay"; payToken: string; locale: string }
+  | { ok: false; error: ExchangeError; ticketTypeId?: string };
+
+export async function applyExchange(input: {
+  access: ChangeAccess;
+  give: string[];
+  sessionId: string;
+  lines: { ticketTypeId: string; quantity: number }[];
+}): Promise<ExchangeResult> {
+  const give = [...new Set(input.give)];
+  const lines = input.lines.filter((l) => l.quantity > 0);
+  if (give.length === 0 || lines.length === 0) return { ok: false, error: "empty" };
+  const resolved = await resolveAccess(input.access);
+  if (!resolved.ok) return { ok: false, error: resolved.error };
+  const access = resolved.access;
+
+  const given = allowedForChange(
+    await prisma.ticket.findMany({
+      where: { ...upcomingTicketsWhere(access.orderId), id: { in: give } },
+      select: ticketSelect,
+    }),
+    access.viaAccount,
+  );
+  if (given.length !== give.length) return { ok: false, error: "notFound" };
+  const organizerIds = [...new Set(given.map((t) => t.ticketType.session.event.organizerId))];
+  const target = (await targetSessions(organizerIds)).find((s) => s.sessionId === input.sessionId);
+  if (!target) return { ok: false, error: "notFound" };
+
+  const holders = given
+    .filter((t) => t.attendeeName && t.attendeeBirthDate)
+    .map((t) => ({ name: t.attendeeName!, birthDate: t.attendeeBirthDate! }));
+  // Places rendues sur la séance visée : elles repartent en vente juste avant.
+  const freed = new Map<string, number>();
+  for (const t of given) {
+    if (t.ticketType.sessionId === target.sessionId) {
+      freed.set(t.ticketTypeId, (freed.get(t.ticketTypeId) ?? 0) + 1);
+    }
+  }
+  const tariffs = target.tariffs.map((t) => ({
+    ...t,
+    available: t.available + (freed.get(t.id) ?? 0),
+  }));
+  const basket = checkBasket({ lines, tariffs, holders: holders.length });
+  if (!basket.ok) return basket;
+
+  // Titulaires reportés dans l'ordre des billets rendus ; l'âge se vérifie au
+  // jour de la nouvelle séance.
+  const tariffOf = new Map(tariffs.map((t) => [t.id, t]));
+  const assigned: { ticketTypeId: string; holder: (typeof holders)[number] }[] = [];
+  let next = 0;
+  for (const line of lines) {
+    const tariff = tariffOf.get(line.ticketTypeId)!;
+    if (!tariff.requiresAttendee) continue;
+    for (let i = 0; i < line.quantity; i++) {
+      const holder = holders[next++]!;
+      if (tariff.maxAgeYears != null && ageOn(holder.birthDate, target.startsAt) >= tariff.maxAgeYears) {
+        return { ok: false, error: "attendeeTooOld", ticketTypeId: tariff.id };
+      }
+      assigned.push({ ticketTypeId: tariff.id, holder });
+    }
+  }
+
+  return run(() =>
+    prisma.$transaction(async (tx) => {
+      let order = await lockOrder(tx, access.orderId);
+      assertEditable(order, true);
+      if (await dropPendingChanges(tx, order.id)) order = await lockOrder(tx, order.id);
+      const active = new Set(order.tickets.filter((t) => t.status === "VALID").map((t) => t.id));
+      if (give.some((id) => !active.has(id))) throw new EditFailure("notFound");
+
+      const paidOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
+      const { dueCents } = exchangeDue({
+        givenCents: given.map((t) => paidOf.get(t.ticketTypeId) ?? 0),
+        lines: lines.map((l) => ({ priceCents: tariffOf.get(l.ticketTypeId)!.priceCents, quantity: l.quantity })),
+      });
+
+      if (dueCents === 0) {
+        await releaseTickets(tx, order, give, false);
+      }
+      const added = await addTicketsTx(tx, order, {
+        lines,
+        fromInvites: false,
+        anySession: true,
+        settle:
+          dueCents > 0
+            ? {
+                method: "LINK",
+                amountCents: dueCents,
+                dueAt: new Date(Date.now() + PAY_HOURS * 3600 * 1000),
+              }
+            : { method: "FREE" },
+        actorId: access.actorId ?? "",
+      });
+
+      if (assigned.length > 0) {
+        const fresh = await tx.ticket.findMany({
+          where: { id: { in: added.ticketIds } },
+          orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+          select: { id: true, ticketTypeId: true },
+        });
+        const used = new Set<string>();
+        for (const { ticketTypeId, holder } of assigned) {
+          const ticket = fresh.find((t) => t.ticketTypeId === ticketTypeId && !used.has(t.id));
+          if (!ticket) throw new EditFailure("retry");
+          used.add(ticket.id);
+          await tx.ticket.update({
+            where: { id: ticket.id },
+            data: { attendeeName: holder.name, attendeeBirthDate: holder.birthDate },
+          });
+        }
+      }
+
+      if (dueCents === 0) {
+        await markLinkUsed(tx, access.linkId);
+        return { ok: true as const, kind: "done" as const, orderId: order.id };
+      }
+      if (!added.chargeId || !added.token) throw new EditFailure("retry");
+      await tx.orderCharge.update({
+        where: { id: added.chargeId },
+        data: { replacesTicketIds: give },
+      });
+      return {
+        ok: true as const,
+        kind: "pay" as const,
+        payToken: added.token,
+        locale: order.locale,
+      };
+    }),
+  );
+}
+
+// ─────────────────────────────── Annulation des places gratuites
+
+export interface CancellableTicket {
+  id: string;
+  eventTitle: Translated;
+  startsAt: Date;
+  tariffName: Translated;
+  seatLabel: string | null;
+  cancelUntil: Date;
+}
+
+/** Places gratuites que le client peut rendre depuis son compte. */
+export async function cancellableTickets(orderId: string): Promise<CancellableTicket[]> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: {
+      status: true,
+      resellerId: true,
+      items: { select: { ticketTypeId: true, unitPriceCents: true } },
+    },
+  });
+  if (!order || order.status !== "PAID" || order.resellerId) return [];
+  const paidOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
+  const tickets = await prisma.ticket.findMany({
+    where: upcomingTicketsWhere(orderId),
+    orderBy: [{ ticketType: { session: { startsAt: "asc" } } }, { seatKey: "asc" }],
+    select: ticketSelect,
+  });
+  return tickets
+    .filter((t) =>
+      cancelOpen({
+        startsAt: t.ticketType.session.startsAt,
+        paidCents: paidOf.get(t.ticketTypeId) ?? 0,
+        event: t.ticketType.session.event,
+      }),
+    )
+    .map((t) => ({
+      id: t.id,
+      eventTitle: t.ticketType.session.event.title as Translated,
+      startsAt: t.ticketType.session.startsAt,
+      tariffName: t.ticketType.name as Translated,
+      seatLabel: t.seatLabel,
+      cancelUntil: new Date(
+        t.ticketType.session.startsAt.getTime() -
+          t.ticketType.session.event.cancelUntilHours * 3600 * 1000,
+      ),
+    }));
+}
+
+export async function cancelFreeTickets(input: {
+  userId: string;
+  orderId: string;
+  ticketIds: string[];
+}): Promise<{ ok: true } | { ok: false; error: EditError }> {
+  const ids = [...new Set(input.ticketIds)];
+  if (ids.length === 0) return { ok: false, error: "empty" };
+  const resolved = await resolveAccess({ userId: input.userId, orderId: input.orderId });
+  if (!resolved.ok) return { ok: false, error: "notFound" };
+  const allowed = new Set((await cancellableTickets(input.orderId)).map((t) => t.id));
+  if (ids.some((id) => !allowed.has(id))) return { ok: false, error: "notFound" };
+
+  return run(() =>
+    prisma.$transaction(async (tx) => {
+      const order = await lockOrder(tx, input.orderId);
+      assertEditable(order, true);
+      await releaseTickets(tx, order, ids, false);
+      await closeIfEmpty(tx, order, ids, false);
+      return { ok: true as const };
+    }),
+  );
+}

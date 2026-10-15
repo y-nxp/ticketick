@@ -203,6 +203,45 @@ export function EventForm({
         </div>
       </fieldset>
 
+      <fieldset className="space-y-3">
+        <legend className="text-sm font-medium">{t("selfService")}</legend>
+        <p className="text-xs text-muted-foreground">{t("selfServiceHint")}</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Checkbox
+              name="selfChange"
+              label={t("selfChange")}
+              defaultChecked={event?.selfChange ?? false}
+            />
+            <Field label={t("changeUntilHours")} hint={t("changeUntilHoursHint")}>
+              <TextInput
+                name="changeUntilHours"
+                type="number"
+                min="0"
+                max="720"
+                defaultValue={String(event?.changeUntilHours ?? 24)}
+              />
+            </Field>
+          </div>
+          <div className="space-y-2">
+            <Checkbox
+              name="selfCancelFree"
+              label={t("selfCancelFree")}
+              defaultChecked={event?.selfCancelFree ?? false}
+            />
+            <Field label={t("cancelUntilHours")} hint={t("cancelUntilHoursHint")}>
+              <TextInput
+                name="cancelUntilHours"
+                type="number"
+                min="0"
+                max="720"
+                defaultValue={String(event?.cancelUntilHours ?? 24)}
+              />
+            </Field>
+          </div>
+        </div>
+      </fieldset>
+
       <fieldset>
         <legend className="text-sm font-medium">{t("payments")}</legend>
         <p className="mt-1 text-xs text-muted-foreground">{t("paymentsHint")}</p>

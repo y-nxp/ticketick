@@ -127,6 +127,10 @@ export async function saveEvent(
     return failure("urlInvalid");
   }
 
+  const changeUntilHours = readInteger(data, "changeUntilHours") ?? 24;
+  const cancelUntilHours = readInteger(data, "cancelUntilHours") ?? 24;
+  if (changeUntilHours > 720 || cancelUntilHours > 720) return failure("hoursInvalid");
+
   if (id && scoped) {
     const current = await prisma.event.findUnique({
       where: { id },
@@ -155,6 +159,10 @@ export async function saveEvent(
     contactPhone,
     contactUrl,
     contactNote: contactNote.fr ? contactNote : Prisma.DbNull,
+    selfChange: readBoolean(data, "selfChange"),
+    changeUntilHours,
+    selfCancelFree: readBoolean(data, "selfCancelFree"),
+    cancelUntilHours,
   };
 
   const liens = categoryIds.map((cid) => ({ id: cid }));
