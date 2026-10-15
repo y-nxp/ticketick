@@ -521,7 +521,7 @@
       "freeTicket": "Gratis",
       "targetTitle": "Elige el espectáculo",
       "soldOutTariff": "agotado",
-      "namedTariff": "nominativa, tomada de una entrada devuelta",
+      "namedTariff": "nominativa: nombre y fecha de nacimiento en el resumen",
       "less": "Una plaza menos",
       "more": "Una plaza más",
       "givenValue": "Entradas devueltas",
@@ -542,13 +542,14 @@
         "maxPerOrder": "Esta tarifa está limitada por pedido.",
         "companionRequiresPaid": "Esta tarifa se compra con una plaza de pago del mismo espectáculo.",
         "companionLimit": "Demasiadas plazas a esta tarifa para el número de plazas de pago.",
-        "attendeesMissing": "Las plazas nominativas toman el titular de una entrada devuelta: devuelve otras tantas entradas nominativas.",
-        "attendeeTooOld": "El titular de una entrada devuelta supera la edad de esta tarifa.",
+        "attendeesMissing": "Indique el nombre, los apellidos y la fecha de nacimiento de cada beneficiario.",
+        "attendeeTooOld": "Un beneficiario supera la edad de esta tarifa el día del espectáculo.",
         "seatsUnavailable": "Uno de los asientos elegidos acaba de ser ocupado. Elija otro en el plano.",
         "expired": "Este enlace ya no es válido. Recarga la página.",
         "notFound": "Una de estas entradas ya no se puede cambiar. Recarga la página.",
         "retry": "No se pudo guardar el cambio. Inténtalo de nuevo en un momento.",
-        "failed": "No se pudo hacer el cambio. Recarga la página e inténtalo de nuevo."
+        "failed": "No se pudo hacer el cambio. Recarga la página e inténtalo de nuevo.",
+        "attendeeInvalid": "Indique el nombre y los apellidos del beneficiario y una fecha de nacimiento válida."
       },
       "stepsLabel": "Pasos del cambio",
       "steps": {
@@ -577,8 +578,7 @@
       "viewCart": "Ver el resumen",
       "otherShows": "Añadir otro espectáculo",
       "edit": "Modificar",
-      "remove": "Quitar de la cesta",
-      "noHolder": "Devuelva primero una entrada nominativa: su titular se traslada a este asiento."
+      "remove": "Quitar de la cesta"
     }
   },
   "consent": {

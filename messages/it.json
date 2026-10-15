@@ -2090,7 +2090,7 @@
       "freeTicket": "Gratuito",
       "targetTitle": "Scegliete lo spettacolo",
       "soldOutTariff": "esaurito",
-      "namedTariff": "nominativo, ripreso da un biglietto restituito",
+      "namedTariff": "nominativo: nome e data di nascita richiesti nel riepilogo",
       "less": "Un posto in meno",
       "more": "Un posto in più",
       "givenValue": "Biglietti restituiti",
@@ -2111,13 +2111,14 @@
         "maxPerOrder": "Questa tariffa è limitata per ordine.",
         "companionRequiresPaid": "Questa tariffa si acquista con un posto a pagamento dello stesso spettacolo.",
         "companionLimit": "Troppi posti a questa tariffa per il numero di posti a pagamento.",
-        "attendeesMissing": "I posti nominativi riprendono l'intestatario di un biglietto restituito: restituite altrettanti biglietti nominativi.",
-        "attendeeTooOld": "L'intestatario di un biglietto restituito supera l'età di questa tariffa.",
+        "attendeesMissing": "Indicate nome, cognome e data di nascita di ogni beneficiario.",
+        "attendeeTooOld": "Un beneficiario supera l'età di questa tariffa il giorno dello spettacolo.",
         "seatsUnavailable": "Uno dei posti scelti è appena stato preso. Sceglietene un altro sulla piantina.",
         "expired": "Questo link non è più valido. Ricaricate la pagina.",
         "notFound": "Uno di questi biglietti non può più essere cambiato. Ricaricate la pagina.",
         "retry": "Il cambio non ha potuto essere registrato. Riprovate tra un istante.",
-        "failed": "Il cambio non ha potuto essere fatto. Ricaricate la pagina e riprovate."
+        "failed": "Il cambio non ha potuto essere fatto. Ricaricate la pagina e riprovate.",
+        "attendeeInvalid": "Indicate nome e cognome del beneficiario e una data di nascita valida."
       },
       "stepsLabel": "Fasi del cambio",
       "steps": {
@@ -2146,8 +2147,7 @@
       "viewCart": "Vedi il riepilogo",
       "otherShows": "Aggiungi un altro spettacolo",
       "edit": "Modifica",
-      "remove": "Togli dal carrello",
-      "noHolder": "Restituite prima un biglietto nominativo: il suo titolare viene ripreso su questo posto."
+      "remove": "Togli dal carrello"
     }
   },
   "organizerReport": {

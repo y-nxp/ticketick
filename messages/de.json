@@ -2090,7 +2090,7 @@
       "freeTicket": "Kostenlos",
       "targetTitle": "Wählen Sie die Vorstellung",
       "soldOutTariff": "ausverkauft",
-      "namedTariff": "personalisiert, von einem zurückgegebenen Ticket übernommen",
+      "namedTariff": "personalisiert: Name und Geburtsdatum in der Übersicht",
       "less": "Ein Platz weniger",
       "more": "Ein Platz mehr",
       "givenValue": "Zurückgegebene Tickets",
@@ -2111,13 +2111,14 @@
         "maxPerOrder": "Dieser Tarif ist pro Bestellung begrenzt.",
         "companionRequiresPaid": "Dieser Tarif wird mit einem bezahlten Platz derselben Vorstellung verkauft.",
         "companionLimit": "Zu viele Plätze zu diesem Tarif für die Zahl der bezahlten Plätze.",
-        "attendeesMissing": "Personalisierte Plätze übernehmen den Inhaber eines zurückgegebenen Tickets: Geben Sie ebenso viele personalisierte Tickets zurück.",
-        "attendeeTooOld": "Der Inhaber eines zurückgegebenen Tickets überschreitet das Alter dieses Tarifs.",
+        "attendeesMissing": "Geben Sie Vorname, Name und Geburtsdatum jeder begünstigten Person an.",
+        "attendeeTooOld": "Eine begünstigte Person überschreitet am Tag der Vorstellung die Altersgrenze dieses Tarifs.",
         "seatsUnavailable": "Einer der gewählten Plätze wurde soeben vergeben. Bitte wählen Sie auf dem Plan einen anderen.",
         "expired": "Dieser Link ist nicht mehr gültig. Laden Sie die Seite neu.",
         "notFound": "Eines dieser Tickets kann nicht mehr geändert werden. Laden Sie die Seite neu.",
         "retry": "Der Tausch konnte nicht gespeichert werden. Versuchen Sie es gleich noch einmal.",
-        "failed": "Der Tausch konnte nicht durchgeführt werden. Laden Sie die Seite neu und versuchen Sie es noch einmal."
+        "failed": "Der Tausch konnte nicht durchgeführt werden. Laden Sie die Seite neu und versuchen Sie es noch einmal.",
+        "attendeeInvalid": "Geben Sie Vor- und Nachname der begünstigten Person sowie ein gültiges Geburtsdatum an."
       },
       "stepsLabel": "Schritte des Tauschs",
       "steps": {
@@ -2146,8 +2147,7 @@
       "viewCart": "Zur Übersicht",
       "otherShows": "Weitere Vorstellung hinzufügen",
       "edit": "Ändern",
-      "remove": "Aus dem Warenkorb entfernen",
-      "noHolder": "Geben Sie zuerst ein personalisiertes Ticket zurück: Sein Inhaber wird für diesen Platz übernommen."
+      "remove": "Aus dem Warenkorb entfernen"
     }
   },
   "organizerReport": {

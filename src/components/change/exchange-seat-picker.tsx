@@ -9,7 +9,11 @@ import { getSeatState } from "@/lib/seating/public-actions";
 import { tariffRoom, type BasketTariff } from "@/lib/orders/self-service-rules";
 import { cn } from "@/lib/utils";
 
-export type PickerTariff = BasketTariff & { name: string; seatZones: string[] };
+export type PickerTariff = BasketTariff & {
+  name: string;
+  seatZones: string[];
+  maxAgeYears: number | null;
+};
 
 export interface SeatPick {
   key: string;
@@ -33,7 +37,6 @@ export function ExchangeSeatPicker({
   picks,
   onPicks,
   ownSeats,
-  holders,
   price,
 }: {
   sessionId: string;
@@ -42,8 +45,6 @@ export function ExchangeSeatPicker({
   picks: SeatPick[];
   onPicks: (picks: SeatPick[]) => void;
   ownSeats: Set<string>;
-  /** Billets rendus avec un titulaire : autant de places nominatives possibles. */
-  holders: number;
   price: (cents: number) => string;
 }) {
   const t = useTranslations("change.exchange");
@@ -79,7 +80,7 @@ export function ExchangeSeatPicker({
     return out;
   };
   const roomIn = (tariff: PickerTariff, counts: Record<string, number>) =>
-    tariffRoom({ ticketTypeId: tariff.id, counts, tariffs, holders });
+    tariffRoom({ ticketTypeId: tariff.id, counts, tariffs });
   /** Une place de plus à ce tarif, `list` restant inchangée ? */
   const fits = (tariff: PickerTariff, list: SeatPick[]) => {
     const counts = countsOf(list);
@@ -91,7 +92,7 @@ export function ExchangeSeatPicker({
     return open.find((x) => !x.requiresAttendee) ?? open[0];
   };
 
-  /** Gratuités ou places nominatives devenues impossibles : tarif de la place, sinon retirées. */
+  /** Gratuités devenues impossibles : tarif de la place, sinon retirées. */
   function normalize(list: SeatPick[]): SeatPick[] {
     let out = list;
     for (let i = 0; i <= list.length; i++) {
@@ -200,23 +201,14 @@ export function ExchangeSeatPicker({
                       {options.map((tariff) => {
                         const checked = tariff.id === pick.ticketTypeId;
                         const ok = checked || fits(tariff, others);
-                        const tariffOf = (p: SeatPick) => tariffs.find((y) => y.id === p.ticketTypeId);
                         const paidOthers = others.some((p) => {
-                          const x = tariffOf(p);
+                          const x = tariffs.find((y) => y.id === p.ticketTypeId);
                           return x != null && !isCompanion(x) && x.priceCents > 0;
                         });
-                        const noHolder =
-                          tariff.requiresAttendee &&
-                          others.filter((p) => tariffOf(p)?.requiresAttendee).length >= holders;
-                        const reason = ok
-                          ? null
-                          : isCompanion(tariff) && !paidOthers
-                            ? te("companionNeedsPaid")
-                            : noHolder
-                              ? t("noHolder")
-                              : isCompanion(tariff)
-                                ? te("companionMaxReached")
-                                : null;
+                        const reason =
+                          ok || !isCompanion(tariff)
+                            ? null
+                            : te(paidOthers ? "companionMaxReached" : "companionNeedsPaid");
                         return (
                           <label
                             key={tariff.id}

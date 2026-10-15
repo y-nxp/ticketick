@@ -2,7 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import type { Translated } from "@/lib/types";
-import { ageOn } from "./attendees";
+import { checkAttendees, type AttendeeError, type Holder } from "./attendees";
 import {
   eventRulesSelect,
   markLinkUsed,
@@ -38,7 +38,19 @@ import {
  * jauge quand le spectacle le permet.
  */
 
-export type ExchangeError = EditError | BasketError | "expired" | "attendeeTooOld";
+export type ExchangeError =
+  | EditError
+  | BasketError
+  | "expired"
+  | "attendeesMissing"
+  | "attendeeInvalid"
+  | "attendeeTooOld";
+
+const ATTENDEE_ERRORS: Record<AttendeeError, ExchangeError> = {
+  attendee_missing: "attendeesMissing",
+  attendee_invalid: "attendeeInvalid",
+  attendee_too_old: "attendeeTooOld",
+};
 
 export interface ExchangeTicket {
   id: string;
@@ -50,8 +62,8 @@ export interface ExchangeTicket {
   seatKey: string | null;
   seatLabel: string | null;
   paidCents: number;
-  /** Titulaire inscrit (nom et date de naissance) : reporté sur les places nominatives. */
-  holder: boolean;
+  /** Bénéficiaire inscrit : proposé d'avance pour les places nominatives. */
+  holder: { name: string; birthDate: string } | null;
 }
 
 export interface ExchangeTarget {
@@ -220,7 +232,10 @@ export async function exchangeOptions(input: {
       seatKey: t.seatKey,
       seatLabel: t.seatLabel,
       paidCents: paidOf.get(t.ticketTypeId) ?? 0,
-      holder: !!(t.attendeeName && t.attendeeBirthDate),
+      holder:
+        t.attendeeName && t.attendeeBirthDate
+          ? { name: t.attendeeName, birthDate: t.attendeeBirthDate.toISOString().slice(0, 10) }
+          : null,
     })),
     targets: await targetSessions(organizerIds),
   };
@@ -233,8 +248,17 @@ export type ExchangeResult =
 
 export interface ExchangeItem {
   sessionId: string;
-  /** `seatKeys` : places choisies sur le plan, une par billet ; sinon attribuées d'office. */
-  lines: { ticketTypeId: string; quantity: number; seatKeys?: string[] }[];
+  /**
+   * `seatKeys` : places choisies sur le plan, une par billet ; sinon attribuées
+   * d'office. `attendees` : un bénéficiaire par billet nominatif, dans l'ordre
+   * des places.
+   */
+  lines: {
+    ticketTypeId: string;
+    quantity: number;
+    seatKeys?: string[];
+    attendees?: { name: string; birthDate: string }[];
+  }[];
 }
 
 /** Un panier : plusieurs spectacles possibles, une seule différence à payer. */
@@ -278,12 +302,8 @@ export async function applyExchange(input: {
   const organizerIds = [...new Set(owned.map((t) => t.ticketType.session.event.organizerId))];
   const open = new Map((await targetSessions(organizerIds)).map((s) => [s.sessionId, s]));
 
-  const holders = given
-    .filter((t) => t.attendeeName && t.attendeeBirthDate)
-    .map((t) => ({ name: t.attendeeName!, birthDate: t.attendeeBirthDate! }));
   const tariffOf = new Map<string, ExchangeTarget["tariffs"][number]>();
-  const assigned: { ticketTypeId: string; holder: (typeof holders)[number] }[] = [];
-  let next = 0;
+  const assigned: { ticketTypeId: string; seatKey: string | null; holder: Holder }[] = [];
   for (const item of items) {
     const target = open.get(item.sessionId);
     if (!target) return { ok: false, error: "notFound" };
@@ -301,26 +321,28 @@ export async function applyExchange(input: {
       ...t,
       available: t.available + (freed.get(t.id) ?? 0),
     }));
-    const basket = checkBasket({ lines: item.lines, tariffs, holders: holders.length });
+    const basket = checkBasket({ lines: item.lines, tariffs });
     if (!basket.ok) return basket;
     for (const t of tariffs) tariffOf.set(t.id, t);
 
-    // Titulaires reportés dans l'ordre des billets rendus, chacun une fois tous
-    // spectacles confondus ; l'âge se vérifie au jour de la nouvelle séance.
+    // Mêmes contrôles qu'au paiement sur le site ; l'âge au jour de la séance.
+    const attendees = checkAttendees(
+      tariffs.map((t) => ({
+        id: t.id,
+        requiresAttendee: t.requiresAttendee,
+        maxAgeYears: t.maxAgeYears,
+        sessionStartsAt: target.startsAt,
+      })),
+      new Map(item.lines.map((l) => [l.ticketTypeId, l.quantity])),
+      item.lines.flatMap((l) => (l.attendees ?? []).map((a) => ({ ...a, ticketTypeId: l.ticketTypeId }))),
+    );
+    if (!attendees.ok) {
+      return { ok: false, error: ATTENDEE_ERRORS[attendees.error], ticketTypeId: attendees.ticketTypeId };
+    }
     for (const line of item.lines) {
-      const tariff = tariffOf.get(line.ticketTypeId)!;
-      if (!tariff.requiresAttendee) continue;
-      for (let i = 0; i < line.quantity; i++) {
-        const holder = holders[next++];
-        if (!holder) return { ok: false, error: "attendeesMissing" };
-        if (
-          tariff.maxAgeYears != null &&
-          ageOn(holder.birthDate, target.startsAt) >= tariff.maxAgeYears
-        ) {
-          return { ok: false, error: "attendeeTooOld", ticketTypeId: tariff.id };
-        }
-        assigned.push({ ticketTypeId: tariff.id, holder });
-      }
+      (attendees.byType.get(line.ticketTypeId) ?? []).forEach((holder, i) =>
+        assigned.push({ ticketTypeId: line.ticketTypeId, seatKey: line.seatKeys?.[i] ?? null, holder }),
+      );
     }
   }
 
@@ -360,11 +382,16 @@ export async function applyExchange(input: {
         const fresh = await tx.ticket.findMany({
           where: { id: { in: added.ticketIds } },
           orderBy: [{ createdAt: "asc" }, { id: "asc" }],
-          select: { id: true, ticketTypeId: true },
+          select: { id: true, ticketTypeId: true, seatKey: true },
         });
         const used = new Set<string>();
-        for (const { ticketTypeId, holder } of assigned) {
-          const ticket = fresh.find((t) => t.ticketTypeId === ticketTypeId && !used.has(t.id));
+        for (const { ticketTypeId, seatKey, holder } of assigned) {
+          const ticket = fresh.find(
+            (t) =>
+              t.ticketTypeId === ticketTypeId &&
+              !used.has(t.id) &&
+              (seatKey == null || t.seatKey === seatKey),
+          );
           if (!ticket) throw new EditFailure("retry");
           used.add(ticket.id);
           await tx.ticket.update({

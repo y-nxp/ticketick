@@ -38,12 +38,12 @@ const tariffs = [
   { ...full, id: "youth", priceCents: 0, maxPerPaidTicket: 2, requiresAttendee: true },
 ];
 
-test("panier d'échange : stock, accompagnants et titulaires", () => {
-  assert.deepEqual(checkBasket({ lines: [], tariffs, holders: 0 }), { ok: false, error: "empty" });
-  assert.deepEqual(checkBasket({ lines: [{ ticketTypeId: "cat1", quantity: 3 }], tariffs, holders: 0 }), { ok: true });
-  assert.equal(
-    checkBasket({ lines: [{ ticketTypeId: "youth", quantity: 1 }], tariffs, holders: 1 }).ok,
-    false,
+test("panier d'échange : stock et accompagnants", () => {
+  assert.deepEqual(checkBasket({ lines: [], tariffs }), { ok: false, error: "empty" });
+  assert.deepEqual(checkBasket({ lines: [{ ticketTypeId: "cat1", quantity: 3 }], tariffs }), { ok: true });
+  assert.deepEqual(
+    checkBasket({ lines: [{ ticketTypeId: "youth", quantity: 1 }], tariffs }),
+    { ok: false, error: "companionRequiresPaid", ticketTypeId: "youth" },
   );
   assert.deepEqual(
     checkBasket({
@@ -52,9 +52,8 @@ test("panier d'échange : stock, accompagnants et titulaires", () => {
         { ticketTypeId: "youth", quantity: 2 },
       ],
       tariffs,
-      holders: 1,
     }),
-    { ok: false, error: "attendeesMissing" },
+    { ok: true },
   );
   assert.deepEqual(
     checkBasket({
@@ -63,24 +62,22 @@ test("panier d'échange : stock, accompagnants et titulaires", () => {
         { ticketTypeId: "youth", quantity: 3 },
       ],
       tariffs,
-      holders: 3,
     }),
     { ok: false, error: "companionLimit", ticketTypeId: "youth" },
   );
   assert.deepEqual(
-    checkBasket({ lines: [{ ticketTypeId: "cat1", quantity: 60 }], tariffs, holders: 0 }),
+    checkBasket({ lines: [{ ticketTypeId: "cat1", quantity: 60 }], tariffs }),
     { ok: false, error: "soldOut", ticketTypeId: "cat1" },
   );
 });
 
-test("gratuité nominative : seulement avec une place payante et un titulaire", () => {
-  const room = (counts: Record<string, number>, holders: number) =>
-    tariffRoom({ ticketTypeId: "youth", counts, tariffs, holders });
-  assert.equal(room({}, 2), 0);
-  assert.equal(room({ cat2: 1 }, 2), 2);
-  assert.equal(room({ cat2: 1 }, 1), 1);
-  assert.equal(room({ cat1: 2, cat2: 1 }, 0), 0);
-  assert.equal(tariffRoom({ ticketTypeId: "cat1", counts: {}, tariffs, holders: 0 }), 10);
+test("gratuité nominative : seulement avec une place payante", () => {
+  const room = (counts: Record<string, number>) => tariffRoom({ ticketTypeId: "youth", counts, tariffs });
+  assert.equal(room({}), 0);
+  assert.equal(room({ cat2: 1 }), 2);
+  assert.equal(room({ cat1: 2, cat2: 1 }), 6);
+  assert.equal(room({ cat1: 2, cat2: 1, youth: 6 }), 6);
+  assert.equal(tariffRoom({ ticketTypeId: "cat1", counts: {}, tariffs }), 10);
 });
 
 test("on ne paie que la hausse nette, jamais de remboursement", () => {

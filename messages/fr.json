@@ -2090,7 +2090,7 @@
       "freeTicket": "Gratuit",
       "targetTitle": "Choisissez le spectacle",
       "soldOutTariff": "complet",
-      "namedTariff": "nominatif, repris d'un billet rendu",
+      "namedTariff": "nominatif : nom et date de naissance demandés au récapitulatif",
       "less": "Une place de moins",
       "more": "Une place de plus",
       "givenValue": "Billets rendus",
@@ -2111,13 +2111,14 @@
         "maxPerOrder": "Ce tarif est limité en nombre de places par commande.",
         "companionRequiresPaid": "Ce tarif s'achète avec une place payante du même spectacle.",
         "companionLimit": "Trop de places à ce tarif pour le nombre de places payantes.",
-        "attendeesMissing": "Les places nominatives reprennent le titulaire d'un billet rendu : rendez autant de billets nominatifs.",
-        "attendeeTooOld": "Le titulaire d'un billet rendu dépasse l'âge de ce tarif.",
+        "attendeesMissing": "Indiquez le prénom, le nom et la date de naissance de chaque bénéficiaire.",
+        "attendeeTooOld": "Un bénéficiaire dépasse l'âge de ce tarif le jour du spectacle.",
         "seatsUnavailable": "Une des places choisies vient d'être prise. Choisissez-en une autre sur le plan.",
         "expired": "Ce lien n'est plus valable. Rechargez la page.",
         "notFound": "Un de ces billets ne peut plus être changé. Rechargez la page.",
         "retry": "L'échange n'a pas pu être enregistré. Réessayez dans un instant.",
-        "failed": "L'échange n'a pas pu être fait. Rechargez la page et réessayez."
+        "failed": "L'échange n'a pas pu être fait. Rechargez la page et réessayez.",
+        "attendeeInvalid": "Indiquez le prénom et le nom du bénéficiaire, et une date de naissance valable."
       },
       "stepsLabel": "Étapes de l'échange",
       "steps": {
@@ -2146,8 +2147,7 @@
       "viewCart": "Voir le récapitulatif",
       "otherShows": "Ajouter un autre spectacle",
       "edit": "Modifier",
-      "remove": "Retirer du panier",
-      "noHolder": "Rendez d'abord un billet nominatif : son titulaire est repris sur cette place."
+      "remove": "Retirer du panier"
     }
   },
   "organizerReport": {

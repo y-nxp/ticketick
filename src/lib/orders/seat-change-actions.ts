@@ -68,6 +68,10 @@ const exchangeSchema = z.object({
               ticketTypeId: z.string().min(1).max(40),
               quantity: z.number().int().min(0).max(50),
               seatKeys: z.array(z.string().min(1).max(40)).max(50).optional(),
+              attendees: z
+                .array(z.object({ name: z.string().max(120), birthDate: z.string().max(10) }))
+                .max(50)
+                .optional(),
             }),
           )
           .min(1)

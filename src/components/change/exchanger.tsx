@@ -36,7 +36,13 @@ export interface ExchangerTicket {
   tariffName: string;
   seatLabel: string | null;
   paidCents: number;
-  holder: boolean;
+  holder: Attendee | null;
+}
+
+interface Attendee {
+  name: string;
+  /** AAAA-MM-JJ */
+  birthDate: string;
 }
 
 export interface ExchangerTarget {
@@ -68,10 +74,25 @@ interface CartShow {
   target: ExchangerTarget;
   tariffs: PickerTariff[];
   lines: Line[];
-  named: number;
+}
+
+/** Une place nominative du panier, à remplir au récapitulatif. */
+interface Slot {
+  key: string;
+  sessionId: string;
+  ticketTypeId: string;
+  legend: string;
+  maxAgeYears: number | null;
 }
 
 const EMPTY: CartEntry = { qty: {}, picks: [] };
+const NO_ATTENDEE: Attendee = { name: "", birthDate: "" };
+
+/** Mêmes exigences que le serveur : prénom et nom, date complète. */
+function attendeeComplete(a: Attendee): boolean {
+  const name = a.name.trim().replace(/\s+/g, " ");
+  return name.length >= 3 && name.includes(" ") && /^\d{4}-\d{2}-\d{2}$/.test(a.birthDate);
+}
 
 const STEPS = ["tickets", "show", "seats", "confirm"] as const;
 
@@ -82,6 +103,7 @@ const ERRORS: string[] = [
   "companionRequiresPaid",
   "companionLimit",
   "attendeesMissing",
+  "attendeeInvalid",
   "attendeeTooOld",
   "seatsUnavailable",
   "expired",
@@ -103,18 +125,20 @@ export function Exchanger({
   targets: ExchangerTarget[];
 }) {
   const t = useTranslations("change.exchange");
+  const tc = useTranslations("checkout");
+  const te = useTranslations("event");
   const router = useRouter();
   const top = React.useRef<HTMLElement>(null);
   const [step, setStep] = React.useState(0);
   const [give, setGive] = React.useState<string[]>([]);
   const [cart, setCart] = React.useState<Record<string, CartEntry>>({});
+  const [attendees, setAttendees] = React.useState<Record<string, Attendee>>({});
   const [sessionId, setSessionId] = React.useState("");
   const [state, setState] = React.useState<ExchangeState | null>(null);
   const [pending, startTransition] = React.useTransition();
   const price = (cents: number) => formatPrice(cents, locale, currency);
 
   const given = tickets.filter((x) => give.includes(x.id));
-  const holders = given.filter((x) => x.holder).length;
   const freedOf = (ticketTypeId: string) =>
     given.filter((x) => x.ticketTypeId === ticketTypeId).length;
   // Les places rendues sur la même séance repartent en vente.
@@ -135,18 +159,12 @@ export function Exchanger({
     const tariffs = tariffsOf(target);
     const lines = linesOf(target, tariffs, entry);
     if (lines.length === 0) return [];
-    const named = lines.reduce((sum, l) => sum + (l.tariff.requiresAttendee ? l.quantity : 0), 0);
-    return [{ target, tariffs, lines, named }];
+    return [{ target, tariffs, lines }];
   });
-  const namedTotal = shows.reduce((sum, s) => sum + s.named, 0);
-  /** Titulaires encore libres pour ce spectacle, les autres du panier gardant les leurs. */
-  const holdersFor = (id: string) =>
-    holders - namedTotal + (shows.find((s) => s.target.sessionId === id)?.named ?? 0);
   const checkOf = (show: CartShow) =>
     checkBasket({
       lines: show.lines.map((l) => ({ ticketTypeId: l.tariff.id, quantity: l.quantity })),
       tariffs: show.tariffs,
-      holders: holdersFor(show.target.sessionId),
     });
   const failing = shows
     .map((show) => ({ show, check: checkOf(show) }))
@@ -163,14 +181,37 @@ export function Exchanger({
   });
   const ready = shows.length > 0 && !failing;
 
+  const slots: Slot[] = shows.flatMap(({ target: show, lines }) =>
+    lines.flatMap(({ tariff, quantity, seats }) =>
+      tariff.requiresAttendee
+        ? Array.from({ length: quantity }, (_, i) => ({
+            key: `${show.sessionId}|${tariff.id}|${seats[i]?.key ?? i}`,
+            sessionId: show.sessionId,
+            ticketTypeId: tariff.id,
+            legend: [show.title, tariff.name, seats[i]?.label].filter(Boolean).join(" · "),
+            maxAgeYears: tariff.maxAgeYears,
+          }))
+        : [],
+    ),
+  );
+  // Les bénéficiaires des billets rendus sont proposés d'avance, dans l'ordre.
+  const holders = given.flatMap((x) => (x.holder ? [x.holder] : []));
+  const attendeeOf = (slot: Slot, index: number) =>
+    attendees[slot.key] ?? holders[index] ?? NO_ATTENDEE;
+  const attendeesDone = slots.every((slot, i) => attendeeComplete(attendeeOf(slot, i)));
+
+  function setAttendee(slot: Slot, index: number, patch: Partial<Attendee>) {
+    setState(null);
+    setAttendees((prev) => ({ ...prev, [slot.key]: { ...attendeeOf(slot, index), ...patch } }));
+  }
+
   const target = targets.find((s) => s.sessionId === sessionId) ?? null;
   const entry = cart[sessionId] ?? EMPTY;
   const tariffs = target ? tariffsOf(target) : [];
   const here = shows.find((s) => s.target.sessionId === sessionId) ?? null;
   const hereCheck = here ? checkOf(here) : null;
-  const holdersHere = holdersFor(sessionId);
   const roomOf = (id: string, counts: Record<string, number>) =>
-    tariffRoom({ ticketTypeId: id, counts, tariffs, holders: holdersHere });
+    tariffRoom({ ticketTypeId: id, counts, tariffs });
   const ownSeats = new Set(
     tickets.flatMap((x) => (x.sessionId === sessionId && x.seatKey ? [x.seatKey] : [])),
   );
@@ -205,7 +246,7 @@ export function Exchanger({
     });
   }
 
-  /** Les gratuités et places nominatives suivent les places payantes et les titulaires. */
+  /** Les gratuités suivent les places payantes. */
   function setQuantity(ticketTypeId: string, value: number) {
     const next = { ...entry.qty, [ticketTypeId]: Math.max(0, value) };
     const companionsLast = [...tariffs].sort(
@@ -221,6 +262,7 @@ export function Exchanger({
     setState(null);
     setGive([]);
     setCart({});
+    setAttendees({});
     setSessionId("");
     setStep(0);
   }
@@ -250,7 +292,11 @@ export function Exchanger({
   }
 
   function confirm() {
-    if (!ready) return;
+    if (!ready || !attendeesDone) return;
+    const attendeesFor = (sid: string, ticketTypeId: string) =>
+      slots.flatMap((slot, i) =>
+        slot.sessionId === sid && slot.ticketTypeId === ticketTypeId ? [attendeeOf(slot, i)] : [],
+      );
     startTransition(async () => {
       const result = await confirmExchangeAction(access, {
         give,
@@ -260,6 +306,9 @@ export function Exchanger({
             ticketTypeId: l.tariff.id,
             quantity: l.quantity,
             ...(show.target.seated ? { seatKeys: l.seats.map((p) => p.key) } : {}),
+            ...(l.tariff.requiresAttendee
+              ? { attendees: attendeesFor(show.target.sessionId, l.tariff.id) }
+              : {}),
           })),
         })),
       });
@@ -485,7 +534,6 @@ export function Exchanger({
                   picks={entry.picks}
                   onPicks={(next) => updateEntry(target.sessionId, { picks: next })}
                   ownSeats={ownSeats}
-                  holders={holdersHere}
                   price={price}
                 />
               </div>
@@ -507,13 +555,10 @@ export function Exchanger({
                             {soldOut ? ` · ${t("soldOutTariff")}` : ""}
                             {tariff.requiresAttendee ? ` · ${t("namedTariff")}` : ""}
                           </span>
-                          {!soldOut && n >= max ? (
-                            <QuantityLimit
-                              tariff={tariff}
-                              tariffs={tariffs}
-                              qty={entry.qty}
-                              holders={holdersHere}
-                            />
+                          {tariff.maxPerPaidTicket != null && !soldOut && n >= max ? (
+                            <span className="block text-xs text-muted-foreground">
+                              {te(max === 0 ? "companionNeedsPaid" : "companionMaxReached")}
+                            </span>
                           ) : null}
                         </span>
                         <span className="flex shrink-0 items-center gap-2">
@@ -639,6 +684,43 @@ export function Exchanger({
               </div>
             </div>
 
+            {slots.length > 0 ? (
+              <div className="mt-4 rounded-card border border-border p-4">
+                <p className="text-sm font-semibold">{tc("attendeesTitle")}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{tc("attendeesHint")}</p>
+                <div className="mt-4 space-y-4">
+                  {slots.map((slot, i) => {
+                    const value = attendeeOf(slot, i);
+                    return (
+                      <fieldset
+                        key={slot.key}
+                        className="grid gap-3 rounded-control border border-border p-3 sm:grid-cols-2"
+                      >
+                        <legend className="px-1 text-sm font-medium">{slot.legend}</legend>
+                        <Field
+                          label={tc("attendeeName")}
+                          value={value.name}
+                          autoComplete="off"
+                          onChange={(name) => setAttendee(slot, i, { name })}
+                        />
+                        <Field
+                          label={tc("attendeeBirthDate")}
+                          type="date"
+                          value={value.birthDate}
+                          onChange={(birthDate) => setAttendee(slot, i, { birthDate })}
+                          hint={
+                            slot.maxAgeYears
+                              ? tc("attendeeAgeHint", { age: slot.maxAgeYears })
+                              : undefined
+                          }
+                        />
+                      </fieldset>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+
             <div className="mt-5 space-y-1 text-sm">
               {given.length > 0 ? (
                 <div className="flex justify-between">
@@ -668,6 +750,8 @@ export function Exchanger({
               <p role="alert" className="mt-3 text-sm text-destructive">
                 {failing.show.target.title} : {errorText(failing.check.error)}
               </p>
+            ) : !attendeesDone ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("errors.attendeesMissing")}</p>
             ) : null}
             {state && !state.ok ? (
               <p role="alert" className="mt-3 text-sm text-destructive">
@@ -683,7 +767,7 @@ export function Exchanger({
                 <ArrowLeft className="size-4" />
                 {t("back")}
               </Button>
-              <Button onClick={confirm} disabled={pending || !ready}>
+              <Button onClick={confirm} disabled={pending || !ready || !attendeesDone}>
                 {pending
                   ? t("saving")
                   : quote.dueCents > 0
@@ -706,33 +790,35 @@ function StepFooter({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Pourquoi le « + » d'un tarif est grisé, quand ce n'est pas le stock. */
-function QuantityLimit({
-  tariff,
-  tariffs,
-  qty,
-  holders,
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+  autoComplete,
+  hint,
 }: {
-  tariff: PickerTariff;
-  tariffs: PickerTariff[];
-  qty: Record<string, number>;
-  holders: number;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  autoComplete?: string;
+  hint?: string;
 }) {
-  const t = useTranslations("change.exchange");
-  const te = useTranslations("event");
-  const count = (pick: (x: PickerTariff) => boolean) =>
-    tariffs.filter(pick).reduce((sum, x) => sum + (qty[x.id] ?? 0), 0);
-  const companion = tariff.maxPerPaidTicket != null;
-  const paid = count((x) => x.maxPerPaidTicket == null && x.priceCents > 0);
-  const reason =
-    companion && paid === 0
-      ? te("companionNeedsPaid")
-      : tariff.requiresAttendee && count((x) => x.requiresAttendee) >= holders
-        ? t("noHolder")
-        : companion
-          ? te("companionMaxReached")
-          : null;
-  return reason ? <span className="block text-xs text-muted-foreground">{reason}</span> : null;
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="text-sm font-medium">{label}</span>
+      <input
+        type={type}
+        value={value}
+        required
+        autoComplete={autoComplete}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-11 rounded-control border border-border bg-background px-3.5 text-sm outline-none focus:border-ring"
+      />
+      {hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
+    </label>
+  );
 }
 
 function ShowLines({

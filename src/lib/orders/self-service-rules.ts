@@ -56,7 +56,7 @@ export interface BasketTariff {
   /** Au plus N de ces places par billet payant de la séance (ou du tarif source). */
   maxPerPaidTicket: number | null;
   companionOfId: string | null;
-  /** Nom et date de naissance exigés : repris des billets rendus. */
+  /** Nom et date de naissance du bénéficiaire exigés, comme au paiement sur le site. */
   requiresAttendee: boolean;
 }
 
@@ -65,18 +65,12 @@ export type BasketError =
   | "soldOut"
   | "maxPerOrder"
   | "companionRequiresPaid"
-  | "companionLimit"
-  | "attendeesMissing";
+  | "companionLimit";
 
-/**
- * Nouveaux billets d'un échange. Les places nominatives (âge, accompagnant)
- * reprennent le titulaire d'un billet rendu : on n'en ajoute pas d'office.
- */
+/** Nouveaux billets d'un échange : stock, plafond par commande, gratuités liées aux places payantes. */
 export function checkBasket(input: {
   lines: { ticketTypeId: string; quantity: number }[];
   tariffs: BasketTariff[];
-  /** Billets rendus qui portent un titulaire (nom et date de naissance). */
-  holders: number;
 }): { ok: true } | { ok: false; error: BasketError; ticketTypeId?: string } {
   const lines = input.lines.filter((l) => l.quantity > 0);
   if (lines.length === 0) return { ok: false, error: "empty" };
@@ -84,7 +78,6 @@ export function checkBasket(input: {
   const qty = new Map(lines.map((l) => [l.ticketTypeId, l.quantity]));
 
   let paid = 0;
-  let named = 0;
   for (const line of lines) {
     const tariff = byId.get(line.ticketTypeId);
     if (!tariff) return { ok: false, error: "soldOut", ticketTypeId: line.ticketTypeId };
@@ -95,7 +88,6 @@ export function checkBasket(input: {
       return { ok: false, error: "maxPerOrder", ticketTypeId: tariff.id };
     }
     if (tariff.maxPerPaidTicket == null && tariff.priceCents > 0) paid += line.quantity;
-    if (tariff.requiresAttendee) named += line.quantity;
   }
   for (const line of lines) {
     const tariff = byId.get(line.ticketTypeId)!;
@@ -106,20 +98,18 @@ export function checkBasket(input: {
       return { ok: false, error: "companionLimit", ticketTypeId: tariff.id };
     }
   }
-  if (named > input.holders) return { ok: false, error: "attendeesMissing" };
   return { ok: true };
 }
 
 /**
  * Places encore possibles à ce tarif, les autres quantités restant telles
  * quelles : mêmes règles que `checkBasket`, pour griser à l'écran ce qu'il
- * refuserait (gratuité sans place payante, nominatif sans titulaire).
+ * refuserait (gratuité sans place payante).
  */
 export function tariffRoom(input: {
   ticketTypeId: string;
   counts: Record<string, number>;
   tariffs: BasketTariff[];
-  holders: number;
 }): number {
   const tariff = input.tariffs.find((t) => t.id === input.ticketTypeId);
   if (!tariff) return 0;
@@ -133,12 +123,6 @@ export function tariffRoom(input: {
             .reduce((sum, t) => sum + count(t.id), 0)
         : count(tariff.companionOfId);
     room = Math.min(room, base * tariff.maxPerPaidTicket);
-  }
-  if (tariff.requiresAttendee) {
-    const otherNamed = input.tariffs
-      .filter((t) => t.requiresAttendee && t.id !== tariff.id)
-      .reduce((sum, t) => sum + count(t.id), 0);
-    room = Math.min(room, input.holders - otherNamed);
   }
   return Math.max(0, room);
 }
