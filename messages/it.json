@@ -2093,7 +2093,6 @@
       "namedTariff": "nominativo, ripreso da un biglietto restituito",
       "less": "Un posto in meno",
       "more": "Un posto in più",
-      "seatsAssigned": "I posti vengono assegnati automaticamente, vicini se possibile. Potrete poi sceglierne altri sulla pianta.",
       "givenValue": "Biglietti restituiti",
       "newValue": "Nuovi biglietti",
       "due": "Da pagare",
@@ -2114,7 +2113,7 @@
         "companionLimit": "Troppi posti a questa tariffa per il numero di posti a pagamento.",
         "attendeesMissing": "I posti nominativi riprendono l'intestatario di un biglietto restituito: restituite altrettanti biglietti nominativi.",
         "attendeeTooOld": "L'intestatario di un biglietto restituito supera l'età di questa tariffa.",
-        "seatsUnavailable": "Non ci sono abbastanza posti liberi per questa tariffa. Sceglietene un'altra.",
+        "seatsUnavailable": "Uno dei posti scelti è appena stato preso. Sceglietene un altro sulla piantina.",
         "expired": "Questo link non è più valido. Ricaricate la pagina.",
         "notFound": "Uno di questi biglietti non può più essere cambiato. Ricaricate la pagina.",
         "retry": "Il cambio non ha potuto essere registrato. Riprovate tra un istante.",
@@ -2138,7 +2137,8 @@
       "from": "da",
       "soldOut": "Esaurito",
       "next": "Continuare",
-      "back": "Indietro"
+      "back": "Indietro",
+      "currentSeats": "I vostri posti attuali"
     }
   },
   "organizerReport": {

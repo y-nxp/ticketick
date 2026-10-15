@@ -67,6 +67,8 @@ export async function ChangeScreen({
             tickets={exchange.tickets.map((ticket) => ({
               id: ticket.id,
               ticketTypeId: ticket.ticketTypeId,
+              sessionId: ticket.sessionId,
+              seatKey: ticket.seatKey,
               title: translate(ticket.eventTitle, locale),
               when: formatDate(ticket.startsAt, fmt, { weekday: "long" }),
               tariffName: translate(ticket.tariffName, locale),

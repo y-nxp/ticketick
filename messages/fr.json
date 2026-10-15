@@ -2093,7 +2093,6 @@
       "namedTariff": "nominatif, repris d'un billet rendu",
       "less": "Une place de moins",
       "more": "Une place de plus",
-      "seatsAssigned": "Les places sont attribuées automatiquement, côte à côte si possible. Vous pourrez ensuite en choisir d'autres sur le plan.",
       "givenValue": "Billets rendus",
       "newValue": "Nouveaux billets",
       "due": "À payer",
@@ -2114,7 +2113,7 @@
         "companionLimit": "Trop de places à ce tarif pour le nombre de places payantes.",
         "attendeesMissing": "Les places nominatives reprennent le titulaire d'un billet rendu : rendez autant de billets nominatifs.",
         "attendeeTooOld": "Le titulaire d'un billet rendu dépasse l'âge de ce tarif.",
-        "seatsUnavailable": "Plus assez de places libres pour ce tarif. Choisissez-en un autre.",
+        "seatsUnavailable": "Une des places choisies vient d'être prise. Choisissez-en une autre sur le plan.",
         "expired": "Ce lien n'est plus valable. Rechargez la page.",
         "notFound": "Un de ces billets ne peut plus être changé. Rechargez la page.",
         "retry": "L'échange n'a pas pu être enregistré. Réessayez dans un instant.",
@@ -2138,7 +2137,8 @@
       "from": "dès",
       "soldOut": "Complet",
       "next": "Continuer",
-      "back": "Retour"
+      "back": "Retour",
+      "currentSeats": "Vos places actuelles"
     }
   },
   "organizerReport": {

@@ -12,12 +12,15 @@ import {
   type ClientAccess,
   type ExchangeState,
 } from "@/lib/orders/seat-change-actions";
-import { checkBasket, exchangeDue, type BasketTariff } from "@/lib/orders/self-service-rules";
+import { checkBasket, exchangeDue } from "@/lib/orders/self-service-rules";
 import { cn, formatPrice } from "@/lib/utils";
+import { ExchangeSeatPicker, type PickerTariff, type SeatPick } from "./exchange-seat-picker";
 
 export interface ExchangerTicket {
   id: string;
   ticketTypeId: string;
+  sessionId: string;
+  seatKey: string | null;
   title: string;
   when: string;
   tariffName: string;
@@ -36,7 +39,7 @@ export interface ExchangerTarget {
   tags: string[];
   venue: string | null;
   seated: boolean;
-  tariffs: (BasketTariff & { name: string })[];
+  tariffs: PickerTariff[];
 }
 
 const STEPS = ["tickets", "show", "seats", "confirm"] as const;
@@ -75,6 +78,7 @@ export function Exchanger({
   const [give, setGive] = React.useState<string[]>([]);
   const [sessionId, setSessionId] = React.useState("");
   const [qty, setQty] = React.useState<Record<string, number>>({});
+  const [picks, setPicks] = React.useState<SeatPick[]>([]);
   const [state, setState] = React.useState<ExchangeState | null>(null);
   const [pending, startTransition] = React.useTransition();
   const price = (cents: number) => formatPrice(cents, locale, currency);
@@ -88,9 +92,17 @@ export function Exchanger({
     // Les places rendues sur la même séance repartent en vente.
     available: tariff.available + freedOf(tariff.id),
   }));
+  const seated = target?.seated === true;
   const lines = tariffs
-    .map((tariff) => ({ tariff, quantity: qty[tariff.id] ?? 0 }))
+    .map((tariff) => {
+      if (!seated) return { tariff, quantity: qty[tariff.id] ?? 0, seats: [] as SeatPick[] };
+      const seats = picks.filter((p) => p.ticketTypeId === tariff.id);
+      return { tariff, quantity: seats.length, seats };
+    })
     .filter((l) => l.quantity > 0);
+  const ownSeats = new Set(
+    tickets.flatMap((x) => (x.sessionId === sessionId && x.seatKey ? [x.seatKey] : [])),
+  );
   const quote = exchangeDue({
     givenCents: given.map((x) => x.paidCents),
     lines: lines.map((l) => ({ priceCents: l.tariff.priceCents, quantity: l.quantity })),
@@ -118,6 +130,7 @@ export function Exchanger({
     setGive([]);
     setSessionId("");
     setQty({});
+    setPicks([]);
     setStep(0);
   }
 
@@ -149,7 +162,11 @@ export function Exchanger({
       const result = await confirmExchangeAction(access, {
         give,
         sessionId: target.sessionId,
-        lines: lines.map((l) => ({ ticketTypeId: l.tariff.id, quantity: l.quantity })),
+        lines: lines.map((l) => ({
+          ticketTypeId: l.tariff.id,
+          quantity: l.quantity,
+          ...(seated ? { seatKeys: l.seats.map((p) => p.key) } : {}),
+        })),
       });
       if (result.ok && result.kind === "pay") {
         window.location.assign(result.url);
@@ -297,7 +314,10 @@ export function Exchanger({
                       aria-pressed={selected}
                       disabled={soldOut}
                       onClick={() => {
-                        if (!selected) setQty({});
+                        if (!selected) {
+                          setQty({});
+                          setPicks([]);
+                        }
                         setSessionId(s.sessionId);
                         setState(null);
                         setStep(2);
@@ -349,55 +369,72 @@ export function Exchanger({
         {step === 2 && target ? (
           <>
             <ChosenShow target={target} onChange={() => go(1)} label={t("changeShow")} />
-            <h3 className="mt-6 text-lg">{t("seatsTitle")}</h3>
-            <ul className="mt-3 divide-y divide-border rounded-control border border-border">
-              {tariffs.map((tariff) => {
-                const n = qty[tariff.id] ?? 0;
-                const max = Math.min(tariff.available, tariff.maxPerOrder);
-                const set = (value: number) => {
-                  setState(null);
-                  setQty((prev) => ({ ...prev, [tariff.id]: Math.max(0, Math.min(max, value)) }));
-                };
-                return (
-                  <li key={tariff.id} className="flex items-center gap-3 px-3 py-3 text-sm">
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-medium">{tariff.name}</span>
-                      <span className="block text-xs text-muted-foreground">
-                        {tariff.priceCents > 0 ? price(tariff.priceCents) : t("freeTicket")}
-                        {max === 0 ? ` · ${t("soldOutTariff")}` : ""}
-                        {tariff.requiresAttendee ? ` · ${t("namedTariff")}` : ""}
-                      </span>
-                    </span>
-                    <span className="flex shrink-0 items-center gap-2">
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="outline"
-                        aria-label={t("less")}
-                        disabled={n === 0}
-                        onClick={() => set(n - 1)}
-                      >
-                        <Minus className="size-4" />
-                      </Button>
-                      <span className="w-6 text-center tabular-nums">{n}</span>
-                      <Button
-                        type="button"
-                        size="icon"
-                        variant="outline"
-                        aria-label={t("more")}
-                        disabled={n >= max}
-                        onClick={() => set(n + 1)}
-                      >
-                        <Plus className="size-4" />
-                      </Button>
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-            {target.seated ? (
-              <p className="mt-2 text-xs text-muted-foreground">{t("seatsAssigned")}</p>
-            ) : null}
+            {seated ? (
+              <div className="mt-6">
+                <ExchangeSeatPicker
+                  key={target.sessionId}
+                  sessionId={target.sessionId}
+                  locale={locale}
+                  tariffs={tariffs}
+                  picks={picks}
+                  onPicks={(next) => {
+                    setState(null);
+                    setPicks(next);
+                  }}
+                  ownSeats={ownSeats}
+                  price={price}
+                />
+              </div>
+            ) : (
+              <>
+                <h3 className="mt-6 text-lg">{t("seatsTitle")}</h3>
+                <ul className="mt-3 divide-y divide-border rounded-control border border-border">
+                  {tariffs.map((tariff) => {
+                    const n = qty[tariff.id] ?? 0;
+                    const max = Math.min(tariff.available, tariff.maxPerOrder);
+                    const set = (value: number) => {
+                      setState(null);
+                      setQty((prev) => ({ ...prev, [tariff.id]: Math.max(0, Math.min(max, value)) }));
+                    };
+                    return (
+                      <li key={tariff.id} className="flex items-center gap-3 px-3 py-3 text-sm">
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-medium">{tariff.name}</span>
+                          <span className="block text-xs text-muted-foreground">
+                            {tariff.priceCents > 0 ? price(tariff.priceCents) : t("freeTicket")}
+                            {max === 0 ? ` · ${t("soldOutTariff")}` : ""}
+                            {tariff.requiresAttendee ? ` · ${t("namedTariff")}` : ""}
+                          </span>
+                        </span>
+                        <span className="flex shrink-0 items-center gap-2">
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            aria-label={t("less")}
+                            disabled={n === 0}
+                            onClick={() => set(n - 1)}
+                          >
+                            <Minus className="size-4" />
+                          </Button>
+                          <span className="w-6 text-center tabular-nums">{n}</span>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            aria-label={t("more")}
+                            disabled={n >= max}
+                            onClick={() => set(n + 1)}
+                          >
+                            <Plus className="size-4" />
+                          </Button>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            )}
             {basket && !basket.ok ? (
               <p role="alert" className="mt-3 text-sm text-destructive">
                 {errorText(basket.error)}
@@ -454,18 +491,32 @@ export function Exchanger({
                   {target.venue ? ` · ${target.venue}` : ""}
                 </p>
                 <ul className="mt-2 space-y-1 text-sm">
-                  {lines.map(({ tariff, quantity }) => (
-                    <li key={tariff.id} className="flex justify-between gap-3">
-                      <span>
-                        {quantity} × {tariff.name}
-                      </span>
-                      <span className="shrink-0 tabular-nums">
-                        {tariff.priceCents > 0
-                          ? price(tariff.priceCents * quantity)
-                          : t("freeTicket")}
-                      </span>
-                    </li>
-                  ))}
+                  {seated
+                    ? lines.flatMap(({ tariff, seats }) =>
+                        seats.map((seat) => (
+                          <li key={seat.key} className="flex justify-between gap-3">
+                            <span className="min-w-0">
+                              <span className="block">{seat.label}</span>
+                              <span className="block text-xs text-muted-foreground">{tariff.name}</span>
+                            </span>
+                            <span className="shrink-0 tabular-nums">
+                              {tariff.priceCents > 0 ? price(tariff.priceCents) : t("freeTicket")}
+                            </span>
+                          </li>
+                        )),
+                      )
+                    : lines.map(({ tariff, quantity }) => (
+                        <li key={tariff.id} className="flex justify-between gap-3">
+                          <span>
+                            {quantity} × {tariff.name}
+                          </span>
+                          <span className="shrink-0 tabular-nums">
+                            {tariff.priceCents > 0
+                              ? price(tariff.priceCents * quantity)
+                              : t("freeTicket")}
+                          </span>
+                        </li>
+                      ))}
                 </ul>
               </div>
             </div>
@@ -490,9 +541,6 @@ export function Exchanger({
               ) : null}
               {quote.dueCents > 0 ? (
                 <p className="text-xs text-muted-foreground">{t("keepNote")}</p>
-              ) : null}
-              {target.seated ? (
-                <p className="text-xs text-muted-foreground">{t("seatsAssigned")}</p>
               ) : null}
             </div>
 

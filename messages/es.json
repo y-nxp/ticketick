@@ -524,7 +524,6 @@
       "namedTariff": "nominativa, tomada de una entrada devuelta",
       "less": "Una plaza menos",
       "more": "Una plaza más",
-      "seatsAssigned": "Las localidades se asignan automáticamente, juntas si es posible. Después podrás elegir otras en el plano.",
       "givenValue": "Entradas devueltas",
       "newValue": "Nuevas entradas",
       "due": "A pagar",
@@ -545,7 +544,7 @@
         "companionLimit": "Demasiadas plazas a esta tarifa para el número de plazas de pago.",
         "attendeesMissing": "Las plazas nominativas toman el titular de una entrada devuelta: devuelve otras tantas entradas nominativas.",
         "attendeeTooOld": "El titular de una entrada devuelta supera la edad de esta tarifa.",
-        "seatsUnavailable": "No hay suficientes localidades libres para esta tarifa. Elige otra.",
+        "seatsUnavailable": "Uno de los asientos elegidos acaba de ser ocupado. Elija otro en el plano.",
         "expired": "Este enlace ya no es válido. Recarga la página.",
         "notFound": "Una de estas entradas ya no se puede cambiar. Recarga la página.",
         "retry": "No se pudo guardar el cambio. Inténtalo de nuevo en un momento.",
@@ -569,7 +568,8 @@
       "from": "desde",
       "soldOut": "Agotado",
       "next": "Continuar",
-      "back": "Volver"
+      "back": "Volver",
+      "currentSeats": "Sus asientos actuales"
     }
   },
   "consent": {

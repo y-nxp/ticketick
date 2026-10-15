@@ -441,7 +441,8 @@ export async function addTicketsTx(
   tx: Prisma.TransactionClient,
   order: { id: string; reference: string; currency: string },
   input: {
-    lines: { ticketTypeId: string; quantity: number }[];
+    /** `seatKeys` : sièges choisis sur le plan, sinon attribués d'office. */
+    lines: { ticketTypeId: string; quantity: number; seatKeys?: string[] }[];
     fromInvites: boolean;
     settle: PaymentSettle;
     actorId: string;
@@ -495,14 +496,24 @@ export async function addTicketsTx(
     if (input.fromInvites && !layout) await returnHeldToSale(tx, sessionId, group);
     await takeStock(
       tx,
-      group.map((l) => ({ ...l, sessionId, capacity: session.capacity })),
+      group.map((l) => ({
+        ticketTypeId: l.ticketTypeId,
+        quantity: l.quantity,
+        sessionId,
+        capacity: session.capacity,
+      })),
     );
     if (!layout) continue;
     const got = await assignSeats(tx, {
       orderId: order.id,
       sessionId,
       layout,
-      lines: group.map((l) => ({ ...l, zones: typeOf.get(l.ticketTypeId)!.seatZones })),
+      lines: group.map((l) => ({
+        ticketTypeId: l.ticketTypeId,
+        quantity: l.quantity,
+        zones: typeOf.get(l.ticketTypeId)!.seatZones,
+        keys: l.seatKeys,
+      })),
       fromInvites: input.fromInvites,
     });
     for (const [id, keys] of got) seatsByType.set(id, keys);

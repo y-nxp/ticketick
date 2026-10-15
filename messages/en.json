@@ -2093,7 +2093,6 @@
       "namedTariff": "named, taken from a ticket given back",
       "less": "One seat less",
       "more": "One seat more",
-      "seatsAssigned": "Seats are assigned automatically, side by side where possible. You can then choose others on the plan.",
       "givenValue": "Tickets given back",
       "newValue": "New tickets",
       "due": "To pay",
@@ -2114,7 +2113,7 @@
         "companionLimit": "Too many seats at this price for the number of paid seats.",
         "attendeesMissing": "Named seats take over the holder of a ticket given back: give back as many named tickets.",
         "attendeeTooOld": "The holder of a ticket given back is over the age for this price.",
-        "seatsUnavailable": "Not enough free seats for this price. Choose another one.",
+        "seatsUnavailable": "One of the seats you chose has just been taken. Please pick another one on the plan.",
         "expired": "This link is no longer valid. Reload the page.",
         "notFound": "One of these tickets can no longer be changed. Reload the page.",
         "retry": "The exchange could not be saved. Try again in a moment.",
@@ -2138,7 +2137,8 @@
       "from": "from",
       "soldOut": "Sold out",
       "next": "Continue",
-      "back": "Back"
+      "back": "Back",
+      "currentSeats": "Your current seats"
     }
   },
   "organizerReport": {

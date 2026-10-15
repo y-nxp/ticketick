@@ -319,7 +319,9 @@ export async function assignSeats(
       zones: line.zones,
       from: [pool],
     });
-    if (got !== picked.length) throw new SeatRaceError();
+    if (got !== picked.length) {
+      throw line.keys?.length ? new NoSeatsError(line.ticketTypeId) : new SeatRaceError();
+    }
     picked.forEach((key) => free.delete(key));
     out.set(line.ticketTypeId, picked);
   }

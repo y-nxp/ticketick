@@ -2093,7 +2093,6 @@
       "namedTariff": "personalisiert, von einem zurückgegebenen Ticket übernommen",
       "less": "Ein Platz weniger",
       "more": "Ein Platz mehr",
-      "seatsAssigned": "Die Plätze werden automatisch zugeteilt, wenn möglich nebeneinander. Danach können Sie im Plan andere wählen.",
       "givenValue": "Zurückgegebene Tickets",
       "newValue": "Neue Tickets",
       "due": "Zu bezahlen",
@@ -2114,7 +2113,7 @@
         "companionLimit": "Zu viele Plätze zu diesem Tarif für die Zahl der bezahlten Plätze.",
         "attendeesMissing": "Personalisierte Plätze übernehmen den Inhaber eines zurückgegebenen Tickets: Geben Sie ebenso viele personalisierte Tickets zurück.",
         "attendeeTooOld": "Der Inhaber eines zurückgegebenen Tickets überschreitet das Alter dieses Tarifs.",
-        "seatsUnavailable": "Nicht genug freie Plätze für diesen Tarif. Wählen Sie einen anderen.",
+        "seatsUnavailable": "Einer der gewählten Plätze wurde soeben vergeben. Bitte wählen Sie auf dem Plan einen anderen.",
         "expired": "Dieser Link ist nicht mehr gültig. Laden Sie die Seite neu.",
         "notFound": "Eines dieser Tickets kann nicht mehr geändert werden. Laden Sie die Seite neu.",
         "retry": "Der Tausch konnte nicht gespeichert werden. Versuchen Sie es gleich noch einmal.",
@@ -2138,7 +2137,8 @@
       "from": "ab",
       "soldOut": "Ausverkauft",
       "next": "Weiter",
-      "back": "Zurück"
+      "back": "Zurück",
+      "currentSeats": "Ihre aktuellen Plätze"
     }
   },
   "organizerReport": {

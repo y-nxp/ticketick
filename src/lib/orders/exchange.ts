@@ -31,8 +31,8 @@ import {
 /**
  * Échange par le client : il rend des billets et prend d'autres places, sur
  * un autre spectacle du même organisateur ou le même, éventuellement plus
- * nombreuses. Jamais de remboursement : il paie seulement la hausse. Les
- * sièges sont attribués d'office ; il peut les changer ensuite sur le plan.
+ * nombreuses. Jamais de remboursement : il paie seulement la hausse. Sur un
+ * plan de salle, il choisit ses sièges ; à défaut, ils sont attribués d'office.
  *
  * Annulation : places gratuites seulement, depuis le compte, pour libérer la
  * jauge quand le spectacle le permet.
@@ -47,6 +47,7 @@ export interface ExchangeTicket {
   eventTitle: Translated;
   startsAt: Date;
   tariffName: Translated;
+  seatKey: string | null;
   seatLabel: string | null;
   paidCents: number;
   /** Titulaire inscrit (nom et date de naissance) : reporté sur les places nominatives. */
@@ -62,7 +63,7 @@ export interface ExchangeTarget {
   startsAt: Date;
   venue: string | null;
   seated: boolean;
-  tariffs: (BasketTariff & { name: Translated; maxAgeYears: number | null })[];
+  tariffs: (BasketTariff & { name: Translated; maxAgeYears: number | null; seatZones: string[] })[];
 }
 
 export interface ExchangeOptions {
@@ -81,6 +82,7 @@ function upcomingTicketsWhere(orderId: string) {
 const ticketSelect = {
   id: true,
   ticketTypeId: true,
+  seatKey: true,
   seatLabel: true,
   attendeeName: true,
   attendeeBirthDate: true,
@@ -137,6 +139,7 @@ async function targetSessions(organizerIds: string[]): Promise<ExchangeTarget[]>
           companionOfId: true,
           requiresAttendee: true,
           maxAgeYears: true,
+          seatZones: true,
           salesStartAt: true,
           salesEndAt: true,
         },
@@ -160,6 +163,7 @@ async function targetSessions(organizerIds: string[]): Promise<ExchangeTarget[]>
         companionOfId: t.companionOfId,
         requiresAttendee: t.requiresAttendee,
         maxAgeYears: t.maxAgeYears,
+        seatZones: t.seatZones,
       }));
     if (tariffs.length === 0) continue;
     out.push({
@@ -213,6 +217,7 @@ export async function exchangeOptions(input: {
       eventTitle: t.ticketType.session.event.title as Translated,
       startsAt: t.ticketType.session.startsAt,
       tariffName: t.ticketType.name as Translated,
+      seatKey: t.seatKey,
       seatLabel: t.seatLabel,
       paidCents: paidOf.get(t.ticketTypeId) ?? 0,
       holder: !!(t.attendeeName && t.attendeeBirthDate),
@@ -230,11 +235,19 @@ export async function applyExchange(input: {
   access: ChangeAccess;
   give: string[];
   sessionId: string;
-  lines: { ticketTypeId: string; quantity: number }[];
+  /** `seatKeys` : places choisies sur le plan, une par billet ; sinon attribuées d'office. */
+  lines: { ticketTypeId: string; quantity: number; seatKeys?: string[] }[];
 }): Promise<ExchangeResult> {
   const give = [...new Set(input.give)];
   const lines = input.lines.filter((l) => l.quantity > 0);
   if (give.length === 0 || lines.length === 0) return { ok: false, error: "empty" };
+  const chosen = lines.flatMap((l) => l.seatKeys ?? []);
+  if (
+    new Set(chosen).size !== chosen.length ||
+    lines.some((l) => l.seatKeys && l.seatKeys.length !== l.quantity)
+  ) {
+    return { ok: false, error: "seatsUnavailable" };
+  }
   const resolved = await resolveAccess(input.access);
   if (!resolved.ok) return { ok: false, error: resolved.error };
   const access = resolved.access;
@@ -250,6 +263,7 @@ export async function applyExchange(input: {
   const organizerIds = [...new Set(given.map((t) => t.ticketType.session.event.organizerId))];
   const target = (await targetSessions(organizerIds)).find((s) => s.sessionId === input.sessionId);
   if (!target) return { ok: false, error: "notFound" };
+  if (chosen.length > 0 && !target.seated) return { ok: false, error: "seatsUnavailable" };
 
   const holders = given
     .filter((t) => t.attendeeName && t.attendeeBirthDate)
