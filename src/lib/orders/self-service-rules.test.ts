@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cancelOpen, changeOpen, checkBasket, exchangeDue } from "./self-service-rules";
+import { cancelOpen, changeOpen, checkBasket, exchangeDue, tariffRoom } from "./self-service-rules";
 
 const now = new Date("2026-12-20T12:00:00Z");
 const inHours = (h: number) => new Date(now.getTime() + h * 3600 * 1000);
@@ -71,6 +71,16 @@ test("panier d'échange : stock, accompagnants et titulaires", () => {
     checkBasket({ lines: [{ ticketTypeId: "cat1", quantity: 60 }], tariffs, holders: 0 }),
     { ok: false, error: "soldOut", ticketTypeId: "cat1" },
   );
+});
+
+test("gratuité nominative : seulement avec une place payante et un titulaire", () => {
+  const room = (counts: Record<string, number>, holders: number) =>
+    tariffRoom({ ticketTypeId: "youth", counts, tariffs, holders });
+  assert.equal(room({}, 2), 0);
+  assert.equal(room({ cat2: 1 }, 2), 2);
+  assert.equal(room({ cat2: 1 }, 1), 1);
+  assert.equal(room({ cat1: 2, cat2: 1 }, 0), 0);
+  assert.equal(tariffRoom({ ticketTypeId: "cat1", counts: {}, tariffs, holders: 0 }), 10);
 });
 
 test("on ne paie que la hausse nette, jamais de remboursement", () => {

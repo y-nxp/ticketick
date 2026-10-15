@@ -2085,7 +2085,7 @@
     "seatsIntro": "Pick one of your seats in the list, then tap the new seat on the plan.",
     "exchange": {
       "title": "Change show or add tickets",
-      "intro": "Choose the tickets to give back, then the show and seats you want. You only pay the difference if the new choice costs more.",
+      "intro": "Give back tickets, add new ones, or both: then choose the show and your seats. You only pay the difference if the new choice costs more.",
       "giveTitle": "Which tickets are you giving back?",
       "freeTicket": "Free",
       "targetTitle": "Choose the show",
@@ -2106,7 +2106,7 @@
       "doneText": "Your new tickets have been sent to you by e-mail. The tickets given back are no longer valid.",
       "continue": "Continue",
       "errors": {
-        "empty": "Choose at least one ticket to give back and one new seat.",
+        "empty": "Choose at least one new seat.",
         "soldOut": "Not enough seats left at this price.",
         "maxPerOrder": "This price is limited in seats per order.",
         "companionRequiresPaid": "This price is sold with a paid seat for the same show.",
@@ -2126,19 +2126,28 @@
         "seats": "Seats",
         "confirm": "Confirmation"
       },
-      "giveHint": "Tap the tickets to exchange. Their value is deducted from the new choice.",
+      "giveHint": "Tap the tickets to exchange: their value is deducted from the new choice. To only add tickets, continue without selecting any.",
       "selectedCount": "{count, plural, =0 {No ticket chosen} one {1 ticket chosen} other {# tickets chosen}}",
-      "targetHint": "All shows of the organiser on sale. You can also keep the same one and add seats.",
+      "targetHint": "All the organiser's shows on sale. You can choose several: each one is added to your basket.",
       "seatsTitle": "How many seats?",
       "confirmTitle": "Check your exchange",
       "youGive": "You give back",
       "youGet": "You receive",
-      "changeShow": "Change show",
       "from": "from",
       "soldOut": "Sold out",
       "next": "Continue",
       "back": "Back",
-      "currentSeats": "Your current seats"
+      "currentSeats": "Your current seats",
+      "nothingGiven": "No tickets given back.",
+      "doneTextAdded": "Your new tickets have been sent to you by e-mail.",
+      "cartTitle": "Your basket",
+      "cartSummary": "{seats, plural, one {1 seat} other {# seats}} · {shows, plural, one {1 show} other {# shows}}",
+      "inCart": "{count, plural, one {1 seat chosen} other {# seats chosen}}",
+      "viewCart": "View summary",
+      "otherShows": "Add another show",
+      "edit": "Edit",
+      "remove": "Remove from basket",
+      "noHolder": "First give back a named ticket: its holder is carried over to this seat."
     }
   },
   "organizerReport": {

@@ -2085,7 +2085,7 @@
     "seatsIntro": "Choisissez une de vos places dans la liste, puis touchez la nouvelle place sur le plan.",
     "exchange": {
       "title": "Changer de spectacle ou ajouter des billets",
-      "intro": "Choisissez les billets à rendre, puis le spectacle et les places voulus. Vous payez seulement la différence si le nouveau choix coûte plus cher.",
+      "intro": "Rendez des billets, ajoutez-en, ou les deux : choisissez ensuite le spectacle et vos places. Vous payez seulement la différence si le nouveau choix coûte plus cher.",
       "giveTitle": "Quels billets rendez-vous ?",
       "freeTicket": "Gratuit",
       "targetTitle": "Choisissez le spectacle",
@@ -2106,7 +2106,7 @@
       "doneText": "Vos nouveaux billets vous ont été envoyés par e-mail. Les billets rendus ne sont plus valables.",
       "continue": "Continuer",
       "errors": {
-        "empty": "Choisissez au moins un billet à rendre et une nouvelle place.",
+        "empty": "Choisissez au moins une nouvelle place.",
         "soldOut": "Il ne reste plus assez de places à ce tarif.",
         "maxPerOrder": "Ce tarif est limité en nombre de places par commande.",
         "companionRequiresPaid": "Ce tarif s'achète avec une place payante du même spectacle.",
@@ -2126,19 +2126,28 @@
         "seats": "Places",
         "confirm": "Confirmation"
       },
-      "giveHint": "Touchez les billets à échanger. Leur valeur est déduite du nouveau choix.",
+      "giveHint": "Touchez les billets à échanger : leur valeur est déduite du nouveau choix. Pour seulement ajouter des billets, continuez sans en choisir.",
       "selectedCount": "{count, plural, =0 {Aucun billet choisi} one {1 billet choisi} other {# billets choisis}}",
-      "targetHint": "Tous les spectacles en vente de l'organisateur. Vous pouvez aussi garder le même et ajouter des places.",
+      "targetHint": "Tous les spectacles en vente de l'organisateur. Vous pouvez en choisir plusieurs : chacun s'ajoute à votre panier.",
       "seatsTitle": "Combien de places ?",
       "confirmTitle": "Vérifiez votre échange",
       "youGive": "Vous rendez",
       "youGet": "Vous recevez",
-      "changeShow": "Changer de spectacle",
       "from": "dès",
       "soldOut": "Complet",
       "next": "Continuer",
       "back": "Retour",
-      "currentSeats": "Vos places actuelles"
+      "currentSeats": "Vos places actuelles",
+      "nothingGiven": "Aucun billet rendu.",
+      "doneTextAdded": "Vos nouveaux billets vous ont été envoyés par e-mail.",
+      "cartTitle": "Votre panier",
+      "cartSummary": "{seats, plural, one {1 place} other {# places}} · {shows, plural, one {1 spectacle} other {# spectacles}}",
+      "inCart": "{count, plural, one {1 place choisie} other {# places choisies}}",
+      "viewCart": "Voir le récapitulatif",
+      "otherShows": "Ajouter un autre spectacle",
+      "edit": "Modifier",
+      "remove": "Retirer du panier",
+      "noHolder": "Rendez d'abord un billet nominatif : son titulaire est repris sur cette place."
     }
   },
   "organizerReport": {

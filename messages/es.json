@@ -516,7 +516,7 @@
     "seatsIntro": "Elige una de tus localidades en la lista y toca la nueva en el plano.",
     "exchange": {
       "title": "Cambiar de espectáculo o añadir entradas",
-      "intro": "Elige las entradas que devuelves y luego el espectáculo y las localidades que quieres. Solo pagas la diferencia si la nueva elección cuesta más.",
+      "intro": "Devuelva entradas, añada otras o ambas cosas: después elija el espectáculo y sus asientos. Solo paga la diferencia si la nueva elección cuesta más.",
       "giveTitle": "¿Qué entradas devuelves?",
       "freeTicket": "Gratis",
       "targetTitle": "Elige el espectáculo",
@@ -537,7 +537,7 @@
       "doneText": "Te hemos enviado tus nuevas entradas por correo. Las entradas devueltas ya no son válidas.",
       "continue": "Continuar",
       "errors": {
-        "empty": "Elige al menos una entrada para devolver y una nueva plaza.",
+        "empty": "Elija al menos un asiento nuevo.",
         "soldOut": "No quedan suficientes plazas a esta tarifa.",
         "maxPerOrder": "Esta tarifa está limitada por pedido.",
         "companionRequiresPaid": "Esta tarifa se compra con una plaza de pago del mismo espectáculo.",
@@ -557,19 +557,28 @@
         "seats": "Plazas",
         "confirm": "Confirmación"
       },
-      "giveHint": "Toca las entradas que quieres cambiar. Su valor se descuenta de la nueva elección.",
+      "giveHint": "Toque las entradas que desea cambiar: su valor se descuenta de la nueva elección. Para solo añadir entradas, continúe sin elegir ninguna.",
       "selectedCount": "{count, plural, =0 {Ninguna entrada elegida} one {1 entrada elegida} other {# entradas elegidas}}",
-      "targetHint": "Todos los espectáculos del organizador a la venta. También puedes quedarte con el mismo y añadir plazas.",
+      "targetHint": "Todos los espectáculos en venta del organizador. Puede elegir varios: cada uno se añade a su cesta.",
       "seatsTitle": "¿Cuántas plazas?",
       "confirmTitle": "Revisa tu cambio",
       "youGive": "Devuelves",
       "youGet": "Recibes",
-      "changeShow": "Cambiar de espectáculo",
       "from": "desde",
       "soldOut": "Agotado",
       "next": "Continuar",
       "back": "Volver",
-      "currentSeats": "Sus asientos actuales"
+      "currentSeats": "Sus asientos actuales",
+      "nothingGiven": "Ninguna entrada devuelta.",
+      "doneTextAdded": "Le hemos enviado sus nuevas entradas por correo electrónico.",
+      "cartTitle": "Su cesta",
+      "cartSummary": "{seats, plural, one {1 asiento} other {# asientos}} · {shows, plural, one {1 espectáculo} other {# espectáculos}}",
+      "inCart": "{count, plural, one {1 asiento elegido} other {# asientos elegidos}}",
+      "viewCart": "Ver el resumen",
+      "otherShows": "Añadir otro espectáculo",
+      "edit": "Modificar",
+      "remove": "Quitar de la cesta",
+      "noHolder": "Devuelva primero una entrada nominativa: su titular se traslada a este asiento."
     }
   },
   "consent": {

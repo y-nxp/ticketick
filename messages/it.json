@@ -2085,7 +2085,7 @@
     "seatsIntro": "Scegliete uno dei vostri posti nell'elenco, poi toccate il nuovo posto sulla pianta.",
     "exchange": {
       "title": "Cambiare spettacolo o aggiungere biglietti",
-      "intro": "Scegliete i biglietti da restituire, poi lo spettacolo e i posti desiderati. Pagate solo la differenza se la nuova scelta costa di più.",
+      "intro": "Restituite dei biglietti, aggiungetene altri o entrambe le cose: scegliete poi lo spettacolo e i vostri posti. Pagate solo la differenza se la nuova scelta costa di più.",
       "giveTitle": "Quali biglietti restituite?",
       "freeTicket": "Gratuito",
       "targetTitle": "Scegliete lo spettacolo",
@@ -2106,7 +2106,7 @@
       "doneText": "I nuovi biglietti vi sono stati inviati per e-mail. I biglietti restituiti non sono più validi.",
       "continue": "Continuare",
       "errors": {
-        "empty": "Scegliete almeno un biglietto da restituire e un nuovo posto.",
+        "empty": "Scegliete almeno un nuovo posto.",
         "soldOut": "Non restano abbastanza posti a questa tariffa.",
         "maxPerOrder": "Questa tariffa è limitata per ordine.",
         "companionRequiresPaid": "Questa tariffa si acquista con un posto a pagamento dello stesso spettacolo.",
@@ -2126,19 +2126,28 @@
         "seats": "Posti",
         "confirm": "Conferma"
       },
-      "giveHint": "Toccate i biglietti da cambiare. Il loro valore viene dedotto dalla nuova scelta.",
+      "giveHint": "Toccate i biglietti da cambiare: il loro valore viene dedotto dalla nuova scelta. Per aggiungere soltanto biglietti, continuate senza sceglierne.",
       "selectedCount": "{count, plural, =0 {Nessun biglietto scelto} one {1 biglietto scelto} other {# biglietti scelti}}",
-      "targetHint": "Tutti gli spettacoli in vendita dell'organizzatore. Potete anche tenere lo stesso e aggiungere posti.",
+      "targetHint": "Tutti gli spettacoli in vendita dell'organizzatore. Potete sceglierne diversi: ognuno si aggiunge al carrello.",
       "seatsTitle": "Quanti posti?",
       "confirmTitle": "Verificate il cambio",
       "youGive": "Restituite",
       "youGet": "Ricevete",
-      "changeShow": "Cambiare spettacolo",
       "from": "da",
       "soldOut": "Esaurito",
       "next": "Continuare",
       "back": "Indietro",
-      "currentSeats": "I vostri posti attuali"
+      "currentSeats": "I vostri posti attuali",
+      "nothingGiven": "Nessun biglietto restituito.",
+      "doneTextAdded": "I nuovi biglietti vi sono stati inviati per e-mail.",
+      "cartTitle": "Il vostro carrello",
+      "cartSummary": "{seats, plural, one {1 posto} other {# posti}} · {shows, plural, one {1 spettacolo} other {# spettacoli}}",
+      "inCart": "{count, plural, one {1 posto scelto} other {# posti scelti}}",
+      "viewCart": "Vedi il riepilogo",
+      "otherShows": "Aggiungi un altro spettacolo",
+      "edit": "Modifica",
+      "remove": "Togli dal carrello",
+      "noHolder": "Restituite prima un biglietto nominativo: il suo titolare viene ripreso su questo posto."
     }
   },
   "organizerReport": {

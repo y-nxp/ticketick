@@ -29,7 +29,7 @@ import {
 } from "./self-service-rules";
 
 /**
- * Échange par le client : il rend des billets et prend d'autres places, sur
+ * Échange par le client : il rend des billets (ou aucun) et prend d'autres places, sur
  * un autre spectacle du même organisateur ou le même, éventuellement plus
  * nombreuses. Jamais de remboursement : il paie seulement la hausse. Sur un
  * plan de salle, il choisit ses sièges ; à défaut, ils sont attribués d'office.
@@ -231,16 +231,27 @@ export type ExchangeResult =
   | { ok: true; kind: "pay"; payToken: string; locale: string }
   | { ok: false; error: ExchangeError; ticketTypeId?: string };
 
-export async function applyExchange(input: {
-  access: ChangeAccess;
-  give: string[];
+export interface ExchangeItem {
   sessionId: string;
   /** `seatKeys` : places choisies sur le plan, une par billet ; sinon attribuées d'office. */
   lines: { ticketTypeId: string; quantity: number; seatKeys?: string[] }[];
+}
+
+/** Un panier : plusieurs spectacles possibles, une seule différence à payer. */
+export async function applyExchange(input: {
+  access: ChangeAccess;
+  give: string[];
+  items: ExchangeItem[];
 }): Promise<ExchangeResult> {
   const give = [...new Set(input.give)];
-  const lines = input.lines.filter((l) => l.quantity > 0);
-  if (give.length === 0 || lines.length === 0) return { ok: false, error: "empty" };
+  const items = input.items
+    .map((item) => ({ ...item, lines: item.lines.filter((l) => l.quantity > 0) }))
+    .filter((item) => item.lines.length > 0);
+  if (items.length === 0) return { ok: false, error: "empty" };
+  if (new Set(items.map((i) => i.sessionId)).size !== items.length) {
+    return { ok: false, error: "notFound" };
+  }
+  const lines = items.flatMap((i) => i.lines);
   const chosen = lines.flatMap((l) => l.seatKeys ?? []);
   if (
     new Set(chosen).size !== chosen.length ||
@@ -252,50 +263,64 @@ export async function applyExchange(input: {
   if (!resolved.ok) return { ok: false, error: resolved.error };
   const access = resolved.access;
 
-  const given = allowedForChange(
+  // Les spectacles proposés et le droit d'ajouter suivent les billets encore
+  // modifiables de la commande, rendus ou non.
+  const owned = allowedForChange(
     await prisma.ticket.findMany({
-      where: { ...upcomingTicketsWhere(access.orderId), id: { in: give } },
+      where: upcomingTicketsWhere(access.orderId),
       select: ticketSelect,
     }),
     access.viaAccount,
   );
+  if (owned.length === 0) return { ok: false, error: "notFound" };
+  const given = owned.filter((t) => give.includes(t.id));
   if (given.length !== give.length) return { ok: false, error: "notFound" };
-  const organizerIds = [...new Set(given.map((t) => t.ticketType.session.event.organizerId))];
-  const target = (await targetSessions(organizerIds)).find((s) => s.sessionId === input.sessionId);
-  if (!target) return { ok: false, error: "notFound" };
-  if (chosen.length > 0 && !target.seated) return { ok: false, error: "seatsUnavailable" };
+  const organizerIds = [...new Set(owned.map((t) => t.ticketType.session.event.organizerId))];
+  const open = new Map((await targetSessions(organizerIds)).map((s) => [s.sessionId, s]));
 
   const holders = given
     .filter((t) => t.attendeeName && t.attendeeBirthDate)
     .map((t) => ({ name: t.attendeeName!, birthDate: t.attendeeBirthDate! }));
-  // Places rendues sur la séance visée : elles repartent en vente juste avant.
-  const freed = new Map<string, number>();
-  for (const t of given) {
-    if (t.ticketType.sessionId === target.sessionId) {
-      freed.set(t.ticketTypeId, (freed.get(t.ticketTypeId) ?? 0) + 1);
-    }
-  }
-  const tariffs = target.tariffs.map((t) => ({
-    ...t,
-    available: t.available + (freed.get(t.id) ?? 0),
-  }));
-  const basket = checkBasket({ lines, tariffs, holders: holders.length });
-  if (!basket.ok) return basket;
-
-  // Titulaires reportés dans l'ordre des billets rendus ; l'âge se vérifie au
-  // jour de la nouvelle séance.
-  const tariffOf = new Map(tariffs.map((t) => [t.id, t]));
+  const tariffOf = new Map<string, ExchangeTarget["tariffs"][number]>();
   const assigned: { ticketTypeId: string; holder: (typeof holders)[number] }[] = [];
   let next = 0;
-  for (const line of lines) {
-    const tariff = tariffOf.get(line.ticketTypeId)!;
-    if (!tariff.requiresAttendee) continue;
-    for (let i = 0; i < line.quantity; i++) {
-      const holder = holders[next++]!;
-      if (tariff.maxAgeYears != null && ageOn(holder.birthDate, target.startsAt) >= tariff.maxAgeYears) {
-        return { ok: false, error: "attendeeTooOld", ticketTypeId: tariff.id };
+  for (const item of items) {
+    const target = open.get(item.sessionId);
+    if (!target) return { ok: false, error: "notFound" };
+    if (item.lines.some((l) => l.seatKeys?.length) && !target.seated) {
+      return { ok: false, error: "seatsUnavailable" };
+    }
+    // Places rendues sur cette séance : elles repartent en vente juste avant.
+    const freed = new Map<string, number>();
+    for (const t of given) {
+      if (t.ticketType.sessionId === target.sessionId) {
+        freed.set(t.ticketTypeId, (freed.get(t.ticketTypeId) ?? 0) + 1);
       }
-      assigned.push({ ticketTypeId: tariff.id, holder });
+    }
+    const tariffs = target.tariffs.map((t) => ({
+      ...t,
+      available: t.available + (freed.get(t.id) ?? 0),
+    }));
+    const basket = checkBasket({ lines: item.lines, tariffs, holders: holders.length });
+    if (!basket.ok) return basket;
+    for (const t of tariffs) tariffOf.set(t.id, t);
+
+    // Titulaires reportés dans l'ordre des billets rendus, chacun une fois tous
+    // spectacles confondus ; l'âge se vérifie au jour de la nouvelle séance.
+    for (const line of item.lines) {
+      const tariff = tariffOf.get(line.ticketTypeId)!;
+      if (!tariff.requiresAttendee) continue;
+      for (let i = 0; i < line.quantity; i++) {
+        const holder = holders[next++];
+        if (!holder) return { ok: false, error: "attendeesMissing" };
+        if (
+          tariff.maxAgeYears != null &&
+          ageOn(holder.birthDate, target.startsAt) >= tariff.maxAgeYears
+        ) {
+          return { ok: false, error: "attendeeTooOld", ticketTypeId: tariff.id };
+        }
+        assigned.push({ ticketTypeId: tariff.id, holder });
+      }
     }
   }
 
@@ -313,7 +338,7 @@ export async function applyExchange(input: {
         lines: lines.map((l) => ({ priceCents: tariffOf.get(l.ticketTypeId)!.priceCents, quantity: l.quantity })),
       });
 
-      if (dueCents === 0) {
+      if (dueCents === 0 && give.length > 0) {
         await releaseTickets(tx, order, give, false);
       }
       const added = await addTicketsTx(tx, order, {

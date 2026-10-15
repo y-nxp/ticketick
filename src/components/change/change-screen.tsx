@@ -104,7 +104,7 @@ export async function ChangeScreen({
         </div>
       ) : null}
 
-      {data.sessions.length > 0 ? (
+      {!canExchange && data.sessions.length > 0 ? (
         <div className="mt-10">
           <SeatChanger
             header={

@@ -4,7 +4,17 @@ import * as React from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check, CheckCircle2, ChevronRight, Minus, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  Minus,
+  Pencil,
+  Plus,
+  ShoppingBag,
+  Trash2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EventCardContent, eventCardClass } from "@/components/events/event-card";
 import {
@@ -12,7 +22,7 @@ import {
   type ClientAccess,
   type ExchangeState,
 } from "@/lib/orders/seat-change-actions";
-import { checkBasket, exchangeDue } from "@/lib/orders/self-service-rules";
+import { checkBasket, exchangeDue, tariffRoom } from "@/lib/orders/self-service-rules";
 import { cn, formatPrice } from "@/lib/utils";
 import { ExchangeSeatPicker, type PickerTariff, type SeatPick } from "./exchange-seat-picker";
 
@@ -41,6 +51,27 @@ export interface ExchangerTarget {
   seated: boolean;
   tariffs: PickerTariff[];
 }
+
+/** Choix sur un spectacle : places du plan, ou nombre de places par tarif sans plan. */
+interface CartEntry {
+  qty: Record<string, number>;
+  picks: SeatPick[];
+}
+
+interface Line {
+  tariff: PickerTariff;
+  quantity: number;
+  seats: SeatPick[];
+}
+
+interface CartShow {
+  target: ExchangerTarget;
+  tariffs: PickerTariff[];
+  lines: Line[];
+  named: number;
+}
+
+const EMPTY: CartEntry = { qty: {}, picks: [] };
 
 const STEPS = ["tickets", "show", "seats", "confirm"] as const;
 
@@ -76,47 +107,75 @@ export function Exchanger({
   const top = React.useRef<HTMLElement>(null);
   const [step, setStep] = React.useState(0);
   const [give, setGive] = React.useState<string[]>([]);
+  const [cart, setCart] = React.useState<Record<string, CartEntry>>({});
   const [sessionId, setSessionId] = React.useState("");
-  const [qty, setQty] = React.useState<Record<string, number>>({});
-  const [picks, setPicks] = React.useState<SeatPick[]>([]);
   const [state, setState] = React.useState<ExchangeState | null>(null);
   const [pending, startTransition] = React.useTransition();
   const price = (cents: number) => formatPrice(cents, locale, currency);
 
   const given = tickets.filter((x) => give.includes(x.id));
+  const holders = given.filter((x) => x.holder).length;
   const freedOf = (ticketTypeId: string) =>
     given.filter((x) => x.ticketTypeId === ticketTypeId).length;
-  const target = targets.find((s) => s.sessionId === sessionId) ?? null;
-  const tariffs = (target?.tariffs ?? []).map((tariff) => ({
-    ...tariff,
-    // Les places rendues sur la même séance repartent en vente.
-    available: tariff.available + freedOf(tariff.id),
-  }));
-  const seated = target?.seated === true;
-  const lines = tariffs
-    .map((tariff) => {
-      if (!seated) return { tariff, quantity: qty[tariff.id] ?? 0, seats: [] as SeatPick[] };
-      const seats = picks.filter((p) => p.ticketTypeId === tariff.id);
-      return { tariff, quantity: seats.length, seats };
-    })
-    .filter((l) => l.quantity > 0);
-  const ownSeats = new Set(
-    tickets.flatMap((x) => (x.sessionId === sessionId && x.seatKey ? [x.seatKey] : [])),
+  // Les places rendues sur la même séance repartent en vente.
+  const tariffsOf = (target: ExchangerTarget) =>
+    target.tariffs.map((tariff) => ({ ...tariff, available: tariff.available + freedOf(tariff.id) }));
+  const linesOf = (target: ExchangerTarget, tariffs: PickerTariff[], entry: CartEntry): Line[] =>
+    tariffs
+      .map((tariff) => {
+        if (!target.seated) return { tariff, quantity: entry.qty[tariff.id] ?? 0, seats: [] };
+        const seats = entry.picks.filter((p) => p.ticketTypeId === tariff.id);
+        return { tariff, quantity: seats.length, seats };
+      })
+      .filter((l) => l.quantity > 0);
+
+  const shows: CartShow[] = targets.flatMap((target) => {
+    const entry = cart[target.sessionId];
+    if (!entry) return [];
+    const tariffs = tariffsOf(target);
+    const lines = linesOf(target, tariffs, entry);
+    if (lines.length === 0) return [];
+    const named = lines.reduce((sum, l) => sum + (l.tariff.requiresAttendee ? l.quantity : 0), 0);
+    return [{ target, tariffs, lines, named }];
+  });
+  const namedTotal = shows.reduce((sum, s) => sum + s.named, 0);
+  /** Titulaires encore libres pour ce spectacle, les autres du panier gardant les leurs. */
+  const holdersFor = (id: string) =>
+    holders - namedTotal + (shows.find((s) => s.target.sessionId === id)?.named ?? 0);
+  const checkOf = (show: CartShow) =>
+    checkBasket({
+      lines: show.lines.map((l) => ({ ticketTypeId: l.tariff.id, quantity: l.quantity })),
+      tariffs: show.tariffs,
+      holders: holdersFor(show.target.sessionId),
+    });
+  const failing = shows
+    .map((show) => ({ show, check: checkOf(show) }))
+    .find(({ check }) => !check.ok);
+  const seatCount = shows.reduce(
+    (sum, s) => sum + s.lines.reduce((n, l) => n + l.quantity, 0),
+    0,
   );
   const quote = exchangeDue({
     givenCents: given.map((x) => x.paidCents),
-    lines: lines.map((l) => ({ priceCents: l.tariff.priceCents, quantity: l.quantity })),
+    lines: shows.flatMap((s) =>
+      s.lines.map((l) => ({ priceCents: l.tariff.priceCents, quantity: l.quantity })),
+    ),
   });
-  const basket =
-    lines.length > 0
-      ? checkBasket({
-          lines: lines.map((l) => ({ ticketTypeId: l.tariff.id, quantity: l.quantity })),
-          tariffs,
-          holders: given.filter((x) => x.holder).length,
-        })
-      : null;
-  const ready = given.length > 0 && target !== null && basket?.ok === true;
-  const reachable = [true, given.length > 0, given.length > 0 && target !== null, ready];
+  const ready = shows.length > 0 && !failing;
+
+  const target = targets.find((s) => s.sessionId === sessionId) ?? null;
+  const entry = cart[sessionId] ?? EMPTY;
+  const tariffs = target ? tariffsOf(target) : [];
+  const here = shows.find((s) => s.target.sessionId === sessionId) ?? null;
+  const hereCheck = here ? checkOf(here) : null;
+  const holdersHere = holdersFor(sessionId);
+  const roomOf = (id: string, counts: Record<string, number>) =>
+    tariffRoom({ ticketTypeId: id, counts, tariffs, holders: holdersHere });
+  const ownSeats = new Set(
+    tickets.flatMap((x) => (x.sessionId === sessionId && x.seatKey ? [x.seatKey] : [])),
+  );
+
+  const reachable = [true, true, target !== null, ready];
 
   function go(next: number) {
     if (!reachable[next]) return;
@@ -125,12 +184,44 @@ export function Exchanger({
     top.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  function openShow(id: string) {
+    setSessionId(id);
+    setState(null);
+    setStep(2);
+    top.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function updateEntry(id: string, patch: Partial<CartEntry>) {
+    setState(null);
+    setCart((prev) => ({ ...prev, [id]: { ...(prev[id] ?? EMPTY), ...patch } }));
+  }
+
+  function removeShow(id: string) {
+    setState(null);
+    setCart((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }
+
+  /** Les gratuités et places nominatives suivent les places payantes et les titulaires. */
+  function setQuantity(ticketTypeId: string, value: number) {
+    const next = { ...entry.qty, [ticketTypeId]: Math.max(0, value) };
+    const companionsLast = [...tariffs].sort(
+      (a, b) => Number(a.maxPerPaidTicket != null) - Number(b.maxPerPaidTicket != null),
+    );
+    for (const tariff of companionsLast) {
+      next[tariff.id] = Math.min(next[tariff.id] ?? 0, roomOf(tariff.id, next));
+    }
+    updateEntry(sessionId, { qty: next });
+  }
+
   function reset() {
     setState(null);
     setGive([]);
+    setCart({});
     setSessionId("");
-    setQty({});
-    setPicks([]);
     setStep(0);
   }
 
@@ -141,7 +232,9 @@ export function Exchanger({
           <CheckCircle2 className="size-7 text-[var(--success)]" />
         </div>
         <h2 className="mt-4 text-2xl">{t("doneTitle")}</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{t("doneText")}</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {t(given.length > 0 ? "doneText" : "doneTextAdded")}
+        </p>
         <Button
           className="mt-6"
           variant="outline"
@@ -157,15 +250,17 @@ export function Exchanger({
   }
 
   function confirm() {
-    if (!target) return;
+    if (!ready) return;
     startTransition(async () => {
       const result = await confirmExchangeAction(access, {
         give,
-        sessionId: target.sessionId,
-        lines: lines.map((l) => ({
-          ticketTypeId: l.tariff.id,
-          quantity: l.quantity,
-          ...(seated ? { seatKeys: l.seats.map((p) => p.key) } : {}),
+        items: shows.map((show) => ({
+          sessionId: show.target.sessionId,
+          lines: show.lines.map((l) => ({
+            ticketTypeId: l.tariff.id,
+            quantity: l.quantity,
+            ...(show.target.seated ? { seatKeys: l.seats.map((p) => p.key) } : {}),
+          })),
         })),
       });
       if (result.ok && result.kind === "pay") {
@@ -178,6 +273,24 @@ export function Exchanger({
   }
 
   const errorText = (code: string) => t(`errors.${ERRORS.includes(code) ? code : "failed"}`);
+  const dueLabel = quote.dueCents > 0 ? price(quote.dueCents) : t("free");
+
+  const cartBar =
+    shows.length > 0 ? (
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-card border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+        <span className="inline-flex items-center gap-2">
+          <ShoppingBag className="size-4 shrink-0" />
+          <span>
+            <span className="font-medium">{t("cartTitle")}</span> ·{" "}
+            {t("cartSummary", { seats: seatCount, shows: shows.length })} · {t("due")} :{" "}
+            <span className="font-semibold tabular-nums">{dueLabel}</span>
+          </span>
+        </span>
+        <Button size="sm" onClick={() => go(3)} disabled={!ready}>
+          {t("viewCart")}
+        </Button>
+      </div>
+    ) : null;
 
   return (
     <section ref={top} className="scroll-mt-24 rounded-card border border-border bg-card p-5 shadow-sm">
@@ -287,9 +400,7 @@ export function Exchanger({
                 {t("selectedCount", { count: given.length })}
                 {given.length > 0 ? ` · ${price(quote.givenCents)}` : ""}
               </p>
-              <Button onClick={() => go(1)} disabled={!reachable[1]}>
-                {t("next")}
-              </Button>
+              <Button onClick={() => go(1)}>{t("next")}</Button>
             </StepFooter>
           </>
         ) : null}
@@ -298,35 +409,26 @@ export function Exchanger({
           <>
             <h3 className="text-lg">{t("targetTitle")}</h3>
             <p className="mt-1 text-sm text-muted-foreground">{t("targetHint")}</p>
+            {cartBar}
             <ul className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {targets.map((s) => {
-                const open = s.tariffs.map((x) => ({ ...x, left: x.available + freedOf(x.id) }));
-                const soldOut = open.every((x) => x.left === 0);
-                const paid = open.filter((x) => x.priceCents > 0 && x.left > 0);
-                const from = Math.min(
-                  ...(paid.length > 0 ? paid : open).map((x) => x.priceCents),
-                );
-                const selected = s.sessionId === sessionId;
+                const open = tariffsOf(s);
+                const soldOut = open.every((x) => x.available === 0);
+                const paid = open.filter((x) => x.priceCents > 0 && x.available > 0);
+                const from = Math.min(...(paid.length > 0 ? paid : open).map((x) => x.priceCents));
+                const show = shows.find((x) => x.target.sessionId === s.sessionId);
+                const count = show?.lines.reduce((n, l) => n + l.quantity, 0) ?? 0;
                 return (
                   <li key={s.sessionId} className="flex">
                     <button
                       type="button"
-                      aria-pressed={selected}
-                      disabled={soldOut}
-                      onClick={() => {
-                        if (!selected) {
-                          setQty({});
-                          setPicks([]);
-                        }
-                        setSessionId(s.sessionId);
-                        setState(null);
-                        setStep(2);
-                        top.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }}
+                      aria-pressed={count > 0}
+                      disabled={soldOut && count === 0}
+                      onClick={() => openShow(s.sessionId)}
                       className={cn(
                         eventCardClass,
                         "w-full text-left disabled:pointer-events-none disabled:opacity-60",
-                        selected && "border-primary ring-2 ring-primary",
+                        count > 0 && "border-primary ring-2 ring-primary",
                       )}
                     >
                       <EventCardContent
@@ -339,6 +441,7 @@ export function Exchanger({
                         tags={s.tags}
                         soldOut={soldOut}
                         soldOutLabel={t("soldOut")}
+                        badge={count > 0 ? t("inCart", { count }) : undefined}
                         footer={
                           soldOut ? (
                             <span className="text-sm font-medium">{t("soldOut")}</span>
@@ -362,26 +465,27 @@ export function Exchanger({
                 <ArrowLeft className="size-4" />
                 {t("back")}
               </Button>
+              <Button onClick={() => go(3)} disabled={!ready}>
+                {t("viewCart")}
+              </Button>
             </StepFooter>
           </>
         ) : null}
 
         {step === 2 && target ? (
           <>
-            <ChosenShow target={target} onChange={() => go(1)} label={t("changeShow")} />
-            {seated ? (
+            <ChosenShow target={target} />
+            {target.seated ? (
               <div className="mt-6">
                 <ExchangeSeatPicker
                   key={target.sessionId}
                   sessionId={target.sessionId}
                   locale={locale}
                   tariffs={tariffs}
-                  picks={picks}
-                  onPicks={(next) => {
-                    setState(null);
-                    setPicks(next);
-                  }}
+                  picks={entry.picks}
+                  onPicks={(next) => updateEntry(target.sessionId, { picks: next })}
                   ownSeats={ownSeats}
+                  holders={holdersHere}
                   price={price}
                 />
               </div>
@@ -390,21 +494,27 @@ export function Exchanger({
                 <h3 className="mt-6 text-lg">{t("seatsTitle")}</h3>
                 <ul className="mt-3 divide-y divide-border rounded-control border border-border">
                   {tariffs.map((tariff) => {
-                    const n = qty[tariff.id] ?? 0;
-                    const max = Math.min(tariff.available, tariff.maxPerOrder);
-                    const set = (value: number) => {
-                      setState(null);
-                      setQty((prev) => ({ ...prev, [tariff.id]: Math.max(0, Math.min(max, value)) }));
-                    };
+                    const n = entry.qty[tariff.id] ?? 0;
+                    const max = roomOf(tariff.id, entry.qty);
+                    const soldOut = Math.min(tariff.available, tariff.maxPerOrder) === 0;
+                    const set = (value: number) => setQuantity(tariff.id, Math.min(max, value));
                     return (
                       <li key={tariff.id} className="flex items-center gap-3 px-3 py-3 text-sm">
                         <span className="min-w-0 flex-1">
                           <span className="block font-medium">{tariff.name}</span>
                           <span className="block text-xs text-muted-foreground">
                             {tariff.priceCents > 0 ? price(tariff.priceCents) : t("freeTicket")}
-                            {max === 0 ? ` · ${t("soldOutTariff")}` : ""}
+                            {soldOut ? ` · ${t("soldOutTariff")}` : ""}
                             {tariff.requiresAttendee ? ` · ${t("namedTariff")}` : ""}
                           </span>
+                          {!soldOut && n >= max ? (
+                            <QuantityLimit
+                              tariff={tariff}
+                              tariffs={tariffs}
+                              qty={entry.qty}
+                              holders={holdersHere}
+                            />
+                          ) : null}
                         </span>
                         <span className="flex shrink-0 items-center gap-2">
                           <Button
@@ -435,24 +545,22 @@ export function Exchanger({
                 </ul>
               </>
             )}
-            {basket && !basket.ok ? (
+            {hereCheck && !hereCheck.ok ? (
               <p role="alert" className="mt-3 text-sm text-destructive">
-                {errorText(basket.error)}
+                {errorText(hereCheck.error)}
               </p>
             ) : null}
             <StepFooter>
               <Button variant="outline" onClick={() => go(1)}>
-                <ArrowLeft className="size-4" />
-                {t("back")}
+                <Plus className="size-4" />
+                {t("otherShows")}
               </Button>
               <div className="flex items-center gap-4">
                 <span className="text-sm text-muted-foreground">
                   {t("due")} :{" "}
-                  <span className="font-semibold text-foreground tabular-nums">
-                    {quote.dueCents > 0 ? price(quote.dueCents) : t("free")}
-                  </span>
+                  <span className="font-semibold text-foreground tabular-nums">{dueLabel}</span>
                 </span>
-                <Button onClick={() => go(3)} disabled={!reachable[3]}>
+                <Button onClick={() => go(3)} disabled={!ready}>
                   {t("next")}
                 </Button>
               </div>
@@ -460,12 +568,15 @@ export function Exchanger({
           </>
         ) : null}
 
-        {step === 3 && target ? (
+        {step === 3 ? (
           <>
             <h3 className="text-lg">{t("confirmTitle")}</h3>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div className="rounded-card border border-border p-4">
                 <p className="text-sm font-semibold">{t("youGive")}</p>
+                {given.length === 0 ? (
+                  <p className="mt-2 text-sm text-muted-foreground">{t("nothingGiven")}</p>
+                ) : null}
                 <ul className="mt-2 space-y-2 text-sm">
                   {given.map((ticket) => (
                     <li key={ticket.id} className="flex justify-between gap-3">
@@ -485,72 +596,90 @@ export function Exchanger({
               </div>
               <div className="rounded-card border border-border p-4">
                 <p className="text-sm font-semibold">{t("youGet")}</p>
-                <p className="mt-2 text-sm">{target.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {target.when}
-                  {target.venue ? ` · ${target.venue}` : ""}
-                </p>
-                <ul className="mt-2 space-y-1 text-sm">
-                  {seated
-                    ? lines.flatMap(({ tariff, seats }) =>
-                        seats.map((seat) => (
-                          <li key={seat.key} className="flex justify-between gap-3">
-                            <span className="min-w-0">
-                              <span className="block">{seat.label}</span>
-                              <span className="block text-xs text-muted-foreground">{tariff.name}</span>
-                            </span>
-                            <span className="shrink-0 tabular-nums">
-                              {tariff.priceCents > 0 ? price(tariff.priceCents) : t("freeTicket")}
-                            </span>
-                          </li>
-                        )),
-                      )
-                    : lines.map(({ tariff, quantity }) => (
-                        <li key={tariff.id} className="flex justify-between gap-3">
-                          <span>
-                            {quantity} × {tariff.name}
-                          </span>
-                          <span className="shrink-0 tabular-nums">
-                            {tariff.priceCents > 0
-                              ? price(tariff.priceCents * quantity)
-                              : t("freeTicket")}
-                          </span>
-                        </li>
-                      ))}
+                <ul className="mt-2 divide-y divide-border">
+                  {shows.map((show) => (
+                    <li key={show.target.sessionId} className="py-3 first:pt-0 last:pb-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 text-sm">
+                          <p>{show.target.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {show.target.when}
+                            {show.target.venue ? ` · ${show.target.venue}` : ""}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 gap-1">
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            aria-label={t("edit")}
+                            onClick={() => openShow(show.target.sessionId)}
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            aria-label={t("remove")}
+                            onClick={() => removeShow(show.target.sessionId)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <ShowLines show={show} price={price} freeLabel={t("freeTicket")} />
+                    </li>
+                  ))}
                 </ul>
+                <Button className="mt-3" variant="outline" size="sm" onClick={() => go(1)}>
+                  <Plus className="size-4" />
+                  {t("otherShows")}
+                </Button>
               </div>
             </div>
 
             <div className="mt-5 space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("givenValue")}</span>
-                <span className="tabular-nums">{price(quote.givenCents)}</span>
-              </div>
+              {given.length > 0 ? (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{t("givenValue")}</span>
+                  <span className="tabular-nums">{price(quote.givenCents)}</span>
+                </div>
+              ) : null}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("newValue")}</span>
                 <span className="tabular-nums">{price(quote.newCents)}</span>
               </div>
               <div className="flex items-baseline justify-between pt-1">
                 <span className="font-semibold">{t("due")}</span>
-                <span className="text-xl font-extrabold tabular-nums">
-                  {quote.dueCents > 0 ? price(quote.dueCents) : t("free")}
-                </span>
+                <span className="text-xl font-extrabold tabular-nums">{dueLabel}</span>
               </div>
               {quote.newCents < quote.givenCents ? (
                 <p className="text-xs text-muted-foreground">{t("noRefund")}</p>
               ) : null}
-              {quote.dueCents > 0 ? (
+              {quote.dueCents > 0 && given.length > 0 ? (
                 <p className="text-xs text-muted-foreground">{t("keepNote")}</p>
               ) : null}
             </div>
 
+            {shows.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">{t("errors.empty")}</p>
+            ) : failing && !failing.check.ok ? (
+              <p role="alert" className="mt-3 text-sm text-destructive">
+                {failing.show.target.title} : {errorText(failing.check.error)}
+              </p>
+            ) : null}
             {state && !state.ok ? (
               <p role="alert" className="mt-3 text-sm text-destructive">
                 {errorText(state.error)}
               </p>
             ) : null}
             <StepFooter>
-              <Button variant="outline" onClick={() => go(2)} disabled={pending}>
+              <Button
+                variant="outline"
+                onClick={() => go(target ? 2 : 1)}
+                disabled={pending}
+              >
                 <ArrowLeft className="size-4" />
                 {t("back")}
               </Button>
@@ -577,15 +706,72 @@ function StepFooter({ children }: { children: React.ReactNode }) {
   );
 }
 
-function ChosenShow({
-  target,
-  onChange,
-  label,
+/** Pourquoi le « + » d'un tarif est grisé, quand ce n'est pas le stock. */
+function QuantityLimit({
+  tariff,
+  tariffs,
+  qty,
+  holders,
 }: {
-  target: ExchangerTarget;
-  onChange: () => void;
-  label: string;
+  tariff: PickerTariff;
+  tariffs: PickerTariff[];
+  qty: Record<string, number>;
+  holders: number;
 }) {
+  const t = useTranslations("change.exchange");
+  const te = useTranslations("event");
+  const count = (pick: (x: PickerTariff) => boolean) =>
+    tariffs.filter(pick).reduce((sum, x) => sum + (qty[x.id] ?? 0), 0);
+  const companion = tariff.maxPerPaidTicket != null;
+  const paid = count((x) => x.maxPerPaidTicket == null && x.priceCents > 0);
+  const reason =
+    companion && paid === 0
+      ? te("companionNeedsPaid")
+      : tariff.requiresAttendee && count((x) => x.requiresAttendee) >= holders
+        ? t("noHolder")
+        : companion
+          ? te("companionMaxReached")
+          : null;
+  return reason ? <span className="block text-xs text-muted-foreground">{reason}</span> : null;
+}
+
+function ShowLines({
+  show,
+  price,
+  freeLabel,
+}: {
+  show: CartShow;
+  price: (cents: number) => string;
+  freeLabel: string;
+}) {
+  const amount = (cents: number) => (cents > 0 ? price(cents) : freeLabel);
+  return (
+    <ul className="mt-2 space-y-1 text-sm">
+      {show.target.seated
+        ? show.lines.flatMap(({ tariff, seats }) =>
+            seats.map((seat) => (
+              <li key={seat.key} className="flex justify-between gap-3">
+                <span className="min-w-0">
+                  <span className="block">{seat.label}</span>
+                  <span className="block text-xs text-muted-foreground">{tariff.name}</span>
+                </span>
+                <span className="shrink-0 tabular-nums">{amount(tariff.priceCents)}</span>
+              </li>
+            )),
+          )
+        : show.lines.map(({ tariff, quantity }) => (
+            <li key={tariff.id} className="flex justify-between gap-3">
+              <span>
+                {quantity} × {tariff.name}
+              </span>
+              <span className="shrink-0 tabular-nums">{amount(tariff.priceCents * quantity)}</span>
+            </li>
+          ))}
+    </ul>
+  );
+}
+
+function ChosenShow({ target }: { target: ExchangerTarget }) {
   return (
     <div className="flex flex-wrap items-center gap-4 rounded-card border border-border p-3">
       {target.coverImage ? (
@@ -600,9 +786,6 @@ function ChosenShow({
           {target.venue ? ` · ${target.venue}` : ""}
         </p>
       </div>
-      <Button variant="outline" size="sm" onClick={onChange}>
-        {label}
-      </Button>
     </div>
   );
 }

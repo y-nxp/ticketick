@@ -110,6 +110,39 @@ export function checkBasket(input: {
   return { ok: true };
 }
 
+/**
+ * Places encore possibles à ce tarif, les autres quantités restant telles
+ * quelles : mêmes règles que `checkBasket`, pour griser à l'écran ce qu'il
+ * refuserait (gratuité sans place payante, nominatif sans titulaire).
+ */
+export function tariffRoom(input: {
+  ticketTypeId: string;
+  counts: Record<string, number>;
+  tariffs: BasketTariff[];
+  holders: number;
+}): number {
+  const tariff = input.tariffs.find((t) => t.id === input.ticketTypeId);
+  if (!tariff) return 0;
+  const count = (id: string) => input.counts[id] ?? 0;
+  let room = Math.min(tariff.available, tariff.maxPerOrder);
+  if (tariff.maxPerPaidTicket != null) {
+    const base =
+      tariff.companionOfId == null
+        ? input.tariffs
+            .filter((t) => t.maxPerPaidTicket == null && t.priceCents > 0)
+            .reduce((sum, t) => sum + count(t.id), 0)
+        : count(tariff.companionOfId);
+    room = Math.min(room, base * tariff.maxPerPaidTicket);
+  }
+  if (tariff.requiresAttendee) {
+    const otherNamed = input.tariffs
+      .filter((t) => t.requiresAttendee && t.id !== tariff.id)
+      .reduce((sum, t) => sum + count(t.id), 0);
+    room = Math.min(room, input.holders - otherNamed);
+  }
+  return Math.max(0, room);
+}
+
 /** Ce que le client paie : la hausse nette, jamais de remboursement. */
 export function exchangeDue(input: {
   givenCents: number[];

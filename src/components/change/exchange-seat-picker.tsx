@@ -6,7 +6,7 @@ import { Loader2, X } from "lucide-react";
 import { SeatLegend, SeatMap, type SeatState } from "@/components/seating/seat-map";
 import { seatLabel, zoneAllowed, type SeatLayout } from "@/lib/seating/layout";
 import { getSeatState } from "@/lib/seating/public-actions";
-import type { BasketTariff } from "@/lib/orders/self-service-rules";
+import { tariffRoom, type BasketTariff } from "@/lib/orders/self-service-rules";
 import { cn } from "@/lib/utils";
 
 export type PickerTariff = BasketTariff & { name: string; seatZones: string[] };
@@ -33,6 +33,7 @@ export function ExchangeSeatPicker({
   picks,
   onPicks,
   ownSeats,
+  holders,
   price,
 }: {
   sessionId: string;
@@ -41,6 +42,8 @@ export function ExchangeSeatPicker({
   picks: SeatPick[];
   onPicks: (picks: SeatPick[]) => void;
   ownSeats: Set<string>;
+  /** Billets rendus avec un titulaire : autant de places nominatives possibles. */
+  holders: number;
   price: (cents: number) => string;
 }) {
   const t = useTranslations("change.exchange");
@@ -70,16 +73,44 @@ export function ExchangeSeatPicker({
     [layout],
   );
 
-  const countOf = (list: SeatPick[], id: string) => list.filter((p) => p.ticketTypeId === id).length;
+  const countsOf = (list: SeatPick[]) => {
+    const out: Record<string, number> = {};
+    for (const p of list) out[p.ticketTypeId] = (out[p.ticketTypeId] ?? 0) + 1;
+    return out;
+  };
+  const roomIn = (tariff: PickerTariff, counts: Record<string, number>) =>
+    tariffRoom({ ticketTypeId: tariff.id, counts, tariffs, holders });
+  /** Une place de plus à ce tarif, `list` restant inchangée ? */
   const fits = (tariff: PickerTariff, list: SeatPick[]) => {
-    const n = countOf(list, tariff.id) + 1;
-    return n <= tariff.available && n <= tariff.maxPerOrder;
+    const counts = countsOf(list);
+    return (counts[tariff.id] ?? 0) < roomIn(tariff, counts);
   };
   const allowedIn = (zone: string) => tariffs.filter((x) => zoneAllowed(x.seatZones, zone));
   const defaultFor = (zone: string, list: SeatPick[]) => {
     const open = allowedIn(zone).filter((x) => !isCompanion(x) && fits(x, list));
     return open.find((x) => !x.requiresAttendee) ?? open[0];
   };
+
+  /** Gratuités ou places nominatives devenues impossibles : tarif de la place, sinon retirées. */
+  function normalize(list: SeatPick[]): SeatPick[] {
+    let out = list;
+    for (let i = 0; i <= list.length; i++) {
+      const counts = countsOf(out);
+      const extra = [...out]
+        .reverse()
+        .find((p) => {
+          const tariff = tariffs.find((x) => x.id === p.ticketTypeId);
+          return !tariff || (counts[p.ticketTypeId] ?? 0) > roomIn(tariff, counts);
+        });
+      if (!extra) break;
+      const others = out.filter((p) => p !== extra);
+      const fallback = defaultFor(zoneOf.get(extra.key) ?? "", others);
+      out = fallback
+        ? out.map((p) => (p === extra ? { ...p, ticketTypeId: fallback.id } : p))
+        : others;
+    }
+    return out;
+  }
 
   function stateOf(key: string): SeatState {
     if (picks.some((p) => p.key === key)) return "selected";
@@ -92,7 +123,7 @@ export function ExchangeSeatPicker({
   function toggle(key: string) {
     setNotice(false);
     if (picks.some((p) => p.key === key)) {
-      onPicks(picks.filter((p) => p.key !== key));
+      onPicks(normalize(picks.filter((p) => p.key !== key)));
       return;
     }
     const zone = zoneOf.get(key);
@@ -106,7 +137,7 @@ export function ExchangeSeatPicker({
   }
 
   function changeTariff(key: string, ticketTypeId: string) {
-    onPicks(picks.map((p) => (p.key === key ? { ...p, ticketTypeId } : p)));
+    onPicks(normalize(picks.map((p) => (p.key === key ? { ...p, ticketTypeId } : p))));
   }
 
   const mains = tariffs.filter((x) => !isCompanion(x));
@@ -169,6 +200,23 @@ export function ExchangeSeatPicker({
                       {options.map((tariff) => {
                         const checked = tariff.id === pick.ticketTypeId;
                         const ok = checked || fits(tariff, others);
+                        const tariffOf = (p: SeatPick) => tariffs.find((y) => y.id === p.ticketTypeId);
+                        const paidOthers = others.some((p) => {
+                          const x = tariffOf(p);
+                          return x != null && !isCompanion(x) && x.priceCents > 0;
+                        });
+                        const noHolder =
+                          tariff.requiresAttendee &&
+                          others.filter((p) => tariffOf(p)?.requiresAttendee).length >= holders;
+                        const reason = ok
+                          ? null
+                          : isCompanion(tariff) && !paidOthers
+                            ? te("companionNeedsPaid")
+                            : noHolder
+                              ? t("noHolder")
+                              : isCompanion(tariff)
+                                ? te("companionMaxReached")
+                                : null;
                         return (
                           <label
                             key={tariff.id}
@@ -192,6 +240,11 @@ export function ExchangeSeatPicker({
                               {tariff.requiresAttendee ? (
                                 <span className="block text-xs font-normal text-muted-foreground">
                                   {t("namedTariff")}
+                                </span>
+                              ) : null}
+                              {reason ? (
+                                <span className="block text-xs font-normal text-muted-foreground">
+                                  {reason}
                                 </span>
                               ) : null}
                             </span>
