@@ -191,6 +191,38 @@ export function rowNumberMarks(
   return out;
 }
 
+/**
+ * Groupes de places réellement voisines dans chaque rang, dans l'ordre du
+ * dessin. L'ordre des places dans le plan ne suit pas toujours le rang (places
+ * ajoutées après coup) ; une allée ou une place absente coupe le groupe.
+ */
+export function seatRuns<S extends Pick<SeatDef, "section" | "row" | "x" | "y">>(seats: S[]): S[][] {
+  const rows = new Map<string, S[]>();
+  for (const seat of seats) {
+    const k = `${seat.section}\u0000${seat.row}`;
+    rows.set(k, [...(rows.get(k) ?? []), seat]);
+  }
+  const runs: S[][] = [];
+  for (const row of rows.values()) {
+    const xs = row.map((s) => s.x);
+    const ys = row.map((s) => s.y);
+    const alongX = Math.max(...xs) - Math.min(...xs) >= Math.max(...ys) - Math.min(...ys);
+    row.sort((a, b) => (alongX ? a.x - b.x || a.y - b.y : a.y - b.y || a.x - b.x));
+    const steps = row.slice(1).map((s, i) => Math.hypot(s.x - row[i]!.x, s.y - row[i]!.y));
+    const pitch = Math.min(...steps.filter((d) => d > 0));
+    let run = [row[0]!];
+    steps.forEach((d, i) => {
+      if (d > pitch * 1.5) {
+        runs.push(run);
+        run = [];
+      }
+      run.push(row[i + 1]!);
+    });
+    runs.push(run);
+  }
+  return runs;
+}
+
 /** Zones où un tarif se vend : toutes si la liste est vide. */
 export function zoneAllowed(seatZones: string[], zone: string): boolean {
   return seatZones.length === 0 || seatZones.includes(zone);

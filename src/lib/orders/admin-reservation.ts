@@ -2,7 +2,7 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { readLayout, zoneAllowed, type SeatLayout } from "@/lib/seating/layout";
+import { readLayout, seatRuns, zoneAllowed, type SeatLayout } from "@/lib/seating/layout";
 import { claimSeats, syncSessionSeats } from "@/lib/seating/seats";
 import { issueMissingTickets } from "@/lib/tickets/issue";
 import { applyAttendees, type Holder } from "./attendees";
@@ -254,7 +254,7 @@ export class SeatRaceError extends Error {}
 /**
  * Attribue des sièges de la zone du tarif : ceux choisis sur le plan (`keys`),
  * sinon côte à côte dans un même rang quand c'est possible, puis les premiers
- * dans l'ordre du plan. Sièges libres par défaut ; avec `fromInvites`,
+ * rang par rang. Sièges libres par défaut ; avec `fromInvites`,
  * uniquement les places bloquées.
  */
 export async function assignSeats(
@@ -278,12 +278,7 @@ export async function assignSeats(
     ).map((s) => s.seatKey),
   );
 
-  const rows = new Map<string, SeatLayout["seats"]>();
-  for (const seat of input.layout.seats) {
-    const key = `${seat.section}\u0000${seat.row}`;
-    rows.set(key, [...(rows.get(key) ?? []), seat]);
-  }
-
+  const runs = seatRuns(input.layout.seats);
   const seatByKey = new Map(input.layout.seats.map((s) => [s.key, s]));
   const out = new Map<string, string[]>();
   // Les sièges choisis passent d'abord : l'attribution d'office ne doit pas les prendre.
@@ -300,7 +295,7 @@ export async function assignSeats(
       }
       picked = [...line.keys];
     }
-    for (const row of picked ? [] : rows.values()) {
+    for (const row of picked ? [] : runs) {
       for (let start = 0; start + line.quantity <= row.length; start++) {
         const run = row.slice(start, start + line.quantity);
         if (run.every(eligible)) {
@@ -310,7 +305,8 @@ export async function assignSeats(
       }
       if (picked) break;
     }
-    picked ??= input.layout.seats
+    picked ??= runs
+      .flat()
       .filter(eligible)
       .slice(0, line.quantity)
       .map((s) => s.key);
