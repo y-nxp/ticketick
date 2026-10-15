@@ -241,6 +241,19 @@ docker compose -f docker-compose.server.yml start app
 Le GB10 a le même service : sauvegardes dans `~/ticketick-v2-prod-backups`
 (conteneur `ticketick-v2-prod-db`).
 
+**Journal de l'application**
+
+Un déploiement remplace le conteneur de l'application, et Docker efface son
+journal avec lui. Juste avant, `server-deploy.sh` l'archive dans
+`~/ticketick-prod/logs` (90 jours gardés). Pour retrouver une vente, un
+paiement ou un envoi de billets :
+
+```bash
+cd ~/ticketick-prod
+docker logs --timestamps --since 2h ticketick-prod-app 2>&1 | grep -i email   # depuis le dernier déploiement
+zcat logs/app-*.log.gz | grep -i "TT-ABCD-1234"                                 # avant
+```
+
 **Workflows**
 
 - *Deploy Production → serveur*, mode `verifier` : contrôle les valeurs

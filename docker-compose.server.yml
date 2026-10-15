@@ -77,6 +77,13 @@ services:
       UPLOAD_DIR: /app/data/uploads
     volumes:
       - uploads-data:/app/data/uploads
+    # Journal plafonné à 100 Mo ; il est archivé dans ./logs avant chaque
+    # déploiement (server-deploy.sh), qui remplace le conteneur.
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
     ports:
       # Boucle locale seulement : sert aux contrôles depuis l'hôte. Le public
       # passe par Caddy.
