@@ -2086,10 +2086,9 @@
     "exchange": {
       "title": "Change show or add tickets",
       "intro": "Choose the tickets to give back, then the show and seats you want. You only pay the difference if the new choice costs more.",
-      "giveTitle": "Tickets to give back",
+      "giveTitle": "Which tickets are you giving back?",
       "freeTicket": "Free",
-      "targetTitle": "New show",
-      "targetPlaceholder": "Choose a show…",
+      "targetTitle": "Choose the show",
       "soldOutTariff": "sold out",
       "namedTariff": "named, taken from a ticket given back",
       "less": "One seat less",
@@ -2120,7 +2119,26 @@
         "notFound": "One of these tickets can no longer be changed. Reload the page.",
         "retry": "The exchange could not be saved. Try again in a moment.",
         "failed": "The exchange could not be made. Reload the page and try again."
-      }
+      },
+      "stepsLabel": "Exchange steps",
+      "steps": {
+        "tickets": "Tickets",
+        "show": "Show",
+        "seats": "Seats",
+        "confirm": "Confirmation"
+      },
+      "giveHint": "Tap the tickets to exchange. Their value is deducted from the new choice.",
+      "selectedCount": "{count, plural, =0 {No ticket chosen} one {1 ticket chosen} other {# tickets chosen}}",
+      "targetHint": "All shows of the organiser on sale. You can also keep the same one and add seats.",
+      "seatsTitle": "How many seats?",
+      "confirmTitle": "Check your exchange",
+      "youGive": "You give back",
+      "youGet": "You receive",
+      "changeShow": "Change show",
+      "from": "from",
+      "soldOut": "Sold out",
+      "next": "Continue",
+      "back": "Back"
     }
   },
   "organizerReport": {

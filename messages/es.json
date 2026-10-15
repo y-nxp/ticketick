@@ -517,10 +517,9 @@
     "exchange": {
       "title": "Cambiar de espectáculo o añadir entradas",
       "intro": "Elige las entradas que devuelves y luego el espectáculo y las localidades que quieres. Solo pagas la diferencia si la nueva elección cuesta más.",
-      "giveTitle": "Entradas que devuelves",
+      "giveTitle": "¿Qué entradas devuelves?",
       "freeTicket": "Gratis",
-      "targetTitle": "Nuevo espectáculo",
-      "targetPlaceholder": "Elegir un espectáculo…",
+      "targetTitle": "Elige el espectáculo",
       "soldOutTariff": "agotado",
       "namedTariff": "nominativa, tomada de una entrada devuelta",
       "less": "Una plaza menos",
@@ -551,7 +550,26 @@
         "notFound": "Una de estas entradas ya no se puede cambiar. Recarga la página.",
         "retry": "No se pudo guardar el cambio. Inténtalo de nuevo en un momento.",
         "failed": "No se pudo hacer el cambio. Recarga la página e inténtalo de nuevo."
-      }
+      },
+      "stepsLabel": "Pasos del cambio",
+      "steps": {
+        "tickets": "Entradas",
+        "show": "Espectáculo",
+        "seats": "Plazas",
+        "confirm": "Confirmación"
+      },
+      "giveHint": "Toca las entradas que quieres cambiar. Su valor se descuenta de la nueva elección.",
+      "selectedCount": "{count, plural, =0 {Ninguna entrada elegida} one {1 entrada elegida} other {# entradas elegidas}}",
+      "targetHint": "Todos los espectáculos del organizador a la venta. También puedes quedarte con el mismo y añadir plazas.",
+      "seatsTitle": "¿Cuántas plazas?",
+      "confirmTitle": "Revisa tu cambio",
+      "youGive": "Devuelves",
+      "youGet": "Recibes",
+      "changeShow": "Cambiar de espectáculo",
+      "from": "desde",
+      "soldOut": "Agotado",
+      "next": "Continuar",
+      "back": "Volver"
     }
   },
   "consent": {

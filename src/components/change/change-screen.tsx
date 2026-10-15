@@ -78,6 +78,19 @@ export async function ChangeScreen({
               sessionId: target.sessionId,
               title: translate(target.eventTitle, locale),
               when: formatDate(target.startsAt, fmt, { weekday: "long" }),
+              startsAt: target.startsAt.toISOString(),
+              coverImage: target.coverImage,
+              categories: target.categories.map((c) => ({
+                id: c.id,
+                name: translate(c.name, locale),
+                color: c.color,
+              })),
+              tags: target.tags
+                ? translate(target.tags, locale)
+                    .split(",")
+                    .map((tag) => tag.trim())
+                    .filter(Boolean)
+                : [],
               venue: target.venue,
               seated: target.seated,
               tariffs: target.tariffs.map((tariff) => ({

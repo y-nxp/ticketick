@@ -2086,10 +2086,9 @@
     "exchange": {
       "title": "Cambiare spettacolo o aggiungere biglietti",
       "intro": "Scegliete i biglietti da restituire, poi lo spettacolo e i posti desiderati. Pagate solo la differenza se la nuova scelta costa di più.",
-      "giveTitle": "Biglietti da restituire",
+      "giveTitle": "Quali biglietti restituite?",
       "freeTicket": "Gratuito",
-      "targetTitle": "Nuovo spettacolo",
-      "targetPlaceholder": "Scegliere uno spettacolo…",
+      "targetTitle": "Scegliete lo spettacolo",
       "soldOutTariff": "esaurito",
       "namedTariff": "nominativo, ripreso da un biglietto restituito",
       "less": "Un posto in meno",
@@ -2120,7 +2119,26 @@
         "notFound": "Uno di questi biglietti non può più essere cambiato. Ricaricate la pagina.",
         "retry": "Il cambio non ha potuto essere registrato. Riprovate tra un istante.",
         "failed": "Il cambio non ha potuto essere fatto. Ricaricate la pagina e riprovate."
-      }
+      },
+      "stepsLabel": "Fasi del cambio",
+      "steps": {
+        "tickets": "Biglietti",
+        "show": "Spettacolo",
+        "seats": "Posti",
+        "confirm": "Conferma"
+      },
+      "giveHint": "Toccate i biglietti da cambiare. Il loro valore viene dedotto dalla nuova scelta.",
+      "selectedCount": "{count, plural, =0 {Nessun biglietto scelto} one {1 biglietto scelto} other {# biglietti scelti}}",
+      "targetHint": "Tutti gli spettacoli in vendita dell'organizzatore. Potete anche tenere lo stesso e aggiungere posti.",
+      "seatsTitle": "Quanti posti?",
+      "confirmTitle": "Verificate il cambio",
+      "youGive": "Restituite",
+      "youGet": "Ricevete",
+      "changeShow": "Cambiare spettacolo",
+      "from": "da",
+      "soldOut": "Esaurito",
+      "next": "Continuare",
+      "back": "Indietro"
     }
   },
   "organizerReport": {

@@ -2086,10 +2086,9 @@
     "exchange": {
       "title": "Changer de spectacle ou ajouter des billets",
       "intro": "Choisissez les billets à rendre, puis le spectacle et les places voulus. Vous payez seulement la différence si le nouveau choix coûte plus cher.",
-      "giveTitle": "Billets à rendre",
+      "giveTitle": "Quels billets rendez-vous ?",
       "freeTicket": "Gratuit",
-      "targetTitle": "Nouveau spectacle",
-      "targetPlaceholder": "Choisir un spectacle…",
+      "targetTitle": "Choisissez le spectacle",
       "soldOutTariff": "complet",
       "namedTariff": "nominatif, repris d'un billet rendu",
       "less": "Une place de moins",
@@ -2120,7 +2119,26 @@
         "notFound": "Un de ces billets ne peut plus être changé. Rechargez la page.",
         "retry": "L'échange n'a pas pu être enregistré. Réessayez dans un instant.",
         "failed": "L'échange n'a pas pu être fait. Rechargez la page et réessayez."
-      }
+      },
+      "stepsLabel": "Étapes de l'échange",
+      "steps": {
+        "tickets": "Billets",
+        "show": "Spectacle",
+        "seats": "Places",
+        "confirm": "Confirmation"
+      },
+      "giveHint": "Touchez les billets à échanger. Leur valeur est déduite du nouveau choix.",
+      "selectedCount": "{count, plural, =0 {Aucun billet choisi} one {1 billet choisi} other {# billets choisis}}",
+      "targetHint": "Tous les spectacles en vente de l'organisateur. Vous pouvez aussi garder le même et ajouter des places.",
+      "seatsTitle": "Combien de places ?",
+      "confirmTitle": "Vérifiez votre échange",
+      "youGive": "Vous rendez",
+      "youGet": "Vous recevez",
+      "changeShow": "Changer de spectacle",
+      "from": "dès",
+      "soldOut": "Complet",
+      "next": "Continuer",
+      "back": "Retour"
     }
   },
   "organizerReport": {

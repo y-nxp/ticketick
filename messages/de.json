@@ -2086,10 +2086,9 @@
     "exchange": {
       "title": "Vorstellung wechseln oder Tickets hinzufügen",
       "intro": "Wählen Sie die Tickets, die Sie zurückgeben, dann die gewünschte Vorstellung und Plätze. Ist die neue Wahl teurer, bezahlen Sie nur die Differenz.",
-      "giveTitle": "Zurückgegebene Tickets",
+      "giveTitle": "Welche Tickets geben Sie zurück?",
       "freeTicket": "Kostenlos",
-      "targetTitle": "Neue Vorstellung",
-      "targetPlaceholder": "Vorstellung wählen…",
+      "targetTitle": "Wählen Sie die Vorstellung",
       "soldOutTariff": "ausverkauft",
       "namedTariff": "personalisiert, von einem zurückgegebenen Ticket übernommen",
       "less": "Ein Platz weniger",
@@ -2120,7 +2119,26 @@
         "notFound": "Eines dieser Tickets kann nicht mehr geändert werden. Laden Sie die Seite neu.",
         "retry": "Der Tausch konnte nicht gespeichert werden. Versuchen Sie es gleich noch einmal.",
         "failed": "Der Tausch konnte nicht durchgeführt werden. Laden Sie die Seite neu und versuchen Sie es noch einmal."
-      }
+      },
+      "stepsLabel": "Schritte des Tauschs",
+      "steps": {
+        "tickets": "Tickets",
+        "show": "Vorstellung",
+        "seats": "Plätze",
+        "confirm": "Bestätigung"
+      },
+      "giveHint": "Tippen Sie auf die Tickets, die Sie tauschen möchten. Ihr Wert wird von der neuen Wahl abgezogen.",
+      "selectedCount": "{count, plural, =0 {Kein Ticket gewählt} one {1 Ticket gewählt} other {# Tickets gewählt}}",
+      "targetHint": "Alle Vorstellungen des Veranstalters im Verkauf. Sie können auch dieselbe behalten und Plätze hinzufügen.",
+      "seatsTitle": "Wie viele Plätze?",
+      "confirmTitle": "Prüfen Sie Ihren Tausch",
+      "youGive": "Sie geben zurück",
+      "youGet": "Sie erhalten",
+      "changeShow": "Vorstellung wechseln",
+      "from": "ab",
+      "soldOut": "Ausverkauft",
+      "next": "Weiter",
+      "back": "Zurück"
     }
   },
   "organizerReport": {

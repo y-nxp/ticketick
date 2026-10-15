@@ -56,6 +56,9 @@ export interface ExchangeTicket {
 export interface ExchangeTarget {
   sessionId: string;
   eventTitle: Translated;
+  coverImage: string;
+  categories: { id: string; name: Translated; color: string }[];
+  tags: Translated | null;
   startsAt: Date;
   venue: string | null;
   seated: boolean;
@@ -113,7 +116,14 @@ async function targetSessions(organizerIds: string[]): Promise<ExchangeTarget[]>
       sold: true,
       seatPlanId: true,
       venue: { select: { name: true, city: true } },
-      event: { select: { title: true } },
+      event: {
+        select: {
+          title: true,
+          coverImage: true,
+          tags: true,
+          categories: { select: { id: true, name: true, color: true } },
+        },
+      },
       ticketTypes: {
         orderBy: { priceCents: "desc" },
         select: {
@@ -155,6 +165,13 @@ async function targetSessions(organizerIds: string[]): Promise<ExchangeTarget[]>
     out.push({
       sessionId: session.id,
       eventTitle: session.event.title as Translated,
+      coverImage: session.event.coverImage ?? "",
+      categories: session.event.categories.map((c) => ({
+        id: c.id,
+        name: c.name as Translated,
+        color: c.color,
+      })),
+      tags: (session.event.tags as Translated | null) ?? null,
       startsAt: session.startsAt,
       venue: session.venue ? `${session.venue.name}, ${session.venue.city}` : null,
       seated: session.seatPlanId != null,
