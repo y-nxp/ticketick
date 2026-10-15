@@ -13,6 +13,7 @@ import {
   SeatRaceError,
 } from "./admin-reservation";
 import { hashHoldToken, SoldOutError, takeStock } from "./create-order";
+import type { LinkLimitError } from "./self-service-rules";
 
 /**
  * Modification d'une commande depuis l'admin : coordonnées, places retirées
@@ -39,7 +40,9 @@ export type EditError =
   | "providerMissing"
   | "emailMissing"
   | "cardMissing"
-  | "retry";
+  | "retry"
+  /** Échange par le lien qui ferait perdre des places ou de la valeur. */
+  | LinkLimitError;
 
 export class EditFailure extends Error {
   constructor(

@@ -22,7 +22,12 @@ import {
   type ClientAccess,
   type ExchangeState,
 } from "@/lib/orders/seat-change-actions";
-import { checkBasket, exchangeDue, tariffRoom } from "@/lib/orders/self-service-rules";
+import {
+  checkBasket,
+  exchangeDue,
+  linkLimitError,
+  tariffRoom,
+} from "@/lib/orders/self-service-rules";
 import { cn, formatPrice } from "@/lib/utils";
 import { ExchangeSeatPicker, type PickerTariff, type SeatPick } from "./exchange-seat-picker";
 
@@ -109,6 +114,9 @@ const ERRORS: string[] = [
   "expired",
   "notFound",
   "retry",
+  "accountRequired",
+  "fewerSeats",
+  "lowerValue",
 ];
 
 export function Exchanger({
@@ -178,6 +186,14 @@ export function Exchanger({
     lines: shows.flatMap((s) =>
       s.lines.map((l) => ({ priceCents: l.tariff.priceCents, quantity: l.quantity })),
     ),
+  });
+  // Par le lien, pas d'échange à la baisse : le serveur le refuse aussi.
+  const limit = linkLimitError({
+    viaAccount: !("token" in access),
+    givenCount: given.length,
+    newCount: seatCount,
+    givenCents: quote.givenCents,
+    newCents: quote.newCents,
   });
   const ready = shows.length > 0 && !failing;
 
@@ -292,7 +308,7 @@ export function Exchanger({
   }
 
   function confirm() {
-    if (!ready || !attendeesDone) return;
+    if (!ready || limit || !attendeesDone) return;
     const attendeesFor = (sid: string, ticketTypeId: string) =>
       slots.flatMap((slot, i) =>
         slot.sessionId === sid && slot.ticketTypeId === ticketTypeId ? [attendeeOf(slot, i)] : [],
@@ -736,7 +752,7 @@ export function Exchanger({
                 <span className="font-semibold">{t("due")}</span>
                 <span className="text-xl font-extrabold tabular-nums">{dueLabel}</span>
               </div>
-              {quote.newCents < quote.givenCents ? (
+              {quote.newCents < quote.givenCents && !limit ? (
                 <p className="text-xs text-muted-foreground">{t("noRefund")}</p>
               ) : null}
               {quote.dueCents > 0 && given.length > 0 ? (
@@ -749,6 +765,10 @@ export function Exchanger({
             ) : failing && !failing.check.ok ? (
               <p role="alert" className="mt-3 text-sm text-destructive">
                 {failing.show.target.title} : {errorText(failing.check.error)}
+              </p>
+            ) : limit ? (
+              <p role="alert" className="mt-3 text-sm text-destructive">
+                {errorText(limit)}
               </p>
             ) : !attendeesDone ? (
               <p className="mt-3 text-sm text-muted-foreground">{t("errors.attendeesMissing")}</p>
@@ -767,7 +787,7 @@ export function Exchanger({
                 <ArrowLeft className="size-4" />
                 {t("back")}
               </Button>
-              <Button onClick={confirm} disabled={pending || !ready || !attendeesDone}>
+              <Button onClick={confirm} disabled={pending || !ready || limit != null || !attendeesDone}>
                 {pending
                   ? t("saving")
                   : quote.dueCents > 0

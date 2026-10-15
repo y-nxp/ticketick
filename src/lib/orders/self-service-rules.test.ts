@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cancelOpen, changeOpen, checkBasket, exchangeDue, tariffRoom } from "./self-service-rules";
+import {
+  cancelOpen,
+  changeOpen,
+  checkBasket,
+  exchangeDue,
+  linkLimitError,
+  tariffRoom,
+} from "./self-service-rules";
 
 const now = new Date("2026-12-20T12:00:00Z");
 const inHours = (h: number) => new Date(now.getTime() + h * 3600 * 1000);
@@ -92,5 +99,21 @@ test("on ne paie que la hausse nette, jamais de remboursement", () => {
   assert.equal(
     exchangeDue({ givenCents: [9000], lines: [{ priceCents: 6000, quantity: 2 }] }).dueCents,
     3000,
+  );
+});
+
+test("par le lien, un échange ne fait pas perdre de places ni de valeur", () => {
+  const base = { viaAccount: false, givenCount: 2, newCount: 2, givenCents: 5000, newCents: 5000 };
+  assert.equal(linkLimitError(base), null);
+  assert.equal(linkLimitError({ ...base, newCount: 3, newCents: 6000 }), null);
+  assert.equal(linkLimitError({ ...base, newCount: 1, newCents: 6000 }), "fewerSeats");
+  assert.equal(linkLimitError({ ...base, newCents: 4000 }), "lowerValue");
+  assert.equal(linkLimitError({ ...base, givenCount: 0, givenCents: 0, newCount: 1, newCents: 0 }), null);
+});
+
+test("depuis le compte, le client peut échanger à la baisse", () => {
+  assert.equal(
+    linkLimitError({ viaAccount: true, givenCount: 4, newCount: 1, givenCents: 20000, newCents: 1000 }),
+    null,
   );
 });

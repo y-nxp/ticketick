@@ -4,6 +4,7 @@ import { envoyer, echapper } from "@/lib/email";
 import { byLocale, intlLocale } from "@/lib/i18n-fallback";
 import { publicAppOrigin } from "@/lib/app-url";
 import { cancellationOutcome, type CancellationCase } from "@/lib/orders/cancellation";
+import { orderHasAccount } from "@/lib/orders/change-access";
 import { prisma } from "@/lib/prisma";
 import { t as translate, type Translated } from "@/lib/types";
 import { formatDate, formatPrice } from "@/lib/utils";
@@ -499,7 +500,10 @@ export function payUrlFor(path: string): string {
   return `${publicAppOrigin()}${path}`;
 }
 
-/** Lien de changement de places : le client choisit lui-même sur le plan. */
+/**
+ * Lien de changement : le client change lui-même de places ou de spectacle.
+ * S'il a un compte, il devra s'y connecter ; sinon on l'invite à en créer un.
+ */
 export async function sendSeatChangeLinkEmail(input: {
   orderId: string;
   url: string;
@@ -516,7 +520,6 @@ export async function sendSeatChangeLinkEmail(input: {
       tickets: {
         where: {
           status: "VALID",
-          seatKey: { not: null },
           ticketType: { session: { startsAt: { gt: new Date() } } },
         },
         orderBy: [{ ticketType: { session: { startsAt: "asc" } } }, { seatKey: "asc" }],
@@ -530,7 +533,7 @@ export async function sendSeatChangeLinkEmail(input: {
                   startsAt: true,
                   venue: { select: { name: true, city: true } },
                   event: {
-                    select: { title: true, organizer: { select: { name: true } } },
+                    select: { title: true, organizer: { select: { name: true, email: true } } },
                   },
                 },
               },
@@ -557,7 +560,13 @@ export async function sendSeatChangeLinkEmail(input: {
     };
   });
   const paragraphs = [t.bonjour(name), t.corps(order.reference)];
-  const after = [t.difference, t.anciens, t.echeance(dateTime(input.expiresAt, locale)), t.questions];
+  const after = [
+    t.difference,
+    t.anciens,
+    (await orderHasAccount(input.orderId)) ? t.compte : t.inviter,
+    t.echeance(dateTime(input.expiresAt, locale)),
+    t.questions,
+  ];
   const html = layout({
     locale,
     organizer: organizer.name,
@@ -588,6 +597,7 @@ export async function sendSeatChangeLinkEmail(input: {
     text,
     html,
     fromName: organizer.name,
+    replyTo: organizer.email,
     etiquette: "changement de billets",
   });
 }
@@ -601,7 +611,11 @@ const CHANGE_TEXTES = {
       `Vous pouvez modifier vous-même votre commande ${ref} : choisir d'autres places, passer à un autre spectacle ou ajouter des billets. Vos billets actuels :`,
     bouton: "Changer mes billets",
     difference:
-      "Si le nouveau choix coûte plus cher, vous ne payez que la différence, par carte. Aucun remboursement n'est fait si le nouveau choix coûte moins cher.",
+      "Si le nouveau choix coûte plus cher, vous ne payez que la différence, par carte. Il doit valoir au moins autant que vos billets actuels : aucun remboursement n'est fait.",
+    compte:
+      "Votre commande est liée à votre compte ticketick : connectez-vous avec cette adresse e-mail pour faire le changement.",
+    inviter:
+      "Pas encore de compte ticketick ? Créez-le avec cette adresse e-mail pour retrouver vos billets et les modifier plus simplement la prochaine fois.",
     anciens:
       "Vos billets actuels restent valables jusqu'au changement. Vous recevez ensuite vos nouveaux billets : les anciens ne sont plus acceptés à l'entrée.",
     echeance: (d: string) => `Ce lien est valable jusqu'au ${d}.`,
@@ -616,7 +630,11 @@ const CHANGE_TEXTES = {
       `You can change your order ${ref} yourself: choose other seats, switch to another show or add tickets. Your current tickets:`,
     bouton: "Change my tickets",
     difference:
-      "If your new choice costs more, you only pay the difference, by card. Nothing is refunded if it costs less.",
+      "If your new choice costs more, you only pay the difference, by card. It must be worth at least as much as your current tickets: nothing is refunded.",
+    compte:
+      "Your order is linked to your ticketick account: sign in with this email address to make the change.",
+    inviter:
+      "No ticketick account yet? Create one with this email address to find your tickets and change them more easily next time.",
     anciens:
       "Your current tickets remain valid until the change. You then receive your new tickets: the old ones are no longer accepted at the door.",
     echeance: (d: string) => `This link is valid until ${d}.`,
@@ -631,7 +649,11 @@ const CHANGE_TEXTES = {
       `Sie können Ihre Bestellung ${ref} selbst ändern: andere Plätze wählen, zu einer anderen Vorstellung wechseln oder Tickets hinzufügen. Ihre aktuellen Tickets:`,
     bouton: "Meine Tickets ändern",
     difference:
-      "Ist Ihre neue Wahl teurer, bezahlen Sie nur die Differenz, per Karte. Ist sie günstiger, wird nichts erstattet.",
+      "Ist Ihre neue Wahl teurer, bezahlen Sie nur die Differenz, per Karte. Sie muss mindestens so viel wert sein wie Ihre aktuellen Tickets: Es wird nichts erstattet.",
+    compte:
+      "Ihre Bestellung ist mit Ihrem ticketick-Konto verknüpft: Melden Sie sich mit dieser E-Mail-Adresse an, um die Änderung vorzunehmen.",
+    inviter:
+      "Noch kein ticketick-Konto? Erstellen Sie es mit dieser E-Mail-Adresse, um Ihre Tickets wiederzufinden und beim nächsten Mal einfacher zu ändern.",
     anciens:
       "Ihre aktuellen Tickets bleiben bis zur Änderung gültig. Danach erhalten Sie Ihre neuen Tickets: Die alten werden am Eingang nicht mehr akzeptiert.",
     echeance: (d: string) => `Dieser Link ist bis ${d} gültig.`,
@@ -646,7 +668,11 @@ const CHANGE_TEXTES = {
       `Potete modificare voi stessi il vostro ordine ${ref}: scegliere altri posti, passare a un altro spettacolo o aggiungere biglietti. I vostri biglietti attuali:`,
     bouton: "Cambiare i miei biglietti",
     difference:
-      "Se la nuova scelta costa di più, pagate solo la differenza, con carta. Se costa meno, non viene rimborsato nulla.",
+      "Se la nuova scelta costa di più, pagate solo la differenza, con carta. Deve valere almeno quanto i vostri biglietti attuali: non viene rimborsato nulla.",
+    compte:
+      "Il vostro ordine è collegato al vostro account ticketick: accedete con questo indirizzo e-mail per fare il cambio.",
+    inviter:
+      "Non avete ancora un account ticketick? Createlo con questo indirizzo e-mail per ritrovare i vostri biglietti e modificarli più facilmente la prossima volta.",
     anciens:
       "I vostri biglietti attuali restano validi fino al cambio. Riceverete poi i nuovi biglietti: quelli vecchi non saranno più accettati all'ingresso.",
     echeance: (d: string) => `Questo link è valido fino al ${d}.`,
@@ -661,7 +687,11 @@ const CHANGE_TEXTES = {
       `Puedes modificar tú mismo tu pedido ${ref}: elegir otras localidades, pasar a otro espectáculo o añadir entradas. Tus entradas actuales:`,
     bouton: "Cambiar mis entradas",
     difference:
-      "Si tu nueva elección cuesta más, solo pagas la diferencia, con tarjeta. Si cuesta menos, no se reembolsa nada.",
+      "Si tu nueva elección cuesta más, solo pagas la diferencia, con tarjeta. Debe valer al menos lo mismo que tus entradas actuales: no se reembolsa nada.",
+    compte:
+      "Tu pedido está vinculado a tu cuenta de ticketick: inicia sesión con esta dirección de correo para hacer el cambio.",
+    inviter:
+      "¿Aún no tienes cuenta de ticketick? Créala con esta dirección de correo para encontrar tus entradas y cambiarlas más fácilmente la próxima vez.",
     anciens:
       "Tus entradas actuales siguen siendo válidas hasta el cambio. Después recibirás tus nuevas entradas: las antiguas ya no se aceptarán en la entrada.",
     echeance: (d: string) => `Este enlace es válido hasta el ${d}.`,

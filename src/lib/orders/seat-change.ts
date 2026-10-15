@@ -10,7 +10,9 @@ import type { Translated } from "@/lib/types";
 import {
   eventRulesSelect,
   markLinkUsed,
+  orderHasAccount,
   resolveAccess,
+  type AccessError,
   type ChangeAccess,
 } from "./change-access";
 import { hashHoldToken, takeStock } from "./create-order";
@@ -29,7 +31,7 @@ import {
   tariffForZone,
   type ChangeTariff,
 } from "./seat-change-quote";
-import { changeOpen } from "./self-service-rules";
+import { changeOpen, linkLimitError, type LinkLimitError } from "./self-service-rules";
 
 /**
  * Changement de places par le client, sur un lien envoyé depuis l'admin ou
@@ -39,13 +41,14 @@ import { changeOpen } from "./self-service-rules";
  * codes). Sans différence à payer, le changement est immédiat. Sinon les
  * nouveaux billets attendent le paiement par carte : les anciens restent
  * valables jusque-là, et un choix abandonné ne change rien. Le lien sert
- * autant de fois que voulu jusqu'à son échéance.
+ * autant de fois que voulu jusqu'à son échéance, courte : il circule par
+ * e-mail et peut être transféré.
  */
 
-const LINK_DAYS = 14;
+const LINK_HOURS = 72;
 export const PAY_HOURS = 2;
 
-export type ChangeError = EditError | "expired";
+export type ChangeError = EditError | AccessError | LinkLimitError;
 
 function newChangeToken(): { token: string; tokenHash: string } {
   const token = randomBytes(24).toString("base64url");
@@ -119,7 +122,7 @@ export async function createChangeLink(input: {
   });
   if (!last) return { ok: false, error: "empty" };
 
-  const limit = new Date(Date.now() + LINK_DAYS * 24 * 3600 * 1000);
+  const limit = new Date(Date.now() + LINK_HOURS * 3600 * 1000);
   const startsAt = last.ticketType.session.startsAt;
   const expiresAt = startsAt < limit ? startsAt : limit;
   const { token, tokenHash } = newChangeToken();
@@ -181,6 +184,8 @@ export interface ChangeSession {
 export type ChangePage =
   | { state: "invalid" }
   | { state: "expired"; locale: string; reference: string }
+  /** La commande a un compte : le lien ne vaut qu'une fois connecté à celui-ci. */
+  | { state: "login"; locale: string; reference: string }
   | {
       state: "open";
       orderId: string;
@@ -193,6 +198,8 @@ export type ChangePage =
       viaAccount: boolean;
       /** Une différence est déjà en attente de paiement : un nouveau choix l'annule. */
       pending: boolean;
+      /** Client du lien sans compte : on l'invite à en créer un. */
+      inviteAccount: boolean;
       sessions: ChangeSession[];
     };
 
@@ -213,7 +220,13 @@ export async function changePageData(access: ChangeAccess): Promise<ChangePage> 
     },
   });
   if (!order || order.status !== "PAID") return { state: "invalid" };
-  if (!resolved.ok) return { state: "expired", locale: order.locale, reference: order.reference };
+  if (!resolved.ok) {
+    return {
+      state: resolved.error === "accountRequired" ? "login" : "expired",
+      locale: order.locale,
+      reference: order.reference,
+    };
+  }
   const { viaAccount, expiresAt } = resolved.access;
 
   const tickets = allowedForChange(
@@ -313,6 +326,7 @@ export async function changePageData(access: ChangeAccess): Promise<ChangePage> 
     expiresAt,
     viaAccount,
     pending: pending > 0,
+    inviteAccount: !viaAccount && !(await orderHasAccount(order.id)),
     sessions: out,
   };
 }
@@ -320,7 +334,7 @@ export async function changePageData(access: ChangeAccess): Promise<ChangePage> 
 // ─────────────────────────────── Changement
 
 export type ChangeResult =
-  | { ok: true; kind: "done"; orderId: string }
+  | { ok: true; kind: "done"; orderId: string; replacedTicketIds: string[] }
   | { ok: true; kind: "pay"; payToken: string; locale: string }
   | { ok: false; error: ChangeError };
 
@@ -425,6 +439,14 @@ export async function applySeatChange(input: {
         });
       }
       const due = amountDue(plan.map((p) => p.delta));
+      const limit = linkLimitError({
+        viaAccount: link.viaAccount,
+        givenCount: plan.length,
+        newCount: plan.length,
+        givenCents: 0,
+        newCents: plan.reduce((sum, p) => sum + p.delta, 0),
+      });
+      if (limit) throw new EditFailure(limit);
       const oldIds = [...sources];
 
       if (due === 0) {
@@ -512,7 +534,12 @@ export async function applySeatChange(input: {
 
       if (due === 0) {
         await markLinkUsed(tx, link.linkId);
-        return { ok: true as const, kind: "done" as const, orderId: order.id };
+        return {
+          ok: true as const,
+          kind: "done" as const,
+          orderId: order.id,
+          replacedTicketIds: oldIds,
+        };
       }
 
       const charge = await openPaymentCharge(tx, order, {
