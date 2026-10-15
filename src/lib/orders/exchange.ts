@@ -24,6 +24,7 @@ import {
   cancelOpen,
   checkBasket,
   exchangeDue,
+  linkLimitError,
   type BasketError,
   type BasketTariff,
 } from "./self-service-rules";
@@ -42,6 +43,7 @@ export type ExchangeError =
   | EditError
   | BasketError
   | "expired"
+  | "accountRequired"
   | "attendeesMissing"
   | "attendeeInvalid"
   | "attendeeTooOld";
@@ -242,7 +244,7 @@ export async function exchangeOptions(input: {
 }
 
 export type ExchangeResult =
-  | { ok: true; kind: "done"; orderId: string }
+  | { ok: true; kind: "done"; orderId: string; replacedTicketIds: string[] }
   | { ok: true; kind: "pay"; payToken: string; locale: string }
   | { ok: false; error: ExchangeError; ticketTypeId?: string };
 
@@ -355,10 +357,19 @@ export async function applyExchange(input: {
       if (give.some((id) => !active.has(id))) throw new EditFailure("notFound");
 
       const paidOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
-      const { dueCents } = exchangeDue({
+      const quote = exchangeDue({
         givenCents: given.map((t) => paidOf.get(t.ticketTypeId) ?? 0),
         lines: lines.map((l) => ({ priceCents: tariffOf.get(l.ticketTypeId)!.priceCents, quantity: l.quantity })),
       });
+      const limit = linkLimitError({
+        viaAccount: access.viaAccount,
+        givenCount: give.length,
+        newCount: lines.reduce((sum, l) => sum + l.quantity, 0),
+        givenCents: quote.givenCents,
+        newCents: quote.newCents,
+      });
+      if (limit) throw new EditFailure(limit);
+      const { dueCents } = quote;
 
       if (dueCents === 0 && give.length > 0) {
         await releaseTickets(tx, order, give, false);
@@ -403,7 +414,12 @@ export async function applyExchange(input: {
 
       if (dueCents === 0) {
         await markLinkUsed(tx, access.linkId);
-        return { ok: true as const, kind: "done" as const, orderId: order.id };
+        return {
+          ok: true as const,
+          kind: "done" as const,
+          orderId: order.id,
+          replacedTicketIds: give,
+        };
       }
       if (!added.chargeId || !added.token) throw new EditFailure("retry");
       await tx.orderCharge.update({

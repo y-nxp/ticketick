@@ -508,7 +508,10 @@
       "used": "Una de estas entradas ya se ha controlado en la entrada.",
       "retry": "No se ha podido guardar el cambio. Inténtalo de nuevo en un momento.",
       "failed": "No se ha podido hacer el cambio. Recarga la página e inténtalo de nuevo.",
-      "notFound": "Una de estas entradas ya no se puede cambiar. Recarga la página."
+      "notFound": "Una de estas entradas ya no se puede cambiar. Recarga la página.",
+      "accountRequired": "Este pedido está vinculado a una cuenta: inicia sesión para cambiarlo.",
+      "fewerSeats": "Con este enlace, el cambio debe incluir al menos tantas localidades como las entradas devueltas. Para devolver más, inicia sesión en tu cuenta o contacta con el organizador.",
+      "lowerValue": "Con este enlace, la nueva elección debe valer al menos lo mismo que las entradas devueltas. Para una localidad más barata, inicia sesión en tu cuenta o contacta con el organizador."
     },
     "current": "Tu localidad actual",
     "nothingToChange": "Por ahora no se puede cambiar ninguna entrada de este pedido.",
@@ -549,7 +552,10 @@
         "notFound": "Una de estas entradas ya no se puede cambiar. Recarga la página.",
         "retry": "No se pudo guardar el cambio. Inténtalo de nuevo en un momento.",
         "failed": "No se pudo hacer el cambio. Recarga la página e inténtalo de nuevo.",
-        "attendeeInvalid": "Indique el nombre y los apellidos del beneficiario y una fecha de nacimiento válida."
+        "attendeeInvalid": "Indique el nombre y los apellidos del beneficiario y una fecha de nacimiento válida.",
+        "accountRequired": "Este pedido está vinculado a una cuenta: inicia sesión para cambiarlo.",
+        "fewerSeats": "Con este enlace, el cambio debe incluir al menos tantas localidades como las entradas devueltas. Para devolver más, inicia sesión en tu cuenta o contacta con el organizador.",
+        "lowerValue": "Con este enlace, la nueva elección debe valer al menos lo mismo que las entradas devueltas. Para una localidad más barata, inicia sesión en tu cuenta o contacta con el organizador."
       },
       "stepsLabel": "Pasos del cambio",
       "steps": {
@@ -579,7 +585,13 @@
       "otherShows": "Añadir otro espectáculo",
       "edit": "Modificar",
       "remove": "Quitar de la cesta"
-    }
+    },
+    "loginTitle": "Inicia sesión para cambiar tus entradas",
+    "loginText": "Este pedido está vinculado a tu cuenta de ticketick. Para proteger tus entradas, inicia sesión con la dirección de correo del pedido: después volverás a esta página.",
+    "loginButton": "Iniciar sesión",
+    "otherAccount": "Este pedido está vinculado a otra cuenta distinta de esta ({email}). Cierra la sesión, vuelve a abrir este enlace e inicia sesión con la dirección de correo del pedido.",
+    "inviteText": "Crea tu cuenta de ticketick con la dirección {email}: encontrarás tus entradas y podrás cambiarlas más fácilmente la próxima vez.",
+    "inviteButton": "Crear mi cuenta"
   },
   "consent": {
     "title": "ticketick respeta su privacidad",

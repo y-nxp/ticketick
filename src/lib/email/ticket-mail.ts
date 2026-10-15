@@ -1,7 +1,7 @@
 import "server-only";
 
 import { envoyer, echapper, type MailAttachment } from "@/lib/email";
-import { byLocale } from "@/lib/i18n-fallback";
+import { byLocale, intlLocale } from "@/lib/i18n-fallback";
 import { publicAppOrigin } from "@/lib/app-url";
 import { ticketQrPng } from "@/lib/tickets/qr";
 import { buildTicketsPdf } from "@/lib/tickets/pdf";
@@ -15,6 +15,8 @@ import {
   type TicketCard,
 } from "@/lib/tickets/payload";
 import type { SeatView } from "@/lib/seating/layout";
+import { t as translate, type Translated } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 const VIEW_CONTACT = "ticket@ticketick.ch";
 
@@ -30,6 +32,9 @@ export async function sendTicketCards(input: {
   viewNotice?: SeatView[];
   /** Places gratuites annulables depuis le compte, jusqu'à N heures avant. */
   freeCancelHours?: number | null;
+  /** Après un échange par le client : places annulées et qui contacter. */
+  exchange?: ExchangeNotice;
+  replyTo?: string;
 }) {
   const attachments: MailAttachment[] = await Promise.all(
     input.tickets.map(async (ticket, index) => ({
@@ -88,7 +93,14 @@ export async function sendTicketCards(input: {
         : views.has("none")
           ? t.vueAucune
           : t.vuePartielle;
-  const titre = input.preview ? t.apercuSujet : vue ? t.vueSujet : t.sujet;
+  const titre = input.preview
+    ? t.apercuSujet
+    : input.exchange
+      ? t.echangeSujet
+      : vue
+        ? t.vueSujet
+        : t.sujet;
+  const echange = input.exchange;
   const totalCents = input.tickets.reduce((sum, ticket) => sum + ticket.priceCents, 0);
   const totalLabel = formatTicketPrice(totalCents, input.locale);
   const downloadHref = `${publicAppOrigin()}${ticketPdfPath(input.reference)}`;
@@ -128,6 +140,21 @@ export async function sendTicketCards(input: {
       <p style="margin:0 0 6px;font-weight:700">${echapper(t.vueTitre)}</p>
       <p style="margin:0 0 6px;line-height:1.5">${echapper(vue)}</p>
       <p style="margin:0;line-height:1.5">${echapper(t.vueChangement)} <a href="mailto:${VIEW_CONTACT}" style="color:#6C5CE7;font-weight:700">${VIEW_CONTACT}</a>${echapper(t.vueReference(input.reference))}</p>
+    </div>`
+        : ""
+    }
+    ${
+      echange
+        ? `<div style="margin:0 0 20px;padding:14px 16px;background:#fff;border:1px solid #e5e7eb;border-left:4px solid #6C5CE7;border-radius:0 8px 8px 0">
+      <p style="margin:0 0 6px;font-weight:700">${echapper(t.echangeTitre)}</p>
+      ${
+        echange.cancelled.length > 0
+          ? `<p style="margin:0 0 6px;line-height:1.5">${echapper(t.echangeAnnules)}</p>
+      <ul style="margin:0 0 6px;padding-left:20px;line-height:1.5">${echange.cancelled.map((l) => `<li style="text-decoration:line-through;color:#6b7280">${echapper(l)}</li>`).join("")}</ul>`
+          : ""
+      }
+      <p style="margin:0 0 6px;line-height:1.5">${echapper(t.echangeNouveaux)}</p>
+      <p style="margin:0;line-height:1.5">${echapper(t.echangeContact(echange.contactName))} <a href="mailto:${echapper(echange.contactEmail)}" style="color:#6C5CE7;font-weight:700">${echapper(echange.contactEmail)}</a></p>
     </div>`
         : ""
     }
@@ -176,6 +203,17 @@ export async function sendTicketCards(input: {
           "",
         ]
       : []),
+    ...(echange
+      ? [
+          t.echangeTitre,
+          ...(echange.cancelled.length > 0
+            ? [t.echangeAnnules, ...echange.cancelled.map((l) => `- ${l}`)]
+            : []),
+          t.echangeNouveaux,
+          `${t.echangeContact(echange.contactName)} ${echange.contactEmail}`,
+          "",
+        ]
+      : []),
     input.preview ? t.apercuCorps : t.corps,
     "",
     ...(annulation ? [`${annulation} ${accountHref}`, ""] : []),
@@ -199,11 +237,12 @@ export async function sendTicketCards(input: {
   return envoyer({
     to: input.to,
     bcc: input.bcc,
+    replyTo: input.replyTo,
     subject: titre,
     text,
     html,
     attachments,
-    etiquette: input.preview ? "aperçu billet" : "billets",
+    etiquette: input.preview ? "aperçu billet" : echange ? "échange de billets" : "billets",
   });
 }
 
@@ -231,6 +270,85 @@ export async function sendPaidOrderTickets(
     tickets: order.cards,
     viewNotice: options.viewNotice,
     freeCancelHours: await freeCancelHours(orderId),
+  });
+}
+
+export interface ExchangeNotice {
+  /** Places rendues, une ligne chacune : spectacle, date, tarif, place. */
+  cancelled: string[];
+  contactName: string;
+  contactEmail: string;
+}
+
+/**
+ * Après un changement fait par le client (lien ou compte) : ses nouveaux
+ * billets, la liste des places annulées, et l'organisateur à contacter sous
+ * 24 heures s'il n'est pas à l'origine du changement. Toujours à l'adresse de
+ * la commande, jamais à celle de la personne qui a fait le changement.
+ */
+export async function sendExchangeTickets(orderId: string, replacedTicketIds: string[]) {
+  const order = await paidOrderForMail(orderId);
+  if (!order) return { sent: false, mock: false };
+  const copies = [...new Set([...order.resellerEmails, ...order.notifyEmails])].filter(
+    (adresse) => adresse !== order.email,
+  );
+  const to = order.email || copies.shift();
+  if (!to) return { sent: false, mock: false };
+
+  const [replaced, first] = await Promise.all([
+    prisma.ticket.findMany({
+      where: { id: { in: replacedTicketIds }, orderId },
+      orderBy: [{ ticketType: { session: { startsAt: "asc" } } }, { seatKey: "asc" }],
+      select: {
+        seatLabel: true,
+        ticketType: {
+          select: {
+            name: true,
+            session: { select: { startsAt: true, event: { select: { title: true } } } },
+          },
+        },
+      },
+    }),
+    prisma.orderItem.findFirst({
+      where: { orderId },
+      select: {
+        ticketType: {
+          select: {
+            session: {
+              select: { event: { select: { organizer: { select: { name: true, email: true } } } } },
+            },
+          },
+        },
+      },
+    }),
+  ]);
+  const organizer = first?.ticketType.session.event.organizer;
+  const locale = order.locale;
+  const cancelled = replaced.map((ticket) =>
+    [
+      translate(ticket.ticketType.session.event.title as Translated, locale),
+      formatDate(ticket.ticketType.session.startsAt, intlLocale(locale), { weekday: "long" }),
+      translate(ticket.ticketType.name as Translated, locale),
+      ticket.seatLabel,
+    ]
+      .filter(Boolean)
+      .join(" — "),
+  );
+
+  return sendTicketCards({
+    to,
+    bcc: copies.length > 0 ? copies : undefined,
+    replyTo: organizer?.email || undefined,
+    buyerName: order.buyerName,
+    reference: order.reference,
+    locale,
+    tickets: order.cards,
+    freeCancelHours: await freeCancelHours(orderId),
+    exchange: {
+      cancelled,
+      contactName: organizer?.name || "ticketick",
+      contactEmail: organizer?.email || VIEW_CONTACT,
+    },
   });
 }
 
@@ -448,6 +566,12 @@ function textes(locale: string) {
       vueChangement: "Si vous souhaitez changer de places, écrivez-nous à",
       vueReference: (ref: string) => ` en indiquant votre référence ${ref}.`,
       sujet: "Votre commande ticketick.ch : vos billets",
+      echangeSujet: "Votre commande ticketick.ch a été modifiée : vos nouveaux billets",
+      echangeTitre: "Votre commande a été modifiée",
+      echangeAnnules: "Ces places sont annulées : leurs billets ne sont plus valables à l’entrée.",
+      echangeNouveaux: "Vos nouveaux billets sont ci-dessous et en pièce jointe.",
+      echangeContact: (org: string) =>
+        `Vous n’êtes pas à l’origine de ce changement, ou quelque chose ne va pas ? Contactez ${org} dans les 24 heures :`,
       apercuSujet: "Aperçu — billet ticketick",
       bonjour: (nom: string) => `Bonjour ${nom},`,
       corps: "Merci pour votre commande. Présentez le QR à l’entrée : chaque billet n’est valable qu’une fois.",
@@ -478,6 +602,12 @@ function textes(locale: string) {
       vueChangement: "If you would like to change seats, write to us at",
       vueReference: (ref: string) => ` quoting your reference ${ref}.`,
       sujet: "Your ticketick.ch order: your tickets",
+      echangeSujet: "Your ticketick.ch order has been changed: your new tickets",
+      echangeTitre: "Your order has been changed",
+      echangeAnnules: "These seats are cancelled: their tickets are no longer valid at the door.",
+      echangeNouveaux: "Your new tickets are below and attached.",
+      echangeContact: (org: string) =>
+        `You did not make this change, or something is wrong? Contact ${org} within 24 hours:`,
       apercuSujet: "Preview — ticketick ticket",
       bonjour: (nom: string) => `Hello ${nom},`,
       corps: "Thank you for your order. Show the QR at the entrance: each ticket is valid once.",
@@ -508,6 +638,12 @@ function textes(locale: string) {
       vueChangement: "Möchten Sie andere Plätze, schreiben Sie uns an",
       vueReference: (ref: string) => ` mit Ihrer Referenz ${ref}.`,
       sujet: "Ihre Bestellung auf ticketick.ch: Ihre Tickets",
+      echangeSujet: "Ihre Bestellung auf ticketick.ch wurde geändert: Ihre neuen Tickets",
+      echangeTitre: "Ihre Bestellung wurde geändert",
+      echangeAnnules: "Diese Plätze sind storniert: Ihre Tickets sind am Eingang nicht mehr gültig.",
+      echangeNouveaux: "Ihre neuen Tickets finden Sie unten und im Anhang.",
+      echangeContact: (org: string) =>
+        `Sie haben diese Änderung nicht vorgenommen oder etwas stimmt nicht? Kontaktieren Sie ${org} innerhalb von 24 Stunden:`,
       apercuSujet: "Vorschau — ticketick-Ticket",
       bonjour: (nom: string) => `Guten Tag ${nom},`,
       corps: "Danke für Ihre Bestellung. Zeigen Sie den QR-Code am Eingang: jedes Ticket gilt nur einmal.",
@@ -538,6 +674,12 @@ function textes(locale: string) {
       vueChangement: "Se desiderate cambiare posti, scriveteci a",
       vueReference: (ref: string) => ` indicando il riferimento ${ref}.`,
       sujet: "Il vostro ordine ticketick.ch: i biglietti",
+      echangeSujet: "Il vostro ordine ticketick.ch è stato modificato: i nuovi biglietti",
+      echangeTitre: "Il vostro ordine è stato modificato",
+      echangeAnnules: "Questi posti sono annullati: i loro biglietti non sono più validi all’ingresso.",
+      echangeNouveaux: "I nuovi biglietti sono qui sotto e in allegato.",
+      echangeContact: (org: string) =>
+        `Non siete stati voi a fare questa modifica, o qualcosa non va? Contattate ${org} entro 24 ore:`,
       apercuSujet: "Anteprima — biglietto ticketick",
       bonjour: (nom: string) => `Buongiorno ${nom},`,
       corps: "Grazie per l’ordine. Mostrate il QR all’ingresso: ogni biglietto è valido una sola volta.",
@@ -568,6 +710,12 @@ function textes(locale: string) {
       vueChangement: "Si quieres cambiar de asientos, escríbenos a",
       vueReference: (ref: string) => ` indicando tu referencia ${ref}.`,
       sujet: "Tu pedido en ticketick.ch: tus entradas",
+      echangeSujet: "Tu pedido en ticketick.ch ha sido modificado: tus nuevas entradas",
+      echangeTitre: "Tu pedido ha sido modificado",
+      echangeAnnules: "Estas localidades están anuladas: sus entradas ya no son válidas en la entrada.",
+      echangeNouveaux: "Tus nuevas entradas están a continuación y en el archivo adjunto.",
+      echangeContact: (org: string) =>
+        `¿No has hecho tú este cambio o algo no va bien? Contacta con ${org} en un plazo de 24 horas:`,
       apercuSujet: "Vista previa — entrada ticketick",
       bonjour: (nom: string) => `Hola, ${nom}:`,
       corps: "Gracias por tu pedido. Muestra el código QR en la entrada: cada entrada solo es válida una vez.",

@@ -1715,7 +1715,7 @@
         "cancelNoticeNotSent": "Non è stato possibile inviare l'e-mail di annullamento."
       },
       "changeLink": "Cambio da parte del cliente",
-      "changeLinkHint": "Il cliente riceve un link per scegliere altri posti, passare a un altro spettacolo dell'organizzatore o aggiungere biglietti. Paga solo l'aumento, con carta; mai un rimborso. Valido al massimo 14 giorni, fino allo spettacolo, tutte le volte necessarie.",
+      "changeLinkHint": "Il cliente riceve un link per scegliere altri posti, passare a un altro spettacolo dell'organizzatore o aggiungere biglietti. Paga solo l'aumento, con carta; mai un rimborso. Valido al massimo 72 ore, fino allo spettacolo, tutte le volte necessarie. Se il cliente ha un account, deve accedervi per modificare.",
       "changeLinkNoCard": "Nessun pagamento con carta è configurato per questo organizzatore: andranno a buon fine solo i cambi senza supplemento.",
       "changeLinkSend": "Inviare il link al cliente",
       "changeLinkReplace": "Un link è già aperto. Sostituirlo con uno nuovo? Quello vecchio non funzionerà più.",
@@ -2077,7 +2077,10 @@
       "used": "Uno di questi biglietti è già stato controllato all'ingresso.",
       "retry": "Il cambio non ha potuto essere registrato. Riprovate tra un istante.",
       "failed": "Il cambio non è stato possibile. Ricaricate la pagina e riprovate.",
-      "notFound": "Uno di questi biglietti non può più essere cambiato. Ricaricate la pagina."
+      "notFound": "Uno di questi biglietti non può più essere cambiato. Ricaricate la pagina.",
+      "accountRequired": "Questo ordine è collegato a un account: accedete per modificarlo.",
+      "fewerSeats": "Con questo link, lo scambio deve comprendere almeno tanti posti quanti i biglietti restituiti. Per restituirne di più, accedete al vostro account o contattate l'organizzatore.",
+      "lowerValue": "Con questo link, la nuova scelta deve valere almeno quanto i biglietti restituiti. Per un posto meno caro, accedete al vostro account o contattate l'organizzatore."
     },
     "current": "Il vostro posto attuale",
     "nothingToChange": "Al momento nessun biglietto di questo ordine può essere cambiato.",
@@ -2118,7 +2121,10 @@
         "notFound": "Uno di questi biglietti non può più essere cambiato. Ricaricate la pagina.",
         "retry": "Il cambio non ha potuto essere registrato. Riprovate tra un istante.",
         "failed": "Il cambio non ha potuto essere fatto. Ricaricate la pagina e riprovate.",
-        "attendeeInvalid": "Indicate nome e cognome del beneficiario e una data di nascita valida."
+        "attendeeInvalid": "Indicate nome e cognome del beneficiario e una data di nascita valida.",
+        "accountRequired": "Questo ordine è collegato a un account: accedete per modificarlo.",
+        "fewerSeats": "Con questo link, lo scambio deve comprendere almeno tanti posti quanti i biglietti restituiti. Per restituirne di più, accedete al vostro account o contattate l'organizzatore.",
+        "lowerValue": "Con questo link, la nuova scelta deve valere almeno quanto i biglietti restituiti. Per un posto meno caro, accedete al vostro account o contattate l'organizzatore."
       },
       "stepsLabel": "Fasi del cambio",
       "steps": {
@@ -2148,7 +2154,13 @@
       "otherShows": "Aggiungi un altro spettacolo",
       "edit": "Modifica",
       "remove": "Togli dal carrello"
-    }
+    },
+    "loginTitle": "Accedete per modificare i vostri biglietti",
+    "loginText": "Questo ordine è collegato al vostro account ticketick. Per proteggere i vostri biglietti, accedete con l'indirizzo e-mail dell'ordine: tornerete poi su questa pagina.",
+    "loginButton": "Accedi",
+    "otherAccount": "Questo ordine è collegato a un account diverso da questo ({email}). Uscite, riaprite questo link e accedete con l'indirizzo e-mail dell'ordine.",
+    "inviteText": "Create il vostro account ticketick con l'indirizzo {email}: ritroverete i vostri biglietti e potrete modificarli più facilmente la prossima volta.",
+    "inviteButton": "Crea il mio account"
   },
   "organizerReport": {
     "subject": "Rapporto {name} — situazione al {date}",

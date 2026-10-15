@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
-import { Clock } from "lucide-react";
+import { Clock, UserPlus } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { intlLocale } from "@/lib/i18n-fallback";
 import { exchangeOptions } from "@/lib/orders/exchange";
 import type { ClientAccess } from "@/lib/orders/seat-change-actions";
@@ -15,10 +16,13 @@ export async function ChangeScreen({
   data,
   access,
   locale,
+  invite = false,
 }: {
   data: Extract<ChangePage, { state: "open" }>;
   access: ClientAccess;
   locale: string;
+  /** Client du lien sans compte : l'inviter à en créer un pour la prochaine fois. */
+  invite?: boolean;
 }) {
   const t = await getTranslations("change");
   const fmt = intlLocale(locale);
@@ -35,6 +39,18 @@ export async function ChangeScreen({
           <Clock className="size-4 shrink-0" />
           {t("validUntil", { date: formatDate(data.expiresAt, fmt, { weekday: "long" }) })}
         </p>
+      ) : null}
+      {invite ? (
+        <div className="mt-4 flex max-w-2xl flex-wrap items-center gap-3 rounded-card border border-border bg-card px-4 py-3 text-sm">
+          <UserPlus className="size-5 shrink-0 text-primary" />
+          <p className="min-w-0 flex-1">{t("inviteText", { email: data.email })}</p>
+          <Link
+            href={`/register?email=${encodeURIComponent(data.email)}&next=${encodeURIComponent("/account")}`}
+            className="font-medium text-primary underline-offset-2 hover:underline"
+          >
+            {t("inviteButton")}
+          </Link>
+        </div>
       ) : null}
       {data.pending ? (
         <p className="mt-4 rounded-card border border-border bg-secondary px-4 py-3 text-sm">

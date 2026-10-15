@@ -127,6 +127,27 @@ export function tariffRoom(input: {
   return Math.max(0, room);
 }
 
+export type LinkLimitError = "fewerSeats" | "lowerValue";
+
+/**
+ * Par le lien, sans compte, un échange ne fait jamais perdre de valeur au
+ * client : autant de places au moins, pour une valeur au moins égale. Sinon
+ * quiconque obtient le lien pourrait faire rendre des billets payés contre
+ * moins, sans remboursement. Depuis le compte, le client décide seul.
+ */
+export function linkLimitError(input: {
+  viaAccount: boolean;
+  givenCount: number;
+  newCount: number;
+  givenCents: number;
+  newCents: number;
+}): LinkLimitError | null {
+  if (input.viaAccount) return null;
+  if (input.newCount < input.givenCount) return "fewerSeats";
+  if (input.newCents < input.givenCents) return "lowerValue";
+  return null;
+}
+
 /** Ce que le client paie : la hausse nette, jamais de remboursement. */
 export function exchangeDue(input: {
   givenCents: number[];

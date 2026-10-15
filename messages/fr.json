@@ -1715,7 +1715,7 @@
         "cancelNoticeNotSent": "L'e-mail d'annulation n'a pas pu être envoyé."
       },
       "changeLink": "Changement par le client",
-      "changeLinkHint": "Le client reçoit un lien pour choisir d'autres places, passer à un autre spectacle de l'organisateur ou ajouter des billets. Il paie seulement la hausse, par carte ; jamais de remboursement. Valable 14 jours au plus, jusqu'au spectacle, autant de fois que nécessaire.",
+      "changeLinkHint": "Le client reçoit un lien pour choisir d'autres places, passer à un autre spectacle de l'organisateur ou ajouter des billets. Il paie seulement la hausse, par carte ; jamais de remboursement. Valable 72 heures au plus, jusqu'au spectacle, autant de fois que nécessaire. Si le client a un compte, il doit s'y connecter pour modifier.",
       "changeLinkNoCard": "Aucun paiement par carte n'est configuré pour cet organisateur : seuls les changements sans supplément aboutiront.",
       "changeLinkSend": "Envoyer le lien au client",
       "changeLinkReplace": "Un lien est déjà ouvert. Le remplacer par un nouveau ? L'ancien ne fonctionnera plus.",
@@ -2077,7 +2077,10 @@
       "used": "Un de ces billets a déjà été contrôlé à l'entrée.",
       "retry": "Le changement n'a pas pu être enregistré. Réessayez dans un instant.",
       "failed": "Le changement n'a pas pu être fait. Rechargez la page et réessayez.",
-      "notFound": "Un de ces billets ne peut plus être changé. Rechargez la page."
+      "notFound": "Un de ces billets ne peut plus être changé. Rechargez la page.",
+      "accountRequired": "Cette commande est liée à un compte : connectez-vous pour la modifier.",
+      "fewerSeats": "Avec ce lien, l'échange doit compter au moins autant de places que les billets rendus. Pour en rendre davantage, connectez-vous à votre compte ou contactez l'organisateur.",
+      "lowerValue": "Avec ce lien, le nouveau choix doit valoir au moins autant que les billets rendus. Pour une place moins chère, connectez-vous à votre compte ou contactez l'organisateur."
     },
     "current": "Votre place actuelle",
     "nothingToChange": "Aucun billet de cette commande ne peut être changé pour le moment.",
@@ -2118,7 +2121,10 @@
         "notFound": "Un de ces billets ne peut plus être changé. Rechargez la page.",
         "retry": "L'échange n'a pas pu être enregistré. Réessayez dans un instant.",
         "failed": "L'échange n'a pas pu être fait. Rechargez la page et réessayez.",
-        "attendeeInvalid": "Indiquez le prénom et le nom du bénéficiaire, et une date de naissance valable."
+        "attendeeInvalid": "Indiquez le prénom et le nom du bénéficiaire, et une date de naissance valable.",
+        "accountRequired": "Cette commande est liée à un compte : connectez-vous pour la modifier.",
+        "fewerSeats": "Avec ce lien, l'échange doit compter au moins autant de places que les billets rendus. Pour en rendre davantage, connectez-vous à votre compte ou contactez l'organisateur.",
+        "lowerValue": "Avec ce lien, le nouveau choix doit valoir au moins autant que les billets rendus. Pour une place moins chère, connectez-vous à votre compte ou contactez l'organisateur."
       },
       "stepsLabel": "Étapes de l'échange",
       "steps": {
@@ -2148,7 +2154,13 @@
       "otherShows": "Ajouter un autre spectacle",
       "edit": "Modifier",
       "remove": "Retirer du panier"
-    }
+    },
+    "loginTitle": "Connectez-vous pour modifier vos billets",
+    "loginText": "Cette commande est liée à votre compte ticketick. Pour protéger vos billets, connectez-vous avec l'adresse e-mail de la commande : vous reviendrez ensuite sur cette page.",
+    "loginButton": "Me connecter",
+    "otherAccount": "Cette commande est liée à un autre compte que celui-ci ({email}). Déconnectez-vous, puis rouvrez ce lien et connectez-vous avec l'adresse e-mail de la commande.",
+    "inviteText": "Créez votre compte ticketick avec l'adresse {email} : vous retrouverez vos billets et pourrez les modifier plus simplement la prochaine fois.",
+    "inviteButton": "Créer mon compte"
   },
   "organizerReport": {
     "subject": "Rapport {name} — état au {date}",

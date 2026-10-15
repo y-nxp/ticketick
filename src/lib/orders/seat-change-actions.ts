@@ -3,7 +3,7 @@
 import * as z from "zod";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { sendCancellationEmail } from "@/lib/email/charge-mail";
-import { sendPaidOrderTickets } from "@/lib/email/ticket-mail";
+import { sendExchangeTickets } from "@/lib/email/ticket-mail";
 import type { ChangeAccess } from "./change-access";
 import { payPath } from "./charges";
 import { applyExchange, cancelFreeTickets, type ExchangeError } from "./exchange";
@@ -18,8 +18,10 @@ const accessSchema = z.union([z.object({ token: id }), z.object({ orderId: id })
 async function serverAccess(input: unknown): Promise<ChangeAccess | null> {
   const parsed = accessSchema.safeParse(input);
   if (!parsed.success) return null;
-  if ("token" in parsed.data) return { token: parsed.data.token };
   const user = await getCurrentUser();
+  // Avec le lien, la session compte aussi : une commande qui a un compte
+  // ne se modifie qu'une fois connecté à celui-ci.
+  if ("token" in parsed.data) return { token: parsed.data.token, userId: user?.id ?? null };
   if (!user) return null;
   return { userId: user.id, orderId: parsed.data.orderId };
 }
@@ -34,8 +36,9 @@ export type ConfirmChangeState =
   | { ok: true; kind: "pay"; url: string }
   | { ok: false; error: ChangeError | "invalid" };
 
-async function sendNewTickets(orderId: string) {
-  await sendPaidOrderTickets(orderId).catch((error) => {
+/** Nouveaux billets, places annulées et contact, à l'adresse de la commande. */
+async function sendNewTickets(orderId: string, replacedTicketIds: string[]) {
+  await sendExchangeTickets(orderId, replacedTicketIds).catch((error) => {
     console.error("[changement] envoi des billets", error);
   });
 }
@@ -52,7 +55,7 @@ export async function confirmSeatChangeAction(
   if (result.kind === "pay") {
     return { ok: true, kind: "pay", url: payPath(result.payToken, result.locale) };
   }
-  await sendNewTickets(result.orderId);
+  await sendNewTickets(result.orderId, result.replacedTicketIds);
   return { ok: true, kind: "done" };
 }
 
@@ -99,7 +102,7 @@ export async function confirmExchangeAction(
   if (result.kind === "pay") {
     return { ok: true, kind: "pay", url: payPath(result.payToken, result.locale) };
   }
-  await sendNewTickets(result.orderId);
+  await sendNewTickets(result.orderId, result.replacedTicketIds);
   return { ok: true, kind: "done" };
 }
 

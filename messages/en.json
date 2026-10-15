@@ -1715,7 +1715,7 @@
         "cancelNoticeNotSent": "The cancellation email could not be sent."
       },
       "changeLink": "Change by the customer",
-      "changeLinkHint": "The customer receives a link to choose other seats, switch to another show of the organiser or add tickets. They only pay the increase, by card; never a refund. Valid for up to 14 days, until the show, as many times as needed.",
+      "changeLinkHint": "The customer receives a link to choose other seats, switch to another show of the organiser or add tickets. They only pay the increase, by card; never a refund. Valid for up to 72 hours, until the show, as many times as needed. If the customer has an account, they must sign in to make changes.",
       "changeLinkNoCard": "No card payment is set up for this organizer: only changes without a surcharge will go through.",
       "changeLinkSend": "Send the link to the customer",
       "changeLinkReplace": "A link is already open. Replace it with a new one? The old one will stop working.",
@@ -2077,7 +2077,10 @@
       "used": "One of these tickets has already been scanned at the door.",
       "retry": "The change could not be saved. Try again in a moment.",
       "failed": "The change could not be made. Reload the page and try again.",
-      "notFound": "One of these tickets can no longer be changed. Reload the page."
+      "notFound": "One of these tickets can no longer be changed. Reload the page.",
+      "accountRequired": "This order is linked to an account: sign in to change it.",
+      "fewerSeats": "With this link, the exchange must include at least as many seats as the tickets returned. To return more, sign in to your account or contact the organiser.",
+      "lowerValue": "With this link, the new choice must be worth at least as much as the tickets returned. For a cheaper seat, sign in to your account or contact the organiser."
     },
     "current": "Your current seat",
     "nothingToChange": "No ticket of this order can be changed at the moment.",
@@ -2118,7 +2121,10 @@
         "notFound": "One of these tickets can no longer be changed. Reload the page.",
         "retry": "The exchange could not be saved. Try again in a moment.",
         "failed": "The exchange could not be made. Reload the page and try again.",
-        "attendeeInvalid": "Enter the beneficiary's first and last name, and a valid date of birth."
+        "attendeeInvalid": "Enter the beneficiary's first and last name, and a valid date of birth.",
+        "accountRequired": "This order is linked to an account: sign in to change it.",
+        "fewerSeats": "With this link, the exchange must include at least as many seats as the tickets returned. To return more, sign in to your account or contact the organiser.",
+        "lowerValue": "With this link, the new choice must be worth at least as much as the tickets returned. For a cheaper seat, sign in to your account or contact the organiser."
       },
       "stepsLabel": "Exchange steps",
       "steps": {
@@ -2148,7 +2154,13 @@
       "otherShows": "Add another show",
       "edit": "Edit",
       "remove": "Remove from basket"
-    }
+    },
+    "loginTitle": "Sign in to change your tickets",
+    "loginText": "This order is linked to your ticketick account. To protect your tickets, sign in with the order's email address: you will then come back to this page.",
+    "loginButton": "Sign in",
+    "otherAccount": "This order is linked to another account than this one ({email}). Sign out, then reopen this link and sign in with the order's email address.",
+    "inviteText": "Create your ticketick account with {email}: you will find your tickets there and can change them more easily next time.",
+    "inviteButton": "Create my account"
   },
   "organizerReport": {
     "subject": "Report {name} — as of {date}",

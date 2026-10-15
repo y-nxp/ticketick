@@ -7,8 +7,12 @@ import { hashHoldToken } from "./create-order";
 /**
  * Qui modifie une commande côté client : le porteur d'un lien envoyé par
  * l'organisateur, ou la personne connectée à qui la commande appartient.
+ * Quand la commande a un compte, le lien ne suffit plus : il faut aussi être
+ * connecté à ce compte (`userId`).
  */
-export type ChangeAccess = { token: string } | { userId: string; orderId: string };
+export type ChangeAccess =
+  | { token: string; userId?: string | null }
+  | { userId: string; orderId: string };
 
 export interface OrderAccess {
   orderId: string;
@@ -19,6 +23,8 @@ export interface OrderAccess {
   viaAccount: boolean;
 }
 
+export type AccessError = "notFound" | "expired" | "accountRequired";
+
 export const eventRulesSelect = {
   selfChange: true,
   changeUntilHours: true,
@@ -26,9 +32,40 @@ export const eventRulesSelect = {
   cancelUntilHours: true,
 } as const;
 
+/**
+ * Compte du client : celui de la commande, ou à défaut un compte dont
+ * l'adresse, confirmée, est celle de la commande (achat fait sans être
+ * connecté).
+ */
+async function orderOwner(orderId: string): Promise<{ id: string; attached: boolean } | null> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { userId: true, email: true },
+  });
+  if (!order) return null;
+  if (order.userId) return { id: order.userId, attached: true };
+  const email = order.email.trim();
+  if (!email) return null;
+  const user = await prisma.user.findFirst({
+    where: { email: { equals: email, mode: "insensitive" }, emailVerifiedAt: { not: null } },
+    select: { id: true },
+  });
+  return user ? { id: user.id, attached: false } : null;
+}
+
+/** La commande rejoint le compte du client, une fois connecté. */
+async function attachOrder(orderId: string, userId: string): Promise<void> {
+  await prisma.order.updateMany({ where: { id: orderId, userId: null }, data: { userId } });
+}
+
+/** Le client du lien a-t-il un compte ? (pour l'inviter à se connecter ou à en créer un) */
+export async function orderHasAccount(orderId: string): Promise<boolean> {
+  return (await orderOwner(orderId)) != null;
+}
+
 export async function resolveAccess(
   access: ChangeAccess,
-): Promise<{ ok: true; access: OrderAccess } | { ok: false; error: "notFound" | "expired"; orderId?: string }> {
+): Promise<{ ok: true; access: OrderAccess } | { ok: false; error: AccessError; orderId?: string }> {
   if ("token" in access) {
     if (!access.token || access.token.length > 100) return { ok: false, error: "notFound" };
     const link = await prisma.orderChangeLink.findUnique({
@@ -37,6 +74,13 @@ export async function resolveAccess(
     });
     if (!link) return { ok: false, error: "notFound" };
     if (link.expiresAt <= new Date()) return { ok: false, error: "expired", orderId: link.orderId };
+    const owner = await orderOwner(link.orderId);
+    if (owner) {
+      if (owner.id !== access.userId) {
+        return { ok: false, error: "accountRequired", orderId: link.orderId };
+      }
+      if (!owner.attached) await attachOrder(link.orderId, owner.id);
+    }
     return {
       ok: true,
       access: {
@@ -49,15 +93,13 @@ export async function resolveAccess(
     };
   }
   if (!access.orderId || !access.userId) return { ok: false, error: "notFound" };
-  const order = await prisma.order.findFirst({
-    where: { id: access.orderId, userId: access.userId },
-    select: { id: true },
-  });
-  if (!order) return { ok: false, error: "notFound" };
+  const owner = await orderOwner(access.orderId);
+  if (owner?.id !== access.userId) return { ok: false, error: "notFound" };
+  if (!owner.attached) await attachOrder(access.orderId, owner.id);
   return {
     ok: true,
     access: {
-      orderId: order.id,
+      orderId: access.orderId,
       linkId: null,
       actorId: access.userId,
       expiresAt: null,

@@ -1715,7 +1715,7 @@
         "cancelNoticeNotSent": "Die Stornierungs-E-Mail konnte nicht gesendet werden."
       },
       "changeLink": "Änderung durch den Kunden",
-      "changeLinkHint": "Der Kunde erhält einen Link, um andere Plätze zu wählen, zu einer anderen Vorstellung des Veranstalters zu wechseln oder Tickets hinzuzufügen. Er bezahlt nur den Aufpreis, per Karte; nie eine Rückerstattung. Höchstens 14 Tage gültig, bis zur Vorstellung, beliebig oft.",
+      "changeLinkHint": "Der Kunde erhält einen Link, um andere Plätze zu wählen, zu einer anderen Vorstellung des Veranstalters zu wechseln oder Tickets hinzuzufügen. Er bezahlt nur den Aufpreis, per Karte; nie eine Rückerstattung. Höchstens 72 Stunden gültig, bis zur Vorstellung, beliebig oft. Hat der Kunde ein Konto, muss er sich für Änderungen anmelden.",
       "changeLinkNoCard": "Für diesen Veranstalter ist keine Kartenzahlung eingerichtet: Nur Änderungen ohne Aufpreis sind möglich.",
       "changeLinkSend": "Link an den Kunden senden",
       "changeLinkReplace": "Es ist bereits ein Link offen. Durch einen neuen ersetzen? Der alte funktioniert dann nicht mehr.",
@@ -2077,7 +2077,10 @@
       "used": "Eines dieser Tickets wurde am Eingang bereits kontrolliert.",
       "retry": "Die Änderung konnte nicht gespeichert werden. Versuchen Sie es gleich noch einmal.",
       "failed": "Die Änderung war nicht möglich. Laden Sie die Seite neu und versuchen Sie es erneut.",
-      "notFound": "Eines dieser Tickets kann nicht mehr geändert werden. Laden Sie die Seite neu."
+      "notFound": "Eines dieser Tickets kann nicht mehr geändert werden. Laden Sie die Seite neu.",
+      "accountRequired": "Diese Bestellung ist mit einem Konto verknüpft: Melden Sie sich an, um sie zu ändern.",
+      "fewerSeats": "Mit diesem Link muss der Umtausch mindestens so viele Plätze umfassen wie die zurückgegebenen Tickets. Um mehr zurückzugeben, melden Sie sich in Ihrem Konto an oder kontaktieren Sie den Veranstalter.",
+      "lowerValue": "Mit diesem Link muss die neue Wahl mindestens so viel wert sein wie die zurückgegebenen Tickets. Für einen günstigeren Platz melden Sie sich in Ihrem Konto an oder kontaktieren Sie den Veranstalter."
     },
     "current": "Ihr aktueller Platz",
     "nothingToChange": "Derzeit kann kein Ticket dieser Bestellung geändert werden.",
@@ -2118,7 +2121,10 @@
         "notFound": "Eines dieser Tickets kann nicht mehr geändert werden. Laden Sie die Seite neu.",
         "retry": "Der Tausch konnte nicht gespeichert werden. Versuchen Sie es gleich noch einmal.",
         "failed": "Der Tausch konnte nicht durchgeführt werden. Laden Sie die Seite neu und versuchen Sie es noch einmal.",
-        "attendeeInvalid": "Geben Sie Vor- und Nachname der begünstigten Person sowie ein gültiges Geburtsdatum an."
+        "attendeeInvalid": "Geben Sie Vor- und Nachname der begünstigten Person sowie ein gültiges Geburtsdatum an.",
+        "accountRequired": "Diese Bestellung ist mit einem Konto verknüpft: Melden Sie sich an, um sie zu ändern.",
+        "fewerSeats": "Mit diesem Link muss der Umtausch mindestens so viele Plätze umfassen wie die zurückgegebenen Tickets. Um mehr zurückzugeben, melden Sie sich in Ihrem Konto an oder kontaktieren Sie den Veranstalter.",
+        "lowerValue": "Mit diesem Link muss die neue Wahl mindestens so viel wert sein wie die zurückgegebenen Tickets. Für einen günstigeren Platz melden Sie sich in Ihrem Konto an oder kontaktieren Sie den Veranstalter."
       },
       "stepsLabel": "Schritte des Tauschs",
       "steps": {
@@ -2148,7 +2154,13 @@
       "otherShows": "Weitere Vorstellung hinzufügen",
       "edit": "Ändern",
       "remove": "Aus dem Warenkorb entfernen"
-    }
+    },
+    "loginTitle": "Melden Sie sich an, um Ihre Tickets zu ändern",
+    "loginText": "Diese Bestellung ist mit Ihrem ticketick-Konto verknüpft. Zum Schutz Ihrer Tickets melden Sie sich mit der E-Mail-Adresse der Bestellung an: Danach kehren Sie auf diese Seite zurück.",
+    "loginButton": "Anmelden",
+    "otherAccount": "Diese Bestellung ist mit einem anderen Konto als diesem ({email}) verknüpft. Melden Sie sich ab, öffnen Sie diesen Link erneut und melden Sie sich mit der E-Mail-Adresse der Bestellung an.",
+    "inviteText": "Erstellen Sie Ihr ticketick-Konto mit der Adresse {email}: Dort finden Sie Ihre Tickets und können sie beim nächsten Mal einfacher ändern.",
+    "inviteButton": "Konto erstellen"
   },
   "organizerReport": {
     "subject": "Bericht {name} — Stand {date}",

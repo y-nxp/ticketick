@@ -16,6 +16,7 @@ import {
   tariffForZone,
   type ChangeTariff,
 } from "@/lib/orders/seat-change-quote";
+import { linkLimitError } from "@/lib/orders/self-service-rules";
 import { seatLabel, zoneAllowed, type SeatLayout } from "@/lib/seating/layout";
 import { cn, formatPrice } from "@/lib/utils";
 
@@ -77,6 +78,14 @@ export function SeatChanger({
   );
   const due = amountDue(lines.map((l) => l.delta));
   const lower = lines.some((l) => l.delta < 0);
+  // Par le lien, pas de changement qui fasse perdre de la valeur : le serveur le refuse aussi.
+  const limit = linkLimitError({
+    viaAccount: !("token" in access),
+    givenCount: lines.length,
+    newCount: lines.length,
+    givenCents: 0,
+    newCents: lines.reduce((sum, l) => sum + l.delta, 0),
+  });
 
   if (state?.ok && state.kind === "done") {
     return (
@@ -180,11 +189,17 @@ export function SeatChanger({
               {due > 0 ? price(due) : t("free")}
             </span>
           </div>
-          {lower ? <p className="mt-2 text-xs text-muted-foreground">{t("noRefund")}</p> : null}
+          {limit ? (
+            <p role="alert" className="mt-2 text-xs text-destructive">
+              {t(`errors.${limit}`)}
+            </p>
+          ) : lower ? (
+            <p className="mt-2 text-xs text-muted-foreground">{t("noRefund")}</p>
+          ) : null}
           {due > 0 ? <p className="mt-2 text-xs text-muted-foreground">{t("keepNote")}</p> : null}
 
           <div className="mt-5 flex flex-wrap gap-2">
-            <Button onClick={confirm} disabled={pending || lines.length === 0}>
+            <Button onClick={confirm} disabled={pending || lines.length === 0 || limit != null}>
               {pending
                 ? t("saving")
                 : due > 0
@@ -216,7 +231,17 @@ export function SeatChanger({
   );
 }
 
-const ERRORS: string[] = ["seatsUnavailable", "soldOut", "expired", "used", "notFound", "retry"];
+const ERRORS: string[] = [
+  "seatsUnavailable",
+  "soldOut",
+  "expired",
+  "used",
+  "notFound",
+  "retry",
+  "accountRequired",
+  "fewerSeats",
+  "lowerValue",
+];
 
 function SessionChanger({
   session,

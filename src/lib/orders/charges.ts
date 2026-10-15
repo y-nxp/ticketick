@@ -1,7 +1,7 @@
 import "server-only";
 
 import { sendRefundAlertEmail } from "@/lib/email";
-import { sendPaidOrderTickets } from "@/lib/email/ticket-mail";
+import { sendExchangeTickets, sendPaidOrderTickets } from "@/lib/email/ticket-mail";
 import { createCardCheckout, PaymentNotConfiguredError } from "@/lib/payment/card";
 import { cardAccountForOrder, organizerOfOrder } from "@/lib/payment/card-account";
 import { mockPaymentsAllowed } from "@/lib/payment/config";
@@ -36,7 +36,8 @@ import { releaseReplacedTickets } from "./seat-change";
 // ─────────────────────────────── Encaissement
 
 type SettleOutcome =
-  | { kind: "settled"; orderId: string }
+  /** `replacedTicketIds` : différence d'un échange par le client, ses anciens billets. */
+  | { kind: "settled"; orderId: string; replacedTicketIds: string[] }
   | { kind: "already" }
   | { kind: "late"; reference: string }
   | { kind: "mismatch" }
@@ -116,7 +117,11 @@ async function settlePayment(input: {
         collectedCents: 0,
       });
     }
-    return { kind: "settled" as const, orderId: charge.orderId };
+    return {
+      kind: "settled" as const,
+      orderId: charge.orderId,
+      replacedTicketIds: charge.replacesTicketIds,
+    };
   });
 }
 
@@ -130,7 +135,11 @@ async function settleLinkPayment(input: {
 }): Promise<void> {
   const outcome = await settlePayment(input);
   if (outcome.kind === "settled") {
-    await sendPaidOrderTickets(outcome.orderId);
+    if (outcome.replacedTicketIds.length > 0) {
+      await sendExchangeTickets(outcome.orderId, outcome.replacedTicketIds);
+    } else {
+      await sendPaidOrderTickets(outcome.orderId);
+    }
     return;
   }
   if (outcome.kind === "late") {
