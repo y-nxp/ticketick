@@ -4,6 +4,7 @@ import {
   cancelOpen,
   changeOpen,
   checkBasket,
+  companionError,
   exchangeDue,
   exchangeRuleError,
   holderKey,
@@ -161,4 +162,38 @@ test("les bénéficiaires des billets rendus restent sur les nouveaux billets", 
   assert.equal(holdersKept([anna], [paul, anna]), true);
   assert.equal(holdersKept([anna, paul], [anna]), true);
   assert.equal(holdersKept([anna, paul], [anna, anna]), false);
+});
+
+test("après l'échange, une gratuité ne reste pas sans place payante", () => {
+  const tariffs = [
+    { id: "cat1", priceCents: 6000, maxPerPaidTicket: null, companionOfId: null },
+    { id: "u25", priceCents: 0, maxPerPaidTicket: 1, companionOfId: null },
+  ];
+  // Cat 1 + moins de 25 ans : le payant part seul, la gratuité resterait.
+  assert.deepEqual(companionError({ lines: [{ ticketTypeId: "u25", quantity: 1 }], tariffs }), {
+    error: "companionRequiresPaid",
+    ticketTypeId: "u25",
+  });
+  // Les deux partent ensemble, ou il reste assez de places payantes.
+  assert.equal(companionError({ lines: [], tariffs }), null);
+  assert.equal(
+    companionError({
+      lines: [
+        { ticketTypeId: "cat1", quantity: 1 },
+        { ticketTypeId: "u25", quantity: 1 },
+      ],
+      tariffs,
+    }),
+    null,
+  );
+  assert.equal(
+    companionError({
+      lines: [
+        { ticketTypeId: "cat1", quantity: 1 },
+        { ticketTypeId: "u25", quantity: 2 },
+      ],
+      tariffs,
+    })?.error,
+    "companionLimit",
+  );
 });

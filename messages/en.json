@@ -2127,7 +2127,8 @@
         "nothingGiven": "Choose at least one ticket to exchange.",
         "seatCount": "Choose exactly as many new seats as tickets given back.",
         "freeSeats": "A free seat can only be obtained in exchange for a free seat.",
-        "attendeeLocked": "The holders of the tickets given back must stay the same on the new tickets."
+        "attendeeLocked": "The holders of the tickets given back must stay the same on the new tickets.",
+        "companionLeft": "A free seat would be left alone at this show, without the paid seat it goes with. Exchange them together."
       },
       "stepsLabel": "Exchange steps",
       "steps": {

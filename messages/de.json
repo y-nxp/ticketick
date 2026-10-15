@@ -2127,7 +2127,8 @@
         "nothingGiven": "Wählen Sie mindestens ein Ticket zum Tauschen.",
         "seatCount": "Wählen Sie genau so viele neue Plätze, wie Sie Tickets zurückgeben.",
         "freeSeats": "Einen Gratisplatz erhalten Sie nur im Tausch gegen einen Gratisplatz.",
-        "attendeeLocked": "Die Inhaber der zurückgegebenen Tickets müssen auf den neuen Tickets dieselben bleiben."
+        "attendeeLocked": "Die Inhaber der zurückgegebenen Tickets müssen auf den neuen Tickets dieselben bleiben.",
+        "companionLeft": "Ein Gratisplatz bliebe bei dieser Vorstellung allein, ohne den bezahlten Platz, zu dem er gehört. Tauschen Sie beide zusammen."
       },
       "stepsLabel": "Schritte des Tauschs",
       "steps": {
