@@ -68,9 +68,38 @@ interface SeatHold {
   checkoutUrl?: string;
   reservedUntil: string;
   cartKey: string;
+  /** Rendue à la vente quand l'acheteur a quitté la page : à remplacer, pas à reprendre. */
+  released?: boolean;
 }
 
 const HOLD_KEY = "ticketick.hold.v1";
+
+/**
+ * Rend la rétention sans attendre les 25 minutes. Appel « sans retour » :
+ * `keepalive` le laisse partir alors que la page se ferme. Le jeton empêche
+ * qu'un tiers libère la commande d'un autre acheteur.
+ */
+function releaseHoldEarly(hold: SeatHold): void {
+  if (!hold.token) return;
+  writeHold({ ...hold, released: true });
+  inflightHolds.delete(hold.cartKey);
+  try {
+    void fetch("/api/hold/release", {
+      method: "POST",
+      keepalive: true,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reference: hold.reference, token: hold.token }),
+    }).catch(() => {});
+  } catch {
+    // Navigateur sans keepalive : le balayage rendra la place dans 25 min.
+  }
+}
+
+/** Spectacle d'où viennent des places, pour y renvoyer l'acheteur. */
+function eventSlugOfSeats(lines: CartLine[], seatKeys: string[]): string | null {
+  const keys = new Set(seatKeys);
+  return lines.find((l) => l.seats?.some((k) => keys.has(k)))?.eventSlug ?? null;
+}
 
 function trackedItems(lines: CartLine[]): TrackedItem[] {
   return lines.map((l) => ({
@@ -207,6 +236,11 @@ function CheckoutInner() {
   const locale = useLocale();
   const { lines, subtotalCents, clear, hydrated, removeSeats } = useCart();
   const router = useRouter();
+  /** Lignes du panier lues hors rendu (fermeture de page, réponse réseau). */
+  const linesRef = React.useRef(lines);
+  React.useEffect(() => {
+    linesRef.current = lines;
+  }, [lines]);
   const searchParams = useSearchParams();
   const canceled = searchParams.get("canceled") === "1";
 
@@ -225,6 +259,8 @@ function CheckoutInner() {
     labels: [] as string[],
   });
   const [seatNotice, setSeatNotice] = React.useState(false);
+  /** Spectacle des places retirées : lien de retour si le panier se vide. */
+  const [seatNoticeSlug, setSeatNoticeSlug] = React.useState<string | null>(null);
   const [form, setForm] = React.useState({
     firstName: "",
     lastName: "",
@@ -342,7 +378,7 @@ function CheckoutInner() {
     Boolean(stored) &&
     (!Number.isFinite(storedUntil) || storedUntil <= now);
   const storedMatches = Boolean(
-    stored && stored.cartKey === cartKey && !storedDead,
+    stored && stored.cartKey === cartKey && !storedDead && !stored.released,
   );
   const createdAlive =
     createdHold &&
@@ -377,7 +413,10 @@ function CheckoutInner() {
     failedFor !== cartKey;
 
   const creatingHold = needsCreate && !createdAlive && !error;
-  const replacing = stored && stored.cartKey !== cartKey ? stored : null;
+  // Panier changé, ou rétention rendue en quittant la page : la nouvelle
+  // demande libère l'ancienne (sans effet si c'est déjà fait) puis reprend.
+  const replacing =
+    stored && (stored.cartKey !== cartKey || stored.released) ? stored : null;
   const replaceReference = replacing?.reference;
   const replaceToken = replacing?.token;
 
@@ -420,6 +459,7 @@ function CheckoutInner() {
       setFailedFor(cartKey);
       if (outcome.error === "seat_taken" && outcome.seatKeys?.length) {
         setSeatNotice(true);
+        setSeatNoticeSlug(eventSlugOfSeats(linesRef.current, outcome.seatKeys));
         removeSeats(outcome.seatKeys);
         return;
       }
@@ -454,6 +494,42 @@ function CheckoutInner() {
     inflightHolds.delete(hold.cartKey);
     clearHold();
   }, [hold, msLeft]);
+
+  const holdRef = React.useRef<SeatHold | null>(null);
+  React.useEffect(() => {
+    holdRef.current = holdActive ? hold : null;
+  }, [holdActive, hold]);
+  /** Commande validée (prestataire, virement, gratuite) : plus rien à rendre. */
+  const orderDone = React.useRef(false);
+
+  /** Libération différée au démontage, annulée si le composant remonte aussitôt. */
+  const releaseTimer = React.useRef<number | null>(null);
+
+  // L'acheteur quitte /checkout sans payer : la place est rendue tout de
+  // suite plutôt qu'au bout des 25 minutes. Fermeture ou rechargement de
+  // l'onglet (`pagehide`) comme retour au spectacle (démontage). Au retour,
+  // une nouvelle rétention est prise et le chrono repart.
+  React.useEffect(() => {
+    const release = () => {
+      releaseTimer.current = null;
+      const current = holdRef.current;
+      if (!current || current.checkoutUrl || orderDone.current) return;
+      releaseHoldEarly(current);
+      holdRef.current = null;
+      setCreatedHold(null);
+    };
+    if (releaseTimer.current != null) {
+      // Remontage immédiat (mode strict de React en développement) : rien
+      // n'a été quitté.
+      window.clearTimeout(releaseTimer.current);
+      releaseTimer.current = null;
+    }
+    window.addEventListener("pagehide", release);
+    return () => {
+      window.removeEventListener("pagehide", release);
+      releaseTimer.current = window.setTimeout(release, 0);
+    };
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -500,6 +576,7 @@ function CheckoutInner() {
         const cle = body?.error;
         if (cle === "seat_taken" && body?.seatKeys?.length) {
           setSeatNotice(true);
+          setSeatNoticeSlug(eventSlugOfSeats(lines, body.seatKeys));
           removeSeats(body.seatKeys);
           return;
         }
@@ -521,6 +598,7 @@ function CheckoutInner() {
 
       // Rien à payer : billets émis, on montre la confirmation et le PDF.
       if (data.status === "PAID") {
+        orderDone.current = true;
         clear();
         clearHold();
         router.push({
@@ -543,6 +621,7 @@ function CheckoutInner() {
           reservedUntil: data.reservedUntil,
           cartKey,
         };
+        orderDone.current = true;
         writeHold(nextHold);
         setCreatedHold(nextHold);
         window.location.assign(data.checkoutUrl);
@@ -558,6 +637,7 @@ function CheckoutInner() {
         items: trackedItems(lines),
         paymentType: "IBAN",
       });
+      orderDone.current = true;
       setResult(data);
       clear();
       clearHold();
@@ -633,6 +713,25 @@ function CheckoutInner() {
   }
 
   if (lines.length === 0) {
+    // Panier vidé parce que ses places viennent d'être prises : le dire, et
+    // ramener au plan plutôt qu'au catalogue.
+    if (seatNotice) {
+      return (
+        <div className="container-page py-20 text-center">
+          <h1 className="text-2xl font-bold">{t("seatsAllRemovedTitle")}</h1>
+          <p className="mx-auto mt-3 max-w-md text-muted-foreground">
+            {t("seatsAllRemoved")}
+          </p>
+          <ContinueShopping
+            eventSlug={seatNoticeSlug ?? undefined}
+            catalog={!seatNoticeSlug}
+            className={`mt-6 inline-flex ${buttonVariants({ size: "lg" })}`}
+          >
+            {seatNoticeSlug ? t("backToSeats") : tc("browse")}
+          </ContinueShopping>
+        </div>
+      );
+    }
     return (
       <div className="container-page py-20 text-center">
         <h1 className="text-2xl font-bold">{tc("empty")}</h1>

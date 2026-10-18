@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-context";
 import { SeatLegend, SeatMap, type SeatState } from "@/components/seating/seat-map";
 import { seatLabel, zoneAllowed, type SeatLayout } from "@/lib/seating/layout";
-import { getSeatState } from "@/lib/seating/public-actions";
+import { findTakenSeats, getSeatState } from "@/lib/seating/public-actions";
 import { rememberShopOrigin } from "@/lib/shop-origin";
 import { cn, formatDate, formatPrice } from "@/lib/utils";
 import { t, type EventItem, type SessionItem, type TicketType } from "@/lib/types";
@@ -19,7 +19,15 @@ interface Pick {
   ticketTypeId: string;
 }
 
-type Loaded = { layout: SeatLayout; unavailable: Set<string> };
+type Loaded = {
+  layout: SeatLayout;
+  unavailable: Set<string>;
+  /** Places qu'un autre acheteur est en train de payer : heure de retour en vente. */
+  held: Map<string, string>;
+};
+
+/** Le plan se recharge à ce rythme tant que l'onglet est visible. */
+const REFRESH_MS = 60_000;
 
 const isCompanion = (tt: TicketType) => tt.maxPerPaidTicket != null;
 const remaining = (tt: TicketType) => tt.quantity - tt.sold;
@@ -53,6 +61,7 @@ export function SeatedSelector({
   const [revision, setRevision] = React.useState(0);
   const [picks, setPicks] = React.useState<Pick[]>([]);
   const [notice, setNotice] = React.useState<string | null>(null);
+  const [adding, setAdding] = React.useState(false);
   /** Sur mobile, le récapitulatif est sous le plan : un bouton y mène tant qu'il n'est pas à l'écran. */
   const summaryRef = React.useRef<HTMLDivElement>(null);
   const [summaryInView, setSummaryInView] = React.useState(false);
@@ -72,7 +81,13 @@ export function SeatedSelector({
       .then((res) => {
         if (ignore) return;
         setLoaded(
-          res ? { layout: res.layout, unavailable: new Set(res.unavailable) } : "error",
+          res
+            ? {
+                layout: res.layout,
+                unavailable: new Set(res.unavailable),
+                held: new Map(Object.entries(res.held ?? {})),
+              }
+            : "error",
         );
       })
       .catch(() => {
@@ -82,6 +97,20 @@ export function SeatedSelector({
       ignore = true;
     };
   }, [session.id, revision]);
+
+  // Le plan est une photo : on la rafraîchit au retour sur l'onglet et à
+  // intervalle régulier, pour voir les places prises ou rendues entre-temps.
+  React.useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "visible") setRevision((n) => n + 1);
+    };
+    document.addEventListener("visibilitychange", refresh);
+    const timer = window.setInterval(refresh, REFRESH_MS);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.clearInterval(timer);
+    };
+  }, []);
 
   const layout = loaded && loaded !== "error" ? loaded.layout : null;
   const seatByKey = React.useMemo(
@@ -164,13 +193,50 @@ export function SeatedSelector({
   function stateOf(key: string): SeatState {
     if (picks.some((p) => p.key === key)) return "selected";
     if (inCart.has(key)) return "mine";
-    if (loaded && loaded !== "error" && loaded.unavailable.has(key)) return "taken";
+    if (loaded && loaded !== "error" && loaded.unavailable.has(key)) {
+      return loaded.held.has(key) ? "held" : "taken";
+    }
     const seat = seatByKey.get(key);
     return seat && defaultFor(seat.zone) ? "free" : "off";
   }
 
-  function addToCart() {
-    if (!layout) return;
+  const timeOf = (iso: string) =>
+    new Intl.DateTimeFormat(`${locale}-CH`, { hour: "2-digit", minute: "2-digit" }).format(
+      new Date(iso),
+    );
+
+  function noteOf(key: string, state: SeatState): string | null {
+    if (state !== "held" || !loaded || loaded === "error") return null;
+    const until = loaded.held.get(key);
+    return until ? te("seatHeldUntil", { time: timeOf(until) }) : te("seatHeld");
+  }
+
+  /**
+   * Vérifie auprès du serveur que les places choisies sont encore libres :
+   * le plan affiché peut dater de plusieurs minutes. Sans réponse, on laisse
+   * passer, /checkout tranchera.
+   */
+  async function addToCart() {
+    if (!layout || adding) return;
+    setAdding(true);
+    let gone: string[] = [];
+    try {
+      gone = await findTakenSeats(
+        session.id,
+        picks.map((p) => p.key),
+      );
+    } catch {
+      gone = [];
+    } finally {
+      setAdding(false);
+    }
+    if (gone.length > 0) {
+      const lost = new Set(gone);
+      setPicks(normalize(picks.filter((p) => !lost.has(p.key))));
+      setNotice(te("seatJustTaken", { count: gone.length }));
+      setRevision((n) => n + 1);
+      return;
+    }
     for (const tt of tariffs) {
       const keys = picks.filter((p) => p.ticketTypeId === tt.id).map((p) => p.key);
       if (keys.length === 0) continue;
@@ -248,6 +314,7 @@ export function SeatedSelector({
               stateOf={stateOf}
               onToggle={toggle}
               uniform={uniform}
+              noteOf={noteOf}
             />
           ) : (
             <div className="grid min-h-64 place-items-center rounded-control border border-dashed border-border text-sm text-muted-foreground">
@@ -279,6 +346,11 @@ export function SeatedSelector({
                 zonePrices={zonePrices}
                 uniformPrice={
                   uniform && mainTariffs[0] ? price(mainTariffs[0].priceCents) : undefined
+                }
+                heldLabel={
+                  loaded && loaded !== "error" && loaded.held.size > 0
+                    ? te("seatHeld")
+                    : undefined
                 }
               />
               {[...zoneNotes.values()].map((note) => (
@@ -388,10 +460,14 @@ export function SeatedSelector({
             <Button
               className="mt-4 w-full"
               size="lg"
-              disabled={picks.length === 0 || previewOpen}
+              disabled={picks.length === 0 || previewOpen || adding}
               onClick={addToCart}
             >
-              <ShoppingBag className="size-4" />
+              {adding ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <ShoppingBag className="size-4" />
+              )}
               {te("addToCart")}
             </Button>
           </div>
