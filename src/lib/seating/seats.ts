@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Prisma } from "@prisma/client";
+import { HELD_METHODS, reservedUntilFrom } from "@/lib/orders/reservation";
 import { prisma } from "@/lib/prisma";
 import { readLayout, seatLabel, type SeatLayout } from "./layout";
 
@@ -138,10 +139,18 @@ export function labelSeats(
   return keys.map((k) => (layout ? seatLabel(layout, k, locale) : k));
 }
 
-/** État public d'une séance : plan et sièges non disponibles, sans plus. */
+/**
+ * État public d'une séance : plan et sièges non disponibles, sans plus.
+ *
+ * `held` : parmi les indisponibles, ceux qu'un autre acheteur est en train de
+ * payer (rétention en cours), avec l'heure à laquelle ils reviendront en
+ * vente s'il ne va pas au bout. Le visiteur sait ainsi qu'une place grise
+ * peut se libérer, sans rien apprendre sur la commande qui la retient.
+ */
 export async function publicSeatState(sessionId: string): Promise<{
   layout: SeatLayout;
   unavailable: string[];
+  held: Record<string, string>;
 } | null> {
   const session = await prisma.eventSession.findFirst({
     where: {
@@ -155,7 +164,27 @@ export async function publicSeatState(sessionId: string): Promise<{
   if (!layout) return null;
   const taken = await prisma.sessionSeat.findMany({
     where: { sessionId, status: { not: "AVAILABLE" } },
-    select: { seatKey: true },
+    select: {
+      seatKey: true,
+      status: true,
+      order: { select: { status: true, paymentMethod: true, createdAt: true } },
+    },
   });
-  return { layout, unavailable: taken.map((t) => t.seatKey) };
+  const now = Date.now();
+  const held: Record<string, string> = {};
+  for (const seat of taken) {
+    const order = seat.order;
+    if (
+      seat.status !== "RESERVED" ||
+      !order ||
+      order.status !== "AWAITING_PAYMENT" ||
+      !order.paymentMethod ||
+      !HELD_METHODS.includes(order.paymentMethod)
+    ) {
+      continue;
+    }
+    const until = reservedUntilFrom(order.createdAt);
+    if (until.getTime() > now) held[seat.seatKey] = until.toISOString();
+  }
+  return { layout, unavailable: taken.map((t) => t.seatKey), held };
 }

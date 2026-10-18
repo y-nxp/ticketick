@@ -101,6 +101,9 @@
     "seatZonesNumbered": "{count, plural, one {Kategorie {list}} other {den Kategorien {list}}}",
     "seatSelected": "Ihre Auswahl",
     "seatTaken": "Besetzt",
+    "seatHeld": "Kauf läuft",
+    "seatHeldUntil": "Eine andere Person kauft diesen Platz gerade; falls der Kauf nicht abgeschlossen wird, ist er gegen {time} wieder frei",
+    "seatJustTaken": "{count, plural, one {Dieser Platz wurde soeben von einer anderen Person gekauft und aus Ihrer Auswahl entfernt.} other {# Plätze wurden soeben von einer anderen Person gekauft und aus Ihrer Auswahl entfernt.}}",
     "seatFree": "Verfügbarer Platz",
     "seatViewNormal": "Normale Sicht",
     "seatNone": "Kein Platz ausgewählt.",
@@ -234,6 +237,9 @@
     "attendee_too_old": "Eine Person überschreitet die Altersgrenze des Gratisplatzes. Wählen Sie für diesen Platz einen anderen Tarif.",
     "seat_taken": "Ein oder mehrere Plätze wurden soeben vergeben. Sie wurden aus Ihrem Warenkorb entfernt.",
     "seatsRemoved": "Einige Plätze wurden soeben von einer anderen Person gekauft und aus Ihrem Warenkorb entfernt. Bitte prüfen Sie Ihre Auswahl.",
+    "seatsAllRemovedTitle": "Platz nicht mehr verfügbar",
+    "seatsAllRemoved": "Der gewählte Platz wurde soeben von einer anderen Person gekauft. Kehren Sie zum Saalplan zurück und wählen Sie einen anderen.",
+    "backToSeats": "Zurück zum Saalplan",
     "invalid_seats": "Ungültige Platzauswahl. Bitte wählen Sie Ihre Plätze erneut.",
     "paymentBlocked": {
       "notActivated": {

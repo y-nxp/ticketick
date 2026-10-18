@@ -101,6 +101,9 @@
     "seatZonesNumbered": "{count, plural, one {categoria {list}} other {categorie {list}}}",
     "seatSelected": "La vostra selezione",
     "seatTaken": "Occupato",
+    "seatHeld": "Acquisto in corso",
+    "seatHeldUntil": "Un altro acquirente sta acquistando questo posto; se non conclude, tornerà disponibile verso le {time}",
+    "seatJustTaken": "{count, plural, one {Questo posto è appena stato preso da un altro acquirente ed è stato rimosso dalla selezione.} other {# posti sono appena stati presi da un altro acquirente e sono stati rimossi dalla selezione.}}",
     "seatFree": "Posto disponibile",
     "seatViewNormal": "Visibilità normale",
     "seatNone": "Nessun posto selezionato.",
@@ -234,6 +237,9 @@
     "attendee_too_old": "Un titolare supera il limite d'età del posto gratuito. Scegliete un'altra tariffa per quel posto.",
     "seat_taken": "Uno o più posti sono appena stati presi. Sono stati rimossi dal carrello.",
     "seatsRemoved": "Alcuni posti sono appena stati presi da un altro acquirente e rimossi dal carrello. Verificate la selezione.",
+    "seatsAllRemovedTitle": "Posto non più disponibile",
+    "seatsAllRemoved": "Il posto scelto è appena stato preso da un altro acquirente. Tornate alla pianta della sala per sceglierne un altro.",
+    "backToSeats": "Torna alla pianta della sala",
     "invalid_seats": "Selezione dei posti non valida. Scegliete di nuovo i posti.",
     "paymentBlocked": {
       "notActivated": {
