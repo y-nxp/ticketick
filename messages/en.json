@@ -101,6 +101,9 @@
     "seatZonesNumbered": "{count, plural, one {category {list}} other {categories {list}}}",
     "seatSelected": "Your selection",
     "seatTaken": "Taken",
+    "seatHeld": "Purchase in progress",
+    "seatHeldUntil": "Another buyer is purchasing this seat; it becomes available again around {time} if they do not complete",
+    "seatJustTaken": "{count, plural, one {This seat was just taken by another buyer and removed from your selection.} other {# seats were just taken by another buyer and removed from your selection.}}",
     "seatFree": "Available seat",
     "seatViewNormal": "Normal view",
     "seatNone": "No seat selected.",
@@ -234,6 +237,9 @@
     "attendee_too_old": "A holder is over the age limit for the free ticket. Choose another rate for that seat.",
     "seat_taken": "One or more seats have just been taken. They were removed from your cart.",
     "seatsRemoved": "Some seats were just taken by another buyer and removed from your cart. Please check your selection.",
+    "seatsAllRemovedTitle": "Seat no longer available",
+    "seatsAllRemoved": "The seat you chose was just taken by another buyer. Go back to the seating plan to pick another one.",
+    "backToSeats": "Back to the seating plan",
     "invalid_seats": "Invalid seat selection. Please choose your seats again.",
     "paymentBlocked": {
       "notActivated": {

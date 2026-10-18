@@ -13,12 +13,29 @@ import {
 } from "@/lib/seating/layout";
 import { t } from "@/lib/types";
 
-/** `blocked` : place réservée aux invités, affichée et cliquable dans l'admin. */
-export type SeatState = "free" | "selected" | "taken" | "mine" | "off" | "blocked";
+/**
+ * `blocked` : place réservée aux invités, affichée et cliquable dans l'admin.
+ * `held` : un autre acheteur est en train de la payer ; elle peut revenir.
+ */
+export type SeatState =
+  | "free"
+  | "selected"
+  | "taken"
+  | "held"
+  | "mine"
+  | "off"
+  | "blocked";
 
 const ZOOMS = [1, 1.5, 2.25];
 /** Places libres quand toute la salle est au même prix : pas de catégories. */
 const UNIFORM_FREE = "#CFC9F8";
+/** Place occupée (vendue ou retenue sans date de retour). */
+const TAKEN = "#d4d4d8";
+/** Achat en cours : hachures sur le gris des places occupées. */
+const HELD_STRIPE = "#9ca3af";
+const HELD_PATTERN_ID = "seat-held-stripes";
+/** Même motif en CSS pour la pastille de la légende. */
+const HELD_SWATCH = `repeating-linear-gradient(135deg, ${TAKEN} 0 3px, ${HELD_STRIPE} 3px 4.5px)`;
 
 /**
  * Salle au même prix partout : les couleurs ne servent plus qu'à montrer les
@@ -48,12 +65,15 @@ export function SeatMap({
   stateOf,
   onToggle,
   uniform = false,
+  noteOf,
 }: {
   layout: SeatLayout;
   locale: string;
   stateOf: (key: string) => SeatState;
   onToggle: (key: string) => void;
   uniform?: boolean;
+  /** Précision ajoutée à l'infobulle d'une place (heure de libération…). */
+  noteOf?: (key: string, state: SeatState) => string | null | undefined;
 }) {
   const te = useTranslations("event");
   const [zoom, setZoom] = React.useState(0);
@@ -95,6 +115,18 @@ export function SeatMap({
           role="group"
           aria-label={te("seatPickTitle")}
         >
+          <defs>
+            <pattern
+              id={HELD_PATTERN_ID}
+              patternUnits="userSpaceOnUse"
+              width={s / 3}
+              height={s / 3}
+              patternTransform="rotate(45)"
+            >
+              <rect width={s / 3} height={s / 3} fill={TAKEN} />
+              <rect width={s / 9} height={s / 3} fill={HELD_STRIPE} />
+            </pattern>
+          </defs>
           {layout.areas.map((a, i) => (
             <g key={`area-${i}`}>
               <rect
@@ -153,6 +185,7 @@ export function SeatMap({
             const label = [
               seatLabel(layout, seat.key, locale, { view: false }),
               zone ? zoneText(zone, locale, uniform) : null,
+              noteOf?.(seat.key, state),
             ]
               .filter(Boolean)
               .join(" · ");
@@ -161,11 +194,13 @@ export function SeatMap({
                 ? "var(--primary)"
                 : state === "blocked"
                   ? "#2A2C30"
+                  : state === "held"
+                    ? `url(#${HELD_PATTERN_ID})`
                   : state === "free"
                   ? tinted
                     ? (zone?.color ?? "#e5e7eb")
                     : UNIFORM_FREE
-                  : "#d4d4d8";
+                  : TAKEN;
             return (
               <g
                 key={seat.key}
@@ -228,6 +263,7 @@ export function SeatLegend({
   zonePrices,
   uniformPrice,
   mineLabel,
+  heldLabel,
 }: {
   layout: SeatLayout;
   locale: string;
@@ -236,6 +272,8 @@ export function SeatLegend({
   uniformPrice?: string;
   /** Places déjà à l'acheteur (état `mine`), quand le plan en montre. */
   mineLabel?: string;
+  /** Places en cours d'achat par d'autres (état `held`), quand il y en a. */
+  heldLabel?: string;
 }) {
   const te = useTranslations("event");
   const swatch = "inline-block size-3.5 shrink-0 rounded-[3px] border border-black/20";
@@ -293,9 +331,15 @@ export function SeatLegend({
         </li>
       ) : null}
       <li className="flex items-center gap-2">
-        <span className={swatch} style={{ background: "#d4d4d8" }} />
+        <span className={swatch} style={{ background: TAKEN }} />
         {te("seatTaken")}
       </li>
+      {heldLabel ? (
+        <li className="flex items-center gap-2">
+          <span className={swatch} style={{ background: HELD_SWATCH }} />
+          {heldLabel}
+        </li>
+      ) : null}
     </ul>
   );
 }
