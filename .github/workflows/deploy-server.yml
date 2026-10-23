@@ -237,7 +237,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: 🧰 Image tools (migrations)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: builder
@@ -246,7 +246,7 @@ jobs:
           cache-from: type=gha,scope=prod-${{ needs.preflight.outputs.arch }}
           cache-to: type=gha,mode=max,scope=prod-${{ needs.preflight.outputs.arch }}
       - name: 📦 Image app
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           target: runner
