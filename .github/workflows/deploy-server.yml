@@ -329,9 +329,9 @@ jobs:
           printf '%s' "$REGISTRY_TOKEN" > bundle/registry-token
 
       # Socle NXP : socle.sh (mise en production sans coupure, retour arrière) dans le paquet.
-      - uses: y-nxp/socle/actions/server-files@v1
-        with:
-          dest: bundle
+      # Socle NXP : copie versionnée de socle.sh (y-nxp/socle), propagée depuis le socle.
+      - name: 🧱 socle.sh
+        run: mkdir -p bundle && cp .socle/socle.sh bundle/socle.sh
 
       - name: 🚀 Déploiement sur le serveur
         run: |
