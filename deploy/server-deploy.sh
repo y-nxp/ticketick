@@ -39,8 +39,11 @@ if [ ! -f "$SECRETS" ]; then
 fi
 
 # ── 2. Fichiers de la version
+# Réécrits sur place : Caddyfile et backup.sh sont montés tels quels dans des conteneurs qui
+# ne sont plus recréés à chaque version, et un `mv` leur laisserait l'ancien fichier.
 for f in docker-compose.server.yml Caddyfile backup.sh; do
-  mv -f "$IN/$f" "$APP_DIR/$f"
+  cat "$IN/$f" > "$APP_DIR/$f"
+  rm -f "$IN/$f"
   chmod 644 "$APP_DIR/$f"
 done
 # Monté tel quel dans le service de sauvegarde : absent, Docker créerait un
@@ -59,8 +62,11 @@ cat "$SECRETS" "$IN/app.env" "$IN/release.env" > "$APP_DIR/.env"
 echo "📥 Téléchargement des images..."
 docker login ghcr.io -u "$REGISTRY_USER" --password-stdin < "$IN/registry-token" > /dev/null
 rm -f "$IN/registry-token"
+# Seulement les images de la version. Postgres et Caddy ne sont pas retéléchargés ici : une
+# nouvelle image (mise à jour d'Alpine) les ferait recréer en plein déploiement, base comprise.
+# Au premier déploiement, `up` télécharge ce qui manque.
 PULL_OK=1
-"${COMPOSE[@]}" pull --quiet || PULL_OK=0
+"${COMPOSE[@]}" pull --quiet migrate app || PULL_OK=0
 docker logout ghcr.io > /dev/null 2>&1 || true
 if [ "$PULL_OK" -ne 1 ]; then
   echo "❌ Téléchargement des images impossible."
@@ -93,11 +99,28 @@ if docker inspect ticketick-prod-app > /dev/null 2>&1; then
 fi
 find "$LOGS" -name 'app-*.log.gz' -mtime +90 -delete
 
-# ── 5. Démarrage
+# ── 5. Démarrage sans coupure
+# La base et Caddy restent en place (recréés seulement si leur configuration change). Les
+# migrations passent pendant que l'ancienne version sert encore, puis seul le conteneur de
+# l'application est remplacé ; Caddy fait patienter les visiteurs le temps qu'il démarre.
 echo "🚀 Démarrage..."
-if ! "${COMPOSE[@]}" up -d --remove-orphans; then
-  echo "❌ Démarrage en échec — sortie des migrations :"
-  "${COMPOSE[@]}" logs --tail=80 migrate || true
+"${COMPOSE[@]}" up -d --no-deps db
+for _ in $(seq 1 30); do
+  [ "$(docker inspect -f '{{.State.Health.Status}}' ticketick-prod-db 2>/dev/null)" = "healthy" ] && break
+  sleep 2
+done
+"${COMPOSE[@]}" up -d --no-deps backup caddy
+# Caddyfile éventuellement modifié : rechargé sans couper les connexions, avant le remplacement
+# de l'application (c'est lui qui fait patienter les visiteurs).
+"${COMPOSE[@]}" exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile > /dev/null 2>&1 \
+  || echo "⚠ Rechargement de Caddy impossible : l'ancienne configuration reste active."
+echo "🗃️  Migrations (l'ancienne version sert pendant ce temps)..."
+if ! "${COMPOSE[@]}" run --rm --no-deps -T migrate; then
+  echo "❌ Migrations en échec : l'ancienne version reste en ligne."
+  exit 1
+fi
+if ! "${COMPOSE[@]}" up -d --no-deps --remove-orphans app; then
+  echo "❌ Démarrage de l'application en échec."
   exit 1
 fi
 
@@ -112,7 +135,7 @@ for _ in $(seq 1 30); do
 done
 if [ "$OK" -ne 1 ]; then
   echo "❌ L'application ne répond pas — logs :"
-  "${COMPOSE[@]}" logs --tail=80 migrate app || true
+  "${COMPOSE[@]}" logs --tail=80 app || true
   exit 1
 fi
 echo "✅ Application opérationnelle"
