@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Envoyer l'aperçu
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         env:
           DEST: ${{ inputs.destinataire }}
         with:

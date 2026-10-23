@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 📋 Déploiement via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         env:
           # Le port n'est pas un secret : surchargeable par une variable de
           # dépôt si le fournisseur n'utilise pas STARTTLS sur 587.

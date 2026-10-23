@@ -36,7 +36,7 @@ jobs:
 
     steps:
       - name: 🔑 Créer le compte via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         env:
           # Le mot de passe passe par un secret : une entrée de workflow
           # apparaîtrait en clair dans l'interface et le journal du run.
