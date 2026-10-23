@@ -64,7 +64,7 @@ export async function searchEvents(input: {
       sessions: {
         where: { startsAt: { gte: now }, status: { not: "CANCELLED" } },
         orderBy: { startsAt: "asc" },
-        select: { startsAt: true, venue: { select: { name: true, city: true } } },
+        select: { startsAt: true, endsAt: true, venue: { select: { name: true, city: true } } },
       },
     },
   });
@@ -95,8 +95,11 @@ export async function searchEvents(input: {
       organizer: e.organizer.name,
       organizerId: e.organizer.id,
       soldOut: e.status === "SOLD_OUT",
+      // Étiquettes (« Bel canto, Jeunes talents ») : le SAV en déduit une durée quand la fin n'est pas saisie.
+      tags: pick(e.tags as Record<string, string> | null, input.locale) || null,
       sessions: e.sessions.slice(0, 5).map((s) => ({
         startsAt: s.startsAt.toISOString(),
+        endsAt: s.endsAt?.toISOString() ?? null,
         venue: s.venue ? `${s.venue.name}, ${s.venue.city}` : null,
       })),
       url: eventPageUrl(origin, input.locale, e.slug),
@@ -111,6 +114,7 @@ async function loadEvent(id: string, organizerId: string | null) {
       slug: true,
       title: true,
       subtitle: true,
+      tags: true,
       description: true,
       status: true,
       onlineSale: true,
@@ -195,6 +199,7 @@ export async function eventDetails(id: string, organizerId: string | null, local
     id: event.id,
     title: pick(event.title as Record<string, string>, locale),
     subtitle: pick(event.subtitle as Record<string, string> | null, locale) || null,
+    tags: pick(event.tags as Record<string, string> | null, locale) || null,
     organizer: event.organizer.name,
     description: plainText(pick(event.description as Record<string, string>, locale)),
     onlineSale: event.onlineSale,
