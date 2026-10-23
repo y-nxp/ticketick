@@ -49,7 +49,8 @@ done
 # Monté tel quel dans le service de sauvegarde : absent, Docker créerait un
 # dossier à sa place. Vide, la copie hors serveur est simplement désactivée.
 if [ -s "$IN/rclone.conf" ]; then
-  mv -f "$IN/rclone.conf" "$APP_DIR/rclone.conf"
+  cat "$IN/rclone.conf" > "$APP_DIR/rclone.conf"
+  rm -f "$IN/rclone.conf"
 else
   : > "$APP_DIR/rclone.conf"
 fi
