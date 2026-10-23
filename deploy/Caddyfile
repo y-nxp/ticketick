@@ -26,7 +26,12 @@
 {$SITE_ADDRESS:ticketick.ch} {
 	import cloudflare_only
 	encode zstd gzip
-	reverse_proxy app:3000
+	# Pendant le remplacement du conteneur de l'application (quelques secondes à chaque
+	# déploiement), Caddy fait patienter les visiteurs au lieu de leur montrer une erreur.
+	reverse_proxy app:3000 {
+		lb_try_duration 30s
+		lb_try_interval 250ms
+	}
 }
 
 # Un seul nom public : les cookies de session sont liés à l'hôte, et les

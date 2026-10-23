@@ -39,14 +39,18 @@ if [ ! -f "$SECRETS" ]; then
 fi
 
 # ── 2. Fichiers de la version
+# Réécrits sur place : Caddyfile et backup.sh sont montés tels quels dans des conteneurs qui
+# ne sont plus recréés à chaque version, et un `mv` leur laisserait l'ancien fichier.
 for f in docker-compose.server.yml Caddyfile backup.sh; do
-  mv -f "$IN/$f" "$APP_DIR/$f"
+  cat "$IN/$f" > "$APP_DIR/$f"
+  rm -f "$IN/$f"
   chmod 644 "$APP_DIR/$f"
 done
 # Monté tel quel dans le service de sauvegarde : absent, Docker créerait un
 # dossier à sa place. Vide, la copie hors serveur est simplement désactivée.
 if [ -s "$IN/rclone.conf" ]; then
-  mv -f "$IN/rclone.conf" "$APP_DIR/rclone.conf"
+  cat "$IN/rclone.conf" > "$APP_DIR/rclone.conf"
+  rm -f "$IN/rclone.conf"
 else
   : > "$APP_DIR/rclone.conf"
 fi
@@ -59,8 +63,15 @@ cat "$SECRETS" "$IN/app.env" "$IN/release.env" > "$APP_DIR/.env"
 echo "📥 Téléchargement des images..."
 docker login ghcr.io -u "$REGISTRY_USER" --password-stdin < "$IN/registry-token" > /dev/null
 rm -f "$IN/registry-token"
+# Seulement les images de la version. Postgres et Caddy ne sont pas retéléchargés ici : une
+# nouvelle image (mise à jour d'Alpine) les ferait recréer en plein déploiement, base comprise.
+# Au premier déploiement, `up` télécharge ce qui manque.
+# Socle NXP (y-nxp/socle) : déposé dans le paquet par l'action server-files.
+SOCLE_COMPOSE=("${COMPOSE[@]}")
+# shellcheck disable=SC1091
+. "$IN/socle.sh"
 PULL_OK=1
-"${COMPOSE[@]}" pull --quiet || PULL_OK=0
+socle_pull migrate app || PULL_OK=0
 docker logout ghcr.io > /dev/null 2>&1 || true
 if [ "$PULL_OK" -ne 1 ]; then
   echo "❌ Téléchargement des images impossible."
@@ -93,28 +104,17 @@ if docker inspect ticketick-prod-app > /dev/null 2>&1; then
 fi
 find "$LOGS" -name 'app-*.log.gz' -mtime +90 -delete
 
-# ── 5. Démarrage
-echo "🚀 Démarrage..."
-if ! "${COMPOSE[@]}" up -d --remove-orphans; then
-  echo "❌ Démarrage en échec — sortie des migrations :"
-  "${COMPOSE[@]}" logs --tail=80 migrate || true
-  exit 1
-fi
+# ── 5. Démarrage sans coupure (socle NXP) : la base et Caddy restent en place, les migrations
+# passent pendant que l'ancienne version sert, seul le conteneur de l'application est remplacé
+# (Caddy fait patienter les visiteurs) ; s'il ne devient pas sain, l'ancienne image revient.
+echo "🚀 Démarrage (socle NXP $SOCLE_VERSION)..."
+socle_infra db
+socle_wait_healthy ticketick-prod-db 60 || { echo "❌ La base ne démarre pas."; exit 1; }
+socle_infra backup caddy
+socle_caddy_reload compose:caddy || true
+socle_migrate migrate || exit 1
+socle_swap app ticketick-prod-app IMAGE_APP 180 || exit 1
 
-echo "⏳ Attente du démarrage..."
-OK=0
-for _ in $(seq 1 30); do
-  if [ "$(docker inspect -f '{{.State.Health.Status}}' ticketick-prod-app 2>/dev/null)" = "healthy" ]; then
-    OK=1
-    break
-  fi
-  sleep 5
-done
-if [ "$OK" -ne 1 ]; then
-  echo "❌ L'application ne répond pas — logs :"
-  "${COMPOSE[@]}" logs --tail=80 migrate app || true
-  exit 1
-fi
 echo "✅ Application opérationnelle"
 
 # ── 6. Contrôles propres à la production

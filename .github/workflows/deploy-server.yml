@@ -324,8 +324,14 @@ jobs:
             SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS MAIL_FROM MAIL_TO \
             LITELLM_API_URL LITELLM_API_KEY PLAN_AI_MODEL PARTNER_API_SECRET \
             GA4_MEASUREMENT_ID GOOGLE_ADS_ID META_PIXEL_ID META_CAPI_TOKEN MATOMO_URL MATOMO_SITE_ID > bundle/app.env
-          write IMAGE_APP IMAGE_TOOLS SITE_ADDRESS WWW_ADDRESS BACKUP_REMOTE REGISTRY_USER > bundle/release.env
+          APP_VERSION=${{ github.sha }}
+          write IMAGE_APP IMAGE_TOOLS APP_VERSION SITE_ADDRESS WWW_ADDRESS BACKUP_REMOTE REGISTRY_USER > bundle/release.env
           printf '%s' "$REGISTRY_TOKEN" > bundle/registry-token
+
+      # Socle NXP : socle.sh (mise en production sans coupure, retour arrière) dans le paquet.
+      - uses: y-nxp/socle/actions/server-files@v1
+        with:
+          dest: bundle
 
       - name: 🚀 Déploiement sur le serveur
         run: |
@@ -337,8 +343,17 @@ jobs:
 
       - name: 🌐 Accès public
         run: |
-          CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://ticketick.ch/api/health" || echo 000)
-          echo "https://ticketick.ch/api/health → HTTP $CODE"
+          # Le site public (à travers Cloudflare) doit servir le commit déployé.
+          for i in $(seq 1 15); do
+            VERSION=$(curl -fsS --max-time 10 "https://ticketick.ch/api/health" 2>/dev/null | sed -n 's/.*"version" *: *"\([^"]*\)".*/\1/p')
+            [ "$VERSION" = "${{ github.sha }}" ] && break
+            sleep 4
+          done
+          echo "https://ticketick.ch/api/health → version ${VERSION:-?}"
+          if [ "$VERSION" != "${{ github.sha }}" ] && [ "${{ vars.PROD_TARGET }}" = server ]; then
+            echo "::error::ticketick.ch ne sert pas le commit déployé (${{ github.sha }})."
+            exit 1
+          fi
           if [ "${{ vars.PROD_TARGET }}" != server ]; then
             echo "ℹ️  PROD_TARGET ne vaut pas « server » : ticketick.ch est encore servi par le GB10."
           fi
