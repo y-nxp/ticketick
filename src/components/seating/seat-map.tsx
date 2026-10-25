@@ -11,14 +11,26 @@ import {
   type SeatLayout,
   type SeatZone,
 } from "@/lib/seating/layout";
+import { takenFill } from "@/lib/seating/contrast";
 import { t } from "@/lib/types";
 
 /** `blocked` : place réservée aux invités, affichée et cliquable dans l'admin. */
 export type SeatState = "free" | "selected" | "taken" | "mine" | "off" | "blocked";
 
 const ZOOMS = [1, 1.5, 2.25];
+/** Texte d'état d'une place (titre et aria-label), hors place libre. */
+const STATE_TEXT = {
+  selected: "seatStateSelected",
+  mine: "seatStateMine",
+  taken: "seatTaken",
+  off: "seatOff",
+  blocked: "seatBlocked",
+} as const;
 /** Places libres quand toute la salle est au même prix : pas de catégories. */
 const UNIFORM_FREE = "#CFC9F8";
+/** Couleur d'une place libre dont la zone n'a pas de couleur. */
+const FALLBACK_FREE = "#e5e7eb";
+const INK = "#2A2C30";
 
 /**
  * Salle au même prix partout : les couleurs ne servent plus qu'à montrer les
@@ -36,6 +48,104 @@ function zoneText(zone: SeatZone, locale: string, uniform: boolean): string | nu
   const view = viewLabel(readView(zone.view), locale);
   if (uniform) return view;
   return [t(zone.name, locale), view].filter(Boolean).join(" · ");
+}
+
+/**
+ * Une place, dessinée à l'échelle `s` autour de (0, 0). Chaque état a un repère
+ * qui ne dépend pas de la couleur : croix (occupée), contour pointillé (hors
+ * tarif), double contour (sélectionnée), coche dans un coin (à vous).
+ */
+function SeatShape({
+  state,
+  s,
+  fill,
+  taken,
+  number,
+}: {
+  state: SeatState;
+  s: number;
+  fill: string;
+  taken: string;
+  number?: string;
+}) {
+  const half = s / 2;
+  const cross = s * 0.3;
+  const mine = state === "mine";
+  const selected = state === "selected";
+  const isTaken = state === "taken";
+  return (
+    <>
+      <rect
+        x={-half}
+        y={-half}
+        width={s}
+        height={s}
+        rx={2.5}
+        fill={mine ? "var(--background)" : isTaken ? taken : fill}
+        opacity={state === "off" ? 0.45 : 1}
+        stroke={
+          selected ? "var(--foreground)" : mine ? "var(--primary)" : "rgba(42,44,48,0.35)"
+        }
+        strokeWidth={selected ? 2 : mine ? 1.8 : 0.6}
+        strokeDasharray={state === "off" ? `${s * 0.15} ${s * 0.1}` : undefined}
+      />
+      {selected ? (
+        <rect
+          x={-half + 2}
+          y={-half + 2}
+          width={s - 4}
+          height={s - 4}
+          rx={1.5}
+          fill="none"
+          stroke="#fff"
+          strokeWidth={0.9}
+        />
+      ) : null}
+      {number != null ? (
+        <text
+          textAnchor="middle"
+          dominantBaseline="central"
+          style={{ fontSize: s * 0.5 }}
+          fill={
+            selected || state === "blocked" ? "#fff" : mine ? "var(--foreground)" : INK
+          }
+          opacity={isTaken ? 0.4 : 1}
+          className="pointer-events-none font-semibold"
+        >
+          {number}
+        </text>
+      ) : null}
+      {isTaken ? (
+        <path
+          d={`M${-cross} ${-cross}L${cross} ${cross}M${cross} ${-cross}L${-cross} ${cross}`}
+          stroke={INK}
+          strokeWidth={Math.max(1, s * 0.09)}
+          strokeLinecap="round"
+          opacity={0.75}
+          className="pointer-events-none"
+        />
+      ) : null}
+      {mine ? (
+        <g className="pointer-events-none" transform={`translate(${half} ${-half})`}>
+          <circle r={s * 0.24} fill="var(--primary)" stroke="var(--background)" strokeWidth={0.8} />
+          <path
+            d={`M${-s * 0.11} 0L${-s * 0.02} ${s * 0.09}L${s * 0.12} ${-s * 0.08}`}
+            fill="none"
+            stroke="#fff"
+            strokeWidth={Math.max(0.9, s * 0.07)}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </g>
+      ) : null}
+    </>
+  );
+}
+
+/** Couleurs de catégorie dont le gris des places occupées doit se distinguer. */
+function categoryColors(layout: SeatLayout, uniform: boolean): string[] {
+  const zones = layout.zones.map((z) => z.color);
+  return keepsZoneColors(layout, uniform) && !uniform ? zones : [UNIFORM_FREE, ...zones];
 }
 
 /**
@@ -60,6 +170,7 @@ export function SeatMap({
   const { viewBox: vb, seatSize: s } = layout;
   const zones = new Map(layout.zones.map((z) => [z.key, z]));
   const tinted = keepsZoneColors(layout, uniform);
+  const taken = takenFill(categoryColors(layout, uniform));
   const rows = React.useMemo(
     () => (layout.rowNumbers ? rowNumberMarks(layout) : []),
     [layout],
@@ -150,22 +261,22 @@ export function SeatMap({
             const zone = zones.get(seat.zone);
             const clickable =
               state === "free" || state === "selected" || state === "blocked";
+            const stateText = state === "free" ? null : te(STATE_TEXT[state]);
             const label = [
               seatLabel(layout, seat.key, locale, { view: false }),
               zone ? zoneText(zone, locale, uniform) : null,
+              stateText,
             ]
               .filter(Boolean)
               .join(" · ");
             const fill =
-              state === "selected" || state === "mine"
+              state === "selected"
                 ? "var(--primary)"
                 : state === "blocked"
-                  ? "#2A2C30"
-                  : state === "free"
-                  ? tinted
-                    ? (zone?.color ?? "#e5e7eb")
-                    : UNIFORM_FREE
-                  : "#d4d4d8";
+                  ? INK
+                  : tinted
+                    ? (zone?.color ?? FALLBACK_FREE)
+                    : UNIFORM_FREE;
             return (
               <g
                 key={seat.key}
@@ -189,30 +300,7 @@ export function SeatMap({
                 className={clickable ? "cursor-pointer outline-none [&:focus-visible>rect]:stroke-[var(--foreground)] [&:focus-visible>rect]:stroke-2" : undefined}
               >
                 <title>{label}</title>
-                <rect
-                  x={-s / 2}
-                  y={-s / 2}
-                  width={s}
-                  height={s}
-                  rx={2.5}
-                  fill={fill}
-                  opacity={state === "mine" ? 0.4 : state === "off" ? 0.45 : 1}
-                  stroke={state === "selected" ? "var(--foreground)" : "rgba(42,44,48,0.35)"}
-                  strokeWidth={state === "selected" ? 1.5 : 0.6}
-                />
-                <text
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  style={{ fontSize: s * 0.5 }}
-                  fill={
-                    state === "selected" || state === "mine" || state === "blocked"
-                      ? "#fff"
-                      : "#2A2C30"
-                  }
-                  className="pointer-events-none font-semibold"
-                >
-                  {seat.number}
-                </text>
+                <SeatShape state={state} s={s} fill={fill} taken={taken} number={seat.number} />
               </g>
             );
           })}
@@ -228,6 +316,7 @@ export function SeatLegend({
   zonePrices,
   uniformPrice,
   mineLabel,
+  showOff,
 }: {
   layout: SeatLayout;
   locale: string;
@@ -236,9 +325,18 @@ export function SeatLegend({
   uniformPrice?: string;
   /** Places déjà à l'acheteur (état `mine`), quand le plan en montre. */
   mineLabel?: string;
+  /** Le plan montre des places hors tarif (état `off`). */
+  showOff?: boolean;
 }) {
   const te = useTranslations("event");
   const swatch = "inline-block size-3.5 shrink-0 rounded-[3px] border border-black/20";
+  const taken = takenFill(categoryColors(layout, uniformPrice != null));
+  const legendSeat = (state: SeatState, fill: string) => (
+    <svg viewBox="-9 -9 18 18" className="size-4 shrink-0 overflow-visible" aria-hidden>
+      <SeatShape state={state} s={14} fill={fill} taken={taken} />
+    </svg>
+  );
+  const hasFallback = layout.seats.some((seat) => !layout.zones.some((z) => z.key === seat.zone));
   const uniform = uniformPrice != null;
   const items: { key: string; colors: string[]; text: string; price?: string }[] = [];
   if (!uniform) {
@@ -282,20 +380,32 @@ export function SeatLegend({
           </span>
         </li>
       ))}
+      {hasFallback ? (
+        <li className="flex items-center gap-2">
+          {legendSeat("free", FALLBACK_FREE)}
+          {te("seatFree")}
+        </li>
+      ) : null}
       <li className="flex items-center gap-2">
-        <span className={swatch} style={{ background: "var(--primary)" }} />
+        {legendSeat("selected", "var(--primary)")}
         {te("seatSelected")}
       </li>
       {mineLabel ? (
         <li className="flex items-center gap-2">
-          <span className={swatch} style={{ background: "var(--primary)", opacity: 0.4 }} />
+          {legendSeat("mine", "var(--primary)")}
           {mineLabel}
         </li>
       ) : null}
       <li className="flex items-center gap-2">
-        <span className={swatch} style={{ background: "#d4d4d8" }} />
+        {legendSeat("taken", "")}
         {te("seatTaken")}
       </li>
+      {showOff ? (
+        <li className="flex items-center gap-2">
+          {legendSeat("off", UNIFORM_FREE)}
+          {te("seatOff")}
+        </li>
+      ) : null}
     </ul>
   );
 }
