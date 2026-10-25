@@ -40,8 +40,8 @@ const STATE_TEXT = {
 /** Places libres quand toute la salle est au même prix : pas de catégories. */
 const UNIFORM_FREE = "#CFC9F8";
 /** Couleur d'une place libre dont la zone n'a pas de couleur. */
-const FALLBACK_FREE = "#e5e7eb";
-const INK = "#2A2C30";
+const FALLBACK_FREE = "var(--seat-free)";
+const INK = "var(--seat-ink)";
 
 /**
  * Salle au même prix partout : les couleurs ne servent plus qu'à montrer les
@@ -90,7 +90,7 @@ function SeatShape({
   number?: string;
 }) {
   const half = s / 2;
-  const cross = s * 0.3;
+  const cross = s * 0.22;
   const mine = state === "mine";
   const selected = state === "selected";
   const isTaken = state === "taken";
@@ -118,19 +118,18 @@ function SeatShape({
           height={s - 4}
           rx={1.5}
           fill="none"
-          stroke="#fff"
+          stroke="var(--primary-foreground)"
           strokeWidth={0.9}
         />
       ) : null}
-      {number != null ? (
+      {number != null && !isTaken ? (
         <text
           textAnchor="middle"
           dominantBaseline="central"
           style={{ fontSize: s * 0.5 }}
           fill={
-            selected || state === "blocked" ? "#fff" : mine ? "var(--foreground)" : INK
+            selected || state === "blocked" ? "var(--primary-foreground)" : mine ? "var(--foreground)" : INK
           }
-          opacity={isTaken ? 0.4 : 1}
           className="pointer-events-none font-semibold"
         >
           {number}
@@ -140,9 +139,9 @@ function SeatShape({
         <path
           d={`M${-cross} ${-cross}L${cross} ${cross}M${cross} ${-cross}L${-cross} ${cross}`}
           stroke={INK}
-          strokeWidth={Math.max(1, s * 0.09)}
+          strokeWidth={Math.max(0.9, s * 0.08)}
           strokeLinecap="round"
-          opacity={0.75}
+          opacity={0.7}
           className="pointer-events-none"
         />
       ) : null}
@@ -152,7 +151,7 @@ function SeatShape({
           <path
             d={`M${-s * 0.11} 0L${-s * 0.02} ${s * 0.09}L${s * 0.12} ${-s * 0.08}`}
             fill="none"
-            stroke="#fff"
+            stroke="var(--primary-foreground)"
             strokeWidth={Math.max(0.9, s * 0.07)}
             strokeLinecap="round"
             strokeLinejoin="round"
