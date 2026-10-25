@@ -109,7 +109,7 @@ prisma/                     # schema.prisma + seed.ts
      distinguent par la référence `{slug}:{commande}`.
    - Les secrets sont chiffrés en base (`PAYMENT_SECRETS_KEY`, à défaut
      `AUTH_SECRET`).
-   - `ALLOW_MOCK_PAYMENTS=true` (local, betadev) remplace carte et virement
+   - `ALLOW_MOCK_PAYMENTS=true` (local, copies de test) remplace carte et virement
      manquants par un paiement simulé : le message « pas encore activé »
      n'apparaît donc qu'en production.
    - **Page de l'organisateur** `/go/{organisateur}` : ses spectacles à venir,
@@ -142,29 +142,13 @@ prisma/                     # schema.prisma + seed.ts
 
 ## Déploiement
 
-| Branche   | Cible                                    | Mécanisme                              |
-| --------- | ---------------------------------------- | -------------------------------------- |
-| `develop` | gb10 → `appbetadev.ticketick.ch`         | `.github/workflows/deploy-betadev.yml` |
-| `main`    | gb10 → `ticketick.ch` (actuel)           | `.github/workflows/deploy-prod.yml`    |
-| `main`    | Jelastic ou VPS → `ticketick.ch` (cible) | `.github/workflows/deploy-server.yml`  |
+| Branche | Cible                | Mécanisme                             |
+| ------- | -------------------- | ------------------------------------- |
+| `main`  | VPS → `ticketick.ch` | `.github/workflows/deploy-server.yml` |
 
-La variable GitHub `PROD_TARGET` choisit la production servie par `main` :
-absente, c'est le GB10 ; `server`, c'est le serveur Jelastic ou VPS.
-
-### BetaDev — gb10 → `appbetadev.ticketick.ch`
-
-Chaque push sur `develop` déclenche le workflow, qui se connecte en SSH à gb10
-(secrets `GB10_HOST`, `GB10_USER`, `GB10_SSH_PRIVATE_KEY`, `GB10_PORT`), met à jour
-le dépôt dans `~/ticketick-v2-betadev`, puis lance `docker-compose.betadev.yml`.
-
-- L'application écoute sur **127.0.0.1:3005** ; Nginx Proxy Manager doit router
-  `appbetadev.ticketick.ch` vers ce port.
-- PostgreSQL n'est **pas** publié sur l'hôte : seul le conteneur applicatif y accède,
-  ce qui évite tout conflit de port avec les autres stacks de gb10.
-- Le mot de passe Postgres et `AUTH_SECRET` sont générés au premier déploiement puis
-  conservés dans `~/.ticketick-v2-betadev.secrets`. Les régénérer après l'initialisation
-  du volume rendrait la base inaccessible.
-- Le déploiement échoue si `/api/health` ne répond pas dans les deux minutes.
+Pas de branche `develop` : chaque carte d'AI Manager (Dev NXP) part de `main` sur une branche
+`feat/<n°>-<sujet>`, se teste sur sa copie de test (lien Tailscale `https://<machine>.ts.net:<port>`),
+puis est fusionnée dans `main`, ce qui la met en production.
 
 ### Production — Jelastic ou VPS → `ticketick.ch`
 
