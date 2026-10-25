@@ -1,10 +1,14 @@
-# Mises à jour des dépendances (socle NXP) : une pull request regroupée par semaine pour les
-# versions mineures et correctives ; les correctifs de sécurité arrivent tout de suite (réglage
-# « Dependabot security updates » du dépôt). Copier dans .github/dependabot.yml.
+# Mises à jour des dépendances (socle NXP). Copier dans .github/dependabot.yml.
+# - une pull request regroupée par semaine pour les versions mineures et correctives ;
+# - les correctifs de sécurité (réglage « Dependabot security updates » du dépôt) arrivent tout de
+#   suite, mais regroupés eux aussi : une seule pull request à la fois au lieu d'une par paquet ;
+# - les versions majeures restent une pull request chacune : la migration passe par une carte
+#   d'AI Manager (copie de test Tailscale, puis main), jamais par une fusion directe.
+# Chaque fusion dans main déploie la production : moins de pull requests, moins de déploiements.
 version: 2
 updates:
   - package-ecosystem: npm
-    directory: /
+    directories: ["/", "/mailer"]
     schedule:
       interval: weekly
       day: monday
@@ -13,10 +17,20 @@ updates:
     open-pull-requests-limit: 5
     groups:
       mineures:
+        applies-to: version-updates
         update-types: [minor, patch]
+      securite:
+        applies-to: security-updates
+        patterns: ["*"]
     labels: [dependances]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
     labels: [dependances]
+    # Le socle est un dépôt privé que Dependabot ne peut pas lire : ses étiquettes sont gérées à la main.
+    ignore:
+      - dependency-name: "y-nxp/socle*"
