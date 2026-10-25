@@ -9,6 +9,6 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "nodemailer": "^10.0.11"
+    "nodemailer": "^10.1.4"
   }
 }
