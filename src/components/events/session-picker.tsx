@@ -93,7 +93,7 @@ export function SessionPicker({
                   </span>
                 ) : null}
               </span>
-              {priced ? (
+              {priced || soldOut ? (
                 <span className="shrink-0 text-sm font-semibold">
                   {soldOut
                     ? te("soldOut")
