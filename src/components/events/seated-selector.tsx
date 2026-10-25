@@ -280,6 +280,7 @@ export function SeatedSelector({
                 uniformPrice={
                   uniform && mainTariffs[0] ? price(mainTariffs[0].priceCents) : undefined
                 }
+                showOff={layout.seats.some((seat) => stateOf(seat.key) === "off")}
               />
               {[...zoneNotes.values()].map((note) => (
                 <p key={note} className="mt-2 text-xs text-muted-foreground">
