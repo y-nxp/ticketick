@@ -249,7 +249,7 @@ function Resultat({ lookup, locale }: { lookup: DoorLookup; locale: string }) {
   if (!lookup.ok) {
     return (
       <div className="rounded-card bg-destructive px-4 py-5 text-center text-white">
-        <X className="mx-auto size-14" strokeWidth={3.5} aria-hidden />
+        <X className="mx-auto mb-1 size-10" strokeWidth={3} aria-hidden />
         <p className="text-xl font-extrabold uppercase">{t("refused")}</p>
         <p className="mt-1 text-sm text-white/90">{t(lookup.reason)}</p>
         {lookup.reason === "otherSession" ? (
@@ -283,9 +283,9 @@ function Resultat({ lookup, locale }: { lookup: DoorLookup; locale: string }) {
       }`}
     >
       {deja ? (
-        <TriangleAlert className="mx-auto size-14" strokeWidth={3} aria-hidden />
+        <TriangleAlert className="mx-auto mb-1 size-10" strokeWidth={2.5} aria-hidden />
       ) : (
-        <Check className="mx-auto size-14" strokeWidth={3.5} aria-hidden />
+        <Check className="mx-auto mb-1 size-10" strokeWidth={3} aria-hidden />
       )}
       <p className="text-xl font-extrabold uppercase">
         {deja ? t("alreadyUsed") : t("admitted")}

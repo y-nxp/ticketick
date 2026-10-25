@@ -27,18 +27,18 @@ export function contrastRatio(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-export const TAKEN_GREYS = ["#d4d4d8", "#9a9aa3", "#5b5b64"] as const;
+export const TAKEN_GREYS = ["#d4d4d8", "#9a9aa3"] as const;
 
 /**
- * Gris des places occupées : celui des trois qui s'écarte le plus, en
+ * Gris des places occupées : celui des deux qui s'écarte le plus, en
  * luminosité, de la couleur de catégorie la plus proche.
  */
 export function takenFill(colors: string[]): string {
   let best: string = TAKEN_GREYS[1];
   let bestMin = -1;
-  for (const grey of [TAKEN_GREYS[1], TAKEN_GREYS[0], TAKEN_GREYS[2]]) {
+  for (const grey of [TAKEN_GREYS[1], TAKEN_GREYS[0]]) {
     const min = Math.min(21, ...colors.map((c) => contrastRatio(grey, c)));
-    // Le gris moyen l'emporte à égalité : il garde le numéro estompé lisible.
+    // Le gris moyen l'emporte à égalité : la croix y reste nette.
     if (min > bestMin + 0.05) {
       bestMin = min;
       best = grey;

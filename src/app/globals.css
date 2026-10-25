@@ -46,6 +46,10 @@
   --border: #e6e8eb;
   --input: #e6e8eb;
   --ring: #6c5ce7;
+
+  /* Plan de salle : mêmes valeurs en clair et en sombre (les places restent claires) */
+  --seat-ink: #2a2c30;
+  --seat-free: #e5e7eb; /* place sans couleur de catégorie */
 }
 
 .dark {
