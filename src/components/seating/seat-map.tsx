@@ -11,7 +11,7 @@ import {
   type SeatLayout,
   type SeatZone,
 } from "@/lib/seating/layout";
-import { takenFill } from "@/lib/seating/contrast";
+import { takenFill, takenMark } from "@/lib/seating/contrast";
 import { t } from "@/lib/types";
 
 /** `blocked` : place réservée aux invités, affichée et cliquable dans l'admin. */
@@ -117,7 +117,7 @@ function SeatShape({
       {isTaken ? (
         <path
           d={`M${-cross} ${-cross}L${cross} ${cross}M${cross} ${-cross}L${-cross} ${cross}`}
-          stroke={INK}
+          stroke={takenMark(taken)}
           strokeWidth={Math.max(0.9, s * 0.08)}
           strokeLinecap="round"
           opacity={0.7}
