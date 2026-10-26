@@ -24,7 +24,7 @@ export default async function ReserveSessionPage({
 
   const data = await getSessionForReservation(id, sessionId);
   if (!data) notFound();
-  const { session, layout, freeByZone, invitesByZone, reservations } = data;
+  const { session, layout, seats, freeByZone, invitesByZone, reservations } = data;
   const past = session.startsAt <= new Date();
   const linkAvailable =
     mockPaymentsAllowed() ||
@@ -56,6 +56,7 @@ export default async function ReserveSessionPage({
       available,
       invites,
       zoneLabel: zoneLabel === name ? null : zoneLabel,
+      zones: tt.seatZones,
     };
   });
 
@@ -93,7 +94,8 @@ export default async function ReserveSessionPage({
           sessionId={session.id}
           locale={locale}
           rows={rows}
-          seated={layout != null}
+          layout={layout}
+          seats={seats}
           linkAvailable={linkAvailable}
         />
       )}

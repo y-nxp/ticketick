@@ -52,7 +52,8 @@ export async function reserveSeats(
   });
   if (!session) return failure("notFound");
 
-  const lines: { ticketTypeId: string; quantity: number }[] = [];
+  const lines: { ticketTypeId: string; quantity: number; seatKeys?: string[] }[] = [];
+  const allSeats = new Set<string>();
   for (const tt of session.ticketTypes) {
     const raw = readText(formData, `qty.${tt.id}`);
     if (!raw) continue;
@@ -60,7 +61,20 @@ export async function reserveSeats(
     if (!Number.isInteger(quantity) || quantity < 0 || quantity > 1000) {
       return failure("quantity");
     }
-    if (quantity > 0) lines.push({ ticketTypeId: tt.id, quantity });
+    if (quantity === 0) continue;
+    // Sièges désignés sur le plan : un par place, jamais deux fois le même.
+    const seats = readText(formData, `seats.${tt.id}`);
+    const seatKeys = seats ? seats.split(",").filter(Boolean) : undefined;
+    if (seatKeys) {
+      if (
+        seatKeys.length !== quantity ||
+        seatKeys.some((k) => k.length > 40 || allSeats.has(k))
+      ) {
+        return failure("quantity");
+      }
+      seatKeys.forEach((k) => allSeats.add(k));
+    }
+    lines.push({ ticketTypeId: tt.id, quantity, seatKeys });
   }
 
   const price = new Map(session.ticketTypes.map((tt) => [tt.id, tt.priceCents]));
@@ -86,6 +100,8 @@ export async function reserveSeats(
     locale: data.locale,
     soldByUserId: user.id,
     fromInvites: readBoolean(formData, "fromInvites"),
+    // L'admin voit les places bloquées sur le plan et peut les désigner.
+    pickBlocked: true,
     email: data.email,
     phone: data.phone,
     settle,

@@ -37,6 +37,12 @@ export interface ReservationInput {
    * retirées de la jauge en placement libre (la jauge remonte d'autant).
    */
   fromInvites?: boolean;
+  /**
+   * Sièges désignés sur le plan : autorise aussi les places bloquées. Réservé
+   * à l'admin, qui les voit ; un point de vente n'y a pas accès, même en
+   * forgeant les clés envoyées par son formulaire.
+   */
+  pickBlocked?: boolean;
   email?: string;
   phone?: string;
   /** Sans règlement : réservation offerte, comme jusqu'ici. */
@@ -54,6 +60,8 @@ export type ReservationError =
   | "soldOut"
   | "seatsUnavailable"
   | "invitesUnavailable"
+  /** Un siège désigné sur le plan n'est plus libre, ou n'est pas admis pour le tarif. */
+  | "seatsTaken"
   | "retry";
 
 export type ReservationResult =
@@ -101,7 +109,18 @@ export async function createReservation(
     0,
   );
 
-  const fromInvites = input.fromInvites === true;
+  // Sièges désignés sur le plan par l'admin, qui voit ce qu'il prend. Tous
+  // bloqués, la réservation compte comme prise aux invités (et y retourne si
+  // elle tombe) ; sinon la case « places invités » du formulaire fait foi.
+  const pickBlocked = input.pickBlocked === true && layout != null;
+  const chosen = pickBlocked ? lines.flatMap((l) => l.seatKeys ?? []) : [];
+  let fromInvites = input.fromInvites === true;
+  if (chosen.length > 0) {
+    const blocked = await prisma.sessionSeat.count({
+      where: { sessionId: session.id, seatKey: { in: chosen }, status: "BLOCKED" },
+    });
+    fromInvites = blocked === chosen.length;
+  }
   const settle: PaymentSettle = input.settle ?? { method: "FREE" };
   const free = settle.method === "FREE" || settle.amountCents <= 0;
   try {
@@ -161,6 +180,7 @@ export async function createReservation(
               zones: types.get(l.ticketTypeId)!.seatZones,
             })),
             fromInvites,
+            pickBlocked,
           })
         : new Map<string, string[]>();
 
@@ -210,7 +230,11 @@ export async function createReservation(
     if (error instanceof NoSeatsError) {
       return {
         ok: false,
-        error: fromInvites ? "invitesUnavailable" : "seatsUnavailable",
+        error: chosen.length > 0
+          ? "seatsTaken"
+          : fromInvites
+            ? "invitesUnavailable"
+            : "seatsUnavailable",
         ticketTypeId: error.ticketTypeId,
       };
     }
@@ -254,8 +278,10 @@ export class SeatRaceError extends Error {}
 /**
  * Attribue des sièges de la zone du tarif : ceux choisis sur le plan (`keys`),
  * sinon côte à côte dans un même rang quand c'est possible, puis les premiers
- * rang par rang. Sièges libres par défaut ; avec `fromInvites`,
- * uniquement les places bloquées.
+ * rang par rang. Attribution d'office parmi les sièges libres ; avec
+ * `fromInvites`, uniquement parmi les places bloquées. Un siège désigné sur le
+ * plan vient du même lot, sauf avec `pickBlocked` (admin) : libre ou bloqué,
+ * l'admin l'a vu avant de le choisir.
  */
 export async function assignSeats(
   tx: Prisma.TransactionClient,
@@ -265,18 +291,20 @@ export async function assignSeats(
     layout: SeatLayout;
     lines: { ticketTypeId: string; quantity: number; zones: string[]; keys?: string[] }[];
     fromInvites?: boolean;
+    pickBlocked?: boolean;
   },
 ): Promise<Map<string, string[]>> {
   await syncSessionSeats(input.sessionId, tx);
   const pool = input.fromInvites ? "BLOCKED" : "AVAILABLE";
-  const free = new Set(
-    (
-      await tx.sessionSeat.findMany({
-        where: { sessionId: input.sessionId, status: pool },
-        select: { seatKey: true },
-      })
-    ).map((s) => s.seatKey),
-  );
+  const open = await tx.sessionSeat.findMany({
+    where: { sessionId: input.sessionId, status: { in: ["AVAILABLE", "BLOCKED"] } },
+    select: { seatKey: true, status: true },
+  });
+  /** Sièges de l'attribution d'office. */
+  const free = new Set(open.filter((s) => s.status === pool).map((s) => s.seatKey));
+  /** Sièges qu'on peut désigner sur le plan : ceux du lot, ou tous pour l'admin. */
+  const pickable = input.pickBlocked ? new Set(open.map((s) => s.seatKey)) : new Set(free);
+  const fromPools: ("AVAILABLE" | "BLOCKED")[] = input.pickBlocked ? ["AVAILABLE", "BLOCKED"] : [pool];
 
   const runs = seatRuns(input.layout.seats);
   const seatByKey = new Map(input.layout.seats.map((s) => [s.key, s]));
@@ -290,7 +318,9 @@ export async function assignSeats(
     let picked: string[] | null = null;
     if (line.keys?.length) {
       const chosen = line.keys.map((key) => seatByKey.get(key));
-      if (chosen.length !== line.quantity || !chosen.every((s) => s && eligible(s))) {
+      const ok = (seat: SeatLayout["seats"][number] | undefined) =>
+        seat != null && pickable.has(seat.key) && zoneAllowed(line.zones, seat.zone);
+      if (chosen.length !== line.quantity || !chosen.every(ok)) {
         throw new NoSeatsError(line.ticketTypeId);
       }
       picked = [...line.keys];
@@ -317,12 +347,15 @@ export async function assignSeats(
       sessionId: input.sessionId,
       keys: picked,
       zones: line.zones,
-      from: [pool],
+      from: line.keys?.length ? fromPools : [pool],
     });
     if (got !== picked.length) {
       throw line.keys?.length ? new NoSeatsError(line.ticketTypeId) : new SeatRaceError();
     }
-    picked.forEach((key) => free.delete(key));
+    picked.forEach((key) => {
+      free.delete(key);
+      pickable.delete(key);
+    });
     out.set(line.ticketTypeId, picked);
   }
   return out;
