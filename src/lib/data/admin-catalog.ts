@@ -266,17 +266,22 @@ export async function getSessionForReservation(eventId: string, sessionId: strin
   const layout = readLayout(session.seatPlan?.layout);
   let freeByZone: Record<string, number> | null = null;
   let invitesByZone: Record<string, number> | null = null;
+  /** État de chaque siège, pour le choix sur le plan. */
+  let seats: { key: string; zone: string; status: "AVAILABLE" | "RESERVED" | "BLOCKED" }[] = [];
   if (layout) {
     await syncSessionSeats(session.id);
-    const rows = await prisma.sessionSeat.groupBy({
-      by: ["zone", "status"],
-      where: { sessionId: session.id, status: { in: ["AVAILABLE", "BLOCKED"] } },
-      _count: { _all: true },
+    const rows = await prisma.sessionSeat.findMany({
+      where: { sessionId: session.id },
+      select: { seatKey: true, zone: true, status: true },
     });
-    const count = (status: string) =>
-      Object.fromEntries(
-        rows.filter((r) => r.status === status).map((r) => [r.zone, r._count._all]),
-      );
+    seats = rows.map((r) => ({ key: r.seatKey, zone: r.zone, status: r.status }));
+    const count = (status: string) => {
+      const out: Record<string, number> = {};
+      for (const r of rows) {
+        if (r.status === status) out[r.zone] = (out[r.zone] ?? 0) + 1;
+      }
+      return out;
+    };
     freeByZone = count("AVAILABLE");
     invitesByZone = count("BLOCKED");
   }
@@ -303,7 +308,7 @@ export async function getSessionForReservation(eventId: string, sessionId: strin
     },
   });
 
-  return { session, layout, freeByZone, invitesByZone, reservations };
+  return { session, layout, seats, freeByZone, invitesByZone, reservations };
 }
 
 /**
