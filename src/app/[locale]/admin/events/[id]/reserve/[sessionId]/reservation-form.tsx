@@ -10,7 +10,9 @@ import { useRouter } from "@/i18n/navigation";
 import { localeLabels, locales } from "@/i18n/routing";
 import { reserveSeats } from "@/lib/admin/reservation-actions";
 import type { FormState } from "@/lib/admin/types";
+import type { SeatLayout } from "@/lib/seating/layout";
 import { formatPrice } from "@/lib/utils";
+import { ReservationSeatPicker, type PickerSeat, type SeatPick } from "./seat-picker";
 
 interface Row {
   id: string;
@@ -20,28 +22,45 @@ interface Row {
   available: number;
   invites: number | null;
   zoneLabel: string | null;
+  zones: string[];
 }
+
+type SeatMode = "plan" | "auto";
 
 export function ReservationForm({
   eventId,
   sessionId,
   locale,
   rows,
-  seated,
+  layout,
+  seats,
   linkAvailable,
 }: {
   eventId: string;
   sessionId: string;
   locale: string;
   rows: Row[];
-  seated: boolean;
+  /** Plan de salle : le choix des places se fait dessus. */
+  layout: SeatLayout | null;
+  seats: PickerSeat[];
   linkAvailable: boolean;
 }) {
   const t = useTranslations("admin.reservation");
   const te = useTranslations("admin.orderEdit");
-  const [qty, setQty] = React.useState<Record<string, number>>({});
+  const seated = layout != null;
+  const [typed, setQty] = React.useState<Record<string, number>>({});
+  const [mode, setMode] = React.useState<SeatMode>(seated ? "plan" : "auto");
+  const [picks, setPicks] = React.useState<SeatPick[]>([]);
   const [settle, setSettle] = React.useState("FREE");
   const [email, setEmail] = React.useState("");
+  const onPlan = seated && mode === "plan";
+  // Sur le plan, les quantités découlent des places choisies.
+  const qty: Record<string, number> = onPlan
+    ? picks.reduce<Record<string, number>>((acc, p) => {
+        acc[p.ticketTypeId] = (acc[p.ticketTypeId] ?? 0) + 1;
+        return acc;
+      }, {})
+    : typed;
   const total = rows.reduce((sum, r) => sum + r.priceCents * (qty[r.id] ?? 0), 0);
   const hasEmail = email.includes("@");
   const router = useRouter();
@@ -52,6 +71,8 @@ export function ReservationForm({
 
   React.useEffect(() => {
     if (state?.ok && state.id) router.push(`/admin/orders/${state.id}`);
+    // Refus : le plan est relu, une place a pu être prise entre-temps.
+    if (state && !state.ok) router.refresh();
   }, [state, router]);
 
   return (
@@ -68,6 +89,65 @@ export function ReservationForm({
       <input type="hidden" name="eventId" value={eventId} />
       <input type="hidden" name="sessionId" value={sessionId} />
 
+      {seated ? (
+        <fieldset>
+          <legend className="text-sm font-medium">{t("seatMode.title")}</legend>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            {(["plan", "auto"] as const).map((m) => (
+              <label
+                key={m}
+                className={`flex cursor-pointer items-start gap-2.5 rounded-control border p-3 text-sm transition-colors ${
+                  mode === m ? "border-primary bg-primary/5" : "border-border hover:bg-muted"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="seatMode"
+                  value={m}
+                  checked={mode === m}
+                  onChange={() => setMode(m)}
+                  className="mt-0.5 accent-[var(--primary)]"
+                />
+                <span>
+                  <span className="block font-medium">{t(`seatMode.${m}`)}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {t(`seatMode.${m}Hint`)}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      ) : null}
+
+      {onPlan && layout ? (
+        <>
+          <ReservationSeatPicker
+            layout={layout}
+            locale={locale}
+            seats={seats}
+            rows={rows}
+            picks={picks}
+            onChange={setPicks}
+          />
+          {rows.map((row) =>
+            qty[row.id] ? (
+              <React.Fragment key={row.id}>
+                <input type="hidden" name={`qty.${row.id}`} value={qty[row.id]} />
+                <input
+                  type="hidden"
+                  name={`seats.${row.id}`}
+                  value={picks
+                    .filter((p) => p.ticketTypeId === row.id)
+                    .map((p) => p.key)
+                    .join(",")}
+                />
+              </React.Fragment>
+            ) : null,
+          )}
+          <p className="text-xs text-muted-foreground">{t("planInvitesHint")}</p>
+        </>
+      ) : (
       <div className="overflow-x-auto rounded-control border border-border">
         <table className="w-full min-w-[30rem] text-sm">
           <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -105,7 +185,7 @@ export function ReservationForm({
                     min="0"
                     max="1000"
                     placeholder="0"
-                    value={qty[row.id] ?? ""}
+                    value={typed[row.id] ?? ""}
                     onChange={(e) =>
                       setQty((prev) => ({
                         ...prev,
@@ -121,6 +201,7 @@ export function ReservationForm({
           </tbody>
         </table>
       </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label={t("ticketNote")} hint={t("ticketNoteHint")}>
@@ -158,7 +239,7 @@ export function ReservationForm({
         </Field>
       </div>
 
-      {seated || rows.some((row) => row.invites) ? (
+      {!onPlan && (seated || rows.some((row) => row.invites)) ? (
         <Checkbox name="fromInvites" label={te("fromInvites")} />
       ) : null}
 
@@ -219,7 +300,10 @@ export function ReservationForm({
         </p>
       ) : null}
 
-      <Button type="submit" disabled={pending || (state?.ok ?? false)}>
+      <Button
+        type="submit"
+        disabled={pending || (state?.ok ?? false) || (onPlan && picks.length === 0)}
+      >
         <TicketCheck className="size-4" />
         {pending ? t("submitting") : t("submit")}
       </Button>
