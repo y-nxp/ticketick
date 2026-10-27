@@ -114,6 +114,7 @@
     "seatError": "Pianta non disponibile al momento. Riprovate tra poco.",
     "zoomIn": "Ingrandisci la pianta",
     "zoomOut": "Riduci la pianta",
+    "seatMoreBelow": "Vedi il resto della pianta",
     "attendeeNote": "Nome e data di nascita richiesti al pagamento.",
     "attendeeNoteAge": "Meno di {age} anni: nome e data di nascita richiesti al pagamento.",
     "contact": {

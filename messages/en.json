@@ -114,6 +114,7 @@
     "seatError": "Seating plan unavailable right now. Please try again shortly.",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",
+    "seatMoreBelow": "See the rest of the plan",
     "attendeeNote": "Name and date of birth required at checkout.",
     "attendeeNoteAge": "Under {age}: name and date of birth required at checkout.",
     "contact": {
