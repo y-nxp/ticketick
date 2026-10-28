@@ -392,6 +392,9 @@ model Organizer {
   postfinance  OrganizerPostfinanceAccount?
   stripe       OrganizerStripeAccount?
 
+  socialAccounts     OrganizerSocialAccount[]
+  promotionCampaigns PromotionCampaign[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -549,6 +552,8 @@ model Event {
   discounts Discount[]
   resellers ResellerEvent[]
   options   EventOption[]
+
+  promotionCampaigns PromotionCampaign[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -902,6 +907,14 @@ model Order {
   /// Commission due au revendeur sur cette commande, figée à la vente.
   commissionCents Int          @default(0)
 
+  /// Campagne dont le lien a précédé l'achat (dernier clic, même navigateur).
+  /// Figé à la création de la commande, jamais recalculé ensuite.
+  promotionCampaign   PromotionCampaign? @relation(fields: [promotionCampaignId], references: [id], onDelete: SetNull)
+  promotionCampaignId String?
+  /// Source du clic : "facebook", "instagram", "code"…
+  promotionSource     String?
+  promotionClickAt    DateTime?
+
   subtotalCents Int
   discountCents Int    @default(0)
   feeCents      Int    @default(0)
@@ -924,6 +937,7 @@ model Order {
   @@index([email])
   @@index([resellerId, createdAt])
   @@index([status, createdAt])
+  @@index([promotionCampaignId])
 }
 
 model OrderItem {
@@ -1147,4 +1161,186 @@ model OrderChangeLink {
 model SetupStep {
   key    String   @id
   doneAt DateTime @default(now())
+}
+
+// ─── Promotion (docs/module-promotion.md, § 3) ──────────────────────────────
+// L'organisateur publie ses événements sur ses propres réseaux ; ticketick
+// rattache ensuite les ventes à la campagne dont le lien a été cliqué.
+
+enum SocialProvider {
+  FACEBOOK_PAGE
+  INSTAGRAM_BUSINESS
+  /// Phase 3.
+  TIKTOK
+}
+
+enum SocialAccountStatus {
+  ACTIVE
+  /// Jeton refusé par la plateforme : l'organisateur doit se reconnecter.
+  NEEDS_RECONNECT
+  /// Déconnecté par l'organisateur : jeton effacé, historique conservé.
+  DISCONNECTED
+}
+
+enum PromotionKind {
+  ORGANIC
+  /// Phase 2.
+  PAID
+}
+
+enum PromotionPostStatus {
+  DRAFT
+  SCHEDULED
+  /// Prise en charge par la minuterie (réservation atomique).
+  PUBLISHING
+  PUBLISHED
+  FAILED
+  CANCELLED
+}
+
+/// Page Facebook ou compte Instagram professionnel d'un organisateur.
+/// Le jeton n'est stocké que chiffré (même mécanisme que Stripe et PayPal) ;
+/// il ne repart jamais vers le navigateur. Une même page peut être connectée
+/// par deux organisateurs (agence, coproduction) : l'unicité porte sur le
+/// triplet, pas sur `externalId` seul.
+model OrganizerSocialAccount {
+  id          String         @id @default(cuid())
+  organizer   Organizer      @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  organizerId String
+  provider    SocialProvider
+  /// Identifiant de la page ou du compte chez la plateforme.
+  externalId  String
+  name        String
+  username    String?
+  pictureUrl  String?
+
+  /// Jeton de page chiffré par `sealSecret` (`src/lib/payment/seal.ts`),
+  /// déchiffré au dernier moment, jamais journalisé ni envoyé au navigateur.
+  /// Vide pour Instagram, qui publie avec le jeton de la page à laquelle il
+  /// est lié (`viaAccount`), et après une déconnexion.
+  tokenEnc       String?
+  tokenExpiresAt DateTime?
+  viaAccount     OrganizerSocialAccount?  @relation("SocialVia", fields: [viaAccountId], references: [id], onDelete: Cascade)
+  viaAccountId   String?
+  linked         OrganizerSocialAccount[] @relation("SocialVia")
+
+  /// Permissions effectivement accordées, relues après la connexion.
+  scopes        String[]            @default([])
+  status        SocialAccountStatus @default(ACTIVE)
+  lastError     String?
+  /// Utilisateur ticketick qui a fait la connexion.
+  connectedById String?
+  connectedAt   DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  posts PromotionPost[]
+
+  @@unique([organizerId, provider, externalId])
+  @@index([organizerId, status])
+}
+
+/// Unité d'attribution : un lien, un code, des ventes. Une campagne peut
+/// regrouper plusieurs publications (Facebook + Instagram, rappels).
+model PromotionCampaign {
+  id          String        @id @default(cuid())
+  organizer   Organizer     @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  organizerId String
+  event       Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId     String
+  /// Séance mise en avant ; vide : toutes les dates.
+  sessionId   String?
+  /// Code court du lien `/p/{code}` et de `utm_campaign=tt-{code}`
+  /// (`src/lib/promotion/campaign-code.ts`).
+  code        String        @unique
+  name        String
+  kind        PromotionKind @default(ORGANIC)
+  locale      String        @default("fr")
+  /// Page d'arrivée : "go" (/go/org/event) ou "events" (/events/slug).
+  landing     String        @default("go")
+
+  /// Phase 2 : budget plafonné et dépense relevée chez Meta.
+  budgetCents    Int?
+  spentCents     Int?
+  currency       String    @default("CHF")
+  externalAdRefs Json?
+  approvedById   String?
+  approvedAt     DateTime?
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts  PromotionPost[]
+  clicks PromotionClickDay[]
+  orders Order[]
+
+  @@index([organizerId, createdAt])
+  @@index([eventId])
+}
+
+/// Une publication sur un compte. Le compte ne se supprime pas tant qu'il a
+/// des publications : la déconnexion efface le jeton et garde l'historique.
+model PromotionPost {
+  id         String                 @id @default(cuid())
+  campaign   PromotionCampaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+  account    OrganizerSocialAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  accountId  String
+
+  status      PromotionPostStatus @default(DRAFT)
+  scheduledAt DateTime?
+  /// Texte final, tel que validé par l'organisateur.
+  message     String
+  /// Chemin `/uploads/…` du visuel retenu (copie figée, voir § 3.5).
+  imagePath   String?
+  /// Lien publié (`/p/{code}` avec `utm_source` du canal).
+  linkUrl     String
+
+  externalId  String?
+  permalink   String?
+  publishedAt DateTime?
+  attempts    Int       @default(0)
+  lastError   String?
+  /// Réservation par la minuterie, pour ne pas publier deux fois.
+  claimedAt   DateTime?
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  log PromotionPostLog[]
+
+  @@index([status, scheduledAt])
+  @@index([campaignId])
+  @@index([accountId])
+}
+
+/// Journal des appels à la plateforme : jamais de jeton ni de corps complet.
+model PromotionPostLog {
+  id         String        @id @default(cuid())
+  post       PromotionPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId     String
+  /// "create_container", "publish", "status", "cancel"…
+  action     String
+  ok         Boolean
+  httpStatus Int?
+  /// Code et sous-code d'erreur de la plateforme.
+  errorCode  String?
+  detail     String?
+  createdAt  DateTime      @default(now())
+
+  @@index([postId, createdAt])
+}
+
+/// Clics sur `/p/{code}`, agrégés par jour : aucune adresse IP ni identifiant.
+model PromotionClickDay {
+  campaign   PromotionCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignId String
+  /// Jour à Zurich.
+  day        DateTime          @db.Date
+  /// "facebook", "instagram", "code"…
+  source     String
+  clicks     Int               @default(0)
+
+  @@id([campaignId, day, source])
 }
