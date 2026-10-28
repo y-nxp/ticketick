@@ -22,6 +22,12 @@ import {
 } from "./options";
 import { CARD_HOLD_MS, HELD_METHODS } from "./reservation";
 import { intlLocale } from "@/lib/i18n-fallback";
+import {
+  promotionOrderFields,
+  resolveOrderAttribution,
+} from "@/lib/promotion/attribution";
+import { findAttributionCampaign } from "@/lib/promotion/clicks";
+import type { PromotionClick } from "@/lib/promotion/cookie";
 
 /**
  * Création d'une commande.
@@ -63,6 +69,11 @@ export interface CreateOrderInput {
    * encore choisi, il sera contrôlé à la validation.
    */
   hold?: boolean;
+  /**
+   * Dernier clic de campagne de ce navigateur (cookie `tt_cmp`), lu par la
+   * route. Absent dans l'immense majorité des commandes : rien ne change alors.
+   */
+  promotion?: PromotionClick;
 }
 
 export type CreateOrderResult =
@@ -383,6 +394,14 @@ export async function createOrder(
   const organizerIds = [
     ...new Set(ticketTypes.map((tt) => tt.session.event.organizer.id)),
   ];
+  const channel = input.resellerId ? "RESELLER" : "ONLINE";
+
+  // Figée ici, rétention comprise, et jamais recalculée ensuite
+  // (docs/module-promotion.md, § 5.2). Sans cookie : aucune requête.
+  const attribution = await resolveOrderAttribution(
+    { click: input.promotion, channel, organizerIds, now },
+    findAttributionCampaign,
+  );
 
   try {
     const order = await prisma.$transaction(async (tx) => {
@@ -409,7 +428,7 @@ export async function createOrder(
           locale: input.locale,
           status: "AWAITING_PAYMENT",
           paymentMethod: input.paymentMethod,
-          channel: input.resellerId ? "RESELLER" : "ONLINE",
+          channel,
           resellerId: input.resellerId,
           soldByUserId: input.soldByUserId,
           userId: input.userId,
@@ -419,6 +438,7 @@ export async function createOrder(
           feeCents,
           totalCents,
           currency,
+          ...promotionOrderFields(attribution),
           items: {
             create: lines.map((l) => ({
               ticketTypeId: l.ticketTypeId,
@@ -831,6 +851,7 @@ async function overPersonLimit(
 export async function createCheckoutHold(input: {
   lines: OrderLineInput[];
   locale: string;
+  promotion?: PromotionClick;
 }): Promise<CreateHoldResult> {
   const placeholder = randomBytes(8).toString("hex");
   const holdToken = randomBytes(24).toString("base64url");
@@ -843,6 +864,7 @@ export async function createCheckoutHold(input: {
     paymentMethod: "CARD",
     holdTokenHash: hashHoldToken(holdToken),
     hold: true,
+    promotion: input.promotion,
   });
   return created.ok ? { ...created, holdToken } : created;
 }

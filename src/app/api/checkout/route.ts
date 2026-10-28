@@ -21,6 +21,7 @@ import { getCurrentUser } from "@/lib/auth/dal";
 import { publicAppOrigin } from "@/lib/app-url";
 import { prisma } from "@/lib/prisma";
 import { reservedUntilFrom } from "@/lib/orders/reservation";
+import { readPromotionClick } from "@/lib/promotion/clicks";
 import { clientIpFrom, consume } from "@/lib/rate-limit";
 import { createPaypalOrder, paypalAccountFor } from "@/lib/payment/paypal";
 import { cardAccountFor } from "@/lib/payment/card-account";
@@ -154,6 +155,9 @@ export async function POST(request: Request) {
       data.paymentMethod === "CARD" || data.paymentMethod === "PAYPAL"
         ? hashHoldToken(freshToken)
         : undefined,
+    // Sert seulement si la commande est créée ici : une rétention garde
+    // l'attribution figée à sa création (`fulfillCheckoutHold` l'ignore).
+    promotion: await readPromotionClick(),
   };
 
   // La rétention a déjà prélevé le stock à l'arrivée sur /checkout.
