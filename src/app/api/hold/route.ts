@@ -6,6 +6,7 @@ import {
   releaseStaleUnpaidCardOrders,
 } from "@/lib/orders/create-order";
 import { reservedUntilFrom } from "@/lib/orders/reservation";
+import { readPromotionClick } from "@/lib/promotion/clicks";
 import { clientIpFrom, consume } from "@/lib/rate-limit";
 
 const lineSchema = z.object({
@@ -57,9 +58,12 @@ export async function POST(request: Request) {
     );
   }
 
+  // La commande naît ici dans le parcours habituel : c'est ici que
+  // l'attribution à une campagne est figée.
   const created = await createCheckoutHold({
     lines: data.lines,
     locale: data.locale,
+    promotion: await readPromotionClick(),
   });
 
   if (!created.ok) {
