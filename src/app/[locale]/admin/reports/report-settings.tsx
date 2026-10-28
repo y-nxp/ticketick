@@ -8,8 +8,7 @@ import { Checkbox, Field, Select, TextArea } from "@/components/admin/fields";
 import { useKeptForm } from "@/components/admin/use-kept-form";
 import { saveReportSettings, sendReportNow } from "@/lib/admin/report-actions";
 import type { FormState } from "@/lib/admin/types";
-
-const SECTIONS = ["sales", "invitations", "remaining"] as const;
+import { DEFAULT_REPORT_SECTIONS, type ReportSection } from "@/lib/reports/sections";
 
 export function SendReportNow({
   organizerId,
@@ -53,6 +52,7 @@ export function ReportSettings({
   weekdays,
   emails,
   sections,
+  promotionOffered,
   fallback,
 }: {
   organizerId: string;
@@ -62,6 +62,8 @@ export function ReportSettings({
   weekdays: readonly { value: string; label: string }[];
   emails: string;
   sections: readonly string[];
+  /** Case « Promotion » : module visible et organisateur avec des campagnes. */
+  promotionOffered: boolean;
   fallback: string;
 }) {
   const t = useTranslations("admin.reports");
@@ -106,7 +108,7 @@ export function ReportSettings({
       <fieldset key={sections.join(",")} className="space-y-2">
         <legend className="text-sm font-medium">{t("sections")}</legend>
         <div className="flex flex-wrap gap-x-6 gap-y-2">
-          {SECTIONS.map((s) => (
+          {[...DEFAULT_REPORT_SECTIONS, ...(promotionOffered ? ["promotion" as const] : [])].map((s: ReportSection) => (
             <Checkbox
               key={s}
               name="sections"

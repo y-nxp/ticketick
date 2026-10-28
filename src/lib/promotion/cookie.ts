@@ -19,7 +19,8 @@ import { isPromotionSource, type PromotionSource } from "./source";
 export const PROMOTION_COOKIE = "tt_cmp";
 
 /** Fenêtre d'attribution (§ 5.2, valeur à confirmer). */
-export const ATTRIBUTION_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+export const ATTRIBUTION_WINDOW_DAYS = 7;
+export const ATTRIBUTION_WINDOW_MS = ATTRIBUTION_WINDOW_DAYS * 24 * 60 * 60 * 1000;
 
 /**
  * Lu par le serveur seulement (`HttpOnly`), à la différence de

@@ -11,11 +11,14 @@ import { prisma } from "@/lib/prisma";
 import { lastClosedPeriod } from "@/lib/resellers/report";
 import { t as tr, type Translated } from "@/lib/types";
 import { EVENT_TIME_ZONE, formatPrice } from "@/lib/utils";
+import { loadActiveCampaignFigures } from "@/lib/promotion/results-store";
+import { promotionReportBlock } from "./promotion-section";
 import { getOrganizerReport, readSections, type ReportSection } from "./summary";
 
 /**
  * Rapport d'un organisateur : ventes, invitations et places restantes des
- * dates à venir, selon les parties choisies. Envoyé à la demande, ou chaque
+ * dates à venir, et résultats de ses campagnes actives (partie « Promotion »,
+ * facultative), selon les parties choisies. Envoyé à la demande, ou chaque
  * jour ou chaque semaine au jour et à l'heure choisis. Les « nouveaux » billets comptent depuis le rapport automatique
  * précédent ; un envoi à la demande ne déplace pas ce point de départ.
  */
@@ -142,6 +145,22 @@ export async function sendOrganizerReport(
     });
     summary.push({ label: t("onSale"), value: String(totals.onSale) });
   }
+  const promotion = sections.includes("promotion")
+    ? promotionReportBlock(
+        sections,
+        (await loadActiveCampaignFigures(organizerId)).map((c) => ({
+          name: c.name,
+          eventTitle: tr(c.event.title as Translated, locale),
+          figures: c.figures,
+        })),
+        t,
+        money,
+      )
+    : null;
+  if (promotion) {
+    tables.push(promotion.table);
+    summary.push(...promotion.summary);
+  }
 
   const [first, ...bcc] = to;
   const result = await sendTableReportEmail(
@@ -157,6 +176,7 @@ export async function sendOrganizerReport(
       footer: [
         ...(sections.includes("sales") ? [t("footerSales")] : []),
         ...(sections.includes("invitations") ? [t("footerInvitations")] : []),
+        ...(promotion ? [promotion.footer] : []),
       ].join(" "),
     },
     "rapport organisateur",

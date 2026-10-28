@@ -719,7 +719,8 @@
         "CASH": "Zahlung erwartet",
         "TERMINAL": "Zahlung erwartet",
         "TRANSFER": "Zahlung erwartet"
-      }
+      },
+      "fromCampaign": "Aus der Kampagne <campaign>{name}</campaign>"
     },
     "resellers": {
       "title": "Verkaufsstellen",
@@ -1778,7 +1779,8 @@
         "all": "Alles",
         "sales": "Verkäufe",
         "invitations": "Einladungen",
-        "remaining": "Verbleibende Plätze"
+        "remaining": "Verbleibende Plätze",
+        "promotion": "Promotion"
       },
       "noOrganizer": "Kein Veranstalter hat ein kommendes Datum.",
       "empty": "Keine kommenden Daten.",
@@ -1894,12 +1896,20 @@
       },
       "campaigns": {
         "title": "Kampagnen",
-        "resultsSoon": "Jede Kampagne hat ihren eigenen Link. Klicks, Tickets und Umsätze werden hier angezeigt.",
         "name": "Kampagne",
         "link": "Link",
         "posts": "Beiträge",
         "created": "Erstellt am",
-        "empty": "Noch keine Kampagnen."
+        "empty": "Noch keine Kampagnen.",
+        "resultsHint": "Verkäufe nach einem Klick auf einen Kampagnenlink: Tickets der beworbenen Veranstaltung, Nettobetrag ohne Servicegebühren.",
+        "state": "Status",
+        "clicks": "Klicks",
+        "tickets": "Tickets",
+        "revenue": "Betrag",
+        "postCount": "{count, plural, =0 {Kein Beitrag} one {# Beitrag} other {# Beiträge}}",
+        "otherTickets": "+ {count} andere Veranstaltungen",
+        "more": "Weitere Kampagnen anzeigen",
+        "createdOn": "erstellt am {date}"
       },
       "status": {
         "DRAFT": "Entwurf",
@@ -2010,6 +2020,51 @@
         "unschedule": "Zurück zum Entwurf",
         "cancelConfirm": "Diesen Beitrag stornieren? Er wird nicht veröffentlicht.",
         "cancel": "Beitrag stornieren"
+      },
+      "results": {
+        "headline": "Diese Kampagne hat <strong>{tickets, plural, one {# Ticket} other {# Tickets}}</strong> für <strong>{amount}</strong> verkauft (Käufe nach einem Klick auf Ihre Beiträge, innerhalb von {days} Tagen, auf demselben Gerät).",
+        "measure": {
+          "title": "Was diese Zahl misst",
+          "click": "Nur Klicks werden zugeordnet: Wer den Beitrag sieht, nicht klickt und später kauft, wird nicht gezählt.",
+          "device": "Derselbe Browser: Ein Klick in der Instagram- oder Facebook-App, gefolgt von einem Kauf auf einem anderen Gerät oder Browser, wird nicht gezählt.",
+          "floor": "Es ist also eine Untergrenze, nicht die gesamte Wirkung der Kampagne.",
+          "net": "Nur bezahlte Bestellungen zählen; eine erstattete oder stornierte Bestellung fällt aus den Summen, ebenso ein storniertes Ticket.",
+          "fees": "Ticketbetrag nach Rabatten, ohne Servicegebühren. Optionen werden separat gezählt, Gratistickets nur als Tickets."
+        },
+        "clicks": "Klicks",
+        "orders": "Bestellungen",
+        "tickets": "Tickets",
+        "ticketsHint": "Beworbene Veranstaltung",
+        "revenue": "Betrag",
+        "revenueHint": "Netto, ohne Servicegebühren",
+        "rate": "Klicks → Bestellungen",
+        "rateHint": "Bestellungen pro 100 Klicks",
+        "rateNone": "Noch kein Klick",
+        "lines": {
+          "title": "Zugeordnete Verkäufe",
+          "event": "Beworbene Veranstaltung",
+          "other": "Andere Veranstaltungen",
+          "otherHint": "Ihre anderen Veranstaltungen in derselben Bestellung",
+          "options": "Bestelloptionen"
+        },
+        "posts": "Beiträge",
+        "permalink": "Beitrag ansehen",
+        "bySource": "Nach Quelle",
+        "sourceColumn": "Quelle",
+        "allTickets": "Tickets (alle)",
+        "allRevenue": "Betrag (alle)",
+        "byDay": "Nach Tag",
+        "byDaySince": "Erster Beitrag am {date}. Verkäufe am Tag der Bestellung.",
+        "byDayHint": "Noch kein Beitrag online. Verkäufe am Tag der Bestellung.",
+        "day": "Tag",
+        "clicksFrom": "Klicks {source}",
+        "noActivity": "Noch keine Klicks und keine Verkäufe.",
+        "source": {
+          "facebook": "Facebook",
+          "instagram": "Instagram",
+          "code": "Kampagnencode",
+          "link": "Direkter Link"
+        }
       }
     }
   },
@@ -2411,7 +2466,19 @@
     "empty": "Keine kommenden Termine.",
     "totals": "Total der kommenden Termine",
     "footerSales": "Verkaufte Tickets: online und bei Vorverkaufsstellen.",
-    "footerInvitations": "Freie Gästeplätze: reserviert, noch nicht vergeben. Bezahlt: ausserhalb des Ticketshops beglichene Einladungen (Überweisung, bar…)."
+    "footerInvitations": "Freie Gästeplätze: reserviert, noch nicht vergeben. Bezahlt: ausserhalb des Ticketshops beglichene Einladungen (Überweisung, bar…).",
+    "promotionTitle": "Promotion",
+    "promotionCampaign": "Kampagne",
+    "promotionClicks": "Klicks",
+    "promotionOrders": "Bestellungen",
+    "promotionTickets": "Tickets",
+    "promotionRevenue": "Betrag",
+    "promotionOther": "Andere Veranstaltungen",
+    "promotionTotalTickets": "Tickets über Ihre Kampagnen",
+    "promotionTotalRevenue": "Betrag über Ihre Kampagnen",
+    "promotionTotalOther": "Andere Veranstaltungen über Ihre Kampagnen",
+    "promotionEmpty": "Keine aktive Kampagne.",
+    "footerPromotion": "Promotion: Käufe nach einem Klick auf Ihre Beiträge, innerhalb von {days} Tagen, auf demselben Gerät — eine Untergrenze, nicht die gesamte Wirkung. Nettobetrag ohne Servicegebühren."
   },
   "consent": {
     "title": "ticketick respektiert Ihre Privatsphäre",

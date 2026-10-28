@@ -719,7 +719,8 @@
         "CASH": "Payment expected",
         "TERMINAL": "Payment expected",
         "TRANSFER": "Payment expected"
-      }
+      },
+      "fromCampaign": "From the campaign <campaign>{name}</campaign>"
     },
     "resellers": {
       "title": "Points of sale",
@@ -1778,7 +1779,8 @@
         "all": "All",
         "sales": "Sales",
         "invitations": "Invitations",
-        "remaining": "Remaining seats"
+        "remaining": "Remaining seats",
+        "promotion": "Promotion"
       },
       "noOrganizer": "No organizer has an upcoming date.",
       "empty": "No upcoming dates.",
@@ -1894,12 +1896,20 @@
       },
       "campaigns": {
         "title": "Campaigns",
-        "resultsSoon": "Each campaign has its own link. Clicks, tickets and revenue will be shown here.",
         "name": "Campaign",
         "link": "Link",
         "posts": "Posts",
         "created": "Created on",
-        "empty": "No campaigns yet."
+        "empty": "No campaigns yet.",
+        "resultsHint": "Sales made after a click on a campaign link: tickets for the promoted show, net amount, service fees excluded.",
+        "state": "Status",
+        "clicks": "Clicks",
+        "tickets": "Tickets",
+        "revenue": "Amount",
+        "postCount": "{count, plural, =0 {No posts} one {# post} other {# posts}}",
+        "otherTickets": "+ {count} other shows",
+        "more": "Show more campaigns",
+        "createdOn": "created on {date}"
       },
       "status": {
         "DRAFT": "Draft",
@@ -2010,6 +2020,51 @@
         "unschedule": "Back to draft",
         "cancelConfirm": "Cancel this post? It will not be published.",
         "cancel": "Cancel the post"
+      },
+      "results": {
+        "headline": "This campaign sold <strong>{tickets, plural, one {# ticket} other {# tickets}}</strong> for <strong>{amount}</strong> (purchases made after a click on your posts, within {days} days, on the same device).",
+        "measure": {
+          "title": "What this figure measures",
+          "click": "Click attribution only: someone who sees the post without clicking, then buys later, is not counted.",
+          "device": "Same browser: a click in the Instagram or Facebook app followed by a purchase on another device or browser is not counted.",
+          "floor": "So this is a floor, not the full effect of the campaign.",
+          "net": "Only paid orders count; a refunded or cancelled order leaves the totals, as does a cancelled ticket.",
+          "fees": "Ticket amount after discounts, service fees excluded. Options are counted separately, free tickets as tickets only."
+        },
+        "clicks": "Clicks",
+        "orders": "Orders",
+        "tickets": "Tickets",
+        "ticketsHint": "Promoted show",
+        "revenue": "Amount",
+        "revenueHint": "Net, service fees excluded",
+        "rate": "Clicks → orders",
+        "rateHint": "Orders per 100 clicks",
+        "rateNone": "No clicks yet",
+        "lines": {
+          "title": "Attributed sales",
+          "event": "Promoted show",
+          "other": "Other shows",
+          "otherHint": "Your other shows bought in the same order",
+          "options": "Order options"
+        },
+        "posts": "Posts",
+        "permalink": "View post",
+        "bySource": "By source",
+        "sourceColumn": "Source",
+        "allTickets": "Tickets (all)",
+        "allRevenue": "Amount (all)",
+        "byDay": "By day",
+        "byDaySince": "First post on {date}. Sales on the day of the order.",
+        "byDayHint": "No post online yet. Sales on the day of the order.",
+        "day": "Day",
+        "clicksFrom": "{source} clicks",
+        "noActivity": "No clicks or sales yet.",
+        "source": {
+          "facebook": "Facebook",
+          "instagram": "Instagram",
+          "code": "Campaign code",
+          "link": "Direct link"
+        }
       }
     }
   },
@@ -2411,7 +2466,19 @@
     "empty": "No upcoming dates.",
     "totals": "Total for upcoming dates",
     "footerSales": "Tickets sold: online and at points of sale.",
-    "footerInvitations": "Guest seats free: set aside, not yet assigned. Paid: invitations settled outside the ticket shop (bank transfer, cash…)."
+    "footerInvitations": "Guest seats free: set aside, not yet assigned. Paid: invitations settled outside the ticket shop (bank transfer, cash…).",
+    "promotionTitle": "Promotion",
+    "promotionCampaign": "Campaign",
+    "promotionClicks": "Clicks",
+    "promotionOrders": "Orders",
+    "promotionTickets": "Tickets",
+    "promotionRevenue": "Amount",
+    "promotionOther": "Other shows",
+    "promotionTotalTickets": "Tickets through your campaigns",
+    "promotionTotalRevenue": "Amount through your campaigns",
+    "promotionTotalOther": "Other shows through your campaigns",
+    "promotionEmpty": "No active campaign.",
+    "footerPromotion": "Promotion: purchases made after a click on your posts, within {days} days, on the same device — a floor, not the full effect. Net amount, service fees excluded."
   },
   "consent": {
     "title": "ticketick respects your privacy",
