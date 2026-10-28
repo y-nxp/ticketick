@@ -4,11 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
 import { statsActor } from "@/lib/admin/access";
+import { canSeePromotionUi } from "@/lib/admin/promotion-visibility";
+import { hasPromotionCampaigns } from "@/lib/promotion/results-store";
 import { reportRecipients, reportSince } from "@/lib/reports/report";
 import {
+  DEFAULT_REPORT_SECTIONS,
   getOrganizerReport,
   readSections,
-  REPORT_SECTIONS,
   type ReportSection,
   type ReportSession,
 } from "@/lib/reports/summary";
@@ -20,7 +22,8 @@ import { ReportSettings, SendReportNow } from "./report-settings";
 
 export const dynamic = "force-dynamic";
 
-const VIEWS = ["all", ...REPORT_SECTIONS] as const;
+/** Vues de la page : « Promotion » n'y a pas de colonne, ses chiffres sont sur `/admin/promotion`. */
+const VIEWS = ["all", ...DEFAULT_REPORT_SECTIONS] as const;
 type View = (typeof VIEWS)[number];
 
 export default async function ReportsPage({
@@ -32,13 +35,13 @@ export default async function ReportsPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { organizerId: own, readOnly } = await statsActor();
+  const { user, organizerId: own, readOnly } = await statsActor();
   const t = await getTranslations("admin.reports");
   const intl = `${locale}-CH`;
   const money = (cents: number) => formatPrice(cents, intl);
   const query = await searchParams;
   const view: View = VIEWS.includes(query.view as View) ? (query.view as View) : "all";
-  const shown: ReportSection[] = view === "all" ? [...REPORT_SECTIONS] : [view];
+  const shown: ReportSection[] = view === "all" ? [...DEFAULT_REPORT_SECTIONS] : [view];
   const has = (section: ReportSection) => shown.includes(section);
 
   const organizers = own
@@ -77,7 +80,14 @@ export default async function ReportsPage({
     },
   });
   const since = reportSince(organizer.lastReportSentAt);
-  const { sessions, totals } = await getOrganizerReport(organizerId, { since });
+  const [{ sessions, totals }, promotionOffered] = await Promise.all([
+    getOrganizerReport(organizerId, { since }),
+    canSeePromotionUi(user) ? hasPromotionCampaigns(organizerId) : false,
+  ]);
+  const savedSections = readSections(organizer.reportSections);
+  // Envoi immédiat de « Tout » : la partie Promotion suit le réglage enregistré.
+  const sendSections: ReportSection[] =
+    view === "all" && savedSections.includes("promotion") ? [...shown, "promotion"] : shown;
 
   const byEvent = new Map<string, ReportSession[]>();
   for (const s of sessions) byEvent.set(s.eventId, [...(byEvent.get(s.eventId) ?? []), s]);
@@ -327,7 +337,7 @@ export default async function ReportsPage({
         </div>
         {readOnly ? null : (
           <>
-            <SendReportNow organizerId={organizerId} sections={shown} label={t(`sendNow.${view}`)} />
+            <SendReportNow organizerId={organizerId} sections={sendSections} label={t(`sendNow.${view}`)} />
             <ReportSettings
               organizerId={organizerId}
               frequency={frequency}
@@ -335,7 +345,8 @@ export default async function ReportsPage({
               hour={schedule.hour}
               weekdays={weekdays}
               emails={organizer.reportEmails.join("\n")}
-              sections={readSections(organizer.reportSections)}
+              sections={savedSections}
+              promotionOffered={promotionOffered}
               fallback={organizer.notifyEmails.join(", ")}
             />
           </>

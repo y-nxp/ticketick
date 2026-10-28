@@ -2,27 +2,31 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Megaphone } from "lucide-react";
 import { PostStatusBadge } from "@/components/admin/promotion/status-badge";
 import { Link } from "@/i18n/navigation";
-import { getPromotionOverview } from "@/lib/data/promotion";
+import { CAMPAIGN_PAGE, campaignListLimit, getPromotionOverview } from "@/lib/data/promotion";
 import { channelOf } from "@/lib/promotion/channels";
 import { t as translate, type Translated } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatPrice } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Écran `/admin/promotion` (docs/module-promotion.md, § 2.2) : comptes
- * connectés, publications et leur état, campagnes. Lecture par
- * `statsActor()` : le responsable invité voit, sans agir.
+ * Écran `/admin/promotion` (docs/module-promotion.md, §§ 2.2 et 5.3) :
+ * comptes connectés, publications et leur état, campagnes et leurs chiffres.
+ * Lecture par `statsActor()` : le responsable invité voit, sans agir.
  */
 export default async function PromotionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ campagnes?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const [data, t] = await Promise.all([getPromotionOverview(), getTranslations("admin.promotion")]);
+  const limit = campaignListLimit((await searchParams).campagnes);
+  const [data, t] = await Promise.all([getPromotionOverview(limit), getTranslations("admin.promotion")]);
   const date = (d: Date) => formatDate(d, `${locale}-CH`);
+  const money = (cents: number) => (cents > 0 ? formatPrice(cents, `${locale}-CH`) : "–");
   const title = (value: unknown) => translate(value as Translated, locale);
 
   return (
@@ -125,32 +129,52 @@ export default async function PromotionPage({
 
       <section>
         <h2 className="font-semibold">{t("campaigns.title")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t("campaigns.resultsSoon")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{t("campaigns.resultsHint")}</p>
         <div className="mt-3 overflow-x-auto rounded-card border border-border">
-          <table className="w-full min-w-[48rem] text-sm">
+          <table className="w-full min-w-[64rem] text-sm">
             <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 font-semibold">{t("campaigns.name")}</th>
+                <th className="px-4 py-3 font-semibold">{t("campaigns.state")}</th>
+                <th className="px-4 py-3 text-right font-semibold">{t("campaigns.clicks")}</th>
+                <th className="px-4 py-3 text-right font-semibold">{t("campaigns.tickets")}</th>
+                <th className="px-4 py-3 text-right font-semibold">{t("campaigns.revenue")}</th>
                 <th className="px-4 py-3 font-semibold">{t("campaigns.link")}</th>
-                <th className="px-4 py-3 text-right font-semibold">{t("campaigns.posts")}</th>
                 <th className="px-4 py-3 font-semibold">{t("campaigns.created")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {data.campaigns.map((c) => (
-                <tr key={c.id}>
+                <tr key={c.id} className="hover:bg-muted/30">
                   <td className="px-4 py-3">
-                    <p className="font-medium">{c.name}</p>
+                    <Link href={`/admin/promotion/${c.id}`} className="font-medium text-primary hover:underline">
+                      {c.name}
+                    </Link>
                     <p className="text-xs text-muted-foreground">
                       {title(c.event.title)}
                       {data.showOrganizer ? ` · ${c.organizer.name}` : ""}
                     </p>
                   </td>
+                  <td className="px-4 py-3">
+                    {c.state ? <PostStatusBadge status={c.state} label={t(`status.${c.state}`)} /> : "—"}
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t("campaigns.postCount", { count: c.postCount })}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums">{c.figures.clicks}</td>
+                  <td className="px-4 py-3 text-right tabular-nums">
+                    {c.figures.event.tickets}
+                    {c.figures.other.tickets > 0 ? (
+                      <span className="block text-xs text-muted-foreground">
+                        {t("campaigns.otherTickets", { count: c.figures.other.tickets })}
+                      </span>
+                    ) : null}
+                  </td>
+                  <td className="px-4 py-3 text-right tabular-nums">{money(c.figures.event.cents)}</td>
                   <td className="px-4 py-3 font-mono text-xs">
                     {`${data.origin.replace(/^https?:\/\//, "")}/p/${c.code}`}
                     <span className="ml-2 font-sans uppercase text-muted-foreground">{c.locale}</span>
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums">{c._count.posts}</td>
                   <td className="px-4 py-3 text-muted-foreground">{date(c.createdAt)}</td>
                 </tr>
               ))}
@@ -160,6 +184,16 @@ export default async function PromotionPage({
             <p className="py-10 text-center text-sm text-muted-foreground">{t("campaigns.empty")}</p>
           ) : null}
         </div>
+        {data.moreCampaigns ? (
+          <p className="mt-3 text-center text-sm">
+            <Link
+              href={{ pathname: "/admin/promotion", query: { campagnes: data.campaignLimit + CAMPAIGN_PAGE } }}
+              className="text-primary hover:underline"
+            >
+              {t("campaigns.more")}
+            </Link>
+          </p>
+        ) : null}
       </section>
     </div>
   );

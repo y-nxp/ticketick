@@ -13,13 +13,12 @@ import { readLayout } from "@/lib/seating/layout";
  * Les ventes sont les billets payés en ligne ou par un point de vente.
  */
 
-export const REPORT_SECTIONS = ["sales", "invitations", "remaining"] as const;
-export type ReportSection = (typeof REPORT_SECTIONS)[number];
-
-export function readSections(raw: readonly string[]): ReportSection[] {
-  const list = REPORT_SECTIONS.filter((s) => raw.includes(s));
-  return list.length > 0 ? list : [...REPORT_SECTIONS];
-}
+export {
+  DEFAULT_REPORT_SECTIONS,
+  readSections,
+  REPORT_SECTIONS,
+  type ReportSection,
+} from "./sections";
 
 export interface InvitationReservation {
   orderId: string;

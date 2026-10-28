@@ -325,6 +325,9 @@ const adminOrderSelect = {
   locale: true,
   createdAt: true,
   reseller: { select: { name: true } },
+  /** Campagne dont le lien a précédé l'achat (docs/module-promotion.md, § 5.3). */
+  promotionSource: true,
+  promotionCampaign: { select: { id: true, name: true, organizerId: true } },
   charges: {
     where: { kind: "PAYMENT" as const, status: "OPEN" as const },
     select: { method: true, amountCents: true },

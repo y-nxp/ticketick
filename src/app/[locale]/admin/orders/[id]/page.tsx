@@ -3,11 +3,13 @@ import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
-import { getCurrentUser } from "@/lib/auth/dal";
+import { canSeePromotionUi } from "@/lib/admin/promotion-visibility";
+import { getCurrentUser, statsOrganizerOf } from "@/lib/auth/dal";
 import { getAdminOrder } from "@/lib/data/admin";
 import { getOrderEditContext } from "@/lib/data/admin-order-edit";
 import { isCheckoutHoldEmail } from "@/lib/orders/create-order";
 import { isAbandonedCardHold, isRefundDue } from "@/lib/orders/reservation";
+import { isPromotionSource } from "@/lib/promotion/source";
 import { t as translate, type Translated } from "@/lib/types";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { OrderActions } from "../order-actions";
@@ -27,6 +29,13 @@ export default async function AdminOrderDetailPage({
   const [order, user] = await Promise.all([getAdminOrder(id), getCurrentUser()]);
   if (!order) notFound();
   const readOnly = user?.role === "ORGANIZER_VIEWER";
+  // Panier mêlé : la campagne d'un autre organisateur ne se montre qu'à l'admin.
+  const campaign =
+    order.promotionCampaign &&
+    (user?.role === "ADMIN" ||
+      (user && statsOrganizerOf(user) === order.promotionCampaign.organizerId))
+      ? order.promotionCampaign
+      : null;
 
   const t = await getTranslations("admin");
   const hold = isCheckoutHoldEmail(order.email);
@@ -156,6 +165,27 @@ export default async function AdminOrderDetailPage({
               <span className="text-muted-foreground">
                 {" · "}
                 {t(`paymentMethod.${order.paymentMethod}`)}
+              </span>
+            ) : null}
+            {campaign ? (
+              <span className="mt-1 block text-muted-foreground">
+                {t.rich("orders.fromCampaign", {
+                  name: campaign.name,
+                  campaign: (chunks) =>
+                    canSeePromotionUi(user) ? (
+                      <Link
+                        href={`/admin/promotion/${campaign.id}`}
+                        className="text-primary hover:underline"
+                      >
+                        {chunks}
+                      </Link>
+                    ) : (
+                      <span className="text-foreground">{chunks}</span>
+                    ),
+                })}
+                {order.promotionSource && isPromotionSource(order.promotionSource)
+                  ? ` · ${t(`promotion.results.source.${order.promotionSource}`)}`
+                  : null}
               </span>
             ) : null}
           </dd>

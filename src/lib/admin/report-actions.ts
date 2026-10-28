@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import * as z from "zod";
 import { assertOrganizerAccess, catalogActor } from "@/lib/admin/access";
 import { failure, readText, success, type FormState } from "@/lib/admin/form";
+import { canSeePromotionUi } from "@/lib/admin/promotion-visibility";
+import { hasPromotionCampaigns } from "@/lib/promotion/results-store";
 import { reportRecipients, sendOrganizerReport } from "@/lib/reports/report";
-import { REPORT_SECTIONS, type ReportSection } from "@/lib/reports/summary";
+import { chosenSections, type ReportSection } from "@/lib/reports/sections";
 import { prisma } from "@/lib/prisma";
 import { consume } from "@/lib/rate-limit";
 import { lastClosedPeriod } from "@/lib/resellers/report";
@@ -18,9 +20,25 @@ function readEmails(raw: string): string[] | null {
   return list.every((a) => z.email().max(200).safeParse(a).success) ? list : null;
 }
 
-function readSectionList(formData: FormData): ReportSection[] {
+/**
+ * Parties choisies. « promotion » n'est proposée qu'à qui voit le module, pour
+ * un organisateur qui a des campagnes (`chosenSections`) ; au moins une des
+ * parties habituelles reste exigée.
+ */
+async function readSectionList(
+  formData: FormData,
+  actor: NonNullable<Awaited<ReturnType<typeof ownedOrganizer>>>,
+  mode: "save" | "send",
+): Promise<ReportSection[] | null> {
+  const promotionOffered =
+    canSeePromotionUi(actor.user) && (await hasPromotionCampaigns(actor.organizer.id));
   const chosen = formData.getAll("sections").map(String);
-  return REPORT_SECTIONS.filter((s) => chosen.includes(s));
+  const sections = chosenSections(chosen, {
+    promotionOffered,
+    saved: actor.organizer.reportSections,
+    ...(mode === "send" ? { requested: chosen.includes("promotion") } : {}),
+  });
+  return sections.some((s) => s !== "promotion") ? sections : null;
 }
 
 async function ownedOrganizer(formData: FormData) {
@@ -36,6 +54,7 @@ async function ownedOrganizer(formData: FormData) {
       reportHour: true,
       reportEmails: true,
       notifyEmails: true,
+      reportSections: true,
     },
   });
   return organizer ? { user, organizer } : null;
@@ -52,8 +71,8 @@ export async function saveReportSettings(_prev: FormState, formData: FormData): 
   if (!frequency.success || !weekday.success || !hour.success) return failure("invalid");
   const emails = readEmails(readText(formData, "emails"));
   if (!emails) return failure("emails");
-  const sections = readSectionList(formData);
-  if (sections.length === 0) return failure("sections");
+  const sections = await readSectionList(formData, actor, "save");
+  if (!sections) return failure("sections");
 
   const { reportFrequency, reportWeekday, reportHour } = actor.organizer;
   const rescheduled =
@@ -87,8 +106,8 @@ export async function saveReportSettings(_prev: FormState, formData: FormData): 
 export async function sendReportNow(_prev: FormState, formData: FormData): Promise<FormState> {
   const actor = await ownedOrganizer(formData);
   if (!actor) return failure("notFound");
-  const sections = readSectionList(formData);
-  if (sections.length === 0) return failure("sections");
+  const sections = await readSectionList(formData, actor, "send");
+  if (!sections) return failure("sections");
   if (!consume(`organizer-report:${actor.organizer.id}`, 5, 60 * 60_000)) return failure("throttled");
   const configured = reportRecipients(actor.organizer);
   const recipients = configured.length > 0 ? configured : [actor.user.email];

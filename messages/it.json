@@ -719,7 +719,8 @@
         "CASH": "Pagamento atteso",
         "TERMINAL": "Pagamento atteso",
         "TRANSFER": "Pagamento atteso"
-      }
+      },
+      "fromCampaign": "Proveniente dalla campagna <campaign>{name}</campaign>"
     },
     "resellers": {
       "title": "Punti vendita",
@@ -1778,7 +1779,8 @@
         "all": "Tutto",
         "sales": "Vendite",
         "invitations": "Inviti",
-        "remaining": "Posti rimanenti"
+        "remaining": "Posti rimanenti",
+        "promotion": "Promozione"
       },
       "noOrganizer": "Nessun organizzatore ha date future.",
       "empty": "Nessuna data futura.",
@@ -1894,12 +1896,20 @@
       },
       "campaigns": {
         "title": "Campagne",
-        "resultsSoon": "Ogni campagna ha il suo link. Clic, biglietti e importi venduti saranno mostrati qui.",
         "name": "Campagna",
         "link": "Link",
         "posts": "Pubblicazioni",
         "created": "Creata il",
-        "empty": "Ancora nessuna campagna."
+        "empty": "Ancora nessuna campagna.",
+        "resultsHint": "Vendite effettuate dopo un clic su un link di campagna: biglietti dello spettacolo promosso, importo netto, spese di servizio escluse.",
+        "state": "Stato",
+        "clicks": "Clic",
+        "tickets": "Biglietti",
+        "revenue": "Importo",
+        "postCount": "{count, plural, =0 {Nessuna pubblicazione} one {# pubblicazione} other {# pubblicazioni}}",
+        "otherTickets": "+ {count} altri spettacoli",
+        "more": "Mostra altre campagne",
+        "createdOn": "creata il {date}"
       },
       "status": {
         "DRAFT": "Bozza",
@@ -2010,6 +2020,51 @@
         "unschedule": "Torna in bozza",
         "cancelConfirm": "Annullare questa pubblicazione? Non verrà pubblicata.",
         "cancel": "Annulla la pubblicazione"
+      },
+      "results": {
+        "headline": "Questa campagna ha venduto <strong>{tickets, plural, one {# biglietto} other {# biglietti}}</strong> per <strong>{amount}</strong> (acquisti fatti dopo un clic sulle vostre pubblicazioni, entro {days} giorni, sullo stesso dispositivo).",
+        "measure": {
+          "title": "Cosa misura questa cifra",
+          "click": "Attribuzione solo al clic: chi vede la pubblicazione senza cliccare e acquista più tardi non viene contato.",
+          "device": "Stesso browser: un clic nell’app Instagram o Facebook seguito da un acquisto su un altro dispositivo o browser non viene contato.",
+          "floor": "È quindi una soglia minima, non l’effetto totale della campagna.",
+          "net": "Contano solo gli ordini pagati; un ordine rimborsato o annullato esce dai totali, come un biglietto annullato.",
+          "fees": "Importo dei biglietti al netto degli sconti, spese di servizio escluse. Le opzioni sono contate a parte, i biglietti gratuiti solo come biglietti."
+        },
+        "clicks": "Clic",
+        "orders": "Ordini",
+        "tickets": "Biglietti",
+        "ticketsHint": "Spettacolo promosso",
+        "revenue": "Importo",
+        "revenueHint": "Netto, spese di servizio escluse",
+        "rate": "Clic → ordini",
+        "rateHint": "Ordini ogni 100 clic",
+        "rateNone": "Ancora nessun clic",
+        "lines": {
+          "title": "Vendite attribuite",
+          "event": "Spettacolo promosso",
+          "other": "Altri spettacoli",
+          "otherHint": "I vostri altri spettacoli acquistati nello stesso ordine",
+          "options": "Opzioni dell’ordine"
+        },
+        "posts": "Pubblicazioni",
+        "permalink": "Vedi la pubblicazione",
+        "bySource": "Per fonte",
+        "sourceColumn": "Fonte",
+        "allTickets": "Biglietti (tutti)",
+        "allRevenue": "Importo (tutti)",
+        "byDay": "Per giorno",
+        "byDaySince": "Prima pubblicazione il {date}. Vendite al giorno dell’ordine.",
+        "byDayHint": "Nessuna pubblicazione ancora online. Vendite al giorno dell’ordine.",
+        "day": "Giorno",
+        "clicksFrom": "Clic {source}",
+        "noActivity": "Ancora nessun clic né vendita.",
+        "source": {
+          "facebook": "Facebook",
+          "instagram": "Instagram",
+          "code": "Codice di campagna",
+          "link": "Link diretto"
+        }
       }
     }
   },
@@ -2411,7 +2466,19 @@
     "empty": "Nessuna data in arrivo.",
     "totals": "Totale delle prossime date",
     "footerSales": "Biglietti venduti: online e nei punti vendita.",
-    "footerInvitations": "Posti ospiti liberi: messi da parte, non ancora assegnati. Pagati: inviti saldati fuori dalla biglietteria (bonifico, contanti…)."
+    "footerInvitations": "Posti ospiti liberi: messi da parte, non ancora assegnati. Pagati: inviti saldati fuori dalla biglietteria (bonifico, contanti…).",
+    "promotionTitle": "Promozione",
+    "promotionCampaign": "Campagna",
+    "promotionClicks": "Clic",
+    "promotionOrders": "Ordini",
+    "promotionTickets": "Biglietti",
+    "promotionRevenue": "Importo",
+    "promotionOther": "Altri spettacoli",
+    "promotionTotalTickets": "Biglietti tramite le vostre campagne",
+    "promotionTotalRevenue": "Importo tramite le vostre campagne",
+    "promotionTotalOther": "Altri spettacoli tramite le vostre campagne",
+    "promotionEmpty": "Nessuna campagna attiva.",
+    "footerPromotion": "Promozione: acquisti fatti dopo un clic sulle vostre pubblicazioni, entro {days} giorni, sullo stesso dispositivo — una soglia minima, non l’effetto totale. Importo netto, spese di servizio escluse."
   },
   "consent": {
     "title": "ticketick rispetta la vostra privacy",

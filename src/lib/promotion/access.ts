@@ -59,6 +59,19 @@ export function mayReadPromotion(actor: PromotionActor, organizerId: string): bo
   return scope.read && covers(scope, organizerId);
 }
 
+/**
+ * Page des résultats d'une campagne : `null` si l'acteur ne la lit pas (la
+ * page répond alors introuvable, sans dire qu'elle existe), sinon lecture
+ * seule ou non.
+ */
+export function campaignAccess(
+  actor: PromotionActor,
+  campaignOrganizerId: string,
+): { readOnly: boolean } | null {
+  if (!mayReadPromotion(actor, campaignOrganizerId)) return null;
+  return { readOnly: !mayWritePromotion(actor, campaignOrganizerId) };
+}
+
 /** Composer, programmer, modifier ou annuler pour cet organisateur. */
 export function mayWritePromotion(actor: PromotionActor, organizerId: string): boolean {
   const scope = promotionScope(actor);

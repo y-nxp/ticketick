@@ -3,12 +3,16 @@ import "server-only";
 import { notFound } from "next/navigation";
 import { catalogActor, forbidIfForeignEvent, statsActor } from "@/lib/admin/access";
 import { publicAppOrigin } from "@/lib/app-url";
+import { statsOrganizerOf } from "@/lib/auth/dal";
 import { prisma } from "@/lib/prisma";
+import { campaignAccess } from "@/lib/promotion/access";
 import { CAMPAIGN_CODE_LENGTH } from "@/lib/promotion/campaign-code";
 import { channelOf } from "@/lib/promotion/channels";
 import { eventImages } from "@/lib/promotion/compose";
 import { isPostEditable } from "@/lib/promotion/post-status";
 import { promotability } from "@/lib/promotion/promotable";
+import { campaignState, emptyFigures } from "@/lib/promotion/results";
+import { loadCampaignDetail, loadCampaignFigures } from "@/lib/promotion/results-store";
 import { PROMOTION_LOCALES, type PromotionLocale } from "@/lib/promotion/template";
 import { localizedPath } from "@/lib/seo/event";
 import { minPriceCents, type Translated } from "@/lib/types";
@@ -167,8 +171,18 @@ const postListSelect = {
   },
 } as const;
 
-/** Écran `/admin/promotion` : comptes, publications, campagnes. */
-export async function getPromotionOverview() {
+/** Campagnes de la liste, par pas de 50 (« voir plus »), jamais plus de 500. */
+export const CAMPAIGN_PAGE = 50;
+const CAMPAIGN_MAX = 500;
+
+export function campaignListLimit(raw: string | undefined): number {
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n <= CAMPAIGN_PAGE) return CAMPAIGN_PAGE;
+  return Math.min(CAMPAIGN_MAX, Math.ceil(n / CAMPAIGN_PAGE) * CAMPAIGN_PAGE);
+}
+
+/** Écran `/admin/promotion` : comptes, publications, campagnes et leurs chiffres. */
+export async function getPromotionOverview(campaignLimit = CAMPAIGN_PAGE) {
   const { organizerId, readOnly } = await statsActor();
   const where = organizerId ? { organizerId } : undefined;
 
@@ -186,30 +200,100 @@ export async function getPromotionOverview() {
     }),
     prisma.promotionCampaign.findMany({
       where,
-      orderBy: { createdAt: "desc" },
-      take: 50,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      // Un de plus : savoir s'il reste des campagnes à montrer.
+      take: campaignLimit + 1,
       select: {
         id: true,
         name: true,
         code: true,
         locale: true,
         createdAt: true,
+        organizerId: true,
+        eventId: true,
         organizer: { select: { name: true } },
         event: { select: { id: true, title: true } },
-        _count: { select: { posts: true } },
+        posts: { select: { status: true } },
       },
     }),
   ]);
+  const shown = campaigns.slice(0, campaignLimit);
+  const figures = await loadCampaignFigures(shown);
 
   return {
     readOnly,
     showOrganizer: organizerId === null,
     accounts,
     posts: posts.map((p) => ({ ...p, editable: !readOnly && isPostEditable(p) })),
-    campaigns,
+    campaigns: shown.map(({ posts: campaignPosts, ...c }) => ({
+      ...c,
+      postCount: campaignPosts.length,
+      state: campaignState(campaignPosts.map((p) => p.status)),
+      figures: figures.get(c.id) ?? emptyFigures(),
+    })),
+    moreCampaigns: campaigns.length > campaignLimit && campaignLimit < CAMPAIGN_MAX,
+    campaignLimit,
     origin: publicAppOrigin(),
   };
 }
+
+/**
+ * Page des résultats d'une campagne (§ 5.3). Lecture par `statsActor()` et
+ * `campaignAccess` : l'admin lit tout, l'organisateur et ses responsables
+ * invités la leur ; celle d'un autre organisateur est introuvable.
+ */
+export async function getPromotionCampaign(id: string) {
+  const { user } = await statsActor();
+
+  const campaign = await prisma.promotionCampaign.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      code: true,
+      locale: true,
+      kind: true,
+      createdAt: true,
+      organizerId: true,
+      eventId: true,
+      sessionId: true,
+      organizer: { select: { name: true } },
+      event: { select: { id: true, title: true } },
+      posts: {
+        orderBy: [{ publishedAt: "asc" }, { scheduledAt: "asc" }, { createdAt: "asc" }],
+        select: {
+          id: true,
+          status: true,
+          scheduledAt: true,
+          publishedAt: true,
+          permalink: true,
+          linkUrl: true,
+          lastError: true,
+          account: { select: { provider: true, name: true } },
+        },
+      },
+    },
+  });
+  const access = campaign ? campaignAccess(user, campaign.organizerId) : null;
+  if (!campaign || !access) notFound();
+
+  const detail = await loadCampaignDetail(campaign);
+  const published = campaign.posts
+    .map((p) => p.publishedAt)
+    .filter((d): d is Date => d !== null)
+    .sort((a, b) => a.getTime() - b.getTime());
+  return {
+    campaign,
+    detail,
+    state: campaignState(campaign.posts.map((p) => p.status)),
+    firstPublishedAt: published[0] ?? null,
+    readOnly: access.readOnly,
+    showOrganizer: statsOrganizerOf(user) === null,
+    origin: publicAppOrigin(),
+  };
+}
+
+export type PromotionCampaignView = Awaited<ReturnType<typeof getPromotionCampaign>>;
 
 /** Comptes connectés (écran `/admin/promotion/comptes`). */
 export async function getPromotionAccounts() {

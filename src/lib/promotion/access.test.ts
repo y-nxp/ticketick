@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { UserRole } from "@prisma/client";
 import { canSeePromotionUi } from "@/lib/admin/promotion-visibility";
-import { mayReadPromotion, mayWritePromotion, promotionScope, type PromotionActor } from "./access";
+import {
+  campaignAccess,
+  mayReadPromotion,
+  mayWritePromotion,
+  promotionScope,
+  type PromotionActor,
+} from "./access";
 
 const actor = (role: UserRole, over: Partial<PromotionActor> = {}): PromotionActor => ({
   role,
@@ -42,6 +48,18 @@ test("autres rôles : aucun accès, même avec un organisateur rattaché", () =>
     const someone = actor(role, { organizerId: "org-a", statsOrganizerId: "org-a" });
     assert.equal(mayReadPromotion(someone, "org-a"), false, role);
     assert.equal(mayWritePromotion(someone, "org-a"), false, role);
+  }
+});
+
+test("page des résultats : admin et propriétaire, lecture seule du responsable, 404 ailleurs", () => {
+  assert.deepEqual(campaignAccess(admin, "org-a"), { readOnly: false });
+  assert.deepEqual(campaignAccess(admin, "org-b"), { readOnly: false });
+  assert.deepEqual(campaignAccess(organizer, "org-a"), { readOnly: false });
+  assert.equal(campaignAccess(organizer, "org-b"), null);
+  assert.deepEqual(campaignAccess(viewer, "org-a"), { readOnly: true });
+  assert.equal(campaignAccess(viewer, "org-b"), null);
+  for (const role of ["DOOR_STAFF", "RESELLER_AGENT", "CUSTOMER"] as const) {
+    assert.equal(campaignAccess(actor(role, { organizerId: "org-a", statsOrganizerId: "org-a" }), "org-a"), null);
   }
 });
 
