@@ -841,6 +841,66 @@ export async function sendTableReportEmail(payload: TableReportPayload, etiquett
   });
 }
 
+/**
+ * Publication Facebook ou Instagram non parue ou annulée par la minuterie
+ * (`src/lib/promotion/publisher.ts`) : laquelle, pourquoi, quoi faire. Textes
+ * déjà traduits ; aucun jeton ni message brut de la plateforme.
+ */
+export interface PromotionFailurePayload {
+  to: string;
+  bcc?: string[];
+  subject: string;
+  heading: string;
+  facts: { label: string; value: string }[];
+  reasonTitle: string;
+  reason: string;
+  actionTitle: string;
+  action: string;
+  link: { url: string; button: string };
+  footer: string;
+}
+
+export async function sendPromotionFailureEmail(payload: PromotionFailurePayload) {
+  const facts = [
+    `<table style="border-collapse:collapse;font-size:13px">`,
+    ...payload.facts.map(
+      (f) =>
+        `<tr><td style="padding:3px 16px 3px 0;color:#6b7280">${echapper(f.label)}</td><td style="padding:3px 0">${echapper(f.value)}</td></tr>`,
+    ),
+    `</table>`,
+  ].join("");
+  const html = [
+    `<p style="font-size:16px;font-weight:600;margin:0 0 12px">${echapper(payload.heading)}</p>`,
+    facts,
+    `<p style="font-weight:600;margin:16px 0 4px">${echapper(payload.reasonTitle)}</p>`,
+    `<p style="margin:0">${echapper(payload.reason)}</p>`,
+    `<p style="font-weight:600;margin:16px 0 4px">${echapper(payload.actionTitle)}</p>`,
+    `<p style="margin:0">${echapper(payload.action)}</p>`,
+    `<p style="margin-top:20px"><a href="${echapper(payload.link.url)}" style="display:inline-block;padding:10px 18px;border-radius:8px;background:#6C5CE7;color:#fff;text-decoration:none;font-weight:600">${echapper(payload.link.button)}</a></p>`,
+    `<p style="color:#6b7280;font-size:12px">${echapper(payload.footer)}</p>`,
+  ].join("");
+  const text = [
+    payload.heading,
+    "",
+    ...payload.facts.map((f) => `${f.label} : ${f.value}`),
+    "",
+    `${payload.reasonTitle} : ${payload.reason}`,
+    `${payload.actionTitle} : ${payload.action}`,
+    "",
+    payload.link.url,
+    "",
+    payload.footer,
+  ].join("\n");
+  return envoyer({
+    to: payload.to,
+    bcc: payload.bcc,
+    subject: payload.subject,
+    text,
+    html: `<div style="font:14px/1.6 system-ui,sans-serif;color:#2A2C30;max-width:640px">${html}</div>`,
+    etiquette: "échec de publication",
+  });
+}
+
 /** Les valeurs insérées dans le HTML viennent en partie de la base. */
 function echapper(value: string): string {
   return value

@@ -915,6 +915,7 @@
         "scheduleInPast": "Das Veröffentlichungsdatum muss in der Zukunft liegen.",
         "scheduleInvalid": "Das Veröffentlichungsdatum ist ungültig.",
         "postLocked": "Dieser Beitrag wurde bereits übernommen, veröffentlicht oder storniert: Er lässt sich nicht mehr ändern.",
+        "retryUnsafe": "Die Plattform hat auf diesen Beitrag nie geantwortet: Er ist vielleicht erschienen. Prüfen Sie die Seite, bevor Sie einen neuen planen, damit er nicht doppelt erscheint.",
         "sessionInvalid": "Diese Vorstellung wird nicht mehr angeboten.",
         "localeInvalid": "Sprache nicht unterstützt.",
         "landingInvalid": "Ungültige Zielseite.",
@@ -2357,6 +2358,36 @@
     "inviteText": "Erstellen Sie Ihr ticketick-Konto mit der Adresse {email}: Dort finden Sie Ihre Tickets und können sie beim nächsten Mal einfacher ändern.",
     "inviteButton": "Konto erstellen",
     "lockedNote": "{count, plural, one {Ein Ticket dieser Bestellung wurde bereits getauscht: Es kann hier nicht mehr getauscht werden.} other {# Tickets dieser Bestellung wurden bereits getauscht: Sie können hier nicht mehr getauscht werden.}} Für eine weitere Änderung kontaktieren Sie den Veranstalter."
+  },
+  "promotionPublisher": {
+    "subjectFailed": "{channel}-Beitrag nicht erschienen — {event}",
+    "subjectCancelled": "{channel}-Beitrag storniert — {event}",
+    "headingFailed": "Ihr Beitrag konnte nicht erscheinen",
+    "headingCancelled": "Ihr geplanter Beitrag wurde storniert",
+    "event": "Veranstaltung",
+    "campaign": "Kampagne",
+    "channel": "Kanal",
+    "scheduledFor": "Geplant am",
+    "reasonTitle": "Grund",
+    "actionTitle": "Was tun",
+    "reason": {
+      "orphaned": "Die Plattform hat den Beitrag nicht bestätigt: Sein Status ist unbekannt und muss bei der Plattform geprüft werden.",
+      "token": "Facebook hat die Berechtigung von ticketick für dieses Konto abgelehnt.",
+      "accountInactive": "Das Konto ist getrennt oder muss neu verbunden werden.",
+      "transient": "Die Plattform blieb nach {attempts} Versuchen nicht erreichbar.",
+      "permanent": "Die Plattform hat den Beitrag abgelehnt.",
+      "unexpected": "Ein unerwarteter Fehler hat den Beitrag verhindert.",
+      "notPromotable": "Die Veranstaltung kann nicht mehr beworben werden: {reasons}."
+    },
+    "action": {
+      "check": "Prüfen Sie auf Ihrer Seite, ob der Beitrag erschienen ist. Veröffentlichen Sie ihn nicht erneut, bevor Sie das geprüft haben: Er könnte doppelt erscheinen.",
+      "reconnect": "Verbinden Sie das Konto unter Promotion › Konten neu und versuchen Sie den Beitrag dann erneut.",
+      "retry": "Sie können den Beitrag in der Beitragsübersicht erneut versuchen.",
+      "review": "Prüfen Sie Text und Bild und versuchen Sie es dann in der Beitragsübersicht erneut.",
+      "none": "Nichts zu tun: Der Beitrag wurde nicht gesendet."
+    },
+    "button": "Beitrag ansehen",
+    "footer": "Automatische Nachricht von ticketick, für diesen Beitrag nur einmal gesendet."
   },
   "organizerReport": {
     "subject": "Bericht {name} — Stand {date}",

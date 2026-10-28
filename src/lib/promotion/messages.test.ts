@@ -30,6 +30,7 @@ const ERRORS = [
   "scheduleInPast",
   "scheduleInvalid",
   "postLocked",
+  "retryUnsafe",
   "sessionInvalid",
   "localeInvalid",
   "landingInvalid",
