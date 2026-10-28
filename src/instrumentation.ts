@@ -10,4 +10,6 @@ export async function register(): Promise<void> {
   startResellerReports();
   const { startOrganizerReports } = await import("@/lib/reports/report");
   startOrganizerReports();
+  const { startPromotionPublisher } = await import("@/lib/promotion/publisher");
+  startPromotionPublisher();
 }

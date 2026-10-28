@@ -12,6 +12,7 @@ import { freezePromotionImage, ImageCopyError } from "@/lib/promotion/image-copy
 import { editablePostWhere, isPostIntent, planCancel, planPostStatus } from "@/lib/promotion/post-status";
 import { messageLimit } from "@/lib/promotion/preview";
 import { promotability } from "@/lib/promotion/promotable";
+import { prismaPublisherStore, retryFailedPost } from "@/lib/promotion/publisher";
 import { promotionMessage, type PromotionLocale } from "@/lib/promotion/template";
 import { readUploadFile, saveUploadedImage, UploadError } from "@/lib/uploads";
 import {
@@ -170,7 +171,7 @@ async function writablePost(id: string) {
     select: {
       status: true,
       claimedAt: true,
-      account: { select: { provider: true, organizerId: true } },
+      account: { select: { provider: true, organizerId: true, status: true } },
       campaign: {
         select: {
           organizerId: true,
@@ -248,6 +249,27 @@ export async function cancelPromotionPost(_state: FormState, data: FormData): Pr
     data: { status: "CANCELLED" },
   });
   if (count !== 1) return failure("postLocked");
+  refresh(post.campaign.eventId);
+  revalidatePath(`/admin/promotion/publications/${id}`);
+  return success(id);
+}
+
+/**
+ * « Réessayer » une publication en échec (§ 2.5) : retour en SCHEDULED à
+ * l'instant, la minuterie la reprend avec toutes ses gardes. Prête à brancher
+ * sur l'écran des publications ; refusée pour une publication orpheline, qui
+ * a peut-être paru (`retryFailedPost`).
+ */
+export async function retryPromotionPost(_state: FormState, data: FormData): Promise<FormState> {
+  const id = readText(data, "id");
+  const post = id ? await writablePost(id) : null;
+  if (!post) return failure("notFound");
+  if (post.status !== "FAILED") return failure("postLocked");
+  if (!promotability(post.campaign.event).promotable) return failure("notPromotable");
+  if (post.account.status !== "ACTIVE") return failure("accountInvalid");
+
+  const result = await retryFailedPost(prismaPublisherStore(prisma), id);
+  if (!result.ok) return failure(result.error);
   refresh(post.campaign.eventId);
   revalidatePath(`/admin/promotion/publications/${id}`);
   return success(id);

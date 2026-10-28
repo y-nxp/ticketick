@@ -915,6 +915,7 @@
         "scheduleInPast": "The publication date must be in the future.",
         "scheduleInvalid": "The publication date is not valid.",
         "postLocked": "This post has already been picked up, published or cancelled: it can no longer be changed.",
+        "retryUnsafe": "The platform never answered for this post: it may have been published. Check the page before scheduling a new one, so it does not appear twice.",
         "sessionInvalid": "This performance is no longer offered.",
         "localeInvalid": "Language not supported.",
         "landingInvalid": "Invalid landing page.",
@@ -2357,6 +2358,36 @@
     "inviteText": "Create your ticketick account with {email}: you will find your tickets there and can change them more easily next time.",
     "inviteButton": "Create my account",
     "lockedNote": "{count, plural, one {One ticket of this order has already been exchanged: it can no longer be exchanged here.} other {# tickets of this order have already been exchanged: they can no longer be exchanged here.}} For another change, contact the organiser."
+  },
+  "promotionPublisher": {
+    "subjectFailed": "{channel} post not published — {event}",
+    "subjectCancelled": "{channel} post cancelled — {event}",
+    "headingFailed": "Your post could not be published",
+    "headingCancelled": "Your scheduled post was cancelled",
+    "event": "Show",
+    "campaign": "Campaign",
+    "channel": "Channel",
+    "scheduledFor": "Scheduled for",
+    "reasonTitle": "Reason",
+    "actionTitle": "What to do",
+    "reason": {
+      "orphaned": "The platform did not confirm the post: its status is unknown and must be checked on the platform.",
+      "token": "Facebook rejected the authorisation given to ticketick for this account.",
+      "accountInactive": "The account is disconnected or needs to be reconnected.",
+      "transient": "The platform remained unavailable after {attempts} attempts.",
+      "permanent": "The platform rejected the post.",
+      "unexpected": "An unexpected error prevented the post.",
+      "notPromotable": "The show can no longer be promoted: {reasons}."
+    },
+    "action": {
+      "check": "Check on your page whether the post appeared. Do not publish it again before checking: it could appear twice.",
+      "reconnect": "Reconnect the account under Promotion › Accounts, then retry the post.",
+      "retry": "You can retry the post from the posts screen.",
+      "review": "Check the text and the image, then retry from the posts screen.",
+      "none": "Nothing to do: the post was not sent."
+    },
+    "button": "View the post",
+    "footer": "Automatic message from ticketick, sent only once for this post."
   },
   "organizerReport": {
     "subject": "Report {name} — as of {date}",

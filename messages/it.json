@@ -915,6 +915,7 @@
         "scheduleInPast": "La data di pubblicazione deve essere nel futuro.",
         "scheduleInvalid": "La data di pubblicazione non è valida.",
         "postLocked": "Questa pubblicazione è già stata presa in carico, pubblicata o annullata: non si può più modificare.",
+        "retryUnsafe": "La piattaforma non ha mai risposto per questa pubblicazione: potrebbe essere apparsa. Controlla la pagina prima di programmarne una nuova, per non pubblicarla due volte.",
         "sessionInvalid": "Questa rappresentazione non è più proposta.",
         "localeInvalid": "Lingua non supportata.",
         "landingInvalid": "Pagina di arrivo non valida.",
@@ -2357,6 +2358,36 @@
     "inviteText": "Create il vostro account ticketick con l'indirizzo {email}: ritroverete i vostri biglietti e potrete modificarli più facilmente la prossima volta.",
     "inviteButton": "Crea il mio account",
     "lockedNote": "{count, plural, one {Un biglietto di questo ordine è già stato scambiato: non può più esserlo qui.} other {# biglietti di questo ordine sono già stati scambiati: non possono più esserlo qui.}} Per un nuovo cambio, contattate l'organizzatore."
+  },
+  "promotionPublisher": {
+    "subjectFailed": "Pubblicazione {channel} non apparsa — {event}",
+    "subjectCancelled": "Pubblicazione {channel} annullata — {event}",
+    "headingFailed": "La tua pubblicazione non è potuta apparire",
+    "headingCancelled": "La tua pubblicazione programmata è stata annullata",
+    "event": "Spettacolo",
+    "campaign": "Campagna",
+    "channel": "Canale",
+    "scheduledFor": "Prevista il",
+    "reasonTitle": "Motivo",
+    "actionTitle": "Cosa fare",
+    "reason": {
+      "orphaned": "La piattaforma non ha confermato la pubblicazione: il suo stato è sconosciuto, da verificare sulla piattaforma.",
+      "token": "Facebook ha rifiutato l’autorizzazione data a ticketick per questo account.",
+      "accountInactive": "L’account è disconnesso o va ricollegato.",
+      "transient": "La piattaforma è rimasta indisponibile dopo {attempts} tentativi.",
+      "permanent": "La piattaforma ha rifiutato la pubblicazione.",
+      "unexpected": "Un errore imprevisto ha impedito la pubblicazione.",
+      "notPromotable": "Lo spettacolo non può più essere promosso: {reasons}."
+    },
+    "action": {
+      "check": "Verifica sulla tua pagina se la pubblicazione è apparsa. Non ripubblicarla prima di aver verificato: potrebbe apparire due volte.",
+      "reconnect": "Ricollega l’account in Promozione › Account, poi riprova la pubblicazione.",
+      "retry": "Puoi riprovare la pubblicazione dalla schermata delle pubblicazioni.",
+      "review": "Verifica il testo e l’immagine, poi riprova dalla schermata delle pubblicazioni.",
+      "none": "Nulla da fare: la pubblicazione non è partita."
+    },
+    "button": "Vedi la pubblicazione",
+    "footer": "Messaggio automatico di ticketick, inviato una sola volta per questa pubblicazione."
   },
   "organizerReport": {
     "subject": "Rapporto {name} — situazione al {date}",
