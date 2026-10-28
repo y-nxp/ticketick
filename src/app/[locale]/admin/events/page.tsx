@@ -1,11 +1,13 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { CalendarDays, Plus } from "lucide-react";
+import { CalendarDays, Megaphone, Plus } from "lucide-react";
 import { OrganizerPageShare } from "@/components/admin/organizer-page-share";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { publicAppOrigin } from "@/lib/app-url";
 import { getCurrentUser } from "@/lib/auth/dal";
+import { canSeePromotionUi } from "@/lib/admin/promotion-visibility";
 import { getAdminEvents, getOwnOrganizerPage } from "@/lib/data/admin";
+import { promotability, type Promotability } from "@/lib/promotion/promotable";
 import { formatDate, formatPrice } from "@/lib/utils";
 import { t as translate, type Translated } from "@/lib/types";
 import {
@@ -33,6 +35,7 @@ export default async function AdminEventsPage({
   ]);
   const t = await getTranslations("admin");
   const readOnly = user?.role === "ORGANIZER_VIEWER";
+  const promotion = canSeePromotionUi(user);
   const origin = publicAppOrigin();
 
   const table = (
@@ -58,6 +61,9 @@ export default async function AdminEventsPage({
             <th className="px-4 py-3 text-right font-semibold">
               {t("events.revenue")}
             </th>
+            {promotion ? (
+              <th className="px-4 py-3 font-semibold">{t("promotion.list.column")}</th>
+            ) : null}
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -142,6 +148,22 @@ export default async function AdminEventsPage({
               <td className="px-4 py-3 text-right tabular-nums">
                 {formatPrice(event.revenueCents, locale)}
               </td>
+              {promotion ? (
+                <td className="px-4 py-3">
+                  <PromoteAction
+                    eventId={event.id}
+                    rules={promotability(event)}
+                    label={t("promotion.list.promote")}
+                    reasons={(rules) =>
+                      t("promotion.list.unavailable", {
+                        reasons: rules.blockers
+                          .map((b) => t(`promotion.blockers.${b}`))
+                          .join(", "),
+                      })
+                    }
+                  />
+                </td>
+              ) : null}
             </tr>
           ))}
         </tbody>
@@ -191,5 +213,44 @@ export default async function AdminEventsPage({
         </BulkSelection>
       )}
     </div>
+  );
+}
+
+/**
+ * Action « Promouvoir » d'une ligne : ouvre le compositeur. Inactive, avec la
+ * raison en infobulle, si l'événement ne se prépare même pas en brouillon.
+ */
+function PromoteAction({
+  eventId,
+  rules,
+  label,
+  reasons,
+}: {
+  eventId: string;
+  rules: Promotability;
+  label: string;
+  reasons: (rules: Promotability) => string;
+}) {
+  if (!rules.preparable) {
+    return (
+      <span
+        aria-disabled
+        title={reasons(rules)}
+        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground opacity-60"
+      >
+        <Megaphone className="size-3.5" />
+        {label}
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={`/admin/promotion/nouveau?event=${eventId}`}
+      title={rules.promotable ? undefined : reasons(rules)}
+      className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+    >
+      <Megaphone className="size-3.5" />
+      {label}
+    </Link>
   );
 }

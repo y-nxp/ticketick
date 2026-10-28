@@ -144,12 +144,14 @@ export async function getAdminEvents() {
       status: true,
       visibility: true,
       featured: true,
+      onlineSale: true,
       organizer: { select: { name: true, slug: true } },
       sessions: {
         orderBy: { startsAt: "asc" },
         select: {
           id: true,
           startsAt: true,
+          status: true,
           capacity: true,
           sold: true,
           venue: { select: { city: true } },

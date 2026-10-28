@@ -597,7 +597,8 @@
       "discounts": "Rabatte",
       "seatPlans": "Saalpläne",
       "payments": "Zahlungen",
-      "reports": "Berichte"
+      "reports": "Berichte",
+      "promotion": "Promotion"
     },
     "overview": {
       "title": "Übersicht",
@@ -908,6 +909,26 @@
       "hideTranslations": "Übersetzungen ausblenden",
       "showTranslations": "Übersetzungen ({count})",
       "errors": {
+        "notPromotable": "Diese Veranstaltung kann derzeit nicht geplant werden: Speichern Sie einen Entwurf.",
+        "notPreparable": "Diese Veranstaltung kann nicht beworben werden.",
+        "scheduleRequired": "Wählen Sie Datum und Uhrzeit der Veröffentlichung.",
+        "scheduleInPast": "Das Veröffentlichungsdatum muss in der Zukunft liegen.",
+        "scheduleInvalid": "Das Veröffentlichungsdatum ist ungültig.",
+        "postLocked": "Dieser Beitrag wurde bereits übernommen, veröffentlicht oder storniert: Er lässt sich nicht mehr ändern.",
+        "sessionInvalid": "Diese Vorstellung wird nicht mehr angeboten.",
+        "localeInvalid": "Sprache nicht unterstützt.",
+        "landingInvalid": "Ungültige Zielseite.",
+        "channelRequired": "Wählen Sie mindestens ein Konto für die Veröffentlichung.",
+        "accountInvalid": "Dieses Konto ist für den Veranstalter dieser Veranstaltung nicht verbunden.",
+        "imageInvalid": "Wählen Sie das Plakat oder ein Bild aus der Galerie der Veranstaltung.",
+        "imageRequired": "Instagram verlangt ein Bild.",
+        "imageExternal": "Dieses Bild liegt nicht auf ticketick: Es kann nicht für den Beitrag kopiert werden.",
+        "imageMissing": "Die Bilddatei wurde nicht gefunden.",
+        "imageUnsupported": "Das Bild ist weder PNG noch JPEG noch WebP.",
+        "messageRequired": "Der Text ist obligatorisch.",
+        "messageTooLong": "Der Text ist für diesen Kanal zu lang.",
+        "forbidden": "Sie haben keinen Zugriff auf diese Veranstaltung.",
+        "intentInvalid": "Unbekannte Aktion.",
         "unavailable": "Speichern gerade nicht möglich. Bitte erneut versuchen.",
         "notFound": "Eintrag nicht gefunden.",
         "slugTaken": "Diese Adresse ist bereits vergeben.",
@@ -1830,6 +1851,165 @@
       },
       "frequencyHint": "Der Bericht zeigt den Stand beim Versand, Termin für Termin. «Neu»: seit dem vorherigen automatischen Bericht.",
       "sections": "Inhalt des automatischen Berichts"
+    },
+    "promotion": {
+      "title": "Promotion",
+      "subtitle": "Veröffentlichen Sie Ihre Veranstaltungen auf Ihrer Facebook-Seite und Ihrem Instagram-Konto, mit einem Link, der die Verkäufe jeder Kampagne zuordnet.",
+      "accounts": {
+        "title": "Verbundene Konten",
+        "manage": "Konten ansehen",
+        "empty": "Kein Konto verbunden.",
+        "emptyHint": "Die Verbindung Ihrer Facebook-Seite und Ihres Instagram-Business-Kontos folgt in Kürze.",
+        "back": "← Promotion",
+        "pageTitle": "Facebook- und Instagram-Konten",
+        "pageSubtitle": "Die Seiten und Konten, auf denen ticketick für Sie veröffentlichen wird.",
+        "connectedAt": "verbunden am {date}",
+        "comingTitle": "Die Verbindung folgt",
+        "comingBody": "Bald verbinden Sie hier Ihre Facebook-Seite, indem Sie sich bei Facebook anmelden und die freigegebenen Seiten wählen. ticketick sieht Ihr Passwort nie, und Sie können die Freigabe jederzeit zurückziehen.",
+        "comingInstagram": "Das Instagram-Konto muss ein Business-Konto sein, das mit Ihrer Facebook-Seite verknüpft ist. Bis dahin können Sie auf der Seite einer Veranstaltung bereits Entwürfe vorbereiten.",
+        "provider": {
+          "FACEBOOK_PAGE": "Facebook-Seite",
+          "INSTAGRAM_BUSINESS": "Instagram Business",
+          "TIKTOK": "TikTok"
+        },
+        "status": {
+          "ACTIVE": "Verbunden",
+          "NEEDS_RECONNECT": "Neu verbinden",
+          "DISCONNECTED": "Getrennt"
+        }
+      },
+      "posts": {
+        "title": "Beiträge",
+        "event": "Veranstaltung",
+        "channel": "Kanal",
+        "status": "Status",
+        "when": "Datum",
+        "publishedAt": "Veröffentlicht am {date}",
+        "scheduledFor": "Geplant für {date}",
+        "notScheduled": "Nicht geplant",
+        "edit": "Bearbeiten",
+        "open": "Öffnen",
+        "empty": "Noch keine Beiträge."
+      },
+      "campaigns": {
+        "title": "Kampagnen",
+        "resultsSoon": "Jede Kampagne hat ihren eigenen Link. Klicks, Tickets und Umsätze werden hier angezeigt.",
+        "name": "Kampagne",
+        "link": "Link",
+        "posts": "Beiträge",
+        "created": "Erstellt am",
+        "empty": "Noch keine Kampagnen."
+      },
+      "status": {
+        "DRAFT": "Entwurf",
+        "SCHEDULED": "Geplant",
+        "PUBLISHING": "Wird veröffentlicht",
+        "PUBLISHED": "Veröffentlicht",
+        "FAILED": "Fehlgeschlagen",
+        "CANCELLED": "Storniert"
+      },
+      "channel": {
+        "facebook": "Facebook",
+        "instagram": "Instagram"
+      },
+      "blockers": {
+        "draft": "die Veranstaltung ist noch ein Entwurf",
+        "cancelled": "die Veranstaltung ist abgesagt",
+        "soldOut": "die Veranstaltung ist ausverkauft",
+        "past": "keine kommende Vorstellung mehr",
+        "members": "die Veranstaltung ist einer Gemeinschaft vorbehalten und erscheint nie in sozialen Netzwerken",
+        "noSession": "keine datierte Vorstellung",
+        "sessionsSoldOut": "alle kommenden Vorstellungen sind ausverkauft"
+      },
+      "section": {
+        "title": "Bewerben",
+        "hint": "Veröffentlichen Sie diese Veranstaltung auf der Facebook-Seite und dem Instagram-Konto des Veranstalters, mit einem Link, der die Verkäufe dem Beitrag zuordnet.",
+        "notPromotable": "Planung nicht möglich: {reasons}.",
+        "draftOnly": "Sie können einen Entwurf vorbereiten, aber noch nicht planen.",
+        "noAttribution": "Ohne Online-Verkauf führt der Beitrag zur Veranstaltungsseite: Es gibt keine Verkäufe, die ihm zugeordnet werden können.",
+        "noAccount": "Kein Konto verbunden.",
+        "connect": "Konten ansehen",
+        "promote": "Bewerben",
+        "recent": "Letzte Beiträge",
+        "all": "Alle Beiträge"
+      },
+      "list": {
+        "column": "Promotion",
+        "promote": "Bewerben",
+        "unavailable": "Nicht verfügbar: {reasons}"
+      },
+      "composer": {
+        "back": "← Zurück zur Veranstaltung",
+        "title": "Neuer Beitrag",
+        "subtitle": "{event} · {organizer}",
+        "notPreparable": "Diese Veranstaltung kann nicht beworben werden: {reasons}.",
+        "session": "Vorstellung",
+        "sessionHint": "Standardmässig wird die nächste Vorstellung vorgeschlagen.",
+        "allDates": "Alle Termine",
+        "channels": "Kanäle",
+        "channelsHint": "Verbundene Konten von {organizer}.",
+        "noAccount": "Kein Konto verbunden",
+        "noAccountHint": "Um einen Beitrag zu speichern, braucht es eine verbundene Facebook-Seite oder ein Instagram-Business-Konto. Text und Vorschauen bleiben einsehbar.",
+        "accountsLink": "Konten ansehen",
+        "noActiveAccount": "Kein Konto ist nutzbar: Verbinden Sie sie zuerst neu.",
+        "language": "Sprache des Publikums",
+        "languageHint": "Sprache des Textes und der Zielseite.",
+        "languages": {
+          "fr": "Französisch",
+          "de": "Deutsch",
+          "en": "Englisch",
+          "it": "Italienisch"
+        },
+        "landing": "Zielseite",
+        "arrival": "Der Link führt zu {path}",
+        "landingGo": "Seite des Veranstalters",
+        "landingEvents": "Veranstaltungsseite auf ticketick",
+        "name": "Name der Kampagne",
+        "nameHint": "Zur Orientierung; wird nicht veröffentlicht.",
+        "text": "Text",
+        "regenerate": "Neu erstellen",
+        "textHint": "Aus der Veranstaltung vorgeschlagen, änderbar. Der Kampagnenlink wird je nach Kanal am Ende ergänzt.",
+        "image": "Bild",
+        "imageHint": "Wird beim Speichern kopiert: Ein späterer Wechsel des Plakats ändert den Beitrag nicht.",
+        "cover": "Plakat",
+        "galleryImage": "Galeriebild {n}",
+        "noImage": "Ohne Bild (nur Facebook)",
+        "when": "Datum und Uhrzeit der Veröffentlichung",
+        "whenHint": "Zürcher Zeit. Für «Planen»; für einen Entwurf freiwillig.",
+        "schedule": "Planen",
+        "publishNow": "Jetzt veröffentlichen",
+        "saving": "Wird gespeichert…",
+        "saveDraft": "Entwurf speichern",
+        "publishNowHint": "«Jetzt veröffentlichen» übergibt den Beitrag dem Zeitplaner, der ihn innerhalb einer Minute veröffentlicht.",
+        "previews": "Vorschau",
+        "codePending": "Der Code des Links (••••••••) wird beim Speichern vergeben.",
+        "previewFacebook": "So auf Facebook",
+        "previewInstagram": "So auf Instagram",
+        "seeMore": "Mehr ansehen",
+        "more": "mehr",
+        "now": "Gerade eben"
+      },
+      "warnings": {
+        "linkNotClickable": "Links in einer Instagram-Bildunterschrift sind nicht anklickbar: Setzen Sie den Link in Ihre Bio. Er bleibt abschreibbar.",
+        "truncated": "Der Text wird gekürzt: Im Feed erscheint nur der Anfang.",
+        "tooLong": "Text zu lang für diesen Kanal: höchstens {max} Zeichen.",
+        "tooManyHashtags": "Mehr als 30 Hashtags: Instagram lehnt den Beitrag ab.",
+        "imageRequired": "Instagram verlangt ein Bild.",
+        "imageCropped": "Das Bild wird zugeschnitten: Der Feed zeigt Formate zwischen 4:5 (Hochformat) und 1,91:1 (Querformat)."
+      },
+      "post": {
+        "title": "Beitrag {channel}",
+        "account": "Konto",
+        "link": "Veröffentlichter Link",
+        "permalink": "Beitrag ansehen",
+        "error": "Fehler",
+        "readOnly": "Nur Lesezugriff.",
+        "lockedHint": "Dieser Beitrag lässt sich nicht mehr ändern: Er wurde übernommen, veröffentlicht oder storniert.",
+        "message": "Veröffentlichter Text",
+        "unschedule": "Zurück zum Entwurf",
+        "cancelConfirm": "Diesen Beitrag stornieren? Er wird nicht veröffentlicht.",
+        "cancel": "Beitrag stornieren"
+      }
     }
   },
   "pay": {

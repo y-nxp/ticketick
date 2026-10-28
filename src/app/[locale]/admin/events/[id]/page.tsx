@@ -1,8 +1,11 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
+import { PromoteSection } from "@/components/admin/promotion/promote-section";
 import { ShareEmbed } from "@/components/admin/share-embed";
+import { canSeePromotionUi } from "@/lib/admin/promotion-visibility";
 import { publicAppOrigin } from "@/lib/app-url";
+import { getCurrentUser } from "@/lib/auth/dal";
 import { getEventForEdit, getReferenceData } from "@/lib/data/admin-catalog";
 import { EventForm } from "../event-form";
 import { OptionsEditor } from "../options-editor";
@@ -19,9 +22,10 @@ export default async function EditEventPage({
   setRequestLocale(locale);
   const t = await getTranslations("admin.eventForm");
 
-  const [event, reference] = await Promise.all([
+  const [event, reference, user] = await Promise.all([
     getEventForEdit(id),
     getReferenceData(),
+    getCurrentUser(),
   ]);
 
   if (!event) notFound();
@@ -47,6 +51,8 @@ export default async function EditEventPage({
         eventSlug={event.slug}
         organizerSlug={event.organizer.slug}
       />
+
+      {canSeePromotionUi(user) ? <PromoteSection eventId={event.id} locale={locale} /> : null}
 
       <SessionsEditor event={event} reference={reference} />
       <OptionsEditor event={event} />

@@ -13,8 +13,10 @@ import {
   BadgePercent,
   Armchair,
   BarChart3,
+  Megaphone,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { canSeePromotionUi } from "@/lib/admin/promotion-visibility";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
 
@@ -41,6 +43,10 @@ export default async function AdminLayout({
     { href: "/admin/events", label: t("nav.events"), icon: CalendarDays },
     { href: "/admin/orders", label: t("nav.orders"), icon: Receipt },
     { href: "/admin/reports", label: t("nav.reports"), icon: BarChart3 },
+    // Réservé à l'admin tant que la connexion OAuth manque : voir `canSeePromotionUi`.
+    ...(canSeePromotionUi(user)
+      ? [{ href: "/admin/promotion", label: t("nav.promotion"), icon: Megaphone }]
+      : []),
     ...(admin
       ? [
           { href: "/admin/users", label: t("nav.users"), icon: Users },
