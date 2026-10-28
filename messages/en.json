@@ -597,7 +597,8 @@
       "discounts": "Discounts",
       "seatPlans": "Seating plans",
       "payments": "Payments",
-      "reports": "Reports"
+      "reports": "Reports",
+      "promotion": "Promotion"
     },
     "overview": {
       "title": "Overview",
@@ -908,6 +909,26 @@
       "hideTranslations": "Hide translations",
       "showTranslations": "Translations ({count})",
       "errors": {
+        "notPromotable": "This show cannot be scheduled yet: save a draft instead.",
+        "notPreparable": "This show cannot be promoted.",
+        "scheduleRequired": "Choose the publication date and time.",
+        "scheduleInPast": "The publication date must be in the future.",
+        "scheduleInvalid": "The publication date is not valid.",
+        "postLocked": "This post has already been picked up, published or cancelled: it can no longer be changed.",
+        "sessionInvalid": "This performance is no longer offered.",
+        "localeInvalid": "Language not supported.",
+        "landingInvalid": "Invalid landing page.",
+        "channelRequired": "Choose at least one account to publish to.",
+        "accountInvalid": "This account is not connected for the show’s organizer.",
+        "imageInvalid": "Choose the poster or an image from the show’s gallery.",
+        "imageRequired": "Instagram requires an image.",
+        "imageExternal": "This image is not stored on ticketick: it cannot be copied for the post.",
+        "imageMissing": "The image file could not be found.",
+        "imageUnsupported": "The image is not a PNG, JPEG or WebP.",
+        "messageRequired": "The text is required.",
+        "messageTooLong": "The text is too long for this channel.",
+        "forbidden": "You do not have access to this show.",
+        "intentInvalid": "Unknown action.",
         "unavailable": "Could not save just now. Please try again.",
         "notFound": "Item not found.",
         "slugTaken": "This address identifier is already taken.",
@@ -1830,6 +1851,165 @@
       },
       "frequencyHint": "The report shows the situation when it is sent, date by date. “New”: since the previous automatic report.",
       "sections": "Automatic report content"
+    },
+    "promotion": {
+      "title": "Promotion",
+      "subtitle": "Publish your shows on your Facebook page and Instagram account, with a link that ties sales back to each campaign.",
+      "accounts": {
+        "title": "Connected accounts",
+        "manage": "View accounts",
+        "empty": "No account connected.",
+        "emptyHint": "Connecting your Facebook page and Instagram business account is coming soon.",
+        "back": "← Promotion",
+        "pageTitle": "Facebook and Instagram accounts",
+        "pageSubtitle": "The pages and accounts ticketick will publish to on your behalf.",
+        "connectedAt": "connected on {date}",
+        "comingTitle": "Connection is coming",
+        "comingBody": "You will soon connect your Facebook page here by signing in with Facebook and choosing the pages you authorise. ticketick never sees your password, and you can withdraw the authorisation at any time.",
+        "comingInstagram": "The Instagram account must be a business account linked to your Facebook page. Meanwhile, you can already prepare drafts from an show’s page.",
+        "provider": {
+          "FACEBOOK_PAGE": "Facebook page",
+          "INSTAGRAM_BUSINESS": "Instagram business",
+          "TIKTOK": "TikTok"
+        },
+        "status": {
+          "ACTIVE": "Connected",
+          "NEEDS_RECONNECT": "Reconnect",
+          "DISCONNECTED": "Disconnected"
+        }
+      },
+      "posts": {
+        "title": "Posts",
+        "event": "Show",
+        "channel": "Channel",
+        "status": "Status",
+        "when": "Date",
+        "publishedAt": "Published on {date}",
+        "scheduledFor": "Scheduled for {date}",
+        "notScheduled": "Not scheduled",
+        "edit": "Edit",
+        "open": "Open",
+        "empty": "No posts yet."
+      },
+      "campaigns": {
+        "title": "Campaigns",
+        "resultsSoon": "Each campaign has its own link. Clicks, tickets and revenue will be shown here.",
+        "name": "Campaign",
+        "link": "Link",
+        "posts": "Posts",
+        "created": "Created on",
+        "empty": "No campaigns yet."
+      },
+      "status": {
+        "DRAFT": "Draft",
+        "SCHEDULED": "Scheduled",
+        "PUBLISHING": "Publishing",
+        "PUBLISHED": "Published",
+        "FAILED": "Failed",
+        "CANCELLED": "Cancelled"
+      },
+      "channel": {
+        "facebook": "Facebook",
+        "instagram": "Instagram"
+      },
+      "blockers": {
+        "draft": "the show is still a draft",
+        "cancelled": "the show is cancelled",
+        "soldOut": "the show is sold out",
+        "past": "no upcoming performance left",
+        "members": "the show is reserved for a community and never goes on social media",
+        "noSession": "no dated performance",
+        "sessionsSoldOut": "all upcoming performances are sold out"
+      },
+      "section": {
+        "title": "Promote",
+        "hint": "Publish this show on the organizer’s Facebook page and Instagram account, with a link that ties sales back to the post.",
+        "notPromotable": "Scheduling not possible: {reasons}.",
+        "draftOnly": "You can prepare a draft, but not schedule it yet.",
+        "noAttribution": "Without online sales, the post will lead to the show page: there will be no sales to attribute to it.",
+        "noAccount": "No account connected.",
+        "connect": "View accounts",
+        "promote": "Promote",
+        "recent": "Latest posts",
+        "all": "All posts"
+      },
+      "list": {
+        "column": "Promotion",
+        "promote": "Promote",
+        "unavailable": "Unavailable: {reasons}"
+      },
+      "composer": {
+        "back": "← Back to the show",
+        "title": "New post",
+        "subtitle": "{event} · {organizer}",
+        "notPreparable": "This show cannot be promoted: {reasons}.",
+        "session": "Performance",
+        "sessionHint": "The next performance is suggested by default.",
+        "allDates": "All dates",
+        "channels": "Channels",
+        "channelsHint": "Connected accounts of {organizer}.",
+        "noAccount": "No account connected",
+        "noAccountHint": "A connected Facebook page or Instagram business account is needed to save a post. The text and previews remain available.",
+        "accountsLink": "View accounts",
+        "noActiveAccount": "No account can be used: reconnect them first.",
+        "language": "Audience language",
+        "languageHint": "Language of the text and of the landing page.",
+        "languages": {
+          "fr": "French",
+          "de": "German",
+          "en": "English",
+          "it": "Italian"
+        },
+        "landing": "Landing page",
+        "arrival": "The link will lead to {path}",
+        "landingGo": "Organizer’s page",
+        "landingEvents": "Show page on ticketick",
+        "name": "Campaign name",
+        "nameHint": "To help you find it; it is not published.",
+        "text": "Text",
+        "regenerate": "Regenerate",
+        "textHint": "Suggested from the show, editable. The campaign link is added at the end, depending on the channel.",
+        "image": "Image",
+        "imageHint": "Copied when saved: changing the show’s poster later does not change the post.",
+        "cover": "Poster",
+        "galleryImage": "Gallery image {n}",
+        "noImage": "No image (Facebook only)",
+        "when": "Publication date and time",
+        "whenHint": "Zurich time. For “Schedule”; optional for a draft.",
+        "schedule": "Schedule",
+        "publishNow": "Publish now",
+        "saving": "Saving…",
+        "saveDraft": "Save draft",
+        "publishNowHint": "“Publish now” hands the post to the scheduler, which publishes it within a minute.",
+        "previews": "Previews",
+        "codePending": "The link code (••••••••) is assigned when saved.",
+        "previewFacebook": "As on Facebook",
+        "previewInstagram": "As on Instagram",
+        "seeMore": "See more",
+        "more": "more",
+        "now": "Just now"
+      },
+      "warnings": {
+        "linkNotClickable": "Links in an Instagram caption are not clickable: put the link in your bio. It can still be copied.",
+        "truncated": "The text will be folded: only the beginning shows in the feed.",
+        "tooLong": "Text too long for this channel: {max} characters at most.",
+        "tooManyHashtags": "More than 30 hashtags: Instagram will reject the post.",
+        "imageRequired": "Instagram requires an image.",
+        "imageCropped": "The image will be cropped: the feed shows formats between 4:5 (portrait) and 1.91:1 (landscape)."
+      },
+      "post": {
+        "title": "{channel} post",
+        "account": "Account",
+        "link": "Published link",
+        "permalink": "View the post",
+        "error": "Error",
+        "readOnly": "Read only.",
+        "lockedHint": "This post can no longer be changed: it has been picked up, published or cancelled.",
+        "message": "Published text",
+        "unschedule": "Back to draft",
+        "cancelConfirm": "Cancel this post? It will not be published.",
+        "cancel": "Cancel the post"
+      }
     }
   },
   "pay": {

@@ -207,8 +207,13 @@ export function nextSession(
   );
 }
 
-/** Prix d'appel, toutes séances confondues. */
-export function minPriceCents(event: EventItem): number {
+/**
+ * Prix d'appel, toutes séances confondues. Ne lit que les tarifs : la
+ * promotion l'applique aussi à une seule séance ou aux seules dates à venir.
+ */
+export function minPriceCents(event: {
+  sessions: { ticketTypes: Pick<TicketType, "priceCents">[] }[];
+}): number {
   const prices = event.sessions
     .flatMap((s) => s.ticketTypes.map((tt) => tt.priceCents))
     .filter((p) => Number.isFinite(p));

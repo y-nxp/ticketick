@@ -597,7 +597,8 @@
       "discounts": "Rabais",
       "seatPlans": "Plans de salle",
       "payments": "Encaissement",
-      "reports": "Rapports"
+      "reports": "Rapports",
+      "promotion": "Promotion"
     },
     "overview": {
       "title": "Vue d’ensemble",
@@ -908,6 +909,26 @@
       "hideTranslations": "Masquer les traductions",
       "showTranslations": "Traductions ({count})",
       "errors": {
+        "notPromotable": "Ce spectacle ne peut pas être programmé pour l’instant : enregistrez un brouillon.",
+        "notPreparable": "Ce spectacle ne peut pas être promu.",
+        "scheduleRequired": "Choisissez la date et l’heure de publication.",
+        "scheduleInPast": "La date de publication doit être dans le futur.",
+        "scheduleInvalid": "La date de publication n’est pas valable.",
+        "postLocked": "Cette publication a déjà été prise en charge, publiée ou annulée : elle ne se modifie plus.",
+        "sessionInvalid": "Cette séance n’est plus proposée.",
+        "localeInvalid": "Langue non prise en charge.",
+        "landingInvalid": "Page d’arrivée non valable.",
+        "channelRequired": "Choisissez au moins un compte où publier.",
+        "accountInvalid": "Ce compte n’est pas connecté pour l’organisateur du spectacle.",
+        "imageInvalid": "Choisissez l’affiche ou une image de la galerie du spectacle.",
+        "imageRequired": "Instagram exige un visuel.",
+        "imageExternal": "Ce visuel n’est pas déposé sur ticketick : il ne peut pas être copié pour la publication.",
+        "imageMissing": "Le fichier du visuel est introuvable.",
+        "imageUnsupported": "Le visuel n’est ni un PNG, ni un JPEG, ni un WebP.",
+        "messageRequired": "Le texte est obligatoire.",
+        "messageTooLong": "Le texte est trop long pour ce canal.",
+        "forbidden": "Vous n’avez pas accès à ce spectacle.",
+        "intentInvalid": "Action inconnue.",
         "unavailable": "Enregistrement impossible pour le moment. Réessayez.",
         "notFound": "Élément introuvable.",
         "slugTaken": "Cet identifiant d’adresse est déjà pris.",
@@ -1830,6 +1851,165 @@
       },
       "frequencyHint": "Le rapport donne l’état au moment de l’envoi, date par date. « Nouveaux » : depuis le rapport automatique précédent.",
       "sections": "Contenu du rapport automatique"
+    },
+    "promotion": {
+      "title": "Promotion",
+      "subtitle": "Publiez vos spectacles sur votre page Facebook et votre compte Instagram, avec un lien qui rattache les ventes à chaque campagne.",
+      "accounts": {
+        "title": "Comptes connectés",
+        "manage": "Voir les comptes",
+        "empty": "Aucun compte connecté.",
+        "emptyHint": "La connexion de votre page Facebook et de votre compte Instagram professionnel arrive prochainement.",
+        "back": "← Promotion",
+        "pageTitle": "Comptes Facebook et Instagram",
+        "pageSubtitle": "Les pages et comptes sur lesquels ticketick publiera pour vous.",
+        "connectedAt": "connecté le {date}",
+        "comingTitle": "La connexion arrive",
+        "comingBody": "Vous pourrez bientôt connecter ici votre page Facebook en vous identifiant chez Facebook, puis choisir la ou les pages autorisées. ticketick ne voit jamais votre mot de passe, et vous pourrez retirer l’autorisation à tout moment.",
+        "comingInstagram": "Le compte Instagram doit être un compte professionnel lié à votre page Facebook. En attendant, vous pouvez déjà préparer des brouillons depuis la fiche d’un spectacle.",
+        "provider": {
+          "FACEBOOK_PAGE": "Page Facebook",
+          "INSTAGRAM_BUSINESS": "Instagram professionnel",
+          "TIKTOK": "TikTok"
+        },
+        "status": {
+          "ACTIVE": "Connecté",
+          "NEEDS_RECONNECT": "À reconnecter",
+          "DISCONNECTED": "Déconnecté"
+        }
+      },
+      "posts": {
+        "title": "Publications",
+        "event": "Spectacle",
+        "channel": "Canal",
+        "status": "État",
+        "when": "Date",
+        "publishedAt": "Publiée le {date}",
+        "scheduledFor": "Prévue le {date}",
+        "notScheduled": "Non programmée",
+        "edit": "Modifier",
+        "open": "Ouvrir",
+        "empty": "Aucune publication pour l’instant."
+      },
+      "campaigns": {
+        "title": "Campagnes",
+        "resultsSoon": "Chaque campagne a son lien. Les clics, billets et montants vendus s’afficheront ici.",
+        "name": "Campagne",
+        "link": "Lien",
+        "posts": "Publications",
+        "created": "Créée le",
+        "empty": "Aucune campagne pour l’instant."
+      },
+      "status": {
+        "DRAFT": "Brouillon",
+        "SCHEDULED": "Programmée",
+        "PUBLISHING": "En cours de publication",
+        "PUBLISHED": "Publiée",
+        "FAILED": "Échec",
+        "CANCELLED": "Annulée"
+      },
+      "channel": {
+        "facebook": "Facebook",
+        "instagram": "Instagram"
+      },
+      "blockers": {
+        "draft": "le spectacle est encore en brouillon",
+        "cancelled": "le spectacle est annulé",
+        "soldOut": "le spectacle est complet",
+        "past": "plus aucune séance à venir",
+        "members": "le spectacle est réservé à une communauté et ne va jamais sur les réseaux",
+        "noSession": "aucune séance datée",
+        "sessionsSoldOut": "toutes les séances à venir sont complètes"
+      },
+      "section": {
+        "title": "Promouvoir",
+        "hint": "Publiez ce spectacle sur la page Facebook et le compte Instagram de l’organisateur, avec un lien qui rattache les ventes à la publication.",
+        "notPromotable": "Programmation impossible : {reasons}.",
+        "draftOnly": "Vous pouvez préparer un brouillon, pas encore le programmer.",
+        "noAttribution": "Sans vente en ligne, la publication renverra à la fiche du spectacle : il n’y aura pas de ventes à lui attribuer.",
+        "noAccount": "Aucun compte connecté.",
+        "connect": "Voir les comptes",
+        "promote": "Promouvoir",
+        "recent": "Dernières publications",
+        "all": "Toutes les publications"
+      },
+      "list": {
+        "column": "Promotion",
+        "promote": "Promouvoir",
+        "unavailable": "Indisponible : {reasons}"
+      },
+      "composer": {
+        "back": "← Retour au spectacle",
+        "title": "Nouvelle publication",
+        "subtitle": "{event} · {organizer}",
+        "notPreparable": "Ce spectacle ne peut pas être promu : {reasons}.",
+        "session": "Séance",
+        "sessionHint": "La prochaine séance est proposée par défaut.",
+        "allDates": "Toutes les dates",
+        "channels": "Canaux",
+        "channelsHint": "Comptes connectés de {organizer}.",
+        "noAccount": "Aucun compte connecté",
+        "noAccountHint": "Il faut une page Facebook ou un compte Instagram professionnel connecté pour enregistrer une publication. Le texte et les aperçus restent consultables.",
+        "accountsLink": "Voir les comptes",
+        "noActiveAccount": "Aucun compte n’est utilisable : reconnectez-les d’abord.",
+        "language": "Langue du public",
+        "languageHint": "Langue du texte et de la page d’arrivée.",
+        "languages": {
+          "fr": "Français",
+          "de": "Allemand",
+          "en": "Anglais",
+          "it": "Italien"
+        },
+        "landing": "Page d’arrivée",
+        "arrival": "Le lien mènera à {path}",
+        "landingGo": "Page de l’organisateur",
+        "landingEvents": "Page du spectacle sur ticketick",
+        "name": "Nom de la campagne",
+        "nameHint": "Pour vous y retrouver ; il n’est pas publié.",
+        "text": "Texte",
+        "regenerate": "Régénérer",
+        "textHint": "Proposé à partir du spectacle, modifiable. Le lien de la campagne est ajouté à la fin, selon le canal.",
+        "image": "Visuel",
+        "imageHint": "Copié à l’enregistrement : changer ensuite l’affiche du spectacle ne modifie pas la publication.",
+        "cover": "Affiche",
+        "galleryImage": "Image {n} de la galerie",
+        "noImage": "Sans visuel (Facebook seulement)",
+        "when": "Date et heure de publication",
+        "whenHint": "Heure de Zurich. Pour « Programmer » ; facultative pour un brouillon.",
+        "schedule": "Programmer",
+        "publishNow": "Publier maintenant",
+        "saving": "Enregistrement…",
+        "saveDraft": "Enregistrer le brouillon",
+        "publishNowHint": "« Publier maintenant » confie la publication à la minuterie, qui la publie dans la minute.",
+        "previews": "Aperçus",
+        "codePending": "Le code du lien (••••••••) est attribué à l’enregistrement.",
+        "previewFacebook": "Tel que sur Facebook",
+        "previewInstagram": "Tel que sur Instagram",
+        "seeMore": "Voir plus",
+        "more": "plus",
+        "now": "À l’instant"
+      },
+      "warnings": {
+        "linkNotClickable": "Les liens d’une légende Instagram ne sont pas cliquables : placez le lien dans votre bio. Il reste recopiable.",
+        "truncated": "Le texte sera replié : seul le début s’affiche dans le fil.",
+        "tooLong": "Texte trop long pour ce canal : {max} caractères au plus.",
+        "tooManyHashtags": "Plus de 30 mots-clics : Instagram refusera la publication.",
+        "imageRequired": "Instagram exige un visuel.",
+        "imageCropped": "Le visuel sera recadré : le fil affiche les formats entre 4:5 (portrait) et 1,91:1 (paysage)."
+      },
+      "post": {
+        "title": "Publication {channel}",
+        "account": "Compte",
+        "link": "Lien publié",
+        "permalink": "Voir la publication",
+        "error": "Erreur",
+        "readOnly": "Lecture seule.",
+        "lockedHint": "Cette publication ne se modifie plus : elle a été prise en charge, publiée ou annulée.",
+        "message": "Texte publié",
+        "unschedule": "Repasser en brouillon",
+        "cancelConfirm": "Annuler cette publication ? Elle ne sera pas publiée.",
+        "cancel": "Annuler la publication"
+      }
     }
   },
   "pay": {
