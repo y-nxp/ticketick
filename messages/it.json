@@ -116,6 +116,21 @@
     "zoomOut": "Riduci la pianta",
     "attendeeNote": "Nome e data di nascita richiesti al pagamento.",
     "attendeeNoteAge": "Meno di {age} anni: nome e data di nascita richiesti al pagamento.",
+    "paused": {
+      "badge": "Vendita sospesa",
+      "title": "Vendita sospesa",
+      "text": "La vendita è momentaneamente sospesa e riprenderà a breve. Lasciateci il vostro indirizzo e-mail e vi terremo informati il prima possibile.",
+      "email": "Il tuo indirizzo e-mail",
+      "submit": "Avvisami alla ripresa",
+      "done": "Fatto. Ti scriveremo non appena la vendita riprende.",
+      "privacy": "Il tuo indirizzo serve solo ad avvisarti della ripresa della vendita.",
+      "errors": {
+        "email": "Questo indirizzo e-mail non sembra valido.",
+        "closed": "La vendita è ripresa: ricarica la pagina per prenotare.",
+        "throttled": "Troppi tentativi. Riprova tra un momento.",
+        "unavailable": "Non è stato possibile registrare la richiesta. Riprova tra un momento."
+      }
+    },
     "contact": {
       "badge": "Su iscrizione",
       "title": "Iscrizione",
@@ -1114,6 +1129,40 @@
       "selfCancelFree": "Annullamento dei posti gratuiti dal conto",
       "cancelUntilHours": "Annullamento possibile fino a (ore prima)",
       "cancelUntilHoursHint": "Il posto liberato torna nella capienza. L'e-mail di prenotazione lo menziona."
+    },
+    "salesPause": {
+      "title": "Sospendere la vendita",
+      "stateOpen": "In vendita",
+      "statePaused": "Vendita sospesa",
+      "hintOpen": "Ferma la vendita per un po' senza togliere l'evento: la pagina resta online, su ticketick e sul sito dell'organizzatore, con un messaggio e un campo per essere avvisati della ripresa.",
+      "hintPaused": "La pagina mostra «La vendita è momentaneamente sospesa» e raccoglie gli indirizzi. Nessuna vendita online né nei punti vendita; la cassa dell'admin può sempre prenotare.",
+      "pause": "Sospendere la vendita",
+      "resume": "Riprendere la vendita",
+      "confirmPause": "Sospendere la vendita di questo evento? La pagina resta online con il messaggio di sospensione.",
+      "waitingPaused": "{count, plural, one {# persona attende} other {# persone attendono}} la ripresa. Riprendete la vendita, poi avvisatele.",
+      "waitingOpen": "{count, plural, one {# persona non è ancora stata avvisata} other {# persone non sono ancora state avvisate}}.",
+      "notify": "Avvisare {count, plural, one {# persona} other {# persone}}",
+      "confirmNotify": "Inviare il messaggio «la vendita è ripresa» a {count, plural, one {# persona} other {# persone}}?",
+      "notified": "Messaggio inviato a {count, plural, one {# persona} other {# persone}}.",
+      "notifiedPartly": "{sent} inviati, {failed} non riusciti: rilanciare per riprovare.",
+      "listTitle": "Iscritti ({count})",
+      "copy": "Copiare gli indirizzi",
+      "copied": "Copiati",
+      "email": "E-mail",
+      "language": "Lingua",
+      "since": "Iscritto il",
+      "notifiedAt": "Avvisato il",
+      "waiting": "In attesa",
+      "delete": "Rimuovere",
+      "deleteAria": "Rimuovere {email} dalla lista",
+      "confirmDelete": "Rimuovere {email} dalla lista?",
+      "empty": "Ancora nessun iscritto.",
+      "errors": {
+        "forbidden": "Questo evento non è vostro.",
+        "notFound": "Evento non trovato.",
+        "stillPaused": "Riprendete prima la vendita.",
+        "unavailable": "Azione non possibile al momento."
+      }
     },
     "embed": {
       "title": "Integrare la biglietteria",

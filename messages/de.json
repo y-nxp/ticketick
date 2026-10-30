@@ -116,6 +116,21 @@
     "zoomOut": "Plan verkleinern",
     "attendeeNote": "Name und Geburtsdatum werden beim Bezahlen verlangt.",
     "attendeeNoteAge": "Unter {age} Jahren: Name und Geburtsdatum werden beim Bezahlen verlangt.",
+    "paused": {
+      "badge": "Verkauf pausiert",
+      "title": "Verkauf pausiert",
+      "text": "Der Verkauf ist vorübergehend ausgesetzt und wird bald fortgesetzt. Hinterlassen Sie uns Ihre E-Mail-Adresse, und wir informieren Sie so schnell wie möglich.",
+      "email": "Ihre E-Mail-Adresse",
+      "submit": "Benachrichtigen, sobald der Verkauf läuft",
+      "done": "Notiert. Wir schreiben Ihnen, sobald der Verkauf wieder läuft.",
+      "privacy": "Ihre Adresse dient nur dazu, Sie über die Wiederaufnahme des Verkaufs zu informieren.",
+      "errors": {
+        "email": "Diese E-Mail-Adresse scheint ungültig zu sein.",
+        "closed": "Der Verkauf läuft wieder: Laden Sie die Seite neu, um zu buchen.",
+        "throttled": "Zu viele Versuche. Bitte versuchen Sie es gleich noch einmal.",
+        "unavailable": "Ihre Anmeldung konnte nicht gespeichert werden. Bitte versuchen Sie es gleich noch einmal."
+      }
+    },
     "contact": {
       "badge": "Mit Anmeldung",
       "title": "Anmeldung",
@@ -1114,6 +1129,40 @@
       "selfCancelFree": "Stornierung kostenloser Plätze im Konto",
       "cancelUntilHours": "Stornierung möglich bis (Stunden vorher)",
       "cancelUntilHoursHint": "Der freie Platz geht zurück in die Kapazität. Die Buchungs-E-Mail erwähnt es."
+    },
+    "salesPause": {
+      "title": "Verkauf pausieren",
+      "stateOpen": "Im Verkauf",
+      "statePaused": "Verkauf pausiert",
+      "hintOpen": "Stoppt den Verkauf vorübergehend, ohne die Veranstaltung zu entfernen: Die Seite bleibt online, auf ticketick und auf der Website des Veranstalters, mit einer Nachricht und einem Feld für die Benachrichtigung.",
+      "hintPaused": "Die Seite zeigt „Der Verkauf ist vorübergehend ausgesetzt“ und sammelt Adressen. Kein Online- und kein Vorverkaufsstellen-Verkauf; die Admin-Kasse kann weiterhin reservieren.",
+      "pause": "Verkauf pausieren",
+      "resume": "Verkauf fortsetzen",
+      "confirmPause": "Verkauf dieser Veranstaltung pausieren? Die Seite bleibt mit der Pausennachricht online.",
+      "waitingPaused": "{count, plural, one {# Person wartet} other {# Personen warten}}. Setzen Sie den Verkauf fort und benachrichtigen Sie sie dann.",
+      "waitingOpen": "{count, plural, one {# Person wurde} other {# Personen wurden}} noch nicht benachrichtigt.",
+      "notify": "{count, plural, one {# Person} other {# Personen}} benachrichtigen",
+      "confirmNotify": "Die Nachricht „Der Verkauf läuft wieder“ an {count, plural, one {# Person} other {# Personen}} senden?",
+      "notified": "Nachricht an {count, plural, one {# Person} other {# Personen}} gesendet.",
+      "notifiedPartly": "{sent} gesendet, {failed} fehlgeschlagen: erneut ausführen, um es nochmals zu versuchen.",
+      "listTitle": "Anmeldungen ({count})",
+      "copy": "Adressen kopieren",
+      "copied": "Kopiert",
+      "email": "E-Mail",
+      "language": "Sprache",
+      "since": "Angemeldet am",
+      "notifiedAt": "Benachrichtigt am",
+      "waiting": "Wartet",
+      "delete": "Entfernen",
+      "deleteAria": "{email} aus der Liste entfernen",
+      "confirmDelete": "{email} aus der Liste entfernen?",
+      "empty": "Noch keine Anmeldungen.",
+      "errors": {
+        "forbidden": "Diese Veranstaltung gehört nicht Ihnen.",
+        "notFound": "Veranstaltung nicht gefunden.",
+        "stillPaused": "Setzen Sie zuerst den Verkauf fort.",
+        "unavailable": "Aktion im Moment nicht möglich."
+      }
     },
     "embed": {
       "title": "Ticketverkauf einbinden",

@@ -116,6 +116,21 @@
     "zoomOut": "Zoom out",
     "attendeeNote": "Name and date of birth required at checkout.",
     "attendeeNoteAge": "Under {age}: name and date of birth required at checkout.",
+    "paused": {
+      "badge": "Sales paused",
+      "title": "Sales paused",
+      "text": "Ticket sales are temporarily paused and will resume soon. Leave us your email and we will let you know as soon as possible.",
+      "email": "Your email",
+      "submit": "Notify me when sales resume",
+      "done": "Noted. We will write to you as soon as sales resume.",
+      "privacy": "Your address is only used to tell you when sales resume.",
+      "errors": {
+        "email": "This email address does not look valid.",
+        "closed": "Sales have resumed: reload the page to book.",
+        "throttled": "Too many attempts. Please try again in a moment.",
+        "unavailable": "Your request could not be saved. Please try again in a moment."
+      }
+    },
     "contact": {
       "badge": "Registration required",
       "title": "Registration",
@@ -1114,6 +1129,40 @@
       "selfCancelFree": "Cancellation of free seats from the account",
       "cancelUntilHours": "Cancellation possible until (hours before)",
       "cancelUntilHoursHint": "The freed seat goes back into the capacity. The booking e-mail mentions it."
+    },
+    "salesPause": {
+      "title": "Pause sales",
+      "stateOpen": "On sale",
+      "statePaused": "Sales paused",
+      "hintOpen": "Stops sales for a while without removing the event: the page stays online, on ticketick and on the organizer's site, with a message and a field to be notified when sales resume.",
+      "hintPaused": "The page shows \"Ticket sales are temporarily paused\" and collects addresses. No online or point-of-sale sales; the admin box office can still book.",
+      "pause": "Pause sales",
+      "resume": "Resume sales",
+      "confirmPause": "Pause sales for this event? The page stays online with the pause message.",
+      "waitingPaused": "{count, plural, one {# person is} other {# people are}} waiting. Resume sales, then notify them.",
+      "waitingOpen": "{count, plural, one {# person has} other {# people have}} not been notified yet.",
+      "notify": "Notify {count, plural, one {# person} other {# people}}",
+      "confirmNotify": "Send the \"sales have resumed\" email to {count, plural, one {# person} other {# people}}?",
+      "notified": "Email sent to {count, plural, one {# person} other {# people}}.",
+      "notifiedPartly": "{sent} sent, {failed} failed: run again to retry the failures.",
+      "listTitle": "Sign-ups ({count})",
+      "copy": "Copy addresses",
+      "copied": "Copied",
+      "email": "Email",
+      "language": "Language",
+      "since": "Signed up",
+      "notifiedAt": "Notified",
+      "waiting": "Waiting",
+      "delete": "Remove",
+      "deleteAria": "Remove {email} from the list",
+      "confirmDelete": "Remove {email} from the list?",
+      "empty": "Nobody has signed up yet.",
+      "errors": {
+        "forbidden": "This event is not yours.",
+        "notFound": "Event not found.",
+        "stillPaused": "Resume sales first.",
+        "unavailable": "Action not possible right now."
+      }
     },
     "embed": {
       "title": "Embed ticketing",

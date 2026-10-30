@@ -532,6 +532,12 @@ model Event {
   /// Remplace la phrase d'introduction, ex. « Billetterie auprès du Gstaad Yacht Club ».
   contactNote  Json?
 
+  /// Vente arrêtée pour un temps : la fiche reste en ligne, sans billets,
+  /// avec un champ pour être prévenu de la reprise (`SalesAlert`). Le guichet
+  /// de l'admin peut toujours réserver.
+  salesPaused  Boolean @default(false)
+  salesAlerts  SalesAlert[]
+
   /// Depuis son compte, le client échange ses billets (places, spectacle du
   /// même organisateur) jusqu'à `changeUntilHours` avant le début. Jamais de
   /// remboursement : seule une hausse se paie.
@@ -608,6 +614,23 @@ model EventSession {
 
   @@index([eventId, startsAt])
   @@index([startsAt, status])
+}
+
+/// Adresse laissée sur la fiche d'un spectacle dont la vente est suspendue,
+/// pour être prévenu de la reprise. Ne sert qu'à ce message.
+model SalesAlert {
+  id         String    @id @default(cuid())
+  event      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId    String
+  /// En minuscules : une adresse par spectacle.
+  email      String
+  locale     String
+  createdAt  DateTime  @default(now())
+  /// Message de reprise envoyé ; vide tant que la personne attend.
+  notifiedAt DateTime?
+
+  @@unique([eventId, email])
+  @@index([eventId, notifiedAt])
 }
 
 /// Plan de salle numéroté, propre à un lieu et partagé par ses séances.

@@ -147,6 +147,7 @@ function mapEvent(e: RawEvent): EventItem {
     coverImage: e.coverImage ?? "",
     gallery: e.gallery,
     onlineSale: e.onlineSale,
+    salesPaused: e.salesPaused,
     contactEmail: e.contactEmail?.trim() || undefined,
     contactPhone: e.contactPhone?.trim() || undefined,
     contactUrl: e.contactUrl?.trim() || undefined,

@@ -96,6 +96,17 @@ export async function getReferenceData() {
 export type ReferenceData = Awaited<ReturnType<typeof getReferenceData>>;
 
 /** Spectacle complet pour l'écran d'édition, séances et tarifs compris. */
+/** Adresses laissées sur la fiche pendant une vente suspendue, les plus récentes d'abord. */
+export async function getSalesAlerts(eventId: string) {
+  const { organizerId } = await catalogActor();
+  await forbidIfForeignEvent(eventId, organizerId);
+  return prisma.salesAlert.findMany({
+    where: { eventId },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, email: true, locale: true, createdAt: true, notifiedAt: true },
+  });
+}
+
 export async function getEventForEdit(id: string) {
   const { organizerId } = await catalogActor();
   await forbidIfForeignEvent(id, organizerId);
@@ -117,6 +128,7 @@ export async function getEventForEdit(id: string) {
       acceptIban: true,
       acceptPaypal: true,
       onlineSale: true,
+      salesPaused: true,
       contactEmail: true,
       contactPhone: true,
       contactUrl: true,

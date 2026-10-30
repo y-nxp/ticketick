@@ -8,6 +8,7 @@ import { CalendarDays, MapPin, DoorOpen, Building2 } from "lucide-react";
 import { SessionPicker } from "./session-picker";
 import { TicketSelector } from "./ticket-selector";
 import { ContactBooking } from "./contact-booking";
+import { PausedBooking } from "./paused-booking";
 import { rememberShopOrigin } from "@/lib/shop-origin";
 import { scrollToIdIfStacked } from "@/lib/scroll-into-view";
 import { formatDate } from "@/lib/utils";
@@ -69,11 +70,13 @@ export function EventBooking({
       selectedId={session.id}
       onSelect={selectSession}
       locale={locale}
-      priced={event.onlineSale}
+      priced={event.onlineSale && !event.salesPaused}
     />
   );
 
-  const tickets = event.onlineSale ? (
+  const tickets = event.salesPaused ? (
+    <PausedBooking event={event} session={session} locale={locale} />
+  ) : event.onlineSale ? (
     <TicketSelector
       event={event}
       session={session}
@@ -84,7 +87,7 @@ export function EventBooking({
   ) : (
     <ContactBooking event={event} session={session} locale={locale} />
   );
-  const seated = session.seated && event.onlineSale;
+  const seated = session.seated && event.onlineSale && !event.salesPaused;
 
   if (widget) {
     return (

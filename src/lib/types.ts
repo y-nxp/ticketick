@@ -131,6 +131,8 @@ export interface EventItem {
   gallery: string[];
   /** Faux : inscription auprès de l'organisateur, sans vente en ligne. */
   onlineSale: boolean;
+  /** Vente arrêtée pour un temps : fiche visible, champ « me prévenir ». */
+  salesPaused: boolean;
   contactEmail?: string;
   contactPhone?: string;
   /** Site où s'inscrire, quand l'inscription ne passe pas par l'organisateur. */
