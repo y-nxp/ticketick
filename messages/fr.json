@@ -116,6 +116,21 @@
     "zoomOut": "Réduire le plan",
     "attendeeNote": "Nom et date de naissance demandés au paiement.",
     "attendeeNoteAge": "Moins de {age} ans : nom et date de naissance demandés lors du paiement.",
+    "paused": {
+      "badge": "Vente suspendue",
+      "title": "Vente suspendue",
+      "text": "La vente est momentanément suspendue. Elle reprendra prochainement. Laissez-nous votre e-mail et nous vous tiendrons informés au plus vite.",
+      "email": "Votre e-mail",
+      "submit": "Me prévenir de la reprise",
+      "done": "C'est noté. Nous vous écrirons dès que la vente reprend.",
+      "privacy": "Votre adresse ne sert qu'à vous prévenir de la reprise de la vente.",
+      "errors": {
+        "email": "Cette adresse e-mail ne semble pas valable.",
+        "closed": "La vente a repris : rechargez la page pour réserver.",
+        "throttled": "Trop d'essais. Réessayez dans un moment.",
+        "unavailable": "L'inscription n'a pas pu être enregistrée. Réessayez dans un moment."
+      }
+    },
     "contact": {
       "badge": "Sur inscription",
       "title": "Inscription",
@@ -1114,6 +1129,40 @@
       "selfCancelFree": "Annulation des places gratuites depuis le compte",
       "cancelUntilHours": "Annulation possible jusqu'à (heures avant)",
       "cancelUntilHoursHint": "La place libérée repart dans la jauge. Le courriel de réservation le mentionne."
+    },
+    "salesPause": {
+      "title": "Suspendre la vente",
+      "stateOpen": "En vente",
+      "statePaused": "Vente suspendue",
+      "hintOpen": "Arrête la vente un moment sans retirer la fiche : elle reste en ligne, sur ticketick comme sur le site de l'organisateur, avec un message et un champ pour être prévenu de la reprise.",
+      "hintPaused": "La fiche affiche « La vente est momentanément suspendue » et recueille les adresses. Aucune vente en ligne ni en point de vente ; le guichet de l'admin peut toujours réserver.",
+      "pause": "Suspendre la vente",
+      "resume": "Reprendre la vente",
+      "confirmPause": "Suspendre la vente de ce spectacle ? La fiche reste en ligne avec le message de suspension.",
+      "waitingPaused": "{count, plural, one {# personne attend} other {# personnes attendent}} la reprise. Reprenez la vente, puis prévenez-les.",
+      "waitingOpen": "{count, plural, one {# personne n'a pas encore été prévenue} other {# personnes n'ont pas encore été prévenues}} de la reprise.",
+      "notify": "Prévenir {count, plural, one {# personne} other {# personnes}}",
+      "confirmNotify": "Envoyer le message « la vente a repris » à {count, plural, one {# personne} other {# personnes}} ?",
+      "notified": "Message envoyé à {count, plural, one {# personne} other {# personnes}}.",
+      "notifiedPartly": "{sent} envoyés, {failed} en échec : relancez pour réessayer les échecs.",
+      "listTitle": "Personnes inscrites ({count})",
+      "copy": "Copier les adresses",
+      "copied": "Copiées",
+      "email": "E-mail",
+      "language": "Langue",
+      "since": "Inscrit le",
+      "notifiedAt": "Prévenu le",
+      "waiting": "En attente",
+      "delete": "Retirer",
+      "deleteAria": "Retirer {email} de la liste",
+      "confirmDelete": "Retirer {email} de la liste ?",
+      "empty": "Personne ne s'est encore inscrit.",
+      "errors": {
+        "forbidden": "Ce spectacle n'est pas à vous.",
+        "notFound": "Spectacle introuvable.",
+        "stillPaused": "Reprenez d'abord la vente.",
+        "unavailable": "Action impossible pour le moment."
+      }
     },
     "embed": {
       "title": "Intégrer la billetterie",

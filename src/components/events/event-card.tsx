@@ -34,6 +34,7 @@ export function EventCard({
     soldOut: string;
     dates: (n: number) => string;
     onRegistration: string;
+    salesPaused: string;
   };
   /** Page de l'organisateur : la carte y mène à sa propre fiche. */
   href?: string;
@@ -66,7 +67,9 @@ export function EventCard({
         }
         imagePriority={imagePriority}
         footer={
-          event.onlineSale ? (
+          event.salesPaused ? (
+            <span className="text-sm font-medium">{labels.salesPaused}</span>
+          ) : event.onlineSale ? (
             <>
               <span className="text-xs text-muted-foreground">{labels.from}</span>
               <span className="text-base font-bold">

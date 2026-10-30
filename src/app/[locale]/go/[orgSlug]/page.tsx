@@ -97,6 +97,7 @@ export default async function OrganizerPortalPage({
                   soldOut: te("soldOut"),
                   dates: (n) => tp("dateCount", { count: n }),
                   onRegistration: te("contact.badge"),
+                  salesPaused: te("paused.badge"),
                 }}
               />
             ))}

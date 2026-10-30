@@ -86,6 +86,7 @@ export async function sellAtPos(input: {
         select: {
           id: true,
           status: true,
+          salesPaused: true,
           organizerId: true,
           resellers: {
             where: { resellerId: reseller.id },
@@ -109,7 +110,11 @@ export async function sellAtPos(input: {
   });
   const assignment = session?.event.resellers[0];
   if (!session || !assignment) return { ok: false, error: "notAssigned" };
-  if (!sellable(session.event.status) || !sellable(session.status)) {
+  if (
+    !sellable(session.event.status) ||
+    !sellable(session.status) ||
+    session.event.salesPaused
+  ) {
     return { ok: false, error: "notOnSale" };
   }
 

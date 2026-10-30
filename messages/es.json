@@ -115,6 +115,21 @@
     "zoomOut": "Reducir el plano",
     "attendeeNote": "Se piden el nombre y la fecha de nacimiento al pagar.",
     "attendeeNoteAge": "Menores de {age} años: se piden el nombre y la fecha de nacimiento al pagar.",
+    "paused": {
+      "badge": "Venta suspendida",
+      "title": "Venta suspendida",
+      "text": "La venta está suspendida temporalmente y se reanudará pronto. Déjanos tu correo electrónico y te avisaremos lo antes posible.",
+      "email": "Tu correo electrónico",
+      "submit": "Avisarme cuando se reanude",
+      "done": "Anotado. Te escribiremos en cuanto se reanude la venta.",
+      "privacy": "Tu dirección solo sirve para avisarte de la reanudación de la venta.",
+      "errors": {
+        "email": "Esta dirección de correo no parece válida.",
+        "closed": "La venta se ha reanudado: recarga la página para reservar.",
+        "throttled": "Demasiados intentos. Inténtalo de nuevo en un momento.",
+        "unavailable": "No se ha podido guardar tu solicitud. Inténtalo de nuevo en un momento."
+      }
+    },
     "contact": {
       "badge": "Con inscripción",
       "title": "Inscripción",

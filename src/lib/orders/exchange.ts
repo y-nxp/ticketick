@@ -130,7 +130,7 @@ async function targetSessions(organizerIds: string[]): Promise<ExchangeTarget[]>
     where: {
       status: "PUBLISHED",
       startsAt: { gt: now },
-      event: { status: "PUBLISHED", onlineSale: true, organizerId: { in: organizerIds } },
+      event: { status: "PUBLISHED", onlineSale: true, salesPaused: false, organizerId: { in: organizerIds } },
     },
     orderBy: { startsAt: "asc" },
     select: {

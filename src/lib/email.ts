@@ -909,3 +909,104 @@ function echapper(value: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+
+// ─────────────────────────────── Reprise de la vente
+
+const REPRISE_TEXTES: Record<
+  string,
+  {
+    sujet: (titre: string) => string;
+    bonjour: string;
+    corps: (titre: string) => string;
+    bouton: string;
+    pourquoi: string;
+  }
+> = {
+  fr: {
+    sujet: (titre) => `${titre} : la vente a repris`,
+    bonjour: "Bonjour",
+    corps: (titre) => `Bonne nouvelle : la vente des billets pour ${titre} a repris.`,
+    bouton: "Réserver mes places",
+    pourquoi:
+      "Vous recevez ce message parce que vous avez demandé à être prévenu de la reprise de la vente. Votre adresse ne servira à rien d'autre.",
+  },
+  en: {
+    sujet: (titre) => `${titre}: tickets are on sale again`,
+    bonjour: "Hello",
+    corps: (titre) => `Good news: tickets for ${titre} are on sale again.`,
+    bouton: "Book my seats",
+    pourquoi:
+      "You are receiving this message because you asked to be told when sales resumed. Your address will not be used for anything else.",
+  },
+  de: {
+    sujet: (titre) => `${titre}: Der Vorverkauf läuft wieder`,
+    bonjour: "Guten Tag",
+    corps: (titre) => `Gute Nachricht: Der Ticketverkauf für ${titre} läuft wieder.`,
+    bouton: "Plätze reservieren",
+    pourquoi:
+      "Sie erhalten diese Nachricht, weil Sie benachrichtigt werden wollten, sobald der Verkauf wieder läuft. Ihre Adresse wird für nichts anderes verwendet.",
+  },
+  it: {
+    sujet: (titre) => `${titre}: la vendita è ripresa`,
+    bonjour: "Buongiorno",
+    corps: (titre) => `Buone notizie: la vendita dei biglietti per ${titre} è ripresa.`,
+    bouton: "Prenota i miei posti",
+    pourquoi:
+      "Ricevi questo messaggio perché hai chiesto di essere avvisato della ripresa della vendita. Il tuo indirizzo non sarà usato per altro.",
+  },
+  es: {
+    sujet: (titre) => `${titre}: la venta se ha reanudado`,
+    bonjour: "Hola",
+    corps: (titre) => `Buenas noticias: la venta de entradas para ${titre} se ha reanudado.`,
+    bouton: "Reservar mis entradas",
+    pourquoi:
+      "Recibes este mensaje porque pediste que te avisáramos cuando se reanudara la venta. Tu dirección no se usará para nada más.",
+  },
+};
+
+/** Personne inscrite sur la fiche d'un spectacle dont la vente reprend. */
+export async function sendSalesResumedEmail(payload: {
+  to: string;
+  locale: string;
+  title: string;
+  /** Date de la prochaine séance, déjà mise en forme. */
+  when: string | null;
+  url: string;
+  organizerName: string;
+  replyTo?: string | null;
+}) {
+  const l = byLocale(REPRISE_TEXTES, payload.locale);
+  const corps = l.corps(payload.title);
+
+  const text = [
+    `${l.bonjour},`,
+    "",
+    corps,
+    ...(payload.when ? [payload.when] : []),
+    "",
+    l.bouton,
+    payload.url,
+    "",
+    l.pourquoi,
+    "",
+    payload.organizerName,
+  ].join("\n");
+
+  const html = [
+    `<p>${echapper(l.bonjour)},</p>`,
+    `<p>${echapper(corps)}${payload.when ? `<br>${echapper(payload.when)}` : ""}</p>`,
+    `<p><a href="${echapper(payload.url)}" style="display:inline-block;padding:12px 20px;border-radius:12px;background:#6C5CE7;color:#fff;text-decoration:none;font-weight:600">${echapper(l.bouton)}</a></p>`,
+    `<p style="color:#6b7280;font-size:13px">${echapper(l.pourquoi)}</p>`,
+    `<p>${echapper(payload.organizerName)}</p>`,
+  ].join("");
+
+  return envoyer({
+    to: payload.to,
+    subject: l.sujet(payload.title),
+    text,
+    html: `<div style="font:14px/1.6 system-ui,sans-serif;color:#2A2C30">${html}</div>`,
+    etiquette: "reprise de la vente",
+    fromName: payload.organizerName,
+    replyTo: payload.replyTo ?? undefined,
+  });
+}

@@ -79,7 +79,7 @@ export function eventJsonLd(event: EventItem, locale: string): Record<string, un
         (tt) => tt.priceCents > 0 && !tt.companionOfId && tt.maxPerPaidTicket == null,
       );
       const offers =
-        event.onlineSale && paid.length
+        event.onlineSale && !event.salesPaused && paid.length
           ? paid.map((tt) => ({
               "@type": "Offer",
               name: t(tt.name, locale),

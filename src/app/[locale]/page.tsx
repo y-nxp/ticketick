@@ -141,6 +141,7 @@ export default async function HomePage({
                   soldOut: te("soldOut"),
                   dates: (n) => te("datesCount", { count: n }),
                   onRegistration: te("contact.badge"),
+                  salesPaused: te("paused.badge"),
                 }}
               />
             ))}

@@ -118,6 +118,7 @@ async function loadEvent(id: string, organizerId: string | null) {
       description: true,
       status: true,
       onlineSale: true,
+      salesPaused: true,
       contactNote: true,
       organizerId: true,
       organizer: { select: { name: true, slug: true } },
@@ -203,6 +204,7 @@ export async function eventDetails(id: string, organizerId: string | null, local
     organizer: event.organizer.name,
     description: plainText(pick(event.description as Record<string, string>, locale)),
     onlineSale: event.onlineSale,
+    salesPaused: event.salesPaused,
     soldOut: event.status === "SOLD_OUT",
     note: pick(event.contactNote as Record<string, string> | null, locale) || null,
     url: eventPageUrl(origin, locale, event.slug),
@@ -255,6 +257,7 @@ export async function eventAvailability(id: string, organizerId: string | null, 
     id: event.id,
     title: pick(event.title as Record<string, string>, locale),
     onlineSale: event.onlineSale,
+    salesPaused: event.salesPaused,
     sessions: event.sessions.map((s) => {
       const remaining =
         s.status === "SOLD_OUT" ? 0 : remainingSeats(s.ticketTypes, s.capacity, s.sold);

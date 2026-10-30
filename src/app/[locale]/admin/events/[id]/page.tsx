@@ -2,11 +2,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { Link } from "@/i18n/navigation";
 import { PromoteSection } from "@/components/admin/promotion/promote-section";
+import { SalesPauseSection } from "@/components/admin/sales-pause-section";
 import { ShareEmbed } from "@/components/admin/share-embed";
 import { canSeePromotionUi } from "@/lib/admin/promotion-visibility";
 import { publicAppOrigin } from "@/lib/app-url";
 import { getCurrentUser } from "@/lib/auth/dal";
-import { getEventForEdit, getReferenceData } from "@/lib/data/admin-catalog";
+import { getEventForEdit, getReferenceData, getSalesAlerts } from "@/lib/data/admin-catalog";
 import { EventForm } from "../event-form";
 import { OptionsEditor } from "../options-editor";
 import { SessionsEditor } from "../sessions-editor";
@@ -22,10 +23,11 @@ export default async function EditEventPage({
   setRequestLocale(locale);
   const t = await getTranslations("admin.eventForm");
 
-  const [event, reference, user] = await Promise.all([
+  const [event, reference, user, alerts] = await Promise.all([
     getEventForEdit(id),
     getReferenceData(),
     getCurrentUser(),
+    getSalesAlerts(id),
   ]);
 
   if (!event) notFound();
@@ -45,6 +47,19 @@ export default async function EditEventPage({
       <div className="rounded-card border border-border bg-card p-6">
         <EventForm event={event} reference={reference} />
       </div>
+
+      <SalesPauseSection
+        eventId={event.id}
+        paused={event.salesPaused}
+        locale={locale}
+        alerts={alerts.map((a) => ({
+          id: a.id,
+          email: a.email,
+          locale: a.locale,
+          createdAt: a.createdAt.toISOString(),
+          notifiedAt: a.notifiedAt?.toISOString() ?? null,
+        }))}
+      />
 
       <ShareEmbed
         origin={publicAppOrigin()}

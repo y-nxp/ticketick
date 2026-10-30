@@ -188,6 +188,7 @@ export async function createOrder(
             select: {
               status: true,
               onlineSale: true,
+              salesPaused: true,
               slug: true,
               title: true,
               acceptCard: true,
@@ -211,7 +212,8 @@ export async function createOrder(
     if (
       tt.session.event.status !== "PUBLISHED" ||
       tt.session.status !== "PUBLISHED" ||
-      !tt.session.event.onlineSale
+      !tt.session.event.onlineSale ||
+      tt.session.event.salesPaused
     ) {
       return { ok: false, error: "not_on_sale", ticketTypeId };
     }

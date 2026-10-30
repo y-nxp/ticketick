@@ -156,7 +156,7 @@ export async function publicSeatState(sessionId: string): Promise<{
     where: {
       id: sessionId,
       status: "PUBLISHED",
-      event: { status: "PUBLISHED" },
+      event: { status: "PUBLISHED", salesPaused: false },
     },
     select: { seatPlan: { select: { layout: true } } },
   });
