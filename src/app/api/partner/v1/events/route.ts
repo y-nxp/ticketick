@@ -10,5 +10,7 @@ export const GET = partnerRoute(({ organizerId, locale, url }) =>
     locale,
     text: url.searchParams.get("q")?.slice(0, 120) ?? null,
     date: url.searchParams.get("date"),
+    from: url.searchParams.get("from"),
+    to: url.searchParams.get("to"),
   }),
 );
