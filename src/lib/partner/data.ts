@@ -60,6 +60,7 @@ export async function searchEvents(input: {
       subtitle: true,
       tags: true,
       status: true,
+      salesPaused: true,
       organizer: { select: { id: true, name: true } },
       sessions: {
         where: { startsAt: { gte: now }, status: { not: "CANCELLED" } },
@@ -95,6 +96,7 @@ export async function searchEvents(input: {
       organizer: e.organizer.name,
       organizerId: e.organizer.id,
       soldOut: e.status === "SOLD_OUT",
+      salesPaused: e.salesPaused,
       // Étiquettes (« Bel canto, Jeunes talents ») : le SAV en déduit une durée quand la fin n'est pas saisie.
       tags: pick(e.tags as Record<string, string> | null, input.locale) || null,
       sessions: e.sessions.slice(0, 5).map((s) => ({
@@ -365,4 +367,33 @@ export async function resendOrderTickets(input: {
   }
   const result = await sendOrderTicketsToBuyer(order.id);
   return { ok: true, sent: result.sent, maskedEmail: maskEmail(normalizeEmail(order.email)) };
+}
+
+export type SalesAlertResult = { ok: true } | { ok: false; reason: "not_found" | "not_paused" };
+
+/**
+ * Inscrit un appelant du SAV téléphonique à l'alerte de reprise d'un spectacle
+ * dont la vente est suspendue : même liste que la fiche publique (admin,
+ * « Prévenir N personnes »), même message de reprise, dans sa langue.
+ */
+export async function subscribeSalesAlert(input: {
+  eventId: string;
+  email: string;
+  locale: string;
+  organizerId: string | null;
+}): Promise<SalesAlertResult> {
+  const event = await prisma.event.findFirst({
+    where: { id: input.eventId, ...visibleEventWhere(input.organizerId) },
+    select: { salesPaused: true },
+  });
+  if (!event) return { ok: false, reason: "not_found" };
+  if (!event.salesPaused) return { ok: false, reason: "not_paused" };
+  // Une inscription après un premier message de reprise (vente suspendue une
+  // seconde fois) remet la personne en attente, comme sur la fiche publique.
+  await prisma.salesAlert.upsert({
+    where: { eventId_email: { eventId: input.eventId, email: input.email } },
+    create: { eventId: input.eventId, email: input.email, locale: input.locale },
+    update: { locale: input.locale, notifiedAt: null },
+  });
+  return { ok: true };
 }
