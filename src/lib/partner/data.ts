@@ -60,6 +60,7 @@ export async function searchEvents(input: {
       subtitle: true,
       tags: true,
       status: true,
+      salesPaused: true,
       organizer: { select: { id: true, name: true } },
       sessions: {
         where: { startsAt: { gte: now }, status: { not: "CANCELLED" } },
@@ -95,6 +96,7 @@ export async function searchEvents(input: {
       organizer: e.organizer.name,
       organizerId: e.organizer.id,
       soldOut: e.status === "SOLD_OUT",
+      salesPaused: e.salesPaused,
       // Étiquettes (« Bel canto, Jeunes talents ») : le SAV en déduit une durée quand la fin n'est pas saisie.
       tags: pick(e.tags as Record<string, string> | null, input.locale) || null,
       sessions: e.sessions.slice(0, 5).map((s) => ({
