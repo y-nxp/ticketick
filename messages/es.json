@@ -158,6 +158,7 @@
     "linkCopied": "Enlace copiado"
   },
   "cart": {
+    "discount": "Descuento",
     "title": "Tu carrito",
     "summary": "Total del pedido",
     "empty": "Tu carrito está vacío.",

@@ -159,6 +159,7 @@ export async function saveEvent(
     contactPhone,
     contactUrl,
     contactNote: contactNote.fr ? contactNote : Prisma.DbNull,
+    groupDiscountOff: !readBoolean(data, "groupDiscount"),
     selfChange: readBoolean(data, "selfChange"),
     changeUntilHours,
     selfCancelFree: readBoolean(data, "selfCancelFree"),

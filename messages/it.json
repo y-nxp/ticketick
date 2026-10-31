@@ -159,6 +159,7 @@
     "linkCopied": "Link copiato"
   },
   "cart": {
+    "discount": "Sconto",
     "title": "Il tuo carrello",
     "summary": "Totale dell’ordine",
     "empty": "Il tuo carrello è vuoto.",
@@ -925,6 +926,8 @@
       "hideTranslations": "Nascondi le traduzioni",
       "showTranslations": "Traduzioni ({count})",
       "errors": {
+        "discountGroupPercentOnly": "Uno sconto di gruppo è una percentuale.",
+        "discountMinQuantityInvalid": "Il numero di posti deve essere un intero di almeno 2.",
         "notPromotable": "Questo spettacolo non può ancora essere programmato: salva una bozza.",
         "notPreparable": "Questo spettacolo non può essere promosso.",
         "scheduleRequired": "Scegli data e ora della pubblicazione.",
@@ -1078,6 +1081,8 @@
       }
     },
     "eventForm": {
+      "groupDiscount": "Sconto di gruppo",
+      "groupDiscountHint": "Togliete la spunta perché le soglie di sconto di gruppo dell'organizzatore non si applichino a questo evento.",
       "createTitle": "Nuovo spettacolo",
       "createSubtitle": "Titolo, organizzatore e stato. Date e tariffe si aggiungono dopo.",
       "editTitle": "Modifica lo spettacolo",
@@ -1342,8 +1347,16 @@
       }
     },
     "discounts": {
+      "kind": "Tipo di sconto",
+      "kindSessions": "Più rappresentazioni",
+      "kindGroup": "Gruppo (per evento)",
+      "kindSessionsHint": "Concesso quando l'ordine riunisce abbastanza rappresentazioni a pagamento diverse.",
+      "kindGroupHint": "Una soglia dello sconto di gruppo: contata evento per evento sui posti a pagamento. Create uno sconto per soglia (es. 8 posti → 10 %, 11 posti → 15 %). Non si cumula con lo sconto multi-rappresentazioni né con i biglietti gratuiti: l'ordine riceve ciò che costa meno all'acquirente.",
+      "minQuantity": "Posti a pagamento per lo stesso evento",
+      "minQuantityHint": "A partire da questo numero di posti, tutte le categorie. I biglietti gratuiti non contano.",
+      "summaryGroup": "{amount} da {n} posti a pagamento per lo stesso evento · {organizer}",
       "title": "Sconti",
-      "subtitle": "Sconti applicati automaticamente, senza codice, non appena un ordine riunisce abbastanza date a pagamento diverse.",
+      "subtitle": "Sconti applicati automaticamente, senza codice: più rappresentazioni in un ordine, o sconto di gruppo per evento. Non si cumulano; l'ordine riceve il più vantaggioso.",
       "empty": "Nessuno sconto automatico.",
       "add": "Aggiungi uno sconto",
       "edit": "Modifica",

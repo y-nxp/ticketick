@@ -8,6 +8,7 @@ import { useLocale } from "next-intl";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ContinueShopping } from "@/components/cart/continue-shopping";
 import { useCart } from "@/components/cart/cart-context";
+import { DiscountRows, useDiscountPreview } from "@/components/cart/discount-rows";
 import { cn, formatDate, formatPrice } from "@/lib/utils";
 
 export default function CartPage() {
@@ -15,7 +16,8 @@ export default function CartPage() {
   const locale = useLocale();
   const { lines, updateQuantity, remove, subtotalCents } = useCart();
 
-  const total = subtotalCents;
+  const discount = useDiscountPreview(lines, locale);
+  const total = Math.max(0, subtotalCents - discount.amountCents);
 
   if (lines.length === 0) {
     return (
@@ -134,6 +136,7 @@ export default function CartPage() {
                 <dt className="text-muted-foreground">{t("subtotal")}</dt>
                 <dd>{formatPrice(subtotalCents, `${locale}-CH`)}</dd>
               </div>
+              <DiscountRows preview={discount} locale={locale} fallbackLabel={t("discount")} />
               <div className="flex justify-between border-t border-border pt-2 text-base font-bold">
                 <dt>{t("total")}</dt>
                 <dd>{formatPrice(total, `${locale}-CH`)}</dd>

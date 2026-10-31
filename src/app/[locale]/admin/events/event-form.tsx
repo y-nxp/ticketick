@@ -164,6 +164,12 @@ export function EventForm({
           label={t("onlineSale")}
           defaultChecked={event?.onlineSale ?? true}
         />
+        <Checkbox
+          name="groupDiscount"
+          label={t("groupDiscount")}
+          defaultChecked={!(event?.groupDiscountOff ?? false)}
+        />
+        <p className="text-xs text-muted-foreground">{t("groupDiscountHint")}</p>
         <p className="text-xs text-muted-foreground">{t("contactHint")}</p>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t("contactEmail")}>

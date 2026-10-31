@@ -159,6 +159,7 @@
     "linkCopied": "Link kopiert"
   },
   "cart": {
+    "discount": "Rabatt",
     "title": "Ihr Warenkorb",
     "summary": "Bestellsumme",
     "empty": "Ihr Warenkorb ist leer.",
@@ -925,6 +926,8 @@
       "hideTranslations": "Übersetzungen ausblenden",
       "showTranslations": "Übersetzungen ({count})",
       "errors": {
+        "discountGroupPercentOnly": "Ein Gruppenrabatt ist ein Prozentsatz.",
+        "discountMinQuantityInvalid": "Die Anzahl Plätze muss eine ganze Zahl von mindestens 2 sein.",
         "notPromotable": "Diese Veranstaltung kann derzeit nicht geplant werden: Speichern Sie einen Entwurf.",
         "notPreparable": "Diese Veranstaltung kann nicht beworben werden.",
         "scheduleRequired": "Wählen Sie Datum und Uhrzeit der Veröffentlichung.",
@@ -1078,6 +1081,8 @@
       }
     },
     "eventForm": {
+      "groupDiscount": "Gruppenrabatt",
+      "groupDiscountHint": "Deaktivieren, damit die Gruppenrabatt-Stufen des Veranstalters für diese Veranstaltung nicht gelten.",
       "createTitle": "Neue Veranstaltung",
       "createSubtitle": "Titel, Veranstalter und Status. Termine und Tarife folgen danach.",
       "editTitle": "Veranstaltung bearbeiten",
@@ -1342,8 +1347,16 @@
       }
     },
     "discounts": {
+      "kind": "Rabattart",
+      "kindSessions": "Mehrere Vorstellungen",
+      "kindGroup": "Gruppe (pro Veranstaltung)",
+      "kindSessionsHint": "Gewährt, wenn die Bestellung genug verschiedene bezahlte Vorstellungen umfasst.",
+      "kindGroupHint": "Eine Stufe des Gruppenrabatts: pro Veranstaltung auf die bezahlten Plätze gezählt. Legen Sie pro Stufe einen Rabatt an (z. B. 8 Plätze → 10 %, 11 Plätze → 15 %). Nicht kumulierbar mit dem Mehrfachrabatt oder mit Gratistickets: Die Bestellung erhält, was für den Käufer günstiger ist.",
+      "minQuantity": "Bezahlte Plätze für dieselbe Veranstaltung",
+      "minQuantityHint": "Ab dieser Anzahl Plätze, alle Kategorien. Gratistickets zählen nicht.",
+      "summaryGroup": "{amount} ab {n} bezahlten Plätzen derselben Veranstaltung · {organizer}",
       "title": "Rabatte",
-      "subtitle": "Rabatte, die automatisch und ohne Code gelten, sobald eine Bestellung genügend verschiedene bezahlte Vorstellungen umfasst.",
+      "subtitle": "Automatisch angewendete Rabatte ohne Code: mehrere Vorstellungen in einer Bestellung oder Gruppenrabatt pro Veranstaltung. Nicht kumulierbar; die Bestellung erhält den günstigeren.",
       "empty": "Kein automatischer Rabatt.",
       "add": "Rabatt hinzufügen",
       "edit": "Bearbeiten",

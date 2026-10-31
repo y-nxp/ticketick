@@ -355,16 +355,12 @@ export async function createOrder(
   if (!options.ok) return options;
 
   const discounts = await resolveAutoDiscounts(
-    lines.map((l) => {
-      const tt = byId.get(l.ticketTypeId)!;
-      return {
-        quantity: l.quantity,
-        unitPriceCents: l.unitPriceCents,
-        sessionId: tt.session.id,
-        venueId: tt.session.venueId,
-        organizerId: tt.session.event.organizer.id,
-      };
-    }),
+    lines.map((l) => ({
+      ticketTypeId: l.ticketTypeId,
+      quantity: l.quantity,
+      unitPriceCents: l.unitPriceCents,
+      seats: l.seats,
+    })),
     now,
   );
 
@@ -374,7 +370,7 @@ export async function createOrder(
   );
   const optionAmount = options.rows.reduce((sum, r) => sum + r.amountCents, 0);
   const subtotalCents = ticketSubtotal + optionAmount;
-  const discountCents = discounts.reduce((sum, d) => sum + d.amountCents, 0);
+  const discountCents = discounts.totalCents;
   const feeCents = Math.round(
     ((subtotalCents - discountCents) * PLATFORM_FEE_BPS) / 10_000,
   );
@@ -442,11 +438,12 @@ export async function createOrder(
           currency,
           ...promotionOrderFields(attribution),
           items: {
-            create: lines.map((l) => ({
+            create: lines.map((l, index) => ({
               ticketTypeId: l.ticketTypeId,
               quantity: l.quantity,
               unitPriceCents: l.unitPriceCents,
               seatKeys: l.seats,
+              discountCents: discounts.perLine[index] ?? 0,
             })),
           },
           options: {
@@ -460,7 +457,7 @@ export async function createOrder(
             })),
           },
           discounts: {
-            create: discounts.map((d) => ({
+            create: discounts.applied.map((d) => ({
               discountId: d.discountId,
               amountCents: d.amountCents,
             })),

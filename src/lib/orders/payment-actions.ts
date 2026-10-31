@@ -24,7 +24,7 @@ export async function checkCartAvailability(
 
 /** Rabais automatiques qui s'appliqueraient au panier, pour l'affichage. */
 export async function previewCartDiscounts(
-  lines: { ticketTypeId: string; quantity: number }[],
+  lines: { ticketTypeId: string; quantity: number; seats?: string[] }[],
   locale: string,
 ): Promise<DiscountPreview> {
   return previewDiscounts(lines.slice(0, 50), locale);

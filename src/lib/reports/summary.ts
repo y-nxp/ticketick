@@ -2,6 +2,7 @@ import "server-only";
 
 import { prisma } from "@/lib/prisma";
 import { HOLD_PLACEHOLDER_DOMAIN } from "@/lib/orders/create-order";
+import { ticketRevenueCents } from "@/lib/orders/discount-engine";
 import { readLayout } from "@/lib/seating/layout";
 
 /**
@@ -156,7 +157,14 @@ export async function getOrganizerReport(
             channel: true,
             subtotalCents: true,
             discountCents: true,
-            items: { select: { ticketTypeId: true, unitPriceCents: true } },
+            items: {
+              select: {
+                ticketTypeId: true,
+                unitPriceCents: true,
+                quantity: true,
+                discountCents: true,
+              },
+            },
           },
         },
       },
@@ -184,9 +192,7 @@ export async function getOrganizerReport(
     const f = of(ticket.ticketTypeId);
     if (!f) continue;
     const o = ticket.order;
-    const unit = o.items.find((i) => i.ticketTypeId === ticket.ticketTypeId)?.unitPriceCents ?? 0;
-    const share = o.subtotalCents > 0 ? 1 - o.discountCents / o.subtotalCents : 1;
-    const cents = Math.round(unit * share);
+    const cents = ticketRevenueCents(o, ticket.ticketTypeId);
     f.sold += 1;
     f.revenueCents += cents;
     if (o.channel === "RESELLER") f.revenueResellerCents += cents;

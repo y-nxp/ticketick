@@ -67,11 +67,17 @@ export function DiscountsEditor({
                   </Badge>
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {t("summary", {
-                    amount: amountOf(d),
-                    n: d.minDistinctSessions ?? 0,
-                    organizer: d.organizer?.name ?? "—",
-                  })}
+                  {d.scope === "EVENT"
+                    ? t("summaryGroup", {
+                        amount: amountOf(d),
+                        n: d.minQuantity ?? 0,
+                        organizer: d.organizer?.name ?? "—",
+                      })
+                    : t("summary", {
+                        amount: amountOf(d),
+                        n: d.minDistinctSessions ?? 0,
+                        organizer: d.organizer?.name ?? "—",
+                      })}
                   {d.venue ? ` · ${t("atVenue", { venue: `${d.venue.name}, ${d.venue.city}` })}` : null}
                   {" · "}
                   {t("usedOn", { n: d._count.orders })}
@@ -119,6 +125,9 @@ function DiscountForm({
   const t = useTranslations("admin.discounts");
   const tf = useTranslations("admin.form");
   const [state, action, pending] = useActionState(saveDiscount, undefined);
+  const [kind, setKind] = React.useState<"sessions" | "group">(
+    discount?.scope === "EVENT" ? "group" : "sessions",
+  );
 
   React.useEffect(() => {
     if (state?.ok) onClose();
@@ -133,6 +142,28 @@ function DiscountForm({
   return (
     <form action={action} className="space-y-3">
       {discount ? <input type="hidden" name="id" value={discount.id} /> : null}
+
+      <fieldset className="space-y-1.5">
+        <legend className="text-sm font-medium">{t("kind")}</legend>
+        <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+          {(["sessions", "group"] as const).map((k) => (
+            <label key={k} className="flex items-center gap-2 text-sm">
+              <input
+                type="radio"
+                name="kind"
+                value={k}
+                checked={kind === k}
+                onChange={() => setKind(k)}
+                className="size-4 accent-[var(--primary)]"
+              />
+              {t(k === "group" ? "kindGroup" : "kindSessions")}
+            </label>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {t(kind === "group" ? "kindGroupHint" : "kindSessionsHint")}
+        </p>
+      </fieldset>
 
       <TranslatedField
         name="label"
@@ -161,26 +192,39 @@ function DiscountForm({
         </Field>
         <Field label={t("type")}>
           <Select
+            key={kind}
             name="type"
-            defaultValue={discount?.type ?? "PERCENTAGE"}
+            defaultValue={kind === "group" ? "PERCENTAGE" : (discount?.type ?? "PERCENTAGE")}
             options={[
               { value: "PERCENTAGE", label: t("typePercentage") },
-              { value: "FIXED_AMOUNT", label: t("typeFixed") },
+              ...(kind === "group" ? [] : [{ value: "FIXED_AMOUNT", label: t("typeFixed") }]),
             ]}
           />
         </Field>
         <Field label={t("value")} hint={t("valueHint")}>
           <TextInput name="value" defaultValue={value} placeholder="15" required />
         </Field>
-        <Field label={t("minDistinctSessions")} hint={t("minDistinctSessionsHint")}>
-          <TextInput
-            name="minDistinctSessions"
-            type="number"
-            min="1"
-            defaultValue={discount?.minDistinctSessions ?? 3}
-            required
-          />
-        </Field>
+        {kind === "group" ? (
+          <Field label={t("minQuantity")} hint={t("minQuantityHint")}>
+            <TextInput
+              name="minQuantity"
+              type="number"
+              min="2"
+              defaultValue={discount?.minQuantity ?? 8}
+              required
+            />
+          </Field>
+        ) : (
+          <Field label={t("minDistinctSessions")} hint={t("minDistinctSessionsHint")}>
+            <TextInput
+              name="minDistinctSessions"
+              type="number"
+              min="1"
+              defaultValue={discount?.minDistinctSessions ?? 3}
+              required
+            />
+          </Field>
+        )}
         <Field label={t("minAmount")} hint={t("optional")}>
           <TextInput
             name="minAmount"
