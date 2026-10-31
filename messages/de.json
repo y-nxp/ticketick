@@ -114,6 +114,7 @@
     "seatError": "Saalplan derzeit nicht verfügbar. Bitte gleich erneut versuchen.",
     "zoomIn": "Plan vergrößern",
     "zoomOut": "Plan verkleinern",
+    "seatMoreBelow": "Rest des Plans ansehen",
     "attendeeNote": "Name und Geburtsdatum werden beim Bezahlen verlangt.",
     "attendeeNoteAge": "Unter {age} Jahren: Name und Geburtsdatum werden beim Bezahlen verlangt.",
     "paused": {

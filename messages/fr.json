@@ -114,6 +114,7 @@
     "seatError": "Plan indisponible pour le moment. Réessayez dans un instant.",
     "zoomIn": "Agrandir le plan",
     "zoomOut": "Réduire le plan",
+    "seatMoreBelow": "Voir la suite du plan",
     "attendeeNote": "Nom et date de naissance demandés au paiement.",
     "attendeeNoteAge": "Moins de {age} ans : nom et date de naissance demandés lors du paiement.",
     "paused": {
