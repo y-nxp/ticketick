@@ -137,7 +137,8 @@ export function matchesText(event: SearchableEvent, query: string | null | undef
       ...event.venues,
     ].join(" "),
   );
-  return words.every((w) => haystack.includes(w));
+  // « les prochains concerts » au téléphone, « Concert » dans le titre ou les étiquettes.
+  return words.every((w) => haystack.includes(w) || (w.endsWith("s") && haystack.includes(w.slice(0, -1))));
 }
 
 /** Date au format AAAA-MM-JJ, comparée au jour civil suisse de chaque séance. */
@@ -145,6 +146,23 @@ export function matchesDate(starts: Date[], day: string | null | undefined): boo
   if (!day) return true;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return false;
   return starts.some((d) => zurichDay(d) === day);
+}
+
+/**
+ * Période AAAA-MM-JJ, bornes incluses, en jours civils suisses (« le mois
+ * prochain » du SAV) : au moins une séance dedans. Une seule borne suffit.
+ */
+export function matchesPeriod(
+  starts: Date[],
+  from: string | null | undefined,
+  to: string | null | undefined,
+): boolean {
+  if (!from && !to) return true;
+  if ((from && !/^\d{4}-\d{2}-\d{2}$/.test(from)) || (to && !/^\d{4}-\d{2}-\d{2}$/.test(to))) return false;
+  return starts.some((d) => {
+    const day = zurichDay(d);
+    return (!from || day >= from) && (!to || day <= to);
+  });
 }
 
 export function zurichDay(date: Date): string {

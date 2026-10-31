@@ -5,6 +5,7 @@ import {
   emailsMatch,
   maskEmail,
   matchesDate,
+  matchesPeriod,
   matchesText,
   normalizeReference,
   remainingSeats,
@@ -64,9 +65,23 @@ test("recherche par texte (toutes langues, sans accents) et par date suisse", ()
   assert.equal(matchesText(event, "new year rougemont"), true);
   assert.equal(matchesText(event, "eglise"), true);
   assert.equal(matchesText(event, "opéra"), false);
+  // « les prochains concerts » : le pluriel dicté trouve le singulier du titre.
+  assert.equal(matchesText(event, "concerts"), true);
   assert.equal(matchesDate(event.sessionStarts, "2026-12-31"), true);
   assert.equal(matchesDate([new Date("2026-12-31T23:30:00Z")], "2027-01-01"), true);
   assert.equal(matchesDate(event.sessionStarts, "31.12.2026"), false);
+});
+
+test("période : jours civils suisses, bornes incluses, une seule borne possible, format strict", () => {
+  const starts = [new Date("2026-12-31T22:30:00Z")];
+  assert.equal(matchesPeriod(starts, null, null), true);
+  assert.equal(matchesPeriod(starts, "2026-12-01", "2026-12-31"), true);
+  assert.equal(matchesPeriod(starts, "2027-01-01", "2027-01-31"), false);
+  // 23 h 30 UTC = minuit passé à Zurich : la séance appartient au 1er janvier.
+  assert.equal(matchesPeriod([new Date("2026-12-31T23:30:00Z")], "2027-01-01", null), true);
+  assert.equal(matchesPeriod(starts, null, "2026-12-30"), false);
+  assert.equal(matchesPeriod(starts, "2026-12-01", null), true);
+  assert.equal(matchesPeriod(starts, "31.12.2026", null), false);
 });
 
 test("places restantes plafonnées par la jauge", () => {

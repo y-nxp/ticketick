@@ -9,6 +9,7 @@ import {
   eventPageUrl,
   maskEmail,
   matchesDate,
+  matchesPeriod,
   matchesText,
   normalizeEmail,
   normalizeReference,
@@ -47,6 +48,9 @@ export async function searchEvents(input: {
   organizerId: string | null;
   text: string | null;
   date: string | null;
+  /** Période (bornes incluses, jours civils suisses) : « les concerts du mois prochain ». */
+  from?: string | null;
+  to?: string | null;
   locale: PartnerLocale;
 }) {
   const now = new Date();
@@ -87,7 +91,9 @@ export async function searchEvents(input: {
             sessionStarts: starts,
           },
           input.text,
-        ) && matchesDate(starts, input.date)
+        ) &&
+        matchesDate(starts, input.date) &&
+        matchesPeriod(starts, input.from, input.to)
       );
     })
     .sort((a, b) => +a.sessions[0].startsAt - +b.sessions[0].startsAt);
