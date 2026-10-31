@@ -538,6 +538,10 @@ model Event {
   salesPaused  Boolean @default(false)
   salesAlerts  SalesAlert[]
 
+  /// Vrai : la remise de groupe de l'organisateur (rabais `scope = EVENT`)
+  /// ne s'applique pas à ce spectacle. Cas particuliers décidés par lui.
+  groupDiscountOff Boolean @default(false)
+
   /// Depuis son compte, le client échange ses billets (places, spectacle du
   /// même organisateur) jusqu'à `changeUntilHours` avant le début. Jamais de
   /// remboursement : seule une hausse se paie.
@@ -866,7 +870,8 @@ model Discount {
   ticketType   TicketType? @relation(fields: [ticketTypeId], references: [id], onDelete: Cascade)
   ticketTypeId String?
 
-  /// Conditions d'application
+  /// Conditions d'application. Remise de groupe (`scope = EVENT`) : nombre
+  /// de places payantes d'un même spectacle à partir duquel ce palier vaut.
   minQuantity    Int?
   minAmountCents Int?
   validFrom      DateTime?
@@ -973,6 +978,10 @@ model OrderItem {
   unitPriceCents Int
   /// Séance numérotée : sièges retenus, un par billet.
   seatKeys       String[]   @default([])
+  /// Part des rabais de la commande portée par cette ligne (toutes places
+  /// confondues), pour attribuer le chiffre d'affaires au bon spectacle.
+  /// 0 sur les commandes antérieures : on répartit alors au prorata.
+  discountCents  Int        @default(0)
 
   @@index([orderId])
 }

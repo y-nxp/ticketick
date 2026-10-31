@@ -33,6 +33,8 @@ import {
   previewCartDiscounts,
 } from "@/lib/orders/payment-actions";
 import type { CartPayments } from "@/lib/orders/payment-methods";
+import type { DiscountPreview } from "@/lib/orders/discounts";
+import { DiscountRows, NO_DISCOUNT } from "@/components/cart/discount-rows";
 import { formatHoldClock } from "@/lib/orders/reservation";
 import { getAccountBuyer } from "@/lib/auth/buyer-actions";
 import { clearBuyer, readBuyer, writeBuyer } from "@/lib/checkout/buyer";
@@ -254,10 +256,7 @@ function CheckoutInner() {
   const [attendees, setAttendees] = React.useState<Record<string, Attendee[]>>(
     {},
   );
-  const [discount, setDiscount] = React.useState({
-    amountCents: 0,
-    labels: [] as string[],
-  });
+  const [discount, setDiscount] = React.useState<DiscountPreview>(NO_DISCOUNT);
   const [seatNotice, setSeatNotice] = React.useState(false);
   /** Spectacle des places retirées : lien de retour si le panier se vide. */
   const [seatNoticeSlug, setSeatNoticeSlug] = React.useState<string | null>(null);
@@ -1144,16 +1143,7 @@ function CheckoutInner() {
                 <dt className="text-muted-foreground">{tc("subtotal")}</dt>
                 <dd>{formatPrice(subtotalCents, `${locale}-CH`)}</dd>
               </div>
-              {discount.amountCents > 0 ? (
-                <div className="flex justify-between gap-3">
-                  <dt className="text-muted-foreground">
-                    {discount.labels.join(", ") || t("discount")}
-                  </dt>
-                  <dd className="whitespace-nowrap">
-                    −{formatPrice(discount.amountCents, `${locale}-CH`)}
-                  </dd>
-                </div>
-              ) : null}
+              <DiscountRows preview={discount} locale={locale} fallbackLabel={t("discount")} />
               <div className="flex justify-between border-t border-border pt-2 text-base font-bold">
                 <dt>{tc("total")}</dt>
                 <dd>{formatPrice(total, `${locale}-CH`)}</dd>

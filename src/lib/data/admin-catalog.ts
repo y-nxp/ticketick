@@ -133,6 +133,7 @@ export async function getEventForEdit(id: string) {
       contactPhone: true,
       contactUrl: true,
       contactNote: true,
+      groupDiscountOff: true,
       selfChange: true,
       changeUntilHours: true,
       selfCancelFree: true,
@@ -333,10 +334,13 @@ export async function getAutoDiscounts() {
   return prisma.discount.findMany({
     where: {
       code: null,
-      minDistinctSessions: { not: null },
+      OR: [
+        { scope: "ORDER", minDistinctSessions: { not: null } },
+        { scope: "EVENT", minQuantity: { not: null } },
+      ],
       organizerId: organizerId ?? { not: null },
     },
-    orderBy: [{ active: "desc" }, { createdAt: "asc" }],
+    orderBy: [{ active: "desc" }, { scope: "asc" }, { minQuantity: "asc" }, { createdAt: "asc" }],
     select: {
       id: true,
       label: true,
@@ -344,7 +348,9 @@ export async function getAutoDiscounts() {
       value: true,
       organizerId: true,
       venueId: true,
+      scope: true,
       minDistinctSessions: true,
+      minQuantity: true,
       minAmountCents: true,
       validFrom: true,
       validUntil: true,

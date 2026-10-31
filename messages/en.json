@@ -159,6 +159,7 @@
     "linkCopied": "Link copied"
   },
   "cart": {
+    "discount": "Discount",
     "title": "Your cart",
     "summary": "Order total",
     "empty": "Your cart is empty.",
@@ -925,6 +926,8 @@
       "hideTranslations": "Hide translations",
       "showTranslations": "Translations ({count})",
       "errors": {
+        "discountGroupPercentOnly": "A group discount is a percentage.",
+        "discountMinQuantityInvalid": "The number of seats must be a whole number of at least 2.",
         "notPromotable": "This show cannot be scheduled yet: save a draft instead.",
         "notPreparable": "This show cannot be promoted.",
         "scheduleRequired": "Choose the publication date and time.",
@@ -1078,6 +1081,8 @@
       }
     },
     "eventForm": {
+      "groupDiscount": "Group discount",
+      "groupDiscountHint": "Untick so that the organizer's group discount tiers do not apply to this event.",
       "createTitle": "New show",
       "createSubtitle": "Title, organizer and status. Dates and fares are added next.",
       "editTitle": "Edit the show",
@@ -1342,8 +1347,16 @@
       }
     },
     "discounts": {
+      "kind": "Kind of discount",
+      "kindSessions": "Several sessions",
+      "kindGroup": "Group (per event)",
+      "kindSessionsHint": "Granted when the order includes enough different paid sessions.",
+      "kindGroupHint": "One group discount tier: counted event by event on paid seats. Create one discount per tier (e.g. 8 seats → 10%, 11 seats → 15%). It does not combine with the multi-session discount or with free tickets: the order gets whatever costs the buyer least.",
+      "minQuantity": "Paid seats for the same event",
+      "minQuantityHint": "From this number of seats, all categories. Free tickets do not count.",
+      "summaryGroup": "{amount} from {n} paid seats for the same event · {organizer}",
       "title": "Discounts",
-      "subtitle": "Discounts applied automatically, without a code, as soon as an order brings together enough different paid sessions.",
+      "subtitle": "Discounts applied automatically, without a code: several sessions in one order, or a group discount per event. They do not combine; the order gets the better one.",
       "empty": "No automatic discount.",
       "add": "Add a discount",
       "edit": "Edit",

@@ -18,8 +18,12 @@ import {
 } from "./form";
 
 /**
- * Rabais automatiques : appliqués sans code dès que la commande compte assez
- * de séances payantes distinctes de l'organisateur (et du lieu, si précisé).
+ * Rabais automatiques, appliqués sans code, de deux sortes qui ne se
+ * cumulent pas (`lib/orders/discount-engine`) :
+ * - multi-séances : assez de séances payantes distinctes de l'organisateur
+ *   (et du lieu, si précisé) dans la commande ;
+ * - remise de groupe : un palier, atteint par le nombre de places payantes
+ *   d'un même spectacle (`scope = EVENT`, `minQuantity`).
  *
  * Un rabais déjà accordé sur une commande ne se supprime pas : la commande
  * garde la trace du montant déduit. On le désactive.
@@ -83,9 +87,21 @@ export async function saveDiscount(
     return failure("discountValueInvalid");
   }
 
-  const minDistinctSessions = readInteger(data, "minDistinctSessions");
-  if (minDistinctSessions === null || minDistinctSessions < 1 || minDistinctSessions > 100) {
-    return failure("discountMinSessionsInvalid");
+  const group = readText(data, "kind") === "group";
+  let minDistinctSessions: number | null = null;
+  let minQuantity: number | null = null;
+  if (group) {
+    // Un palier de groupe est un pourcentage des places du spectacle.
+    if (type !== "PERCENTAGE") return failure("discountGroupPercentOnly");
+    minQuantity = readInteger(data, "minQuantity");
+    if (minQuantity === null || minQuantity < 2 || minQuantity > 1000) {
+      return failure("discountMinQuantityInvalid");
+    }
+  } else {
+    minDistinctSessions = readInteger(data, "minDistinctSessions");
+    if (minDistinctSessions === null || minDistinctSessions < 1 || minDistinctSessions > 100) {
+      return failure("discountMinSessionsInvalid");
+    }
   }
 
   let minAmountCents: number | null = null;
@@ -103,10 +119,11 @@ export async function saveDiscount(
     label,
     type,
     value,
-    scope: "ORDER" as const,
+    scope: group ? ("EVENT" as const) : ("ORDER" as const),
     organizerId,
     venueId,
     minDistinctSessions,
+    minQuantity,
     minAmountCents,
     validFrom: validFrom ?? null,
     validUntil: validUntil ?? null,

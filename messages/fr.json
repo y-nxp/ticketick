@@ -159,6 +159,7 @@
     "linkCopied": "Lien copié"
   },
   "cart": {
+    "discount": "Rabais",
     "title": "Votre panier",
     "summary": "Total de la commande",
     "empty": "Votre panier est vide.",
@@ -925,6 +926,8 @@
       "hideTranslations": "Masquer les traductions",
       "showTranslations": "Traductions ({count})",
       "errors": {
+        "discountGroupPercentOnly": "Une remise de groupe est un pourcentage.",
+        "discountMinQuantityInvalid": "Le nombre de places doit être un entier d'au moins 2.",
         "notPromotable": "Ce spectacle ne peut pas être programmé pour l’instant : enregistrez un brouillon.",
         "notPreparable": "Ce spectacle ne peut pas être promu.",
         "scheduleRequired": "Choisissez la date et l’heure de publication.",
@@ -1078,6 +1081,8 @@
       }
     },
     "eventForm": {
+      "groupDiscount": "Remise de groupe",
+      "groupDiscountHint": "Décochez pour que les paliers de remise de groupe de l'organisateur ne s'appliquent pas à ce spectacle.",
       "createTitle": "Nouveau spectacle",
       "createSubtitle": "Titre, organisateur et statut. Les dates et les tarifs s’ajoutent ensuite.",
       "editTitle": "Modifier le spectacle",
@@ -1342,8 +1347,16 @@
       }
     },
     "discounts": {
+      "kind": "Sorte de rabais",
+      "kindSessions": "Plusieurs séances",
+      "kindGroup": "Groupe (par spectacle)",
+      "kindSessionsHint": "Accordé quand la commande réunit assez de séances payantes différentes.",
+      "kindGroupHint": "Un palier de remise de groupe : compté spectacle par spectacle sur les places payantes. Créez un rabais par palier (ex. 8 places → 10 %, 11 places → 15 %). Il ne se cumule ni avec le multi-séances ni avec les gratuités : la commande reçoit ce qui coûte le moins à l'acheteur.",
+      "minQuantity": "Places payantes pour un même spectacle",
+      "minQuantityHint": "À partir de ce nombre de places, toutes catégories. Les billets gratuits ne comptent pas.",
+      "summaryGroup": "{amount} dès {n} places payantes d'un même spectacle · {organizer}",
       "title": "Rabais",
-      "subtitle": "Rabais appliqués automatiquement, sans code, dès qu’une commande réunit assez de séances payantes différentes.",
+      "subtitle": "Rabais appliqués automatiquement, sans code : plusieurs séances dans une commande, ou remise de groupe par spectacle. Ils ne se cumulent pas ; la commande reçoit le plus avantageux.",
       "empty": "Aucun rabais automatique.",
       "add": "Ajouter un rabais",
       "edit": "Modifier",

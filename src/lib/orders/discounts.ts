@@ -1,48 +1,74 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
+import {
+  computeDiscounts,
+  type EngineApplied,
+  type EngineDiscount,
+  type EngineLine,
+} from "./discount-engine";
 
 /**
- * Rabais automatiques (sans code).
- *
- * Seule la forme « N séances payantes distinctes chez un organisateur,
- * éventuellement dans un même lieu » est gérée : le multi-concerts du
- * Gstaad New Year Music Festival (-15 % dès 3 concerts à Rougemont).
- * Le montant n'est calculé que sur les billets qui comptent.
+ * Rabais automatiques (sans code) : lecture en base, puis calcul par
+ * `discount-engine` (multi-séances ou remise de groupe, sans cumul).
  */
 
 export interface DiscountLine {
+  ticketTypeId: string;
   quantity: number;
-  unitPriceCents: number;
-  sessionId: string;
-  venueId: string | null;
-  organizerId: string;
+  /** Prix unitaire retenu par la commande ; celui du tarif sinon. */
+  unitPriceCents?: number;
+  /** Places numérotées : sert à connaître le plein tarif d'une gratuité. */
+  seats?: string[];
 }
 
-export interface AppliedDiscount {
-  discountId: string;
-  label: unknown;
-  amountCents: number;
+export type AppliedDiscount = EngineApplied;
+
+export interface ResolvedDiscounts {
+  applied: AppliedDiscount[];
+  /** Part du rabais portée par chaque ligne, dans l'ordre reçu. */
+  perLine: number[];
+  totalCents: number;
 }
 
-/** Arrondi aux 5 centimes, comme un montant en francs suisses. */
-function roundTo5(cents: number): number {
-  return Math.round(cents / 5) * 5;
-}
+const NONE: ResolvedDiscounts = { applied: [], perLine: [], totalCents: 0 };
 
 export async function resolveAutoDiscounts(
   lines: DiscountLine[],
   now: Date = new Date(),
-): Promise<AppliedDiscount[]> {
-  const organizerIds = [...new Set(lines.map((l) => l.organizerId))];
-  if (organizerIds.length === 0) return [];
+): Promise<ResolvedDiscounts> {
+  if (lines.length === 0) return NONE;
+  const ids = [...new Set(lines.map((l) => l.ticketTypeId))];
+  const types = await prisma.ticketType.findMany({
+    where: { id: { in: ids } },
+    select: {
+      id: true,
+      priceCents: true,
+      maxPerPaidTicket: true,
+      companionOfId: true,
+      seatZones: true,
+      session: {
+        select: {
+          id: true,
+          venueId: true,
+          event: { select: { id: true, organizerId: true, groupDiscountOff: true } },
+        },
+      },
+    },
+  });
+  const byId = new Map(types.map((t) => [t.id, t]));
+  const organizerIds = [...new Set(types.map((t) => t.session.event.organizerId))];
+  if (organizerIds.length === 0) return { ...NONE, perLine: lines.map(() => 0) };
 
-  const discounts = await prisma.discount.findMany({
+  const rows = await prisma.discount.findMany({
     where: {
       active: true,
       code: null,
       organizerId: { in: organizerIds },
-      minDistinctSessions: { not: null },
+      OR: [
+        { scope: "ORDER", minDistinctSessions: { not: null } },
+        { scope: "EVENT", minQuantity: { not: null } },
+      ],
       AND: [
         { OR: [{ validFrom: null }, { validFrom: { lte: now } }] },
         { OR: [{ validUntil: null }, { validUntil: { gte: now } }] },
@@ -50,77 +76,159 @@ export async function resolveAutoDiscounts(
     },
     orderBy: { createdAt: "asc" },
   });
+  const discounts: EngineDiscount[] = rows.map((d) => ({
+    id: d.id,
+    label: d.label,
+    kind: d.scope === "EVENT" ? "group" : "sessions",
+    type: d.type,
+    value: d.value,
+    organizerId: d.organizerId,
+    venueId: d.venueId,
+    minDistinctSessions: d.minDistinctSessions,
+    minQuantity: d.minQuantity,
+    minAmountCents: d.minAmountCents,
+    maxRedemptions: d.maxRedemptions,
+    redemptions: d.redemptions,
+  }));
+  const hasGroup = discounts.some((d) => d.kind === "group");
 
-  const ticketTotal = lines.reduce((s, l) => s + l.quantity * l.unitPriceCents, 0);
-  const applied: AppliedDiscount[] = [];
-  let remaining = ticketTotal;
+  // Plein tarif des gratuités accompagnantes : seulement utile s'il y a une
+  // remise de groupe à comparer (elles ne s'y cumulent pas).
+  const companionLines = lines.filter((l) => {
+    const tt = byId.get(l.ticketTypeId);
+    return tt && tt.maxPerPaidTicket != null && (l.unitPriceCents ?? tt.priceCents) === 0;
+  });
+  const regular =
+    hasGroup && companionLines.length
+      ? await regularPrices(companionLines, byId)
+      : new Map<DiscountLine, number[]>();
 
-  for (const d of discounts) {
-    if (d.maxRedemptions != null && d.redemptions >= d.maxRedemptions) continue;
-    const qualifying = lines.filter(
-      (l) =>
-        l.unitPriceCents > 0 &&
-        l.organizerId === d.organizerId &&
-        (d.venueId == null || l.venueId === d.venueId),
+  const engineLines: EngineLine[] = [];
+  const kept: number[] = [];
+  lines.forEach((line, index) => {
+    const tt = byId.get(line.ticketTypeId);
+    if (!tt || !Number.isInteger(line.quantity) || line.quantity < 1) return;
+    kept.push(index);
+    engineLines.push({
+      quantity: Math.min(line.quantity, 100),
+      unitPriceCents: line.unitPriceCents ?? tt.priceCents,
+      sessionId: tt.session.id,
+      eventId: tt.session.event.id,
+      venueId: tt.session.venueId,
+      organizerId: tt.session.event.organizerId,
+      groupDiscountOff: tt.session.event.groupDiscountOff,
+      ...(regular.has(line) ? { companionRegularCents: regular.get(line) } : {}),
+    });
+  });
+
+  const result = computeDiscounts(engineLines, discounts);
+  const perLine = lines.map(() => 0);
+  kept.forEach((index, k) => {
+    perLine[index] = result.perLine[k];
+  });
+  return { applied: result.applied, perLine, totalCents: result.totalCents };
+}
+
+/**
+ * Prix qu'aurait chaque place d'une gratuité sans elle : le tarif source
+ * désigné, sinon le moins cher des tarifs payants de la séance valables
+ * dans la zone du siège (ou dans les zones de la gratuité, sans siège).
+ */
+async function regularPrices(
+  lines: DiscountLine[],
+  byId: Map<
+    string,
+    {
+      companionOfId: string | null;
+      seatZones: string[];
+      session: { id: string };
+    }
+  >,
+): Promise<Map<DiscountLine, number[]>> {
+  const sessionIds = [...new Set(lines.map((l) => byId.get(l.ticketTypeId)!.session.id))];
+  const [tariffs, seats] = await Promise.all([
+    prisma.ticketType.findMany({
+      where: { sessionId: { in: sessionIds }, priceCents: { gt: 0 }, maxPerPaidTicket: null },
+      select: { id: true, sessionId: true, priceCents: true, seatZones: true },
+    }),
+    prisma.sessionSeat.findMany({
+      where: {
+        sessionId: { in: sessionIds },
+        seatKey: { in: lines.flatMap((l) => l.seats ?? []) },
+      },
+      select: { sessionId: true, seatKey: true, zone: true },
+    }),
+  ]);
+  const zoneOf = new Map(seats.map((s) => [`${s.sessionId}:${s.seatKey}`, s.zone]));
+  const priceOf = new Map(tariffs.map((t) => [t.id, t.priceCents]));
+
+  const cheapest = (sessionId: string, zones: string[]): number => {
+    const fits = tariffs.filter(
+      (t) =>
+        t.sessionId === sessionId &&
+        (zones.length === 0 || t.seatZones.length === 0 || t.seatZones.some((z) => zones.includes(z))),
     );
-    const sessions = new Set(qualifying.map((l) => l.sessionId));
-    if (sessions.size < (d.minDistinctSessions ?? 0)) continue;
+    return fits.length ? Math.min(...fits.map((t) => t.priceCents)) : 0;
+  };
 
-    const base = qualifying.reduce((s, l) => s + l.quantity * l.unitPriceCents, 0);
-    if (d.minAmountCents != null && base < d.minAmountCents) continue;
-    const raw =
-      d.type === "PERCENTAGE"
-        ? roundTo5((base * d.value) / 10_000)
-        : Math.min(d.value, base);
-    const amountCents = Math.min(raw, remaining);
-    if (amountCents <= 0) continue;
-    remaining -= amountCents;
-    applied.push({ discountId: d.id, label: d.label, amountCents });
+  const out = new Map<DiscountLine, number[]>();
+  for (const line of lines) {
+    const tt = byId.get(line.ticketTypeId)!;
+    const sessionId = tt.session.id;
+    const source = tt.companionOfId ? priceOf.get(tt.companionOfId) : undefined;
+    const prices: number[] = [];
+    for (let i = 0; i < Math.min(line.quantity, 100); i += 1) {
+      const seat = line.seats?.[i];
+      const zone = seat ? zoneOf.get(`${sessionId}:${seat}`) : undefined;
+      prices.push(source ?? cheapest(sessionId, zone ? [zone] : tt.seatZones));
+    }
+    out.set(line, prices);
   }
-  return applied;
+  return out;
+}
+
+const WAIVED_NOTE: Record<string, string> = {
+  fr: "billets gratuits comptés au plein tarif",
+  en: "free tickets counted at full price",
+  de: "Gratistickets zum vollen Preis gezählt",
+  it: "biglietti gratuiti contati a prezzo pieno",
+  es: "entradas gratuitas contadas a precio completo",
+};
+
+/** Libellé d'un rabais appliqué dans la langue de l'acheteur. */
+export function appliedLabel(d: AppliedDiscount, locale: string): string {
+  const label = d.label as Record<string, string> | null;
+  const text = label?.[locale] || (locale === "es" ? label?.en : "") || label?.fr || "";
+  return d.waivesCompanions ? `${text} (${WAIVED_NOTE[locale] ?? WAIVED_NOTE.fr})` : text;
 }
 
 export interface DiscountPreview {
   amountCents: number;
   labels: string[];
+  /** Chaque rabais appliqué, avec son montant, pour le détail du panier. */
+  items: { label: string; amountCents: number }[];
 }
 
 /** Même calcul que la commande, d'après les tarifs en base. */
 export async function previewDiscounts(
-  lines: { ticketTypeId: string; quantity: number }[],
+  lines: { ticketTypeId: string; quantity: number; seats?: string[] }[],
   locale: string,
 ): Promise<DiscountPreview> {
-  const ids = [...new Set(lines.map((l) => l.ticketTypeId))];
-  if (ids.length === 0) return { amountCents: 0, labels: [] };
-  const types = await prisma.ticketType.findMany({
-    where: { id: { in: ids } },
-    select: {
-      id: true,
-      priceCents: true,
-      session: {
-        select: { id: true, venueId: true, event: { select: { organizerId: true } } },
-      },
-    },
-  });
-  const byId = new Map(types.map((t) => [t.id, t]));
-  const discountLines: DiscountLine[] = [];
-  for (const line of lines) {
-    const tt = byId.get(line.ticketTypeId);
-    if (!tt || !Number.isInteger(line.quantity) || line.quantity < 1) continue;
-    discountLines.push({
-      quantity: Math.min(line.quantity, 100),
-      unitPriceCents: tt.priceCents,
-      sessionId: tt.session.id,
-      venueId: tt.session.venueId,
-      organizerId: tt.session.event.organizerId,
-    });
-  }
-  const applied = await resolveAutoDiscounts(discountLines);
+  const clean = lines
+    .filter((l) => typeof l.ticketTypeId === "string" && Number.isInteger(l.quantity))
+    .map((l) => ({
+      ticketTypeId: l.ticketTypeId,
+      quantity: l.quantity,
+      seats: Array.isArray(l.seats) ? l.seats.filter((s) => typeof s === "string").slice(0, 100) : undefined,
+    }));
+  const resolved = await resolveAutoDiscounts(clean);
+  const items = resolved.applied.map((d) => ({
+    label: appliedLabel(d, locale),
+    amountCents: d.amountCents,
+  }));
   return {
-    amountCents: applied.reduce((s, d) => s + d.amountCents, 0),
-    labels: applied.map((d) => {
-      const label = d.label as Record<string, string> | null;
-      return label?.[locale] ?? label?.fr ?? "";
-    }),
+    amountCents: resolved.totalCents,
+    labels: items.map((i) => i.label),
+    items,
   };
 }
