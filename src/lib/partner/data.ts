@@ -24,7 +24,9 @@ import {
  */
 
 const SALE_STATUSES = ["PUBLISHED", "SOLD_OUT"] as const;
-const MAX_EVENTS = 8;
+// Le SAV précharge cette liste comme catalogue : au-delà, `truncated` lui dit qu'il ne voit pas tout.
+const MAX_EVENTS = 24;
+const MAX_SESSIONS = 5;
 
 function visibleEventWhere(organizerId: string | null) {
   return organizerId
@@ -71,7 +73,7 @@ export async function searchEvents(input: {
   });
 
   const origin = publicAppOrigin();
-  return rows
+  const matching = rows
     .filter((e) => {
       const starts = e.sessions.map((s) => s.startsAt);
       return (
@@ -88,24 +90,27 @@ export async function searchEvents(input: {
         ) && matchesDate(starts, input.date)
       );
     })
-    .sort((a, b) => +a.sessions[0].startsAt - +b.sessions[0].startsAt)
-    .slice(0, MAX_EVENTS)
-    .map((e) => ({
-      id: e.id,
-      title: pick(e.title as Record<string, string>, input.locale),
-      organizer: e.organizer.name,
-      organizerId: e.organizer.id,
-      soldOut: e.status === "SOLD_OUT",
-      salesPaused: e.salesPaused,
-      // Étiquettes (« Bel canto, Jeunes talents ») : le SAV en déduit une durée quand la fin n'est pas saisie.
-      tags: pick(e.tags as Record<string, string> | null, input.locale) || null,
-      sessions: e.sessions.slice(0, 5).map((s) => ({
-        startsAt: s.startsAt.toISOString(),
-        endsAt: s.endsAt?.toISOString() ?? null,
-        venue: s.venue ? `${s.venue.name}, ${s.venue.city}` : null,
-      })),
-      url: eventPageUrl(origin, input.locale, e.slug),
-    }));
+    .sort((a, b) => +a.sessions[0].startsAt - +b.sessions[0].startsAt);
+  const events = matching.slice(0, MAX_EVENTS).map((e) => ({
+    id: e.id,
+    title: pick(e.title as Record<string, string>, input.locale),
+    organizer: e.organizer.name,
+    organizerId: e.organizer.id,
+    soldOut: e.status === "SOLD_OUT",
+    salesPaused: e.salesPaused,
+    // Étiquettes (« Bel canto, Jeunes talents ») : le SAV en déduit une durée quand la fin n'est pas saisie.
+    tags: pick(e.tags as Record<string, string> | null, input.locale) || null,
+    // Seules les premières séances partent : le total et la dernière date disent ce qui manque.
+    sessionsTotal: e.sessions.length,
+    lastAt: e.sessions[e.sessions.length - 1]!.startsAt.toISOString(),
+    sessions: e.sessions.slice(0, MAX_SESSIONS).map((s) => ({
+      startsAt: s.startsAt.toISOString(),
+      endsAt: s.endsAt?.toISOString() ?? null,
+      venue: s.venue ? `${s.venue.name}, ${s.venue.city}` : null,
+    })),
+    url: eventPageUrl(origin, input.locale, e.slug),
+  }));
+  return { events, truncated: matching.length > MAX_EVENTS };
 }
 
 async function loadEvent(id: string, organizerId: string | null) {
