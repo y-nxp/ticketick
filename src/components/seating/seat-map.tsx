@@ -11,7 +11,7 @@ import {
   type SeatLayout,
   type SeatZone,
 } from "@/lib/seating/layout";
-import { takenFill, takenMark } from "@/lib/seating/contrast";
+import { TAKEN_GREY } from "@/lib/seating/contrast";
 import { t } from "@/lib/types";
 
 /**
@@ -51,15 +51,11 @@ function keepsZoneColors(layout: SeatLayout, uniform: boolean): boolean {
   return !uniform || layout.zones.some((z) => readView(z.view));
 }
 
-/**
- * Achat en cours : hachures d'encre translucide sur le gris des places
- * occupées (gris choisi selon les catégories, voir `takenFill`).
- */
+/** Achat en cours : hachures d'encre translucide sur le gris des places occupées. */
 const HELD_PATTERN_ID = "seat-held-stripes";
 const HELD_STRIPE = "rgba(42,44,48,0.3)";
 /** Même motif en CSS pour la pastille de la légende. */
-const heldSwatch = (taken: string) =>
-  `repeating-linear-gradient(135deg, transparent 0 3px, ${HELD_STRIPE} 3px 4.5px), ${taken}`;
+const HELD_SWATCH = `repeating-linear-gradient(135deg, transparent 0 3px, ${HELD_STRIPE} 3px 4.5px), ${TAKEN_GREY}`;
 
 /**
  * Libellé d'une zone : nom de la catégorie et visibilité réduite. Salle au
@@ -73,20 +69,19 @@ function zoneText(zone: SeatZone, locale: string, uniform: boolean): string | nu
 
 /**
  * Une place, dessinée à l'échelle `s` autour de (0, 0). Chaque état a un repère
- * qui ne dépend pas de la couleur : croix (occupée), contour pointillé (hors
- * tarif), double contour (sélectionnée), coche dans un coin (à vous).
+ * qui ne dépend pas de la couleur : croix (occupée), hachures (achat en cours),
+ * contour pointillé (hors tarif), double contour (sélectionnée), contour épais
+ * de la couleur de marque sur fond clair (à vous).
  */
 function SeatShape({
   state,
   s,
   fill,
-  taken,
   number,
 }: {
   state: SeatState;
   s: number;
   fill: string;
-  taken: string;
   number?: string;
 }) {
   const half = s / 2;
@@ -102,7 +97,7 @@ function SeatShape({
         width={s}
         height={s}
         rx={2.5}
-        fill={mine ? "var(--background)" : isTaken ? taken : fill}
+        fill={mine ? "var(--background)" : isTaken ? TAKEN_GREY : fill}
         opacity={state === "off" ? 0.45 : 1}
         stroke={
           selected ? "var(--foreground)" : mine ? "var(--primary)" : "rgba(42,44,48,0.35)"
@@ -138,34 +133,15 @@ function SeatShape({
       {isTaken ? (
         <path
           d={`M${-cross} ${-cross}L${cross} ${cross}M${cross} ${-cross}L${-cross} ${cross}`}
-          stroke={takenMark(taken)}
+          stroke={INK}
           strokeWidth={Math.max(0.9, s * 0.08)}
           strokeLinecap="round"
           opacity={0.7}
           className="pointer-events-none"
         />
       ) : null}
-      {mine ? (
-        <g className="pointer-events-none" transform={`translate(${half} ${-half})`}>
-          <circle r={s * 0.24} fill="var(--primary)" stroke="var(--background)" strokeWidth={0.8} />
-          <path
-            d={`M${-s * 0.11} 0L${-s * 0.02} ${s * 0.09}L${s * 0.12} ${-s * 0.08}`}
-            fill="none"
-            stroke="var(--primary-foreground)"
-            strokeWidth={Math.max(0.9, s * 0.07)}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </g>
-      ) : null}
     </>
   );
-}
-
-/** Couleurs de catégorie dont le gris des places occupées doit se distinguer. */
-function categoryColors(layout: SeatLayout, uniform: boolean): string[] {
-  const zones = layout.zones.map((z) => z.color);
-  return keepsZoneColors(layout, uniform) && !uniform ? zones : [UNIFORM_FREE, ...zones];
 }
 
 /**
@@ -193,7 +169,6 @@ export function SeatMap({
   const { viewBox: vb, seatSize: s } = layout;
   const zones = new Map(layout.zones.map((z) => [z.key, z]));
   const tinted = keepsZoneColors(layout, uniform);
-  const taken = takenFill(categoryColors(layout, uniform));
   const rows = React.useMemo(
     () => (layout.rowNumbers ? rowNumberMarks(layout) : []),
     [layout],
@@ -237,7 +212,7 @@ export function SeatMap({
               height={s / 3}
               patternTransform="rotate(45)"
             >
-              <rect width={s / 3} height={s / 3} fill={taken} />
+              <rect width={s / 3} height={s / 3} fill={TAKEN_GREY} />
               <rect width={s / 9} height={s / 3} fill={HELD_STRIPE} />
             </pattern>
           </defs>
@@ -337,7 +312,7 @@ export function SeatMap({
                 className={clickable ? "cursor-pointer outline-none [&:focus-visible>rect]:stroke-[var(--foreground)] [&:focus-visible>rect]:stroke-2" : undefined}
               >
                 <title>{label}</title>
-                <SeatShape state={state} s={s} fill={fill} taken={taken} number={seat.number} />
+                <SeatShape state={state} s={s} fill={fill} number={seat.number} />
               </g>
             );
           })}
@@ -370,10 +345,9 @@ export function SeatLegend({
 }) {
   const te = useTranslations("event");
   const swatch = "inline-block size-3.5 shrink-0 rounded-[3px] border border-black/20";
-  const taken = takenFill(categoryColors(layout, uniformPrice != null));
   const legendSeat = (state: SeatState, fill: string) => (
     <svg viewBox="-9 -9 18 18" className="size-4 shrink-0 overflow-visible" aria-hidden>
-      <SeatShape state={state} s={14} fill={fill} taken={taken} />
+      <SeatShape state={state} s={14} fill={fill} />
     </svg>
   );
   const hasFallback = layout.seats.some((seat) => !layout.zones.some((z) => z.key === seat.zone));
@@ -442,7 +416,7 @@ export function SeatLegend({
       </li>
       {heldLabel ? (
         <li className="flex items-center gap-2">
-          <span className={swatch} style={{ background: heldSwatch(taken) }} />
+          <span className={swatch} style={{ background: HELD_SWATCH }} />
           {heldLabel}
         </li>
       ) : null}

@@ -1,7 +1,8 @@
 /**
  * Contraste des couleurs du plan de salle. Les catégories viennent des plans
- * des salles : on ne peut pas les changer, mais on peut choisir le gris des
- * places occupées pour qu'il s'en distingue par la luminosité (daltonisme).
+ * des salles : on ne peut pas les changer, mais le gris des places occupées
+ * doit s'en distinguer par la luminosité, pas seulement par la teinte
+ * (daltonisme). Le test vérifie ce gris contre les couleurs connues.
  */
 
 function channel(v: number): number {
@@ -27,27 +28,9 @@ export function contrastRatio(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-export const TAKEN_GREYS = ["#d4d4d8", "#9a9aa3", "#5b5b64"] as const;
-
-/** Croix des places occupées : claire sur le gris foncé, sinon l'encre du plan. */
-export function takenMark(grey: string): string {
-  return grey === TAKEN_GREYS[2] ? "var(--primary-foreground)" : "var(--seat-ink)";
-}
-
 /**
- * Gris des places occupées : celui des trois qui s'écarte le plus, en
- * luminosité, de la couleur de catégorie la plus proche.
+ * Gris des places occupées : un seul gris, moyen. Il s'écarte en luminosité
+ * de la lavande du prix unique et des pastels des catégories (Rougemont
+ * Cat. 2 comprise) sans assombrir le plan, et la croix d'encre y reste nette.
  */
-export function takenFill(colors: string[]): string {
-  let best: string = TAKEN_GREYS[1];
-  let bestMin = -1;
-  for (const grey of [TAKEN_GREYS[1], TAKEN_GREYS[0], TAKEN_GREYS[2]]) {
-    const min = Math.min(21, ...colors.map((c) => contrastRatio(grey, c)));
-    // Le gris moyen l'emporte à égalité : la croix y reste nette.
-    if (min > bestMin + 0.05) {
-      bestMin = min;
-      best = grey;
-    }
-  }
-  return best;
-}
+export const TAKEN_GREY = "#9a9aa3";
