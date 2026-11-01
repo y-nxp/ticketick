@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronDown, ZoomIn, ZoomOut } from "lucide-react";
 import {
   readView,
   rowNumberMarks,
@@ -77,6 +77,23 @@ export function SeatMap({
 }) {
   const te = useTranslations("event");
   const [zoom, setZoom] = React.useState(0);
+  const boxRef = React.useRef<HTMLDivElement>(null);
+  // Le plan dépasse la boîte : la suite est sous le pli (barre de défilement
+  // invisible sur Mac), on l'indique par un dégradé et un bouton.
+  const [moreBelow, setMoreBelow] = React.useState(false);
+  const checkMore = React.useCallback(() => {
+    const el = boxRef.current;
+    if (el) setMoreBelow(el.scrollHeight - el.scrollTop - el.clientHeight > 24);
+  }, []);
+  React.useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    checkMore();
+    const ro = new ResizeObserver(checkMore);
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    return () => ro.disconnect();
+  }, [checkMore, zoom, layout]);
   const { viewBox: vb, seatSize: s } = layout;
   const zones = new Map(layout.zones.map((z) => [z.key, z]));
   const tinted = keepsZoneColors(layout, uniform);
@@ -107,7 +124,11 @@ export function SeatMap({
           <ZoomIn className="size-4" />
         </button>
       </div>
-      <div className="max-h-[75vh] overflow-auto rounded-control border border-border bg-background">
+      <div
+        ref={boxRef}
+        onScroll={checkMore}
+        className="max-h-[75vh] overflow-auto rounded-control border border-border bg-background"
+      >
         <svg
           viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
           style={{ width: `${ZOOMS[zoom] * 100}%` }}
@@ -253,6 +274,23 @@ export function SeatMap({
           })}
         </svg>
       </div>
+      {moreBelow ? (
+        <div className="pointer-events-none absolute inset-x-px bottom-px flex h-16 items-end justify-center rounded-b-control bg-gradient-to-t from-background via-background/80 to-transparent pb-2">
+          <button
+            type="button"
+            onClick={() =>
+              boxRef.current?.scrollBy({
+                top: boxRef.current.clientHeight * 0.8,
+                behavior: "smooth",
+              })
+            }
+            className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium shadow-sm hover:bg-secondary"
+          >
+            <ChevronDown className="size-3.5" />
+            {te("seatMoreBelow")}
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -113,6 +113,7 @@
     "seatError": "El plano no está disponible en este momento. Inténtalo de nuevo en un instante.",
     "zoomIn": "Ampliar el plano",
     "zoomOut": "Reducir el plano",
+    "seatMoreBelow": "Ver el resto del plano",
     "attendeeNote": "Se piden el nombre y la fecha de nacimiento al pagar.",
     "attendeeNoteAge": "Menores de {age} años: se piden el nombre y la fecha de nacimiento al pagar.",
     "paused": {
