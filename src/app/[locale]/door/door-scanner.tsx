@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useLocale, useTranslations } from "next-intl";
 import jsQR from "jsqr";
-import { Camera, Keyboard, Loader2, ScanLine, Users } from "lucide-react";
+import { Camera, Check, Keyboard, Loader2, ScanLine, TriangleAlert, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { admitTicket, doorCounts, type DoorLookup } from "@/lib/door/actions";
@@ -248,7 +248,8 @@ function Resultat({ lookup, locale }: { lookup: DoorLookup; locale: string }) {
 
   if (!lookup.ok) {
     return (
-      <div className="rounded-card bg-destructive px-4 py-5 text-center text-white">
+      <div className="rounded-card bg-red-700 px-4 py-5 text-center text-white">
+        <X className="mx-auto mb-1 size-10" strokeWidth={3} aria-hidden />
         <p className="text-xl font-extrabold uppercase">{t("refused")}</p>
         <p className="mt-1 text-sm text-white/90">{t(lookup.reason)}</p>
         {lookup.reason === "otherSession" ? (
@@ -281,6 +282,11 @@ function Resultat({ lookup, locale }: { lookup: DoorLookup; locale: string }) {
         deja ? "bg-amber-700" : "bg-emerald-700"
       }`}
     >
+      {deja ? (
+        <TriangleAlert className="mx-auto mb-1 size-10" strokeWidth={2.5} aria-hidden />
+      ) : (
+        <Check className="mx-auto mb-1 size-10" strokeWidth={3} aria-hidden />
+      )}
       <p className="text-xl font-extrabold uppercase">
         {deja ? t("alreadyUsed") : t("admitted")}
       </p>

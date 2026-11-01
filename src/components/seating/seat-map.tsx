@@ -11,6 +11,7 @@ import {
   type SeatLayout,
   type SeatZone,
 } from "@/lib/seating/layout";
+import { TAKEN_GREY } from "@/lib/seating/contrast";
 import { t } from "@/lib/types";
 
 /**
@@ -27,15 +28,20 @@ export type SeatState =
   | "blocked";
 
 const ZOOMS = [1, 1.5, 2.25];
+/** Texte d'état d'une place (titre et aria-label), hors place libre. */
+const STATE_TEXT = {
+  selected: "seatStateSelected",
+  mine: "seatStateMine",
+  taken: "seatTaken",
+  held: "seatHeld",
+  off: "seatOff",
+  blocked: "seatBlocked",
+} as const;
 /** Places libres quand toute la salle est au même prix : pas de catégories. */
 const UNIFORM_FREE = "#CFC9F8";
-/** Place occupée (vendue ou retenue sans date de retour). */
-const TAKEN = "#d4d4d8";
-/** Achat en cours : hachures sur le gris des places occupées. */
-const HELD_STRIPE = "#9ca3af";
-const HELD_PATTERN_ID = "seat-held-stripes";
-/** Même motif en CSS pour la pastille de la légende. */
-const HELD_SWATCH = `repeating-linear-gradient(135deg, ${TAKEN} 0 3px, ${HELD_STRIPE} 3px 4.5px)`;
+/** Couleur d'une place libre dont la zone n'a pas de couleur. */
+const FALLBACK_FREE = "var(--seat-free)";
+const INK = "var(--seat-ink)";
 
 /**
  * Salle au même prix partout : les couleurs ne servent plus qu'à montrer les
@@ -45,6 +51,12 @@ function keepsZoneColors(layout: SeatLayout, uniform: boolean): boolean {
   return !uniform || layout.zones.some((z) => readView(z.view));
 }
 
+/** Achat en cours : hachures d'encre translucide sur le gris des places occupées. */
+const HELD_PATTERN_ID = "seat-held-stripes";
+const HELD_STRIPE = "rgba(42,44,48,0.3)";
+/** Même motif en CSS pour la pastille de la légende. */
+const HELD_SWATCH = `repeating-linear-gradient(135deg, transparent 0 3px, ${HELD_STRIPE} 3px 4.5px), ${TAKEN_GREY}`;
+
 /**
  * Libellé d'une zone : nom de la catégorie et visibilité réduite. Salle au
  * même prix : la visibilité seule, sans nom de catégorie.
@@ -53,6 +65,99 @@ function zoneText(zone: SeatZone, locale: string, uniform: boolean): string | nu
   const view = viewLabel(readView(zone.view), locale);
   if (uniform) return view;
   return [t(zone.name, locale), view].filter(Boolean).join(" · ");
+}
+
+/**
+ * Une place, dessinée à l'échelle `s` autour de (0, 0). Chaque état a un repère
+ * qui ne dépend pas de la couleur : croix (occupée), hachures (achat en cours),
+ * contour pointillé (hors tarif), double contour (sélectionnée), contour épais
+ * de la couleur de marque sur fond clair (à vous).
+ */
+function SeatShape({
+  state,
+  s,
+  fill,
+  number,
+}: {
+  state: SeatState;
+  s: number;
+  fill: string;
+  number?: string;
+}) {
+  const half = s / 2;
+  const cross = s * 0.22;
+  const mine = state === "mine";
+  const selected = state === "selected";
+  const isTaken = state === "taken";
+  const off = state === "off";
+  return (
+    <>
+      <rect
+        x={-half}
+        y={-half}
+        width={s}
+        height={s}
+        rx={2.5}
+        fill={mine ? "var(--background)" : isTaken ? TAKEN_GREY : fill}
+        // Hors tarif : fond estompé (selon le thème), pointillé net.
+        style={off ? { fillOpacity: "var(--seat-off-fill)" } : undefined}
+        stroke={
+          selected
+            ? "var(--foreground)"
+            : mine
+              ? "var(--primary)"
+              : off
+                ? "var(--muted-foreground)"
+                : "var(--seat-edge)"
+        }
+        strokeWidth={selected ? 2 : mine ? 1.8 : off ? 0.9 : 0.6}
+        strokeDasharray={off ? `${s * 0.15} ${s * 0.1}` : undefined}
+      />
+      {selected ? (
+        <rect
+          x={-half + 2}
+          y={-half + 2}
+          width={s - 4}
+          height={s - 4}
+          rx={1.5}
+          fill="none"
+          stroke="var(--primary-foreground)"
+          strokeWidth={0.9}
+        />
+      ) : null}
+      {number != null && !isTaken ? (
+        <text
+          textAnchor="middle"
+          dominantBaseline="central"
+          style={{ fontSize: s * 0.5 }}
+          fill={
+            selected
+              ? "var(--primary-foreground)"
+              : state === "blocked"
+                ? "var(--seat-reserved-ink)"
+                : off
+                  ? "var(--muted-foreground)"
+                  : mine
+                  ? "var(--foreground)"
+                  : INK
+          }
+          className="pointer-events-none font-semibold"
+        >
+          {number}
+        </text>
+      ) : null}
+      {isTaken ? (
+        <path
+          d={`M${-cross} ${-cross}L${cross} ${cross}M${cross} ${-cross}L${-cross} ${cross}`}
+          stroke={INK}
+          strokeWidth={Math.max(0.9, s * 0.08)}
+          strokeLinecap="round"
+          opacity={0.7}
+          className="pointer-events-none"
+        />
+      ) : null}
+    </>
+  );
 }
 
 /**
@@ -72,7 +177,7 @@ export function SeatMap({
   stateOf: (key: string) => SeatState;
   onToggle: (key: string) => void;
   uniform?: boolean;
-  /** Précision ajoutée à l'infobulle d'une place (heure de libération…). */
+  /** Précision qui remplace le texte d'état d'une place dans l'infobulle (heure de libération…). */
   noteOf?: (key: string, state: SeatState) => string | null | undefined;
 }) {
   const te = useTranslations("event");
@@ -144,7 +249,7 @@ export function SeatMap({
               height={s / 3}
               patternTransform="rotate(45)"
             >
-              <rect width={s / 3} height={s / 3} fill={TAKEN} />
+              <rect width={s / 3} height={s / 3} fill={TAKEN_GREY} />
               <rect width={s / 9} height={s / 3} fill={HELD_STRIPE} />
             </pattern>
           </defs>
@@ -203,25 +308,24 @@ export function SeatMap({
             const zone = zones.get(seat.zone);
             const clickable =
               state === "free" || state === "selected" || state === "blocked";
+            const stateText = state === "free" ? null : te(STATE_TEXT[state]);
             const label = [
               seatLabel(layout, seat.key, locale, { view: false }),
               zone ? zoneText(zone, locale, uniform) : null,
-              noteOf?.(seat.key, state),
+              noteOf?.(seat.key, state) ?? stateText,
             ]
               .filter(Boolean)
               .join(" · ");
             const fill =
-              state === "selected" || state === "mine"
+              state === "selected"
                 ? "var(--primary)"
                 : state === "blocked"
-                  ? "#2A2C30"
+                  ? "var(--seat-reserved)"
                   : state === "held"
                     ? `url(#${HELD_PATTERN_ID})`
-                  : state === "free"
-                  ? tinted
-                    ? (zone?.color ?? "#e5e7eb")
-                    : UNIFORM_FREE
-                  : TAKEN;
+                    : tinted
+                      ? (zone?.color ?? FALLBACK_FREE)
+                      : UNIFORM_FREE;
             return (
               <g
                 key={seat.key}
@@ -245,30 +349,7 @@ export function SeatMap({
                 className={clickable ? "cursor-pointer outline-none [&:focus-visible>rect]:stroke-[var(--foreground)] [&:focus-visible>rect]:stroke-2" : undefined}
               >
                 <title>{label}</title>
-                <rect
-                  x={-s / 2}
-                  y={-s / 2}
-                  width={s}
-                  height={s}
-                  rx={2.5}
-                  fill={fill}
-                  opacity={state === "mine" ? 0.4 : state === "off" ? 0.45 : 1}
-                  stroke={state === "selected" ? "var(--foreground)" : "rgba(42,44,48,0.35)"}
-                  strokeWidth={state === "selected" ? 1.5 : 0.6}
-                />
-                <text
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  style={{ fontSize: s * 0.5 }}
-                  fill={
-                    state === "selected" || state === "mine" || state === "blocked"
-                      ? "#fff"
-                      : "#2A2C30"
-                  }
-                  className="pointer-events-none font-semibold"
-                >
-                  {seat.number}
-                </text>
+                <SeatShape state={state} s={s} fill={fill} number={seat.number} />
               </g>
             );
           })}
@@ -302,6 +383,7 @@ export function SeatLegend({
   uniformPrice,
   mineLabel,
   heldLabel,
+  showOff,
 }: {
   layout: SeatLayout;
   locale: string;
@@ -312,9 +394,17 @@ export function SeatLegend({
   mineLabel?: string;
   /** Places en cours d'achat par d'autres (état `held`), quand il y en a. */
   heldLabel?: string;
+  /** Le plan montre des places hors tarif (état `off`). */
+  showOff?: boolean;
 }) {
   const te = useTranslations("event");
   const swatch = "inline-block size-3.5 shrink-0 rounded-[3px] border border-black/20";
+  const legendSeat = (state: SeatState, fill: string) => (
+    <svg viewBox="-9 -9 18 18" className="size-4 shrink-0 overflow-visible" aria-hidden>
+      <SeatShape state={state} s={14} fill={fill} />
+    </svg>
+  );
+  const hasFallback = layout.seats.some((seat) => !layout.zones.some((z) => z.key === seat.zone));
   const uniform = uniformPrice != null;
   const items: { key: string; colors: string[]; text: string; price?: string }[] = [];
   if (!uniform) {
@@ -358,24 +448,36 @@ export function SeatLegend({
           </span>
         </li>
       ))}
+      {hasFallback ? (
+        <li className="flex items-center gap-2">
+          {legendSeat("free", FALLBACK_FREE)}
+          {te("seatFree")}
+        </li>
+      ) : null}
       <li className="flex items-center gap-2">
-        <span className={swatch} style={{ background: "var(--primary)" }} />
+        {legendSeat("selected", "var(--primary)")}
         {te("seatSelected")}
       </li>
       {mineLabel ? (
         <li className="flex items-center gap-2">
-          <span className={swatch} style={{ background: "var(--primary)", opacity: 0.4 }} />
+          {legendSeat("mine", "var(--primary)")}
           {mineLabel}
         </li>
       ) : null}
       <li className="flex items-center gap-2">
-        <span className={swatch} style={{ background: TAKEN }} />
+        {legendSeat("taken", "")}
         {te("seatTaken")}
       </li>
       {heldLabel ? (
         <li className="flex items-center gap-2">
           <span className={swatch} style={{ background: HELD_SWATCH }} />
           {heldLabel}
+        </li>
+      ) : null}
+      {showOff ? (
+        <li className="flex items-center gap-2">
+          {legendSeat("off", UNIFORM_FREE)}
+          {te("seatOff")}
         </li>
       ) : null}
     </ul>
