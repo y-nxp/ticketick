@@ -248,7 +248,7 @@ function Resultat({ lookup, locale }: { lookup: DoorLookup; locale: string }) {
 
   if (!lookup.ok) {
     return (
-      <div className="rounded-card bg-destructive px-4 py-5 text-center text-white">
+      <div className="rounded-card bg-red-700 px-4 py-5 text-center text-white">
         <X className="mx-auto mb-1 size-10" strokeWidth={3} aria-hidden />
         <p className="text-xl font-extrabold uppercase">{t("refused")}</p>
         <p className="mt-1 text-sm text-white/90">{t(lookup.reason)}</p>

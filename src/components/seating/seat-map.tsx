@@ -100,7 +100,7 @@ function SeatShape({
         fill={mine ? "var(--background)" : isTaken ? TAKEN_GREY : fill}
         opacity={state === "off" ? 0.45 : 1}
         stroke={
-          selected ? "var(--foreground)" : mine ? "var(--primary)" : "rgba(42,44,48,0.35)"
+          selected ? "var(--foreground)" : mine ? "var(--primary)" : "var(--seat-edge)"
         }
         strokeWidth={selected ? 2 : mine ? 1.8 : 0.6}
         strokeDasharray={state === "off" ? `${s * 0.15} ${s * 0.1}` : undefined}
@@ -123,7 +123,13 @@ function SeatShape({
           dominantBaseline="central"
           style={{ fontSize: s * 0.5 }}
           fill={
-            selected || state === "blocked" ? "var(--primary-foreground)" : mine ? "var(--foreground)" : INK
+            selected
+              ? "var(--primary-foreground)"
+              : state === "blocked"
+                ? "var(--seat-reserved-ink)"
+                : mine
+                  ? "var(--foreground)"
+                  : INK
           }
           className="pointer-events-none font-semibold"
         >
@@ -283,7 +289,7 @@ export function SeatMap({
               state === "selected"
                 ? "var(--primary)"
                 : state === "blocked"
-                  ? INK
+                  ? "var(--seat-reserved)"
                   : state === "held"
                     ? `url(#${HELD_PATTERN_ID})`
                     : tinted

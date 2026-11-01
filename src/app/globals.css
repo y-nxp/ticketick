@@ -50,6 +50,9 @@
   /* Plan de salle : mêmes valeurs en clair et en sombre (les places restent claires) */
   --seat-ink: #2a2c30;
   --seat-free: #e5e7eb; /* place sans couleur de catégorie */
+  --seat-edge: rgba(42, 44, 48, 0.35); /* contour fin des places */
+  --seat-reserved: #2a2c30; /* place réservée : fond et numéro posé dessus */
+  --seat-reserved-ink: #ffffff;
 }
 
 .dark {
@@ -85,6 +88,11 @@
   --border: #3a3d44;
   --input: #3a3d44;
   --ring: #8577ec;
+
+  /* Plan de salle : les places restent claires, mais contour et réservées s'inversent */
+  --seat-edge: rgba(207, 210, 217, 0.55);
+  --seat-reserved: #c9ccd3;
+  --seat-reserved-ink: #2a2c30;
 }
 
 @theme inline {
