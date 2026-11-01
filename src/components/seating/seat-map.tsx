@@ -89,6 +89,7 @@ function SeatShape({
   const mine = state === "mine";
   const selected = state === "selected";
   const isTaken = state === "taken";
+  const off = state === "off";
   return (
     <>
       <rect
@@ -98,12 +99,19 @@ function SeatShape({
         height={s}
         rx={2.5}
         fill={mine ? "var(--background)" : isTaken ? TAKEN_GREY : fill}
-        opacity={state === "off" ? 0.45 : 1}
+        // Hors tarif : fond estompé (selon le thème), pointillé net.
+        style={off ? { fillOpacity: "var(--seat-off-fill)" } : undefined}
         stroke={
-          selected ? "var(--foreground)" : mine ? "var(--primary)" : "var(--seat-edge)"
+          selected
+            ? "var(--foreground)"
+            : mine
+              ? "var(--primary)"
+              : off
+                ? "var(--muted-foreground)"
+                : "var(--seat-edge)"
         }
-        strokeWidth={selected ? 2 : mine ? 1.8 : 0.6}
-        strokeDasharray={state === "off" ? `${s * 0.15} ${s * 0.1}` : undefined}
+        strokeWidth={selected ? 2 : mine ? 1.8 : off ? 0.9 : 0.6}
+        strokeDasharray={off ? `${s * 0.15} ${s * 0.1}` : undefined}
       />
       {selected ? (
         <rect
@@ -127,7 +135,9 @@ function SeatShape({
               ? "var(--primary-foreground)"
               : state === "blocked"
                 ? "var(--seat-reserved-ink)"
-                : mine
+                : off
+                  ? "var(--muted-foreground)"
+                  : mine
                   ? "var(--foreground)"
                   : INK
           }

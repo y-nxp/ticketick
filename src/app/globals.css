@@ -53,6 +53,7 @@
   --seat-edge: rgba(42, 44, 48, 0.35); /* contour fin des places */
   --seat-reserved: #2a2c30; /* place réservée : fond et numéro posé dessus */
   --seat-reserved-ink: #ffffff;
+  --seat-off-fill: 0.45; /* opacité du fond d'une place hors tarif */
 }
 
 .dark {
@@ -93,6 +94,7 @@
   --seat-edge: rgba(207, 210, 217, 0.55);
   --seat-reserved: #c9ccd3;
   --seat-reserved-ink: #2a2c30;
+  --seat-off-fill: 0.16;
 }
 
 @theme inline {
