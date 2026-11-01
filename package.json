@@ -53,7 +53,7 @@
     "prisma": "^6.19.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
-    "typescript": "^5"
+    "typescript": "^7"
   },
   "allowScripts": {
     "@swc/core@1.16.20": true,
