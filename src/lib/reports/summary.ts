@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { HOLD_PLACEHOLDER_DOMAIN } from "@/lib/orders/create-order";
 import { ticketRevenueCents } from "@/lib/orders/discount-engine";
 import { readLayout } from "@/lib/seating/layout";
+import { tallySessionOptions, type SessionOptionReport } from "./options-section";
 
 /**
  * Rapport d'un organisateur, séance par séance, pour les dates à venir :
@@ -62,6 +63,8 @@ export interface ReportSession extends ReportFigures {
   venue: string | null;
   seated: boolean;
   reservations: InvitationReservation[];
+  /** Options choisies par les commandes payées (navette…). */
+  options: SessionOptionReport[];
 }
 
 const EMPTY: ReportFigures = {
@@ -79,7 +82,7 @@ const EMPTY: ReportFigures = {
 
 export async function getOrganizerReport(
   organizerId: string,
-  options: { since: Date; now?: Date },
+  options: { since: Date; now?: Date; locale?: string },
 ): Promise<{ sessions: ReportSession[]; totals: ReportFigures }> {
   const now = options.now ?? new Date();
   const sessions = await prisma.eventSession.findMany({
@@ -108,7 +111,7 @@ export async function getOrganizerReport(
   const ofSession = { ticketType: { sessionId: { in: ids } } };
 
   const planIds = [...new Set(sessions.map((s) => s.seatPlanId).filter((id): id is string => !!id))];
-  const [plans, seatCounts, reservationTickets, soldTickets, pendingItems] = await Promise.all([
+  const [plans, seatCounts, reservationTickets, soldTickets, pendingItems, orderOptions] = await Promise.all([
     prisma.seatPlan.findMany({ where: { id: { in: planIds } }, select: { id: true, layout: true } }),
     prisma.sessionSeat.groupBy({
       by: ["sessionId", "status"],
@@ -180,6 +183,46 @@ export async function getOrganizerReport(
       },
       select: { ticketTypeId: true, quantity: true },
     }),
+    prisma.orderOption.findMany({
+      where: {
+        order: { status: "PAID", tickets: { some: { ...ofSession, status: { in: ["VALID", "USED"] } } } },
+        option: { event: { organizerId } },
+      },
+      orderBy: { order: { createdAt: "asc" } },
+      select: {
+        summary: true,
+        option: {
+          select: {
+            id: true,
+            title: true,
+            sortOrder: true,
+            sessionId: true,
+            groups: {
+              orderBy: { sortOrder: "asc" },
+              select: {
+                id: true,
+                title: true,
+                choices: { orderBy: { sortOrder: "asc" }, select: { id: true, label: true } },
+              },
+            },
+          },
+        },
+        order: {
+          select: {
+            id: true,
+            reference: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            email: true,
+            tickets: {
+              where: { ...ofSession, status: { in: ["VALID", "USED"] } },
+              select: { ticketType: { select: { sessionId: true } } },
+            },
+          },
+        },
+      },
+    }),
   ]);
 
   const figures = new Map<string, ReportFigures>(ids.map((id) => [id, { ...EMPTY }]));
@@ -229,6 +272,36 @@ export async function getOrganizerReport(
     reservations.set(sessionId, bySession);
   }
 
+  // Une option liée à une séance y reste ; sinon, la séance des billets de la
+  // commande (la plus fournie si la commande en couvre plusieurs).
+  const optionsBySession = tallySessionOptions(
+    orderOptions.flatMap(({ summary, option, order }) => {
+      const counts = new Map<string, number>();
+      for (const ticket of order.tickets) {
+        counts.set(ticket.ticketType.sessionId, (counts.get(ticket.ticketType.sessionId) ?? 0) + 1);
+      }
+      const sessionId =
+        option.sessionId ?? [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+      if (!sessionId || !counts.has(sessionId)) return [];
+      return [
+        {
+          sessionId,
+          option,
+          summary,
+          people: counts.get(sessionId)!,
+          order: {
+            id: order.id,
+            reference: order.reference,
+            name: `${order.firstName} ${order.lastName}`.trim(),
+            phone: order.phone,
+            email: order.email,
+          },
+        },
+      ];
+    }),
+    options.locale ?? "fr",
+  );
+
   const seatsInPlan = new Map(plans.map((p) => [p.id, readLayout(p.layout)?.seats.length ?? 0]));
   const seatStatus = new Map<string, Record<string, number>>();
   for (const row of seatCounts) {
@@ -264,6 +337,7 @@ export async function getOrganizerReport(
           ? Math.max(0, s.capacity - s.sold)
           : s.ticketTypes.reduce((n, tt) => n + Math.max(0, tt.quantity - tt.sold), 0),
       reservations: list,
+      options: optionsBySession.get(s.id) ?? [],
     };
   });
 

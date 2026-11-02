@@ -1635,7 +1635,13 @@
       "title": "Prenotazione alla cassa",
       "intro": "Per un gruppo, un partner o un cliente al telefono: indichi il numero di posti per tariffa, poi il pagamento — omaggio, contanti, link di pagamento con carta o pagamento sul posto la sera dello spettacolo.",
       "introSeated": "Per un gruppo, un partner o un cliente al telefono: scegliete i posti sulla pianta, liberi o bloccati per gli ospiti, oppure indicate un numero di posti per tariffa per l'assegnazione automatica, vicini quando possibile. Scegliete poi il pagamento.",
-      "seatMode": {"title": "Posti", "plan": "Scegliere sulla pianta", "planHint": "Toccate i posti desiderati sulla pianta, liberi o bloccati (ospiti). La tariffa si sceglie poi per ogni posto.", "auto": "Assegnazione automatica", "autoHint": "Indicate le quantità: vengono assegnati i migliori posti liberi; i posti bloccati solo su richiesta."},
+      "seatMode": {
+        "title": "Posti",
+        "plan": "Scegliere sulla pianta",
+        "planHint": "Toccate i posti desiderati sulla pianta, liberi o bloccati (ospiti). La tariffa si sceglie poi per ogni posto.",
+        "auto": "Assegnazione automatica",
+        "autoHint": "Indicate le quantità: vengono assegnati i migliori posti liberi; i posti bloccati solo su richiesta."
+      },
       "planInvitesHint": "Una prenotazione composta solo da posti bloccati è conteggiata sul contingente ospiti: se decade, i posti vi ritornano. Con almeno un posto libero, tornano in vendita.",
       "noTariffs": "Nessuna tariffa per questa data: aggiungine una prima di prenotare.",
       "tariff": "Tariffa",
@@ -1920,7 +1926,18 @@
         "sections": "Scegli almeno una parte del rapporto."
       },
       "frequencyHint": "Il rapporto mostra la situazione al momento dell’invio, data per data. «Nuovi»: dal rapporto automatico precedente.",
-      "sections": "Contenuto del rapporto automatico"
+      "sections": "Contenuto del rapporto automatico",
+      "optionsSummary": "{orders, plural, one {# ordine} other {# ordini}} · {people, plural, one {# persona} other {# persone}}",
+      "optionsBuyers": "Persone iscritte ({count})",
+      "optionsOther": "Etichetta modificata nel frattempo",
+      "people": "{count, plural, =0 {–} one {# persona} other {# persone}}",
+      "orders": "{count, plural, =0 {nessun ordine} one {# ordine} other {# ordini}}",
+      "buyerName": "Nome",
+      "buyerPeople": "Persone",
+      "buyerChoices": "Scelte",
+      "buyerPhone": "Telefono",
+      "buyerOrder": "Ordine",
+      "optionsHeading": "Opzioni scelte — {date}"
     },
     "promotion": {
       "title": "Promozione",
@@ -2545,7 +2562,13 @@
     "promotionTotalRevenue": "Importo tramite le vostre campagne",
     "promotionTotalOther": "Altri spettacoli tramite le vostre campagne",
     "promotionEmpty": "Nessuna campagna attiva.",
-    "footerPromotion": "Promozione: acquisti fatti dopo un clic sulle vostre pubblicazioni, entro {days} giorni, sullo stesso dispositivo — una soglia minima, non l’effetto totale. Importo netto, spese di servizio escluse."
+    "footerPromotion": "Promozione: acquisti fatti dopo un clic sulle vostre pubblicazioni, entro {days} giorni, sullo stesso dispositivo — una soglia minima, non l’effetto totale. Importo netto, spese di servizio escluse.",
+    "optionsTitle": "Opzioni scelte",
+    "optionsChoice": "Scelta",
+    "optionsOrders": "Ordini",
+    "optionsPeople": "Persone",
+    "optionsTotal": "Ordini con questa opzione",
+    "footerOptions": "Opzioni: ordini pagati; Persone = biglietti di questi ordini per la data."
   },
   "consent": {
     "title": "ticketick rispetta la vostra privacy",

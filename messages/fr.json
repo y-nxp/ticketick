@@ -1635,7 +1635,13 @@
       "title": "Réservation au guichet",
       "intro": "Pour un groupe, un partenaire ou un client au téléphone : indiquez le nombre de places par tarif, puis le règlement — offert, espèces, lien de paiement par carte ou paiement sur place le soir du spectacle.",
       "introSeated": "Pour un groupe, un partenaire ou un client au téléphone : choisissez les places sur le plan, libres ou bloquées pour les invités, ou indiquez un nombre de places par tarif pour une attribution automatique, côte à côte quand c'est possible. Choisissez ensuite le règlement.",
-      "seatMode": {"title": "Places", "plan": "Choisir sur le plan", "planHint": "Touchez les places voulues sur le plan, libres ou bloquées (invités). Le tarif se choisit ensuite pour chaque place.", "auto": "Attribution automatique", "autoHint": "Indiquez les quantités : les meilleures places libres sont attribuées ; les places bloquées seulement si vous le demandez."},
+      "seatMode": {
+        "title": "Places",
+        "plan": "Choisir sur le plan",
+        "planHint": "Touchez les places voulues sur le plan, libres ou bloquées (invités). Le tarif se choisit ensuite pour chaque place.",
+        "auto": "Attribution automatique",
+        "autoHint": "Indiquez les quantités : les meilleures places libres sont attribuées ; les places bloquées seulement si vous le demandez."
+      },
       "planInvitesHint": "Une réservation composée uniquement de places bloquées est comptée sur le contingent invités : si elle tombe, les places y retournent. Avec au moins une place libre, elles reviennent en vente.",
       "noTariffs": "Aucun tarif sur cette séance : ajoutez-en un avant de réserver.",
       "tariff": "Tarif",
@@ -1920,7 +1926,18 @@
         "sections": "Choisissez au moins une partie du rapport."
       },
       "frequencyHint": "Le rapport donne l’état au moment de l’envoi, date par date. « Nouveaux » : depuis le rapport automatique précédent.",
-      "sections": "Contenu du rapport automatique"
+      "sections": "Contenu du rapport automatique",
+      "optionsSummary": "{orders, plural, one {# commande} other {# commandes}} · {people, plural, one {# personne} other {# personnes}}",
+      "optionsBuyers": "Personnes inscrites ({count})",
+      "optionsOther": "Libellé modifié depuis",
+      "people": "{count, plural, =0 {–} one {# personne} other {# personnes}}",
+      "orders": "{count, plural, =0 {aucune commande} one {# commande} other {# commandes}}",
+      "buyerName": "Nom",
+      "buyerPeople": "Personnes",
+      "buyerChoices": "Choix",
+      "buyerPhone": "Téléphone",
+      "buyerOrder": "Commande",
+      "optionsHeading": "Options choisies — {date}"
     },
     "promotion": {
       "title": "Promotion",
@@ -2545,7 +2562,13 @@
     "promotionTotalRevenue": "Montant via vos campagnes",
     "promotionTotalOther": "Autres spectacles via vos campagnes",
     "promotionEmpty": "Aucune campagne active.",
-    "footerPromotion": "Promotion : achats faits après un clic sur vos publications, dans les {days} jours, sur le même appareil — un plancher, pas l’effet total. Montant net, frais de service exclus."
+    "footerPromotion": "Promotion : achats faits après un clic sur vos publications, dans les {days} jours, sur le même appareil — un plancher, pas l’effet total. Montant net, frais de service exclus.",
+    "optionsTitle": "Options choisies",
+    "optionsChoice": "Choix",
+    "optionsOrders": "Commandes",
+    "optionsPeople": "Personnes",
+    "optionsTotal": "Commandes avec cette option",
+    "footerOptions": "Options : commandes payées ; Personnes = billets de ces commandes pour la date."
   },
   "consent": {
     "title": "ticketick respecte votre vie privée",
