@@ -1927,7 +1927,7 @@
       },
       "frequencyHint": "The report shows the situation when it is sent, date by date. “New”: since the previous automatic report.",
       "sections": "Automatic report content",
-      "optionsSummary": "{orders, plural, one {# order} other {# orders}} · {people, plural, one {# person} other {# people}}",
+      "optionsSummary": "{people, plural, one {# person} other {# people}} · {orders, plural, one {# order} other {# orders}}",
       "optionsBuyers": "People signed up ({count})",
       "optionsOther": "Label changed since",
       "people": "{count, plural, =0 {–} one {# person} other {# people}}",
@@ -2567,7 +2567,7 @@
     "optionsChoice": "Choice",
     "optionsOrders": "Orders",
     "optionsPeople": "People",
-    "optionsTotal": "Orders with this option",
+    "optionsTotal": "Total",
     "footerOptions": "Options: paid orders; People = tickets in those orders for the date."
   },
   "consent": {

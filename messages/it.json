@@ -1927,7 +1927,7 @@
       },
       "frequencyHint": "Il rapporto mostra la situazione al momento dell’invio, data per data. «Nuovi»: dal rapporto automatico precedente.",
       "sections": "Contenuto del rapporto automatico",
-      "optionsSummary": "{orders, plural, one {# ordine} other {# ordini}} · {people, plural, one {# persona} other {# persone}}",
+      "optionsSummary": "{people, plural, one {# persona} other {# persone}} · {orders, plural, one {# ordine} other {# ordini}}",
       "optionsBuyers": "Persone iscritte ({count})",
       "optionsOther": "Etichetta modificata nel frattempo",
       "people": "{count, plural, =0 {–} one {# persona} other {# persone}}",
@@ -2567,7 +2567,7 @@
     "optionsChoice": "Scelta",
     "optionsOrders": "Ordini",
     "optionsPeople": "Persone",
-    "optionsTotal": "Ordini con questa opzione",
+    "optionsTotal": "Totale",
     "footerOptions": "Opzioni: ordini pagati; Persone = biglietti di questi ordini per la data."
   },
   "consent": {

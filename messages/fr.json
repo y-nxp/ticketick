@@ -1927,7 +1927,7 @@
       },
       "frequencyHint": "Le rapport donne l’état au moment de l’envoi, date par date. « Nouveaux » : depuis le rapport automatique précédent.",
       "sections": "Contenu du rapport automatique",
-      "optionsSummary": "{orders, plural, one {# commande} other {# commandes}} · {people, plural, one {# personne} other {# personnes}}",
+      "optionsSummary": "{people, plural, one {# personne} other {# personnes}} · {orders, plural, one {# commande} other {# commandes}}",
       "optionsBuyers": "Personnes inscrites ({count})",
       "optionsOther": "Libellé modifié depuis",
       "people": "{count, plural, =0 {–} one {# personne} other {# personnes}}",
@@ -2567,7 +2567,7 @@
     "optionsChoice": "Choix",
     "optionsOrders": "Commandes",
     "optionsPeople": "Personnes",
-    "optionsTotal": "Commandes avec cette option",
+    "optionsTotal": "Total",
     "footerOptions": "Options : commandes payées ; Personnes = billets de ces commandes pour la date."
   },
   "consent": {

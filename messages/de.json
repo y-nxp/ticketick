@@ -1927,7 +1927,7 @@
       },
       "frequencyHint": "Der Bericht zeigt den Stand beim Versand, Termin für Termin. «Neu»: seit dem vorherigen automatischen Bericht.",
       "sections": "Inhalt des automatischen Berichts",
-      "optionsSummary": "{orders, plural, one {# Bestellung} other {# Bestellungen}} · {people, plural, one {# Person} other {# Personen}}",
+      "optionsSummary": "{people, plural, one {# Person} other {# Personen}} · {orders, plural, one {# Bestellung} other {# Bestellungen}}",
       "optionsBuyers": "Angemeldete Personen ({count})",
       "optionsOther": "Bezeichnung seither geändert",
       "people": "{count, plural, =0 {–} one {# Person} other {# Personen}}",
@@ -2567,7 +2567,7 @@
     "optionsChoice": "Auswahl",
     "optionsOrders": "Bestellungen",
     "optionsPeople": "Personen",
-    "optionsTotal": "Bestellungen mit dieser Option",
+    "optionsTotal": "Total",
     "footerOptions": "Optionen: bezahlte Bestellungen; Personen = Tickets dieser Bestellungen für das Datum."
   },
   "consent": {
