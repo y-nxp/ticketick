@@ -70,6 +70,7 @@ export async function getManagedReseller(id: string) {
       allowCashSales: true,
       allowTerminalSales: true,
       allowOnlineSales: true,
+      allowPausedSales: true,
       notifyEmails: true,
       reportFrequency: true,
       reportCopyOrganizer: true,
@@ -147,6 +148,7 @@ export async function getPosShows(agent: Agent) {
           id: true,
           title: true,
           coverImage: true,
+          salesPaused: true,
           organizer: { select: { name: true } },
           sessions: {
             where: { startsAt: { gt: now }, status: { in: ["PUBLISHED", "SOLD_OUT"] } },
@@ -191,6 +193,7 @@ export async function getPosSession(agent: Agent, sessionId: string) {
           id: true,
           title: true,
           organizerId: true,
+          salesPaused: true,
           organizer: { select: { name: true } },
         },
       },
@@ -307,6 +310,7 @@ const saleSelect = {
         select: {
           session: {
             select: {
+              id: true,
               startsAt: true,
               event: { select: { title: true } },
             },
@@ -336,7 +340,7 @@ type SaleRow = {
   }[];
   items: {
     quantity: number;
-    ticketType: { session: { startsAt: Date; event: { title: unknown } } };
+    ticketType: { session: { id: string; startsAt: Date; event: { title: unknown } } };
   }[];
 };
 
@@ -354,7 +358,12 @@ function toSale(order: SaleRow) {
         : charge.status === "OPEN"
           ? "pending"
           : "expired";
-  const session = order.items[0]?.ticketType.session;
+  // Une vente peut couvrir plusieurs concerts : chacun une fois, par date.
+  const shows = [
+    ...new Map(order.items.map((i) => [i.ticketType.session.id, i.ticketType.session])).values(),
+  ]
+    .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
+    .map((s) => ({ title: s.event.title, startsAt: s.startsAt }));
   return {
     id: order.id,
     reference: order.reference,
@@ -369,7 +378,6 @@ function toSale(order: SaleRow) {
     commissionCents: state === "paid" ? order.commissionCents : 0,
     method: charge?.method ?? "FREE",
     state,
-    eventTitle: session?.event.title ?? null,
-    startsAt: session?.startsAt ?? null,
+    shows,
   };
 }

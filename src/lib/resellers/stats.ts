@@ -3,6 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { commissionRule, type CommissionRule } from "./commission";
+import { shareOut } from "./split";
 
 /**
  * Ventes d'un point de vente, par spectacle attribué. Une vente ne compte
@@ -62,6 +63,64 @@ export function emptyTotals(): PosTotals {
   };
 }
 
+/**
+ * Ventile les totaux d'une vente sur ses concerts : billets comptés là où
+ * ils sont, montants au prorata de ce que rapportent les billets valables de
+ * chaque concert (rabais déduit). Une vente sur un seul concert lui revient
+ * entière.
+ */
+function splitByEvent(
+  order: {
+    tickets: { status: string; ticketTypeId: string }[];
+    items: {
+      ticketTypeId: string;
+      quantity: number;
+      unitPriceCents: number;
+      discountCents: number;
+      ticketType: { session: { eventId: string } };
+    }[];
+  },
+  row: PosTotals,
+  isValid: (t: { status: string }) => boolean,
+  byEvent: Map<string, PosTotals>,
+): void {
+  const itemOf = new Map(order.items.map((i) => [i.ticketTypeId, i]));
+  const eventIds = [...new Set(order.items.map((i) => i.ticketType.session.eventId))];
+  if (eventIds.length === 0) return;
+  const parts = eventIds.map(() => emptyTotals());
+  const weights = eventIds.map(() => 0);
+  for (const ticket of order.tickets) {
+    const item = itemOf.get(ticket.ticketTypeId);
+    if (!item) continue;
+    const at = eventIds.indexOf(item.ticketType.session.eventId);
+    if (ticket.status === "PENDING") parts[at]!.pendingTickets += 1;
+    if (!isValid(ticket)) continue;
+    parts[at]!.tickets += 1;
+    weights[at]! += item.unitPriceCents - item.discountCents / Math.max(1, item.quantity);
+  }
+  // Billets tous gratuits : au nombre de billets.
+  const basis = weights.some((w) => w > 0) ? weights : parts.map((p) => p.tickets);
+  const money = [
+    "amountCents",
+    "cashCents",
+    "terminalCents",
+    "onlineCents",
+    "commissionCents",
+    "onSiteCommissionCents",
+    "onlineCommissionCents",
+  ] as const;
+  for (const key of money) {
+    shareOut(row[key], basis).forEach((cents, at) => {
+      parts[at]![key] = cents;
+    });
+  }
+  eventIds.forEach((eventId, at) => {
+    const into = byEvent.get(eventId) ?? emptyTotals();
+    add(into, parts[at]!);
+    byEvent.set(eventId, into);
+  });
+}
+
 function add(into: PosTotals, from: PosTotals): void {
   for (const key of Object.keys(into) as (keyof PosTotals)[]) into[key] += from[key];
 }
@@ -113,19 +172,25 @@ export async function resellerStats(
       commissionCents: true,
       paymentMethod: true,
       charges: { select: { kind: true, status: true, method: true, amountCents: true, provider: true } },
-      tickets: { select: { status: true } },
-      items: { take: 1, select: { ticketType: { select: { session: { select: { eventId: true } } } } } },
+      tickets: { select: { status: true, ticketTypeId: true } },
+      items: {
+        select: {
+          ticketTypeId: true,
+          quantity: true,
+          unitPriceCents: true,
+          discountCents: true,
+          ticketType: { select: { session: { select: { eventId: true } } } },
+        },
+      },
     },
   });
 
   const byEvent = new Map<string, PosTotals>();
   for (const order of orders) {
-    const eventId = order.items[0]?.ticketType.session.eventId;
-    if (!eventId) continue;
-    const row = byEvent.get(eventId) ?? emptyTotals();
-    const valid = order.tickets.filter((t) => t.status === "VALID" || t.status === "USED").length;
-    const pending = order.tickets.filter((t) => t.status === "PENDING").length;
-    row.pendingTickets += pending;
+    const row = emptyTotals();
+    const isValid = (t: { status: string }) => t.status === "VALID" || t.status === "USED";
+    const valid = order.tickets.filter(isValid).length;
+    row.pendingTickets += order.tickets.filter((t) => t.status === "PENDING").length;
     if (valid > 0) {
       row.tickets += valid;
       row.amountCents += order.totalCents;
@@ -154,7 +219,7 @@ export async function resellerStats(
       row.onlineCommissionCents += onlineShare;
       row.onSiteCommissionCents += order.commissionCents - onlineShare;
     }
-    byEvent.set(eventId, row);
+    splitByEvent(order, row, isValid, byEvent);
   }
 
   const now = new Date();

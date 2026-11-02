@@ -1,7 +1,13 @@
 import "server-only";
 
 import { createReservation, type ReservationError } from "@/lib/orders/admin-reservation";
-import { checkAttendees, type AttendeeError, type AttendeeInput } from "@/lib/orders/attendees";
+import {
+  checkAttendees,
+  type AttendeeError,
+  type AttendeeInput,
+  type Holder,
+} from "@/lib/orders/attendees";
+import { resolveAutoDiscounts } from "@/lib/orders/discounts";
 import type { PaymentSettle } from "@/lib/orders/edit-order";
 import { mockPaymentsAllowed } from "@/lib/payment/config";
 import { cardAccountForOrganizer } from "@/lib/payment/card-account";
@@ -9,10 +15,11 @@ import { prisma } from "@/lib/prisma";
 import { commissionCents, commissionRule } from "./commission";
 
 /**
- * Vente au guichet d'un point de vente. Espèces ou terminal : billets
- * valables tout de suite, l'argent reste au point de vente. Carte en ligne :
- * le client paie sur l'écran ou par QR, chez l'organisateur, et ses billets
- * restent en attente jusqu'au paiement.
+ * Vente au guichet d'un point de vente, sur un ou plusieurs concerts. Espèces
+ * ou terminal : billets valables tout de suite, l'argent reste au point de
+ * vente. Carte en ligne : le client paie sur l'écran ou par QR, chez
+ * l'organisateur, et ses billets restent en attente jusqu'au paiement. Les
+ * rabais automatiques (multi-concerts, groupe) s'appliquent comme en ligne.
  */
 
 export type PosMethod = "CASH" | "TERMINAL" | "ONLINE";
@@ -26,6 +33,8 @@ export type PosSaleError =
   | "notAssigned"
   | "methodNotAllowed"
   | "notOnSale"
+  | "paused"
+  | "mixedOrganizers"
   | "companion_requires_paid"
   | "companion_limit"
   | "cardMissing"
@@ -36,18 +45,23 @@ export type PosSaleResult =
       ok: true;
       orderId: string;
       reference: string;
-      eventId: string;
       chargeId?: string;
       token?: string;
     }
   | { ok: false; error: PosSaleError; ticketTypeId?: string };
 
+export interface PosSaleLine {
+  ticketTypeId: string;
+  quantity: number;
+  /** Sièges choisis sur le plan ; absents, ils sont attribués d'office. */
+  seatKeys?: string[];
+}
+
 export async function sellAtPos(input: {
   agentId: string;
   resellerId: string;
-  sessionId: string;
-  /** `seatKeys` : sièges choisis sur le plan ; absents, ils sont attribués d'office. */
-  lines: { ticketTypeId: string; quantity: number; seatKeys?: string[] }[];
+  /** Lignes de tous les concerts de la vente : la séance se lit sur le tarif. */
+  lines: PosSaleLine[];
   method: PosMethod;
   holderName: string;
   email: string;
@@ -65,6 +79,7 @@ export async function sellAtPos(input: {
       allowCashSales: true,
       allowTerminalSales: true,
       allowOnlineSales: true,
+      allowPausedSales: true,
     },
   });
   if (!reseller) return { ok: false, error: "notAssigned" };
@@ -76,8 +91,35 @@ export async function sellAtPos(input: {
         : reseller.allowOnlineSales;
   if (!allowed) return { ok: false, error: "methodNotAllowed" };
 
-  const session = await prisma.eventSession.findUnique({
-    where: { id: input.sessionId },
+  const lines = input.lines.filter((l) => l.quantity > 0);
+  if (lines.length === 0) return { ok: false, error: "empty" };
+  if (new Set(lines.map((l) => l.ticketTypeId)).size !== lines.length) {
+    return { ok: false, error: "quantity" };
+  }
+  if (lines.some((l) => l.seatKeys?.length && l.seatKeys.length !== l.quantity)) {
+    return { ok: false, error: "quantity" };
+  }
+
+  const found = await prisma.ticketType.findMany({
+    where: { id: { in: lines.map((l) => l.ticketTypeId) } },
+    select: {
+      id: true,
+      priceCents: true,
+      maxPerPaidTicket: true,
+      companionOfId: true,
+      requiresAttendee: true,
+      maxAgeYears: true,
+      salesStartAt: true,
+      salesEndAt: true,
+      sessionId: true,
+    },
+  });
+  const types = new Map(found.map((tt) => [tt.id, tt]));
+  if (lines.some((l) => !types.has(l.ticketTypeId))) return { ok: false, error: "notFound" };
+
+  const sessionIds = [...new Set(found.map((tt) => tt.sessionId))];
+  const sessions = await prisma.eventSession.findMany({
+    where: { id: { in: sessionIds } },
     select: {
       id: true,
       startsAt: true,
@@ -95,73 +137,88 @@ export async function sellAtPos(input: {
         },
       },
       ticketTypes: {
-        select: {
-          id: true,
-          priceCents: true,
-          maxPerPaidTicket: true,
-          companionOfId: true,
-          requiresAttendee: true,
-          maxAgeYears: true,
-          salesStartAt: true,
-          salesEndAt: true,
-        },
+        select: { id: true, requiresAttendee: true, maxAgeYears: true },
       },
     },
   });
-  const assignment = session?.event.resellers[0];
-  if (!session || !assignment) return { ok: false, error: "notAssigned" };
-  if (
-    !sellable(session.event.status) ||
-    !sellable(session.status) ||
-    session.event.salesPaused
-  ) {
-    return { ok: false, error: "notOnSale" };
-  }
+  if (sessions.length !== sessionIds.length) return { ok: false, error: "notFound" };
 
-  const lines = input.lines.filter((l) => l.quantity > 0);
-  if (lines.length === 0) return { ok: false, error: "empty" };
-  const seatKeys = lines.flatMap((l) => l.seatKeys ?? []);
-  if (
-    new Set(seatKeys).size !== seatKeys.length ||
-    lines.some((l) => l.seatKeys?.length && l.seatKeys.length !== l.quantity)
-  ) {
-    return { ok: false, error: "quantity" };
-  }
-  const types = new Map(session.ticketTypes.map((tt) => [tt.id, tt]));
   const now = new Date();
-  for (const line of lines) {
-    const tt = types.get(line.ticketTypeId);
-    if (!tt) return { ok: false, error: "notFound" };
-    if ((tt.salesStartAt && tt.salesStartAt > now) || (tt.salesEndAt && tt.salesEndAt < now)) {
-      return { ok: false, error: "notOnSale", ticketTypeId: tt.id };
+  const parts = [];
+  for (const session of sessions) {
+    const assignment = session.event.resellers[0];
+    const own = lines.filter((l) => types.get(l.ticketTypeId)!.sessionId === session.id);
+    const first = own[0]!.ticketTypeId;
+    if (!assignment) return { ok: false, error: "notAssigned", ticketTypeId: first };
+    if (!sellable(session.event.status) || !sellable(session.status)) {
+      return { ok: false, error: "notOnSale", ticketTypeId: first };
     }
+    if (session.event.salesPaused && !reseller.allowPausedSales) {
+      return { ok: false, error: "paused", ticketTypeId: first };
+    }
+    // Un même siège ne se vend qu'une fois par séance.
+    const seatKeys = own.flatMap((l) => l.seatKeys ?? []);
+    if (new Set(seatKeys).size !== seatKeys.length) return { ok: false, error: "quantity" };
+    for (const line of own) {
+      const tt = types.get(line.ticketTypeId)!;
+      if ((tt.salesStartAt && tt.salesStartAt > now) || (tt.salesEndAt && tt.salesEndAt < now)) {
+        return { ok: false, error: "notOnSale", ticketTypeId: tt.id };
+      }
+    }
+
+    // Gratuités et titulaires se vérifient concert par concert, comme en ligne.
+    const quantities = new Map(own.map((l) => [l.ticketTypeId, l.quantity]));
+    const companion = checkCompanions(
+      own.map((l) => ({ ...l, type: types.get(l.ticketTypeId)! })),
+      quantities,
+    );
+    if (companion) return { ok: false, ...companion };
+    parts.push({ session, assignment, lines: own, quantities });
+  }
+  if (new Set(sessions.map((s) => s.event.organizerId)).size > 1) {
+    return { ok: false, error: "mixedOrganizers" };
   }
 
-  const quantities = new Map(lines.map((l) => [l.ticketTypeId, l.quantity]));
-  const companion = checkCompanions(
-    lines.map((l) => ({ ...l, type: types.get(l.ticketTypeId)! })),
-    quantities,
-  );
-  if (companion) return { ok: false, ...companion };
+  const holders = new Map<string, Holder[]>();
+  for (const part of parts) {
+    const checked = checkAttendees(
+      part.session.ticketTypes.map((tt) => ({
+        id: tt.id,
+        requiresAttendee: tt.requiresAttendee,
+        maxAgeYears: tt.maxAgeYears,
+        sessionStartsAt: part.session.startsAt,
+      })),
+      part.quantities,
+      input.attendees.filter((a) => part.quantities.has(a.ticketTypeId)),
+    );
+    if (!checked.ok) return checked;
+    for (const [id, list] of checked.byType) holders.set(id, list);
+  }
 
-  const checked = checkAttendees(
-    session.ticketTypes.map((tt) => ({
-      id: tt.id,
-      requiresAttendee: tt.requiresAttendee,
-      maxAgeYears: tt.maxAgeYears,
-      sessionStartsAt: session.startsAt,
+  const discounts = await resolveAutoDiscounts(
+    lines.map((l) => ({
+      ticketTypeId: l.ticketTypeId,
+      quantity: l.quantity,
+      seats: l.seatKeys,
     })),
-    quantities,
-    input.attendees,
+    now,
   );
-  if (!checked.ok) return checked;
+  const discountOf = new Map(lines.map((l, i) => [l.ticketTypeId, discounts.perLine[i] ?? 0]));
+  const net = (l: PosSaleLine) =>
+    types.get(l.ticketTypeId)!.priceCents * l.quantity - (discountOf.get(l.ticketTypeId) ?? 0);
+  const amountCents = lines.reduce((sum, l) => sum + net(l), 0);
 
-  const amountCents = lines.reduce(
-    (sum, l) => sum + types.get(l.ticketTypeId)!.priceCents * l.quantity,
-    0,
-  );
-  const paidTickets = lines.reduce(
-    (sum, l) => sum + (types.get(l.ticketTypeId)!.priceCents > 0 ? l.quantity : 0),
+  // Commission de chaque concert selon sa règle, sur le montant payé.
+  const commission = parts.reduce(
+    (sum, part) =>
+      sum +
+      commissionCents(commissionRule(reseller, part.assignment), {
+        amountCents: part.lines.reduce((n, l) => n + net(l), 0),
+        paidTickets: part.lines.reduce(
+          (n, l) => n + (types.get(l.ticketTypeId)!.priceCents > 0 ? l.quantity : 0),
+          0,
+        ),
+      }),
     0,
   );
 
@@ -171,17 +228,23 @@ export async function sellAtPos(input: {
   } else if (input.method === "ONLINE") {
     const card =
       mockPaymentsAllowed() ||
-      (await cardAccountForOrganizer(session.event.organizerId)) !== null;
+      (await cardAccountForOrganizer(sessions[0]!.event.organizerId)) !== null;
     if (!card) return { ok: false, error: "cardMissing" };
-    const dueAt = new Date(Math.min(now.getTime() + ONLINE_DUE_MS, session.startsAt.getTime()));
+    const firstStart = Math.min(...sessions.map((s) => s.startsAt.getTime()));
+    const dueAt = new Date(Math.min(now.getTime() + ONLINE_DUE_MS, firstStart));
     settle = { method: "LINK", amountCents, dueAt };
   } else {
     settle = { method: input.method, amountCents };
   }
 
   const result = await createReservation({
-    sessionId: session.id,
-    lines,
+    parts: parts.map((part) => ({
+      sessionId: part.session.id,
+      lines: part.lines.map((l) => ({
+        ...l,
+        discountCents: discountOf.get(l.ticketTypeId) ?? 0,
+      })),
+    })),
     holderName: input.holderName,
     ticketNote: "",
     locale: input.locale,
@@ -189,17 +252,14 @@ export async function sellAtPos(input: {
     email: input.email,
     phone: input.phone,
     settle,
-    reseller: {
-      id: reseller.id,
-      commissionCents: commissionCents(commissionRule(reseller, assignment), {
-        amountCents,
-        paidTickets,
-      }),
-    },
-    holders: checked.byType,
+    reseller: { id: reseller.id, commissionCents: commission },
+    holders,
+    discounts: discounts.applied.map((d) => ({
+      discountId: d.discountId,
+      amountCents: d.amountCents,
+    })),
   });
-  if (!result.ok) return result;
-  return { ...result, eventId: session.event.id };
+  return result;
 }
 
 function sellable(status: string): boolean {

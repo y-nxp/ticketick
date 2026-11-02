@@ -790,7 +790,10 @@
         "reportFrequency": "Récapitulatif des ventes",
         "reportFrequencyHint": "Envoyé à 7 h : la veille, ou la semaine passée le lundi.",
         "reportCopyOrganizer": "Envoyer aussi le récapitulatif aux adresses de copie de l'organisateur",
-        "active": "Point de vente actif (ses vendeurs peuvent vendre)"
+        "active": "Point de vente actif (ses vendeurs peuvent vendre)",
+        "paused": "Vente suspendue",
+        "allowPausedSales": "Vendre aussi les spectacles dont la vente est suspendue",
+        "allowPausedSalesHint": "Sans cette case, un spectacle mis en pause par l'organisateur ne peut pas être vendu au guichet."
       },
       "frequency": {
         "NONE": "Pas de récapitulatif",
@@ -2322,7 +2325,9 @@
         "notOnSale": "Ce tarif n'est pas en vente en ce moment.",
         "companion_requires_paid": "Les places gratuites demandent au moins un billet payant.",
         "companion_limit": "Trop de places gratuites pour le nombre de billets payants.",
-        "cardMissing": "Le paiement en ligne n'est pas disponible pour cet organisateur."
+        "cardMissing": "Le paiement en ligne n'est pas disponible pour cet organisateur.",
+        "paused": "L'organisateur a suspendu la vente de ce spectacle.",
+        "mixedOrganizers": "Une vente ne peut réunir que des spectacles d'un même organisateur."
       },
       "seatMode": {
         "title": "Places",
@@ -2330,7 +2335,23 @@
         "planHint": "Touchez les places voulues sur le plan.",
         "auto": "Attribution automatique",
         "autoHint": "Indiquez les quantités : les meilleures places libres sont attribuées."
-      }
+      },
+      "cart": {
+        "title": "Déjà dans cette vente",
+        "hint": "Encaissés avec ce concert, en une seule fois. Touchez un concert pour le modifier.",
+        "remove": "Retirer {title} de la vente",
+        "add": "Ajouter un autre concert",
+        "bannerTitle": "Vente en cours : {count, plural, =1 {# place} other {# places}} pour {concerts, plural, =1 {# concert} other {# concerts}}",
+        "bannerHint": "Choisissez le concert suivant ci-dessous, ou passez à l'encaissement.",
+        "clear": "Annuler la vente",
+        "confirmClear": "Annuler la vente en cours ? Les concerts choisis seront retirés.",
+        "checkout": "Encaisser"
+      },
+      "subtotal": "Sous-total",
+      "summaryConcerts": "{count, plural, =1 {# place} other {# places}} · {concerts, plural, =1 {# concert} other {# concerts}}",
+      "paused": "L'organisateur a suspendu la vente de ce spectacle.",
+      "pausedAllowed": "Vente suspendue en ligne par l'organisateur : votre point de vente est autorisé à vendre quand même.",
+      "pausedBadge": "Vente suspendue"
     },
     "sales": {
       "title": "Ventes",

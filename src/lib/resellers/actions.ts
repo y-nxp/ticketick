@@ -22,6 +22,7 @@ import { sendResellerAgentInvitationEmail } from "@/lib/email";
 import { payUrlFor, sendPaymentLinkEmail } from "@/lib/email/charge-mail";
 import { sendPaidOrderTickets } from "@/lib/email/ticket-mail";
 import type { AttendeeInput } from "@/lib/orders/attendees";
+import { previewDiscounts, type DiscountPreview } from "@/lib/orders/discounts";
 import { payPath, rotatePayToken } from "@/lib/orders/charges";
 import { prisma } from "@/lib/prisma";
 import { consume } from "@/lib/rate-limit";
@@ -135,6 +136,7 @@ export async function saveReseller(_prev: FormState, formData: FormData): Promis
     allowCashSales,
     allowTerminalSales,
     allowOnlineSales,
+    allowPausedSales: readBoolean(formData, "allowPausedSales"),
     notifyEmails,
     reportCopyOrganizer: readBoolean(formData, "reportCopyOrganizer"),
   };
@@ -377,7 +379,6 @@ export async function sendResellerReportNow(
 // ─────────────────────────────── Vente au guichet
 
 const saleSchema = z.object({
-  sessionId: z.string().min(1),
   method: z.enum(["CASH", "TERMINAL", "ONLINE"]),
   holderName: z.string().max(120),
   email: z.union([z.literal(""), z.email().max(200)]),
@@ -395,7 +396,6 @@ export async function sellAtPosAction(
 ): Promise<PosSaleState> {
   const agent = await requireResellerAgent();
   const parsed = saleSchema.safeParse({
-    sessionId: readText(formData, "sessionId"),
     method: readText(formData, "method"),
     holderName: readText(formData, "holderName"),
     email: readText(formData, "email").toLowerCase(),
@@ -412,7 +412,7 @@ export async function sellAtPosAction(
     const qty = /^qty\.(.+)$/.exec(key);
     if (qty) {
       const quantity = Number(value || "0");
-      if (!Number.isInteger(quantity) || quantity < 0 || quantity > 100) {
+      if (!Number.isInteger(quantity) || quantity < 0 || quantity > 100 || lines.length >= 100) {
         return { ok: false, error: "quantity" };
       }
       const seats = readText(formData, `seats.${qty[1]}`);
@@ -433,7 +433,6 @@ export async function sellAtPosAction(
   const result = await sellAtPos({
     agentId: agent.id,
     resellerId: agent.resellerId,
-    sessionId: data.sessionId,
     lines,
     method: data.method as PosMethod,
     holderName: data.holderName,
@@ -467,6 +466,16 @@ export async function sellAtPosAction(
     pdfUrl: ticketPdfPath(result.reference),
     emailed: Boolean(data.email) && mail.sent,
   };
+}
+
+/** Rabais automatiques de la vente en cours, pour l'afficher avant d'encaisser. */
+export async function previewPosDiscounts(
+  lines: { ticketTypeId: string; quantity: number; seats?: string[] }[],
+  locale: string,
+): Promise<DiscountPreview> {
+  await requireResellerAgent();
+  if (!Array.isArray(lines) || lines.length > 100) return { amountCents: 0, labels: [], items: [] };
+  return previewDiscounts(lines, locales.includes(locale as never) ? locale : "fr");
 }
 
 /** Plan d'une séance attribuée au point de vente et sièges qui ne sont plus libres. */

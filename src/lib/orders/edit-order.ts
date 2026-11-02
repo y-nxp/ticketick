@@ -97,6 +97,7 @@ const orderSelect = {
       ticketTypeId: true,
       quantity: true,
       unitPriceCents: true,
+      discountCents: true,
       seatKeys: true,
       ticketType: {
         select: {
@@ -169,7 +170,13 @@ export async function releaseTickets(
     throw new EditFailure("notFound");
   }
 
-  const priceOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
+  // Prix payé, rabais déduit : la commission a été calculée dessus.
+  const priceOf = new Map(
+    order.items.map((i) => [
+      i.ticketTypeId,
+      i.unitPriceCents - i.discountCents / Math.max(1, i.quantity),
+    ]),
+  );
   const byType = new Map<string, typeof tickets>();
   for (const ticket of tickets) {
     byType.set(ticket.ticketTypeId, [...(byType.get(ticket.ticketTypeId) ?? []), ticket]);
@@ -446,7 +453,13 @@ async function returnCommission(
   removedIds: string[],
 ): Promise<void> {
   if (!order.resellerId || order.commissionCents <= 0) return;
-  const priceOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
+  // Prix payé, rabais déduit : la commission a été calculée dessus.
+  const priceOf = new Map(
+    order.items.map((i) => [
+      i.ticketTypeId,
+      i.unitPriceCents - i.discountCents / Math.max(1, i.quantity),
+    ]),
+  );
   const removed = new Set(removedIds);
   const sum = (list: LockedOrder["tickets"]) => {
     const paid = list.filter((t) => (priceOf.get(t.ticketTypeId) ?? 0) > 0);

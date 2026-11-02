@@ -93,8 +93,7 @@ export async function reserveSeats(
   }
 
   const result = await createReservation({
-    sessionId: session.id,
-    lines,
+    parts: [{ sessionId: session.id, lines }],
     holderName: data.holderName,
     ticketNote: data.ticketNote,
     locale: data.locale,

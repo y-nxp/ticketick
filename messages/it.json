@@ -790,7 +790,10 @@
         "reportFrequency": "Riepilogo delle vendite",
         "reportFrequencyHint": "Inviato alle 7: il giorno precedente, o la settimana passata il lunedì.",
         "reportCopyOrganizer": "Inviare il riepilogo anche agli indirizzi di copia dell'organizzatore",
-        "active": "Punto vendita attivo (i suoi venditori possono vendere)"
+        "active": "Punto vendita attivo (i suoi venditori possono vendere)",
+        "paused": "Vendita sospesa",
+        "allowPausedSales": "Vendere anche gli spettacoli con vendita sospesa",
+        "allowPausedSalesHint": "Senza questa casella, uno spettacolo sospeso dall'organizzatore non può essere venduto allo sportello."
       },
       "frequency": {
         "NONE": "Nessun riepilogo",
@@ -2322,7 +2325,9 @@
         "notOnSale": "Questa tariffa non è in vendita al momento.",
         "companion_requires_paid": "I posti gratuiti richiedono almeno un biglietto pagato.",
         "companion_limit": "Troppi posti gratuiti per il numero di biglietti pagati.",
-        "cardMissing": "Il pagamento online non è disponibile per questo organizzatore."
+        "cardMissing": "Il pagamento online non è disponibile per questo organizzatore.",
+        "paused": "L'organizzatore ha sospeso la vendita di questo spettacolo.",
+        "mixedOrganizers": "Una vendita può riunire solo spettacoli dello stesso organizzatore."
       },
       "seatMode": {
         "title": "Posti",
@@ -2330,7 +2335,23 @@
         "planHint": "Toccate i posti desiderati sulla pianta.",
         "auto": "Assegnazione automatica",
         "autoHint": "Indicate le quantità: vengono assegnati i migliori posti liberi."
-      }
+      },
+      "cart": {
+        "title": "Già in questa vendita",
+        "hint": "Pagati insieme a questo concerto, in una volta sola. Tocca un concerto per modificarlo.",
+        "remove": "Togli {title} dalla vendita",
+        "add": "Aggiungi un altro concerto",
+        "bannerTitle": "Vendita in corso: {count, plural, =1 {# posto} other {# posti}} per {concerts, plural, =1 {# concerto} other {# concerti}}",
+        "bannerHint": "Scegli qui sotto il concerto successivo, o passa all'incasso.",
+        "clear": "Annulla la vendita",
+        "confirmClear": "Annullare la vendita in corso? I concerti scelti saranno tolti.",
+        "checkout": "Incassa"
+      },
+      "subtotal": "Subtotale",
+      "summaryConcerts": "{count, plural, =1 {# posto} other {# posti}} · {concerts, plural, =1 {# concerto} other {# concerti}}",
+      "paused": "L'organizzatore ha sospeso la vendita di questo spettacolo.",
+      "pausedAllowed": "Vendita online sospesa dall'organizzatore: il tuo punto vendita può vendere comunque.",
+      "pausedBadge": "Vendita sospesa"
     },
     "sales": {
       "title": "Vendite",

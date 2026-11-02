@@ -5,6 +5,7 @@ import { requireResellerAgent } from "@/lib/auth/dal";
 import { getPosShows } from "@/lib/resellers/data";
 import { t as translate, type Translated } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { PosCartBanner } from "./cart-banner";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export default async function PosSellPage({
         <h1 className="text-2xl">{t("title")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
       </header>
+      <PosCartBanner agentId={agent.id} locale={locale} />
       {shows.length === 0 ? (
         <p className="rounded-card border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
           {t("none")}
@@ -37,7 +39,14 @@ export default async function PosSellPage({
               id={show.id}
               className="scroll-mt-24 rounded-card border border-border bg-card p-5"
             >
-              <h2 className="text-lg">{translate(show.title as Translated, locale)}</h2>
+              <h2 className="text-lg">
+                {translate(show.title as Translated, locale)}
+                {show.salesPaused ? (
+                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 align-middle text-xs font-medium text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
+                    {t("pausedBadge")}
+                  </span>
+                ) : null}
+              </h2>
               <p className="text-xs text-muted-foreground">{show.organizer.name}</p>
               <ul className="mt-3 divide-y divide-border">
                 {show.sessions.map((s) => (
