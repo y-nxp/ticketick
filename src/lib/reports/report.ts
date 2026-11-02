@@ -121,13 +121,13 @@ export async function sendOrganizerReport(
         const count = (n: number) => (n > 0 ? String(n) : "–");
         tables.push({
           title: `${t("optionsTitle")} — ${option.title} · ${label(s)}`,
-          columns: [t("optionsChoice"), t("optionsOrders"), t("optionsPeople")],
+          columns: [t("optionsChoice"), t("optionsPeople"), t("optionsOrders")],
           rows: [
             ...option.groups.flatMap((g) =>
-              g.choices.map((c) => [[g.title, c.label].filter(Boolean).join(" : "), count(c.orders), count(c.people)]),
+              g.choices.map((c) => [[g.title, c.label].filter(Boolean).join(" : "), count(c.people), count(c.orders)]),
             ),
-            ...option.other.map((c) => [c.label, count(c.orders), count(c.people)]),
-            [t("optionsTotal"), String(option.orders), String(option.people)],
+            ...option.other.map((c) => [c.label, count(c.people), count(c.orders)]),
+            [t("optionsTotal"), String(option.people), String(option.orders)],
           ],
           empty: t("empty"),
         });
