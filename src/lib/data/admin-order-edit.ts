@@ -234,6 +234,12 @@ export async function getOrderEditContext(orderId: string, locale: string) {
         label: `${translate(s.event.title as Translated, locale)}`,
         startsAt: s.startsAt,
       })),
+    /** Vente encaissée par le point de vente : il peut rendre l'argent lui-même. */
+    resellerCollected:
+      order.resellerId != null &&
+      (await prisma.resellerLedgerEntry.count({
+        where: { orderId: order.id, type: "CASH_COLLECTED" },
+      })) > 0,
     providerRefund:
       order.payment?.status === "COMPLETED" &&
       REFUNDABLE_PROVIDERS.includes(order.payment.provider)

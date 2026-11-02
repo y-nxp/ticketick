@@ -269,7 +269,7 @@ export default async function AdminOrderDetailPage({
         </ul>
       </section>
 
-      {order.tickets.length > 0 && !(edit && editable && !order.reseller) ? (
+      {order.tickets.length > 0 && !(edit && editable) ? (
         <section className="mt-6">
           <h2 className="text-sm font-semibold">{t("orders.tickets")}</h2>
           <ul className="mt-2 divide-y divide-border rounded-card border border-border">
@@ -376,7 +376,7 @@ export default async function AdminOrderDetailPage({
             id: c.id,
             number: c.number,
             kind: c.kind,
-            method: c.method,
+            method: c.provider === "reseller" ? "RESELLER" : c.method,
             status: c.status,
             amountCents: c.amountCents,
             due: c.dueAt ? formatDate(c.dueAt, fmt, short) : null,
@@ -393,6 +393,7 @@ export default async function AdminOrderDetailPage({
                 .reduce((sum, c) => sum + c.amountCents, 0),
           )}
           providerRefund={edit.providerRefund}
+          resellerCollected={edit.resellerCollected}
           linkAvailable={edit.linkAvailable}
           seatedSessions={edit.seatedSessions.map((s) => ({
             id: s.id,

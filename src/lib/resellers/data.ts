@@ -297,9 +297,8 @@ const saleSelect = {
   commissionCents: true,
   soldBy: { select: { name: true, email: true } },
   charges: {
-    where: { kind: "PAYMENT" as const },
     orderBy: { createdAt: "asc" as const },
-    select: { method: true, status: true, amountCents: true },
+    select: { kind: true, method: true, status: true, amountCents: true, provider: true },
   },
   items: {
     select: {
@@ -328,7 +327,13 @@ type SaleRow = {
   totalCents: number;
   commissionCents: number;
   soldBy: { name: string | null; email: string } | null;
-  charges: { method: string; status: string; amountCents: number }[];
+  charges: {
+    kind: string;
+    method: string;
+    status: string;
+    amountCents: number;
+    provider: string | null;
+  }[];
   items: {
     quantity: number;
     ticketType: { session: { startsAt: Date; event: { title: unknown } } };
@@ -336,7 +341,11 @@ type SaleRow = {
 };
 
 function toSale(order: SaleRow) {
-  const charge = order.charges[0];
+  const charge = order.charges.find((c) => c.kind === "PAYMENT");
+  // Argent rendu par le point de vente lui-même : déduit du montant de la vente.
+  const returned = order.charges
+    .filter((c) => c.kind === "REFUND" && c.status === "DONE" && c.provider === "reseller")
+    .reduce((n, c) => n + c.amountCents, 0);
   const state: "paid" | "pending" | "expired" | "cancelled" =
     order.status === "CANCELLED" || order.status === "REFUNDED"
       ? "cancelled"
@@ -353,7 +362,10 @@ function toSale(order: SaleRow) {
     holder: `${order.firstName} ${order.lastName}`.trim(),
     seller: order.soldBy?.name ?? order.soldBy?.email ?? null,
     tickets: order.items.reduce((n, i) => n + i.quantity, 0),
-    amountCents: charge?.amountCents ?? 0,
+    amountCents: Math.max(
+      0,
+      (charge?.amountCents ?? 0) - returned,
+    ),
     commissionCents: state === "paid" ? order.commissionCents : 0,
     method: charge?.method ?? "FREE",
     state,

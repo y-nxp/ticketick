@@ -112,7 +112,7 @@ export async function removeTicketsAction(
 
   const method = readText(formData, "refund");
   let refund: RefundSettle = { method: "NONE" };
-  if (method === "CASH" || method === "CREDIT_NOTE" || method === "PROVIDER") {
+  if (method === "CASH" || method === "CREDIT_NOTE" || method === "PROVIDER" || method === "RESELLER") {
     const amountCents = readMoneyCents(formData, "refundAmount");
     if (amountCents == null) return failure("amount");
     refund = { method, amountCents };

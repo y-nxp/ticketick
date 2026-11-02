@@ -1685,7 +1685,7 @@
     },
     "orderEdit": {
       "title": "Modifica l'ordine",
-      "resellerHint": "Ordine di un punto vendita: la commissione è fissa, qui si modificano solo i dati di contatto e i posti.",
+      "resellerHint": "Vendita di un punto vendita: i biglietti si possono annullare qui sotto e la sua commissione su questi biglietti viene stornata. Niente aggiunte né cambi di tariffa qui.",
       "details": "Dati di contatto",
       "firstName": "Nome",
       "lastName": "Cognome",
@@ -1747,7 +1747,8 @@
         "CREDIT_NOTE": "nota di credito",
         "PROVIDER": "sulla carta",
         "TERMINAL": "terminale del punto vendita",
-        "TRANSFER": "bonifico"
+        "TRANSFER": "bonifico",
+        "RESELLER": "rimborsato dal punto vendita"
       },
       "status": {
         "OPEN": "In attesa",
@@ -1817,7 +1818,8 @@
         "quantity": "Numero di posti non valido.",
         "ticketsNotSent": "L'invio dei biglietti non è riuscito.",
         "changeNothing": "Nessun biglietto da cambiare: servono posti numerati validi per un concerto futuro.",
-        "cancelNoticeNotSent": "Non è stato possibile inviare l'e-mail di annullamento."
+        "cancelNoticeNotSent": "Non è stato possibile inviare l'e-mail di annullamento.",
+        "resellerNotCollected": "Questo punto vendita non ha incassato questa vendita: scegli un altro rimborso."
       },
       "changeLink": "Cambio da parte del cliente",
       "changeLinkHint": "Il cliente riceve un link per scambiare i suoi biglietti, uno per uno, con altri posti o un altro spettacolo dell'organizzatore. Paga solo l'aumento, con carta; mai un rimborso. Il link permette anche di scambiare di nuovo un biglietto già scambiato. Valido al massimo 72 ore, fino allo spettacolo. Se il cliente ha un account, deve accedervi.",
@@ -1841,7 +1843,8 @@
         "unpaid": "E-mail inviata: biglietti non pagati, nessun rimborso."
       },
       "cancelNoticeSentOn": "E-mail inviata il {date}",
-      "cancelNoticeNotYet": "Non ancora comunicato"
+      "cancelNoticeNotYet": "Non ancora comunicato",
+      "refundReseller": "Rimborsato dal punto vendita"
     },
     "reports": {
       "title": "Rapporti",

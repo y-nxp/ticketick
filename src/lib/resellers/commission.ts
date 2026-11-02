@@ -49,3 +49,24 @@ export function describeRule(
   if (rule.kind === "FIXED_PER_TICKET") return perTicket(format(rule.fixedCents));
   return `${(rule.bps / 100).toLocaleString(locale, { maximumFractionDigits: 2 })} %`;
 }
+
+/**
+ * Commission reprise quand des billets d'une vente sont annulés : la part des
+ * billets retirés dans ce qui restait de la vente, selon la règle (montant
+ * pour un pourcentage, nombre de billets payants pour un montant fixe). Tout
+ * retirer reprend toute la commission restante, sans reste d'arrondi.
+ */
+export function commissionReturned(
+  kind: CommissionKind,
+  remainingCents: number,
+  before: { amountCents: number; paidTickets: number },
+  removed: { amountCents: number; paidTickets: number },
+): number {
+  const [part, whole] =
+    kind === "FIXED_PER_TICKET"
+      ? [removed.paidTickets, before.paidTickets]
+      : [removed.amountCents, before.amountCents];
+  if (remainingCents <= 0 || part <= 0 || whole <= 0) return 0;
+  if (part >= whole) return remainingCents;
+  return Math.min(remainingCents, Math.round((remainingCents * part) / whole));
+}

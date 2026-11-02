@@ -1685,7 +1685,7 @@
     },
     "orderEdit": {
       "title": "Edit the order",
-      "resellerHint": "Sales point order: its commission is fixed, so only the contact details and seats can be changed here.",
+      "resellerHint": "Sale by a point of sale: tickets can be cancelled below, and its commission on them is taken back. No adding tickets or changing prices here.",
       "details": "Contact details",
       "firstName": "First name",
       "lastName": "Last name",
@@ -1747,7 +1747,8 @@
         "CREDIT_NOTE": "credit note",
         "PROVIDER": "to the card",
         "TERMINAL": "point of sale terminal",
-        "TRANSFER": "bank transfer"
+        "TRANSFER": "bank transfer",
+        "RESELLER": "refunded by the point of sale"
       },
       "status": {
         "OPEN": "Pending",
@@ -1817,7 +1818,8 @@
         "quantity": "Invalid number of seats.",
         "ticketsNotSent": "Sending the tickets failed.",
         "changeNothing": "No ticket to change: valid numbered seats for an upcoming concert are needed.",
-        "cancelNoticeNotSent": "The cancellation email could not be sent."
+        "cancelNoticeNotSent": "The cancellation email could not be sent.",
+        "resellerNotCollected": "This point of sale did not collect this sale: choose another refund."
       },
       "changeLink": "Change by the customer",
       "changeLinkHint": "The customer receives a link to exchange their tickets, one for one, for other seats or another show of the organiser. They only pay the increase, by card; never a refund. The link also allows a ticket that was already exchanged to be exchanged again. Valid for up to 72 hours, until the show. If the customer has an account, they must sign in to it.",
@@ -1841,7 +1843,8 @@
         "unpaid": "Email sent: unpaid tickets, no refund."
       },
       "cancelNoticeSentOn": "Email sent on {date}",
-      "cancelNoticeNotYet": "Not notified yet"
+      "cancelNoticeNotYet": "Not notified yet",
+      "refundReseller": "Refunded by the point of sale"
     },
     "reports": {
       "title": "Reports",
