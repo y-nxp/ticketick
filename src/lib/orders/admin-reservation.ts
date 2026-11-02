@@ -22,10 +22,21 @@ import { recordResellerSale } from "./reseller-ledger";
  * l'ouverture.
  */
 
+export interface ReservationLine {
+  ticketTypeId: string;
+  quantity: number;
+  /** Sièges choisis sur le plan, sinon attribués d'office. */
+  seatKeys?: string[];
+  /** Part des rabais automatiques portée par la ligne (vente au guichet). */
+  discountCents?: number;
+}
+
 export interface ReservationInput {
-  sessionId: string;
-  /** `seatKeys` : sièges choisis sur le plan, sinon attribués d'office. */
-  lines: { ticketTypeId: string; quantity: number; seatKeys?: string[] }[];
+  /**
+   * Séances réservées, chacune avec ses lignes : une seule depuis l'admin,
+   * plusieurs pour une vente au guichet sur plusieurs concerts.
+   */
+  parts: { sessionId: string; lines: ReservationLine[] }[];
   /** Nom et prénom, facultatif. */
   holderName: string;
   /** Mention imprimée sur chaque billet, facultative. */
@@ -51,6 +62,8 @@ export interface ReservationInput {
   reseller?: { id: string; commissionCents: number };
   /** Titulaires des tarifs nominatifs, déjà vérifiés. */
   holders?: Map<string, Holder[]>;
+  /** Rabais automatiques appliqués, dont la part est portée par les lignes. */
+  discounts?: { discountId: string; amountCents: number }[];
 }
 
 export type ReservationError =
@@ -80,11 +93,16 @@ const PAID_METHOD = {
 export async function createReservation(
   input: ReservationInput,
 ): Promise<ReservationResult> {
-  const lines = input.lines.filter((l) => l.quantity > 0);
-  if (lines.length === 0) return { ok: false, error: "empty" };
+  const wanted = input.parts
+    .map((p) => ({ sessionId: p.sessionId, lines: p.lines.filter((l) => l.quantity > 0) }))
+    .filter((p) => p.lines.length > 0);
+  if (wanted.length === 0) return { ok: false, error: "empty" };
+  if (new Set(wanted.map((p) => p.sessionId)).size !== wanted.length) {
+    return { ok: false, error: "notFound" };
+  }
 
-  const session = await prisma.eventSession.findUnique({
-    where: { id: input.sessionId },
+  const sessions = await prisma.eventSession.findMany({
+    where: { id: { in: wanted.map((p) => p.sessionId) } },
     select: {
       id: true,
       startsAt: true,
@@ -95,15 +113,24 @@ export async function createReservation(
       },
     },
   });
-  if (!session) return { ok: false, error: "notFound" };
-  if (session.startsAt <= new Date()) return { ok: false, error: "sessionPast" };
+  const byId = new Map(sessions.map((s) => [s.id, s]));
+  if (wanted.some((p) => !byId.has(p.sessionId))) return { ok: false, error: "notFound" };
+  const now = new Date();
+  if (sessions.some((s) => s.startsAt <= now)) return { ok: false, error: "sessionPast" };
 
-  const types = new Map(session.ticketTypes.map((tt) => [tt.id, tt]));
-  if (lines.some((l) => !types.has(l.ticketTypeId))) {
+  const types = new Map(sessions.flatMap((s) => s.ticketTypes.map((tt) => [tt.id, tt] as const)));
+  const parts = wanted.map((p) => {
+    const session = byId.get(p.sessionId)!;
+    return { session, lines: p.lines, layout: readLayout(session.seatPlan?.layout) };
+  });
+  if (
+    parts.some((p) =>
+      p.lines.some((l) => !p.session.ticketTypes.some((tt) => tt.id === l.ticketTypeId)),
+    )
+  ) {
     return { ok: false, error: "notFound" };
   }
-
-  const layout = readLayout(session.seatPlan?.layout);
+  const lines = parts.flatMap((p) => p.lines);
   const subtotalCents = lines.reduce(
     (sum, l) => sum + types.get(l.ticketTypeId)!.priceCents * l.quantity,
     0,
@@ -112,12 +139,16 @@ export async function createReservation(
   // Sièges désignés sur le plan par l'admin, qui voit ce qu'il prend. Tous
   // bloqués, la réservation compte comme prise aux invités (et y retourne si
   // elle tombe) ; sinon la case « places invités » du formulaire fait foi.
-  const pickBlocked = input.pickBlocked === true && layout != null;
-  const chosen = pickBlocked ? lines.flatMap((l) => l.seatKeys ?? []) : [];
+  const pickBlocked = input.pickBlocked === true;
+  const chosen = pickBlocked
+    ? parts.flatMap((p) =>
+        p.layout ? p.lines.flatMap((l) => (l.seatKeys ?? []).map((seatKey) => ({ sessionId: p.session.id, seatKey }))) : [],
+      )
+    : [];
   let fromInvites = input.fromInvites === true;
   if (chosen.length > 0) {
     const blocked = await prisma.sessionSeat.count({
-      where: { sessionId: session.id, seatKey: { in: chosen }, status: "BLOCKED" },
+      where: { OR: chosen, status: "BLOCKED" },
     });
     fromInvites = blocked === chosen.length;
   }
@@ -125,14 +156,19 @@ export async function createReservation(
   const free = settle.method === "FREE" || settle.amountCents <= 0;
   try {
     const created = await prisma.$transaction(async (tx) => {
-      if (fromInvites && !layout) await returnHeldToSale(tx, session.id, lines);
+      for (const p of parts) {
+        if (fromInvites && !p.layout) await returnHeldToSale(tx, p.session.id, p.lines);
+      }
       await takeStock(
         tx,
-        lines.map((l) => ({
-          ...l,
-          sessionId: session.id,
-          capacity: session.capacity,
-        })),
+        parts.flatMap((p) =>
+          p.lines.map((l) => ({
+            ticketTypeId: l.ticketTypeId,
+            quantity: l.quantity,
+            sessionId: p.session.id,
+            capacity: p.session.capacity,
+          })),
+        ),
       );
 
       const name = input.holderName.trim();
@@ -154,7 +190,9 @@ export async function createReservation(
           // Offerte : prix des tarifs gardés pour mémoire. Payante : le total
           // suit l'encaissé, porté par le règlement.
           subtotalCents,
-          discountCents: free ? subtotalCents : 0,
+          discountCents: free
+            ? subtotalCents
+            : lines.reduce((sum, l) => sum + (l.discountCents ?? 0), 0),
           totalCents: 0,
           currency: types.get(lines[0]!.ticketTypeId)!.currency,
           items: {
@@ -162,27 +200,34 @@ export async function createReservation(
               ticketTypeId: l.ticketTypeId,
               quantity: l.quantity,
               unitPriceCents: types.get(l.ticketTypeId)!.priceCents,
+              discountCents: free ? 0 : (l.discountCents ?? 0),
             })),
           },
+          ...(!free && input.discounts?.length
+            ? { discounts: { create: input.discounts } }
+            : {}),
         },
         select: { id: true, reference: true, currency: true },
       });
 
-      const seatsByType = layout
-        ? await assignSeats(tx, {
-            orderId: order.id,
-            sessionId: session.id,
-            layout,
-            lines: lines.map((l) => ({
-              ticketTypeId: l.ticketTypeId,
-              quantity: l.quantity,
-              keys: l.seatKeys,
-              zones: types.get(l.ticketTypeId)!.seatZones,
-            })),
-            fromInvites,
-            pickBlocked,
-          })
-        : new Map<string, string[]>();
+      const seatsByType = new Map<string, string[]>();
+      for (const p of parts) {
+        if (!p.layout) continue;
+        const assigned = await assignSeats(tx, {
+          orderId: order.id,
+          sessionId: p.session.id,
+          layout: p.layout,
+          lines: p.lines.map((l) => ({
+            ticketTypeId: l.ticketTypeId,
+            quantity: l.quantity,
+            keys: l.seatKeys,
+            zones: types.get(l.ticketTypeId)!.seatZones,
+          })),
+          fromInvites,
+          pickBlocked,
+        });
+        for (const [id, keys] of assigned) seatsByType.set(id, keys);
+      }
 
       const items = lines.map((l) => ({
         ticketTypeId: l.ticketTypeId,
@@ -230,7 +275,8 @@ export async function createReservation(
     if (error instanceof NoSeatsError) {
       return {
         ok: false,
-        error: chosen.length > 0
+        error: chosen.length > 0 ||
+          lines.some((l) => l.ticketTypeId === error.ticketTypeId && l.seatKeys?.length)
           ? "seatsTaken"
           : fromInvites
             ? "invitesUnavailable"

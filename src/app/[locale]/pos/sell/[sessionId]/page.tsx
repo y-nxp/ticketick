@@ -27,7 +27,12 @@ export default async function PosSessionPage({
 
   const reseller = await prisma.reseller.findUniqueOrThrow({
     where: { id: agent.resellerId },
-    select: { allowCashSales: true, allowTerminalSales: true, allowOnlineSales: true },
+    select: {
+      allowCashSales: true,
+      allowTerminalSales: true,
+      allowOnlineSales: true,
+      allowPausedSales: true,
+    },
   });
   const onlineReady =
     reseller.allowOnlineSales &&
@@ -37,6 +42,15 @@ export default async function PosSessionPage({
     ...(reseller.allowTerminalSales ? (["TERMINAL"] as const) : []),
     ...(onlineReady ? (["ONLINE"] as const) : []),
   ];
+  const paused = session.event.salesPaused;
+  const title = translate(session.event.title as Translated, locale);
+  const when = [
+    formatDate(session.startsAt, `${locale}-CH`),
+    session.label ? translate(session.label as Translated, locale) : null,
+    session.venue ? `${session.venue.name}, ${session.venue.city}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <div className="space-y-6">
@@ -46,14 +60,19 @@ export default async function PosSessionPage({
             {t("back")}
           </Link>
         </p>
-        <h1 className="mt-2 text-2xl">{translate(session.event.title as Translated, locale)}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {formatDate(session.startsAt, `${locale}-CH`)}
-          {session.label ? ` · ${translate(session.label as Translated, locale)}` : null}
-          {session.venue ? ` · ${session.venue.name}, ${session.venue.city}` : null}
-        </p>
+        <h1 className="mt-2 text-2xl">{title}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{when}</p>
       </header>
-      {types.length === 0 ? (
+      {paused && reseller.allowPausedSales ? (
+        <p className="rounded-control bg-amber-100 px-3.5 py-2.5 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
+          {t("pausedAllowed")}
+        </p>
+      ) : null}
+      {paused && !reseller.allowPausedSales ? (
+        <p className="rounded-card border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+          {t("paused")}
+        </p>
+      ) : types.length === 0 ? (
         <p className="rounded-card border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
           {t("noTariffs")}
         </p>
@@ -63,7 +82,10 @@ export default async function PosSessionPage({
         </p>
       ) : (
         <PosSaleForm
+          agentId={agent.id}
           sessionId={session.id}
+          title={title}
+          when={when}
           locale={locale}
           methods={methods}
           seated={data.seated}

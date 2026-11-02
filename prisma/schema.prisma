@@ -744,6 +744,8 @@ model Reseller {
   allowTerminalSales Boolean @default(true)
   /// Carte en ligne de l'organisateur : le client paie sur l'écran ou par QR.
   allowOnlineSales   Boolean @default(true)
+  /// Vend aussi les spectacles dont l'organisateur a suspendu la vente.
+  allowPausedSales   Boolean @default(false)
 
   /// Copies des e-mails de vente et récapitulatifs, une adresse par ligne.
   notifyEmails        String[]        @default([])

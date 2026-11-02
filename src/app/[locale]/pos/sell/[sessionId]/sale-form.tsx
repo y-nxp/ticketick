@@ -3,13 +3,15 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import { CheckCircle2, Download, QrCode, TicketCheck } from "lucide-react";
+import { CheckCircle2, Download, Plus, QrCode, TicketCheck, X } from "lucide-react";
 import { Field, TextInput } from "@/components/admin/fields";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Link } from "@/i18n/navigation";
-import { sellAtPosAction } from "@/lib/resellers/actions";
+import { Link, useRouter } from "@/i18n/navigation";
+import type { DiscountPreview } from "@/lib/orders/discounts";
+import { previewPosDiscounts, sellAtPosAction } from "@/lib/resellers/actions";
 import type { PosSaleState } from "@/lib/resellers/types";
 import { formatPrice } from "@/lib/utils";
+import { partCount, partTotal, usePosCart, type CartPart } from "../pos-cart";
 import { PosSeatPicker, type SeatPick } from "./seat-picker";
 
 interface Row {
@@ -30,42 +32,82 @@ type SeatMode = "plan" | "auto";
 const inputClass =
   "h-11 w-full rounded-control border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-ring";
 
-export function PosSaleForm(props: {
+interface SaleProps {
+  agentId: string;
   sessionId: string;
+  /** Titre et date du concert, repris dans la vente en cours. */
+  title: string;
+  when: string;
   locale: string;
   methods: Method[];
   seated: boolean;
   rows: Row[];
-}) {
+}
+
+const noSubscribe = () => () => {};
+
+export function PosSaleForm(props: SaleProps) {
   // Nouvelle vente : le formulaire repart de zéro, résultat compris.
   const [round, setRound] = React.useState(0);
-  return <SaleRound key={round} {...props} onNext={() => setRound((n) => n + 1)} />;
+  // La vente en cours est lue dans ce navigateur : rien à montrer avant.
+  const mounted = React.useSyncExternalStore(
+    noSubscribe,
+    () => true,
+    () => false,
+  );
+  const cart = usePosCart(props.agentId);
+  if (!mounted) return null;
+  return (
+    <SaleRound
+      key={round}
+      {...props}
+      initial={cart.parts.find((p) => p.sessionId === props.sessionId)}
+      onNext={() => setRound((n) => n + 1)}
+    />
+  );
 }
 
 function SaleRound({
+  agentId,
   sessionId,
+  title,
+  when,
   locale,
   methods,
   seated,
   rows,
+  initial,
   onNext,
-}: {
-  sessionId: string;
-  locale: string;
-  methods: Method[];
-  seated: boolean;
-  rows: Row[];
+}: SaleProps & {
+  /** Ce concert est déjà dans la vente en cours : sa sélection est reprise. */
+  initial?: CartPart;
   onNext: () => void;
 }) {
   const t = useTranslations("pos.sell");
-  const [typed, setQty] = React.useState<Record<string, number>>({});
-  const [mode, setMode] = React.useState<SeatMode>(seated ? "plan" : "auto");
-  const [picks, setPicks] = React.useState<SeatPick[]>([]);
+  const router = useRouter();
+  const cart = usePosCart(agentId);
+  const formRef = React.useRef<HTMLFormElement>(null);
+  const [typed, setQty] = React.useState<Record<string, number>>(() =>
+    initial?.seatMode === "auto"
+      ? Object.fromEntries(initial.lines.map((l) => [l.ticketTypeId, l.quantity]))
+      : {},
+  );
+  const [mode, setMode] = React.useState<SeatMode>(
+    seated ? (initial?.seatMode ?? "plan") : "auto",
+  );
+  const [picks, setPicks] = React.useState<SeatPick[]>(() =>
+    initial?.seatMode === "plan"
+      ? initial.lines.flatMap((l) =>
+          (l.seatKeys ?? []).map((key) => ({ key, ticketTypeId: l.ticketTypeId })),
+        )
+      : [],
+  );
   const [method, setMethod] = React.useState<Method>(methods[0]!);
   const [state, action, pending] = useActionState<PosSaleState, FormData>(
     sellAtPosAction,
     undefined,
   );
+  const others = cart.parts.filter((p) => p.sessionId !== sessionId);
   const onPlan = seated && mode === "plan";
   const qty: Record<string, number> = onPlan
     ? picks.reduce<Record<string, number>>(
@@ -73,9 +115,87 @@ function SaleRound({
         {},
       )
     : typed;
-  const total = rows.reduce((sum, r) => sum + r.priceCents * (qty[r.id] ?? 0), 0);
-  const count = rows.reduce((sum, r) => sum + (qty[r.id] ?? 0), 0);
+  const own = rows.reduce((sum, r) => sum + r.priceCents * (qty[r.id] ?? 0), 0);
+  const ownCount = rows.reduce((sum, r) => sum + (qty[r.id] ?? 0), 0);
+  const total = own + others.reduce((sum, p) => sum + partTotal(p), 0);
+  const count = ownCount + others.reduce((sum, p) => sum + partCount(p), 0);
   const nominative = rows.filter((r) => r.requiresAttendee && (qty[r.id] ?? 0) > 0);
+  const seatsOf = (id: string) =>
+    onPlan ? picks.filter((p) => p.ticketTypeId === id).map((p) => p.key) : undefined;
+
+  // Rabais automatiques de toute la vente, recalculés par le serveur.
+  const previewKey = JSON.stringify([
+    ...others.flatMap((p) =>
+      p.lines.map((l) => ({ ticketTypeId: l.ticketTypeId, quantity: l.quantity, seats: l.seatKeys })),
+    ),
+    ...rows
+      .filter((r) => (qty[r.id] ?? 0) > 0)
+      .map((r) => ({ ticketTypeId: r.id, quantity: qty[r.id]!, seats: seatsOf(r.id) })),
+  ]);
+  const [preview, setPreview] = React.useState<{ key: string; value: DiscountPreview } | null>(null);
+  React.useEffect(() => {
+    if (previewKey === "[]") return;
+    let ignore = false;
+    const timer = setTimeout(() => {
+      previewPosDiscounts(JSON.parse(previewKey), locale)
+        .then((value) => {
+          if (!ignore) setPreview({ key: previewKey, value });
+        })
+        .catch(() => {});
+    }, 300);
+    return () => {
+      ignore = true;
+      clearTimeout(timer);
+    };
+  }, [previewKey, locale]);
+  const discount = preview?.key === previewKey ? preview.value : null;
+  const due = Math.max(0, total - (discount?.amountCents ?? 0));
+  const money = (cents: number) => formatPrice(cents, `${locale}-CH`);
+
+  // Le concert affiché rejoint la vente en cours ; le vendeur en choisit un autre.
+  function addAndContinue() {
+    const form = formRef.current;
+    if (!form || ownCount === 0 || !form.reportValidity()) return;
+    const data = new FormData(form);
+    cart.put({
+      sessionId,
+      title,
+      when,
+      seatMode: onPlan ? "plan" : "auto",
+      lines: rows
+        .filter((r) => (qty[r.id] ?? 0) > 0)
+        .map((r) => ({
+          ticketTypeId: r.id,
+          name: r.name,
+          quantity: qty[r.id]!,
+          priceCents: r.priceCents,
+          seatKeys: seatsOf(r.id),
+        })),
+      attendees: nominative.flatMap((r) =>
+        Array.from({ length: Math.min(qty[r.id] ?? 0, 100) }, (_, i) => ({
+          ticketTypeId: r.id,
+          name: String(data.get(`attendee.${r.id}.${i}.name`) ?? ""),
+          birthDate: String(data.get(`attendee.${r.id}.${i}.birthDate`) ?? ""),
+        })),
+      ),
+    });
+    router.push("/pos/sell");
+  }
+
+  // Vente faite : la vente en cours est terminée.
+  const done = state?.ok === true;
+  React.useEffect(() => {
+    if (done) cart.clear();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- une fois, à la vente
+  }, [done]);
+
+  const initialAttendee = (id: string, i: number) =>
+    initial?.attendees.filter((a) => a.ticketTypeId === id)[i];
+
+  const failedPart =
+    state && !state.ok && state.ticketTypeId
+      ? others.find((p) => p.lines.some((l) => l.ticketTypeId === state.ticketTypeId))
+      : undefined;
 
   if (state?.ok) {
     return (
@@ -141,10 +261,56 @@ function SaleRound({
         const data = new FormData(e.currentTarget);
         React.startTransition(() => action(data));
       }}
+      ref={formRef}
       className="space-y-5 rounded-card border border-border bg-card p-6"
     >
-      <input type="hidden" name="sessionId" value={sessionId} />
       <input type="hidden" name="locale" value={locale} />
+
+      {others.length > 0 ? (
+        <section className="rounded-control border border-border bg-muted/40 p-4">
+          <h2 className="text-sm font-medium">{t("cart.title")}</h2>
+          <p className="text-xs text-muted-foreground">{t("cart.hint")}</p>
+          <ul className="mt-3 divide-y divide-border text-sm">
+            {others.map((part) => (
+              <li key={part.sessionId} className="flex items-start gap-3 py-2">
+                <Link href={`/pos/sell/${part.sessionId}`} className="min-w-0 flex-1 hover:text-primary">
+                  <span className="block font-medium">{part.title}</span>
+                  <span className="block text-xs text-muted-foreground">{part.when}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {part.lines.map((l) => `${l.quantity} × ${l.name}`).join(" · ")}
+                  </span>
+                </Link>
+                <span className="shrink-0 tabular-nums">{money(partTotal(part))}</span>
+                <button
+                  type="button"
+                  onClick={() => cart.remove(part.sessionId)}
+                  aria-label={t("cart.remove", { title: part.title })}
+                  className="shrink-0 rounded-control p-1 text-muted-foreground hover:bg-secondary hover:text-destructive"
+                >
+                  <X className="size-4" aria-hidden />
+                </button>
+                {part.lines.map((l) => (
+                  <React.Fragment key={l.ticketTypeId}>
+                    <input type="hidden" name={`qty.${l.ticketTypeId}`} value={l.quantity} />
+                    {l.seatKeys?.length ? (
+                      <input type="hidden" name={`seats.${l.ticketTypeId}`} value={l.seatKeys.join(",")} />
+                    ) : null}
+                  </React.Fragment>
+                ))}
+                {part.attendees.map((a, i) => {
+                  const index = part.attendees.slice(0, i).filter((b) => b.ticketTypeId === a.ticketTypeId).length;
+                  return (
+                    <React.Fragment key={`${a.ticketTypeId}.${index}`}>
+                      <input type="hidden" name={`attendee.${a.ticketTypeId}.${index}.name`} value={a.name} />
+                      <input type="hidden" name={`attendee.${a.ticketTypeId}.${index}.birthDate`} value={a.birthDate} />
+                    </React.Fragment>
+                  );
+                })}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {seated ? (
         <fieldset>
@@ -260,10 +426,20 @@ function SaleRound({
             Array.from({ length: Math.min(qty[row.id] ?? 0, 100) }, (_, i) => (
               <div key={`${row.id}.${i}`} className="grid gap-3 sm:grid-cols-[1fr_12rem]">
                 <Field label={`${row.name} ${i + 1} · ${t("attendeeName")}`}>
-                  <TextInput name={`attendee.${row.id}.${i}.name`} maxLength={120} required />
+                  <TextInput
+                    name={`attendee.${row.id}.${i}.name`}
+                    maxLength={120}
+                    required
+                    defaultValue={initialAttendee(row.id, i)?.name}
+                  />
                 </Field>
                 <Field label={t("attendeeBirthDate")}>
-                  <TextInput name={`attendee.${row.id}.${i}.birthDate`} type="date" required />
+                  <TextInput
+                    name={`attendee.${row.id}.${i}.birthDate`}
+                    type="date"
+                    required
+                    defaultValue={initialAttendee(row.id, i)?.birthDate}
+                  />
                 </Field>
               </div>
             )),
@@ -317,22 +493,55 @@ function SaleRound({
       {state && !state.ok ? (
         <p role="alert" className="rounded-control bg-destructive/10 px-3.5 py-2.5 text-sm text-destructive">
           {t(`errors.${state.error}`)}
+          {failedPart ? ` (${failedPart.title}, ${failedPart.when})` : null}
         </p>
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
-        <p className="text-sm">
-          {t("summary", { count })} ·{" "}
-          <span className="font-semibold tabular-nums">{formatPrice(total, `${locale}-CH`)}</span>
-        </p>
-        <Button type="submit" size="lg" disabled={pending || count === 0}>
-          <TicketCheck className="size-4" />
-          {pending
-            ? t("submitting")
-            : total > 0
-              ? t(`submit.${method}`, { amount: formatPrice(total, `${locale}-CH`) })
-              : t("submitFree")}
-        </Button>
+      <div className="space-y-4 border-t border-border pt-4">
+        <div className="text-sm">
+          {discount?.items.length ? (
+            <>
+              <p className="flex justify-between gap-4 text-muted-foreground">
+                <span>{t("subtotal")}</span>
+                <span className="tabular-nums">{money(total)}</span>
+              </p>
+              {discount.items.map((d) => (
+                <p key={d.label} className="flex justify-between gap-4 text-[var(--success)]">
+                  <span>{d.label}</span>
+                  <span className="tabular-nums">−{money(d.amountCents)}</span>
+                </p>
+              ))}
+            </>
+          ) : null}
+          <p className="flex justify-between gap-4">
+            <span>
+              {others.length > 0
+                ? t("summaryConcerts", { count, concerts: others.length + (ownCount > 0 ? 1 : 0) })
+                : t("summary", { count })}
+            </span>
+            <span className="font-semibold tabular-nums">{money(due)}</span>
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            disabled={pending || ownCount === 0}
+            onClick={addAndContinue}
+          >
+            <Plus className="size-4" />
+            {t("cart.add")}
+          </Button>
+          <Button type="submit" size="lg" disabled={pending || count === 0}>
+            <TicketCheck className="size-4" />
+            {pending
+              ? t("submitting")
+              : total > 0
+                ? t(`submit.${method}`, { amount: money(due) })
+                : t("submitFree")}
+          </Button>
+        </div>
       </div>
     </form>
   );

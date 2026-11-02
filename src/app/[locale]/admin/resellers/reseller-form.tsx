@@ -25,6 +25,7 @@ export interface ResellerFormValues {
   allowCashSales: boolean;
   allowTerminalSales: boolean;
   allowOnlineSales: boolean;
+  allowPausedSales: boolean;
   notifyEmails: string[];
   reportFrequency: string;
   reportCopyOrganizer: boolean;
@@ -46,6 +47,7 @@ const EMPTY: ResellerFormValues = {
   allowCashSales: true,
   allowTerminalSales: true,
   allowOnlineSales: true,
+  allowPausedSales: false,
   notifyEmails: [],
   reportFrequency: "WEEKLY",
   reportCopyOrganizer: true,
@@ -160,6 +162,16 @@ export function ResellerForm({
           defaultChecked={values.allowOnlineSales}
         />
         <p className="text-xs text-muted-foreground">{t("fields.methodsHint")}</p>
+      </fieldset>
+
+      <fieldset className="space-y-2.5">
+        <legend className="text-sm font-medium">{t("fields.paused")}</legend>
+        <Checkbox
+          name="allowPausedSales"
+          label={t("fields.allowPausedSales")}
+          defaultChecked={values.allowPausedSales}
+        />
+        <p className="text-xs text-muted-foreground">{t("fields.allowPausedSalesHint")}</p>
       </fieldset>
 
       <fieldset className="space-y-4">

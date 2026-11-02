@@ -34,10 +34,11 @@ export default async function PosSalePage({
           </Link>
         </p>
         <h1 className="mt-2 font-mono text-2xl">{sale.reference}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {sale.eventTitle ? translate(sale.eventTitle as Translated, locale) : null}
-          {sale.startsAt ? ` · ${formatDate(sale.startsAt, `${locale}-CH`)}` : null}
-        </p>
+        {sale.shows.map((show, i) => (
+          <p key={i} className="mt-1 text-sm text-muted-foreground">
+            {translate(show.title as Translated, locale)} · {formatDate(show.startsAt, `${locale}-CH`)}
+          </p>
+        ))}
       </header>
 
       <section className="grid gap-4 rounded-card border border-border bg-card p-6 text-sm sm:grid-cols-2">

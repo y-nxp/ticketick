@@ -790,7 +790,10 @@
         "reportFrequency": "Sales summary",
         "reportFrequencyHint": "Sent at 7 am: the previous day, or the past week on Mondays.",
         "reportCopyOrganizer": "Also send the summary to the organiser's copy addresses",
-        "active": "Point of sale active (its sellers can sell)"
+        "active": "Point of sale active (its sellers can sell)",
+        "paused": "Paused sales",
+        "allowPausedSales": "Also sell shows whose sales are paused",
+        "allowPausedSalesHint": "Unticked, a show paused by the organiser cannot be sold at the counter."
       },
       "frequency": {
         "NONE": "No summary",
@@ -2322,7 +2325,9 @@
         "notOnSale": "This ticket is not on sale at the moment.",
         "companion_requires_paid": "Free seats require at least one paid ticket.",
         "companion_limit": "Too many free seats for the number of paid tickets.",
-        "cardMissing": "Online payment is not available for this organiser."
+        "cardMissing": "Online payment is not available for this organiser.",
+        "paused": "The organiser has paused sales for this show.",
+        "mixedOrganizers": "A sale can only combine shows from the same organiser."
       },
       "seatMode": {
         "title": "Seats",
@@ -2330,7 +2335,23 @@
         "planHint": "Tap the seats you want on the plan.",
         "auto": "Automatic allocation",
         "autoHint": "Enter the quantities: the best free seats are allocated."
-      }
+      },
+      "cart": {
+        "title": "Already in this sale",
+        "hint": "Paid together with this concert, in one go. Tap a concert to change it.",
+        "remove": "Remove {title} from the sale",
+        "add": "Add another concert",
+        "bannerTitle": "Sale in progress: {count, plural, =1 {# seat} other {# seats}} for {concerts, plural, =1 {# concert} other {# concerts}}",
+        "bannerHint": "Choose the next concert below, or go to payment.",
+        "clear": "Cancel sale",
+        "confirmClear": "Cancel the sale in progress? The chosen concerts will be removed.",
+        "checkout": "Take payment"
+      },
+      "subtotal": "Subtotal",
+      "summaryConcerts": "{count, plural, =1 {# seat} other {# seats}} · {concerts, plural, =1 {# concert} other {# concerts}}",
+      "paused": "The organiser has paused sales for this show.",
+      "pausedAllowed": "Online sales are paused by the organiser: your point of sale may still sell.",
+      "pausedBadge": "Sales paused"
     },
     "sales": {
       "title": "Sales",

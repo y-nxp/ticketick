@@ -62,13 +62,15 @@ export default async function PosSalesPage({
                         .join(" · ")}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
-                    {sale.eventTitle ? translate(sale.eventTitle as Translated, locale) : null}
-                    {sale.startsAt ? (
-                      <span className="block text-xs text-muted-foreground">
-                        {formatDate(sale.startsAt, `${locale}-CH`)}
+                  <td className="space-y-1.5 px-4 py-3">
+                    {sale.shows.map((show, i) => (
+                      <span key={i} className="block">
+                        {translate(show.title as Translated, locale)}
+                        <span className="block text-xs text-muted-foreground">
+                          {formatDate(show.startsAt, `${locale}-CH`)}
+                        </span>
                       </span>
-                    ) : null}
+                    ))}
                   </td>
                   <td className="px-4 py-3">
                     <span className="block">{t(`methods.${sale.method}`)}</span>
