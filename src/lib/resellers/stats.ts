@@ -112,7 +112,7 @@ export async function resellerStats(
       totalCents: true,
       commissionCents: true,
       paymentMethod: true,
-      charges: { select: { status: true, method: true, amountCents: true } },
+      charges: { select: { kind: true, status: true, method: true, amountCents: true, provider: true } },
       tickets: { select: { status: true } },
       items: { take: 1, select: { ticketType: { select: { session: { select: { eventId: true } } } } } },
     },
@@ -134,6 +134,13 @@ export async function resellerStats(
       let online = 0;
       for (const charge of order.charges) {
         if (charge.status !== "DONE") continue;
+        // Un remboursement ne compte que s'il a été rendu par le point de
+        // vente : celui de l'organisateur ne change pas ce qu'il a encaissé.
+        if (charge.kind === "REFUND") {
+          if (charge.provider === "reseller") row.cashCents -= charge.amountCents;
+          if (charge.provider === "reseller") onSite -= charge.amountCents;
+          continue;
+        }
         if (charge.method === "CASH") row.cashCents += charge.amountCents;
         else if (charge.method === "TERMINAL") row.terminalCents += charge.amountCents;
         else if (charge.method === "LINK") row.onlineCents += charge.amountCents;

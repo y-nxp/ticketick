@@ -1685,7 +1685,7 @@
     },
     "orderEdit": {
       "title": "Bestellung bearbeiten",
-      "resellerHint": "Bestellung einer Verkaufsstelle: Die Provision ist fest, hier lassen sich nur Kontaktdaten und Sitzplätze ändern.",
+      "resellerHint": "Verkauf einer Verkaufsstelle: Tickets können unten storniert werden, ihre Provision auf diese Tickets wird zurückgebucht. Keine weiteren Tickets oder Tarifwechsel hier.",
       "details": "Kontaktdaten",
       "firstName": "Vorname",
       "lastName": "Nachname",
@@ -1747,7 +1747,8 @@
         "CREDIT_NOTE": "Gutschrift",
         "PROVIDER": "auf die Karte",
         "TERMINAL": "Terminal der Verkaufsstelle",
-        "TRANSFER": "Überweisung"
+        "TRANSFER": "Überweisung",
+        "RESELLER": "von der Verkaufsstelle erstattet"
       },
       "status": {
         "OPEN": "Offen",
@@ -1817,7 +1818,8 @@
         "quantity": "Ungültige Anzahl Plätze.",
         "ticketsNotSent": "Das Senden der Tickets ist fehlgeschlagen.",
         "changeNothing": "Kein Ticket zu ändern: Es braucht gültige nummerierte Plätze für ein kommendes Konzert.",
-        "cancelNoticeNotSent": "Die Stornierungs-E-Mail konnte nicht gesendet werden."
+        "cancelNoticeNotSent": "Die Stornierungs-E-Mail konnte nicht gesendet werden.",
+        "resellerNotCollected": "Diese Verkaufsstelle hat diesen Verkauf nicht kassiert: Wählen Sie eine andere Rückerstattung."
       },
       "changeLink": "Änderung durch den Kunden",
       "changeLinkHint": "Der Kunde erhält einen Link, um seine Tickets eins zu eins gegen andere Plätze oder eine andere Vorstellung des Veranstalters zu tauschen. Er bezahlt nur den Aufpreis, per Karte; nie eine Rückerstattung. Mit dem Link lässt sich auch ein bereits getauschtes Ticket erneut tauschen. Höchstens 72 Stunden gültig, bis zur Vorstellung. Hat der Kunde ein Konto, muss er sich anmelden.",
@@ -1841,7 +1843,8 @@
         "unpaid": "E-Mail gesendet: unbezahlte Tickets, keine Rückerstattung."
       },
       "cancelNoticeSentOn": "E-Mail gesendet am {date}",
-      "cancelNoticeNotYet": "Noch nicht mitgeteilt"
+      "cancelNoticeNotYet": "Noch nicht mitgeteilt",
+      "refundReseller": "Von der Verkaufsstelle erstattet"
     },
     "reports": {
       "title": "Berichte",

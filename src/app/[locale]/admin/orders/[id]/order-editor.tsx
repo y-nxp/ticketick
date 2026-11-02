@@ -43,7 +43,8 @@ export interface EditorCharge {
   id: string;
   number: string;
   kind: "PAYMENT" | "REFUND";
-  method: "CASH" | "LINK" | "DOOR" | "TERMINAL" | "TRANSFER" | "CREDIT_NOTE" | "PROVIDER";
+  /** `RESELLER` : rendu par le point de vente (espèces de son côté). */
+  method: "CASH" | "LINK" | "DOOR" | "TERMINAL" | "TRANSFER" | "CREDIT_NOTE" | "PROVIDER" | "RESELLER";
   status: "OPEN" | "DONE" | "EXPIRED" | "CANCELLED" | "FAILED";
   amountCents: number;
   due: string | null;
@@ -68,6 +69,8 @@ export interface EditorProps {
   charges: EditorCharge[];
   refundableCents: number;
   providerRefund: string | null;
+  /** Vente encaissée par le point de vente, qui peut rendre l'argent lui-même. */
+  resellerCollected: boolean;
   linkAvailable: boolean;
   seatedSessions: { id: string; label: string }[];
   changeLink: { sent: string; expires: string; used: string | null; expired: boolean } | null;
@@ -103,9 +106,9 @@ export function OrderEditor(props: EditorProps) {
         <p className="text-sm text-muted-foreground">{t("resellerHint")}</p>
       ) : null}
       <DetailsForm {...props} />
+      {props.editable ? <RemovePanel {...props} /> : null}
       {props.editable && !props.reseller ? (
         <>
-          <RemovePanel {...props} />
           <AddPanel {...props} hasEmail={hasEmail} />
           <ChangeLinkPanel {...props} hasEmail={hasEmail} />
         </>
@@ -177,12 +180,14 @@ function RemovePanel({
   tickets,
   refundableCents,
   providerRefund,
+  resellerCollected,
   details,
 }: EditorProps) {
   const t = useTranslations("admin.orderEdit");
   const ts = useTranslations("admin.ticketStatus");
   const [picked, setPicked] = React.useState<string[]>([]);
-  const [refund, setRefund] = React.useState("NONE");
+  // Vente encaissée par le point de vente : l'acheteur y retourne d'habitude.
+  const [refund, setRefund] = React.useState(resellerCollected ? "RESELLER" : "NONE");
   const [state, action, pending] = useActionState<FormState, FormData>(
     async (prev, formData) => {
       const result = await removeTicketsAction(prev, formData);
@@ -261,6 +266,7 @@ function RemovePanel({
                 className="h-11 w-full rounded-control border border-border bg-background px-3 text-sm"
               >
                 <option value="NONE">{t("refundNone")}</option>
+                {resellerCollected ? <option value="RESELLER">{t("refundReseller")}</option> : null}
                 <option value="CASH">{t("refundCash")}</option>
                 <option value="CREDIT_NOTE" disabled={!details.email}>
                   {t("refundCredit")}

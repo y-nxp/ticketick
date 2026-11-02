@@ -1685,7 +1685,7 @@
     },
     "orderEdit": {
       "title": "Modifier la commande",
-      "resellerHint": "Commande d'un point de vente : sa commission est figée, seules les coordonnées et les sièges se modifient ici.",
+      "resellerHint": "Vente d'un point de vente : les billets peuvent être annulés ci-dessous, et sa commission sur ces billets lui est reprise. Pas d'ajout ni de changement de tarif ici.",
       "details": "Coordonnées",
       "firstName": "Prénom",
       "lastName": "Nom",
@@ -1747,7 +1747,8 @@
         "CREDIT_NOTE": "note de crédit",
         "PROVIDER": "sur la carte",
         "TERMINAL": "terminal du point de vente",
-        "TRANSFER": "virement"
+        "TRANSFER": "virement",
+        "RESELLER": "rendu par le point de vente"
       },
       "status": {
         "OPEN": "En attente",
@@ -1817,7 +1818,8 @@
         "quantity": "Nombre de places invalide.",
         "ticketsNotSent": "L'envoi des billets a échoué.",
         "changeNothing": "Aucun billet à changer : il faut des places numérotées valables pour un concert à venir.",
-        "cancelNoticeNotSent": "L'e-mail d'annulation n'a pas pu être envoyé."
+        "cancelNoticeNotSent": "L'e-mail d'annulation n'a pas pu être envoyé.",
+        "resellerNotCollected": "Ce point de vente n'a pas encaissé cette vente : choisissez un autre remboursement."
       },
       "changeLink": "Changement par le client",
       "changeLinkHint": "Le client reçoit un lien pour échanger ses billets, billet pour billet, contre d'autres places ou un autre spectacle de l'organisateur. Il paie seulement la hausse, par carte ; jamais de remboursement. Le lien permet aussi d'échanger un billet déjà échangé. Valable 72 heures au plus, jusqu'au spectacle. Si le client a un compte, il doit s'y connecter.",
@@ -1841,7 +1843,8 @@
         "unpaid": "E-mail envoyé : billets non réglés, pas de remboursement."
       },
       "cancelNoticeSentOn": "E-mail envoyé le {date}",
-      "cancelNoticeNotYet": "Pas encore annoncé"
+      "cancelNoticeNotYet": "Pas encore annoncé",
+      "refundReseller": "Rendu par le point de vente"
     },
     "reports": {
       "title": "Rapports",

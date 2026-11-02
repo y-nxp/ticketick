@@ -5,6 +5,7 @@ import { Prisma, type ChargeMethod, type TicketStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { readLayout, seatLabel, zoneAllowed } from "@/lib/seating/layout";
 import { claimSeats, releaseSeats, syncSessionSeats } from "@/lib/seating/seats";
+import { commissionReturned, commissionRule } from "@/lib/resellers/commission";
 import { issueMissingTickets } from "@/lib/tickets/issue";
 import {
   assignSeats,
@@ -38,6 +39,7 @@ export type EditError =
   | "amount"
   | "refundTooHigh"
   | "providerMissing"
+  | "resellerNotCollected"
   | "emailMissing"
   | "cardMissing"
   | "retry"
@@ -63,10 +65,13 @@ export type PaymentSettle =
   | { method: "CASH" | "DOOR" | "TERMINAL" | "TRANSFER"; amountCents: number }
   | { method: "LINK"; amountCents: number; dueAt: Date };
 
-/** Différence rendue au client pour des places retirées. */
+/**
+ * Différence rendue au client pour des places retirées. `RESELLER` : le point
+ * de vente qui avait encaissé rend l'argent lui-même.
+ */
 export type RefundSettle =
   | { method: "NONE" }
-  | { method: "CASH" | "CREDIT_NOTE" | "PROVIDER"; amountCents: number };
+  | { method: "CASH" | "CREDIT_NOTE" | "PROVIDER" | "RESELLER"; amountCents: number };
 
 /** Prestataires chez qui un paiement d'origine se rembourse par l'API. */
 export const REFUNDABLE_PROVIDERS = ["postfinance", "paypal", "stripe", "mock"];
@@ -84,6 +89,7 @@ const orderSelect = {
   email: true,
   locale: true,
   resellerId: true,
+  commissionCents: true,
   payment: { select: { provider: true, status: true } },
   items: {
     select: {
@@ -98,6 +104,7 @@ const orderSelect = {
           seatZones: true,
           session: {
             select: {
+              eventId: true,
               capacity: true,
               seatPlan: { select: { layout: true } },
             },
@@ -133,8 +140,9 @@ export async function lockOrder(
 
 export function assertEditable(order: LockedOrder, changesSeats: boolean): void {
   if (order.status !== "PAID") throw new EditFailure("notEditable");
-  // La commission du revendeur est figée à la vente : ses commandes ne
-  // changent ni de places ni de montant ici.
+  // La commission du revendeur est fixée à la vente : ses commandes ne
+  // gagnent ni places ni tarifs ici. Les annuler passe par
+  // `removeOrderTickets`, qui reprend sa commission.
   if (changesSeats && order.resellerId) throw new EditFailure("reseller");
 }
 
@@ -349,7 +357,7 @@ export async function removeOrderTickets(input: {
   return run(() =>
     prisma.$transaction(async (tx) => {
       const order = await lockOrder(tx, input.orderId);
-      assertEditable(order, true);
+      assertEditable(order, false);
       if (
         refund?.method === "PROVIDER" &&
         !(
@@ -360,7 +368,17 @@ export async function removeOrderTickets(input: {
         throw new EditFailure("providerMissing");
       }
 
+      const collected = order.resellerId
+        ? await tx.resellerLedgerEntry.count({
+            where: { orderId: order.id, type: "CASH_COLLECTED" },
+          })
+        : 0;
+      if (refund?.method === "RESELLER" && collected === 0) {
+        throw new EditFailure("resellerNotCollected");
+      }
+
       await releaseTickets(tx, order, input.ticketIds, input.toInvites);
+      if (order.resellerId) await returnCommission(tx, order, input.ticketIds);
 
       let chargeId: string | undefined;
       if (refund) {
@@ -371,17 +389,18 @@ export async function removeOrderTickets(input: {
         const refundable = order.totalCents - (pendingRefunds._sum.amountCents ?? 0);
         if (refund.amountCents > refundable) throw new EditFailure("refundTooHigh");
 
-        const cash = refund.method === "CASH";
+        const byReseller = refund.method === "RESELLER";
+        const cash = refund.method === "CASH" || byReseller;
         const charge = await tx.orderCharge.create({
           data: {
             orderId: order.id,
             number: await nextChargeNumber(tx, order),
             kind: "REFUND",
-            method: refund.method,
+            method: refund.method === "RESELLER" ? "CASH" : refund.method,
             status: cash ? "DONE" : "OPEN",
             amountCents: refund.amountCents,
             currency: order.currency,
-            provider: cash ? "cash" : null,
+            provider: byReseller ? "reseller" : cash ? "cash" : null,
             ticketIds: input.ticketIds,
             createdById: input.actorId,
             settledAt: cash ? new Date() : null,
@@ -395,12 +414,85 @@ export async function removeOrderTickets(input: {
             data: { totalCents: { decrement: refund.amountCents } },
           });
         }
+        if (byReseller) {
+          // Il a rendu l'argent qu'il devait à l'organisateur : sa dette baisse d'autant.
+          await tx.resellerLedgerEntry.create({
+            data: {
+              resellerId: order.resellerId!,
+              orderId: order.id,
+              type: "ADJUSTMENT",
+              amountCents: refund.amountCents,
+              note: `Remboursé par le point de vente : ${order.reference}`,
+            },
+          });
+        }
       }
 
       await closeIfEmpty(tx, order, input.ticketIds, refund !== null);
       return { ok: true as const, chargeId, refundChargeId: chargeId };
     }),
   );
+}
+
+/**
+ * Vente d'un point de vente : la commission des billets annulés lui est
+ * reprise, au prorata de ce qui restait. Déjà portée à son registre (vente
+ * payée), elle y est corrigée ; sinon elle baisse seulement sur la commande,
+ * et le paiement à venir inscrira le bon montant.
+ */
+async function returnCommission(
+  tx: Prisma.TransactionClient,
+  order: LockedOrder,
+  removedIds: string[],
+): Promise<void> {
+  if (!order.resellerId || order.commissionCents <= 0) return;
+  const priceOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
+  const removed = new Set(removedIds);
+  const sum = (list: LockedOrder["tickets"]) => {
+    const paid = list.filter((t) => (priceOf.get(t.ticketTypeId) ?? 0) > 0);
+    return {
+      amountCents: paid.reduce((n, t) => n + (priceOf.get(t.ticketTypeId) ?? 0), 0),
+      paidTickets: paid.length,
+    };
+  };
+  const before = sum(order.tickets.filter((t) => t.status !== "CANCELLED"));
+  const gone = sum(order.tickets.filter((t) => removed.has(t.id)));
+
+  const eventId = order.items[0]?.ticketType.session.eventId;
+  const reseller = await tx.reseller.findUniqueOrThrow({
+    where: { id: order.resellerId },
+    select: {
+      commissionKind: true,
+      commissionBps: true,
+      commissionFixedCents: true,
+      events: {
+        where: { eventId: eventId ?? "" },
+        select: { commissionKind: true, commissionBps: true, commissionFixedCents: true },
+      },
+    },
+  });
+  const rule = commissionRule(reseller, reseller.events[0]);
+  const back = commissionReturned(rule.kind, order.commissionCents, before, gone);
+  if (back <= 0) return;
+
+  await tx.order.update({
+    where: { id: order.id },
+    data: { commissionCents: { decrement: back } },
+  });
+  const earned = await tx.resellerLedgerEntry.count({
+    where: { orderId: order.id, type: "COMMISSION_EARNED" },
+  });
+  if (earned > 0) {
+    await tx.resellerLedgerEntry.create({
+      data: {
+        resellerId: order.resellerId,
+        orderId: order.id,
+        type: "ADJUSTMENT",
+        amountCents: -back,
+        note: `Commission reprise, billets annulés : ${order.reference}`,
+      },
+    });
+  }
 }
 
 // ─────────────────────────────── Places ajoutées
