@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { BarChart3, TicketCheck } from "lucide-react";
+import { BarChart3, Bus, TicketCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -81,7 +81,7 @@ export default async function ReportsPage({
   });
   const since = reportSince(organizer.lastReportSentAt);
   const [{ sessions, totals }, promotionOffered] = await Promise.all([
-    getOrganizerReport(organizerId, { since }),
+    getOrganizerReport(organizerId, { since, locale }),
     canSeePromotionUi(user) ? hasPromotionCampaigns(organizerId) : false,
   ]);
   const savedSections = readSections(organizer.reportSections);
@@ -306,6 +306,17 @@ export default async function ReportsPage({
                 </tbody>
               </table>
             </div>
+            {has("sales")
+              ? rows
+                  .filter((s) => s.options.length > 0)
+                  .map((s) => (
+                    <SessionOptions
+                      key={s.sessionId}
+                      options={s.options}
+                      heading={[when(s.startsAt), s.venue].filter(Boolean).join(" · ")}
+                    />
+                  ))
+              : null}
           </section>
         ))
       )}
@@ -352,6 +363,104 @@ export default async function ReportsPage({
           </>
         )}
       </section>
+    </div>
+  );
+}
+
+/** Options choisies (navette…) : personnes par choix, puis la liste des inscrits. */
+async function SessionOptions({
+  options,
+  heading,
+}: {
+  options: ReportSession["options"];
+  heading: string;
+}) {
+  const t = await getTranslations("admin.reports");
+  return (
+    <div className="space-y-3 border-t border-border pt-4">
+      <h3 className="text-sm font-medium">{t("optionsHeading", { date: heading })}</h3>
+      {options.map((o) => (
+        <div key={o.optionId} className="rounded-control border border-border bg-muted/40 p-4">
+          <p className="flex items-start gap-2 text-sm font-medium">
+            <Bus className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+            <span>
+              {o.title}
+              <span className="block text-xs font-normal text-muted-foreground">
+                {t("optionsSummary", { orders: o.orders, people: o.people })}
+              </span>
+            </span>
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {[...o.groups, ...(o.other.length ? [{ title: t("optionsOther"), choices: o.other }] : [])].map((g) => (
+              <div key={g.title} className="rounded-control border border-border bg-card p-3">
+                {g.title ? <p className="text-xs font-medium text-muted-foreground">{g.title}</p> : null}
+                <ul className="mt-1.5 divide-y divide-border text-sm">
+                  {g.choices.map((c) => (
+                    <li key={c.label} className="flex items-baseline justify-between gap-3 py-1.5">
+                      <span>{c.label}</span>
+                      <span className="whitespace-nowrap text-right tabular-nums">
+                        <span className="font-semibold">{t("people", { count: c.people })}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {t("orders", { count: c.orders })}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <details className="mt-3">
+            <summary className="cursor-pointer text-sm font-medium text-primary">
+              {t("optionsBuyers", { count: o.buyers.length })}
+            </summary>
+            <div className="mt-2 rounded-control border border-border bg-card text-sm">
+              <div className="hidden grid-cols-[minmax(0,1.2fr)_5rem_minmax(0,1.5fr)_9rem_6rem] gap-3 border-b border-border px-3 py-2 text-xs text-muted-foreground md:grid">
+                <span>{t("buyerName")}</span>
+                <span className="text-right">{t("buyerPeople")}</span>
+                <span>{t("buyerChoices")}</span>
+                <span>{t("buyerPhone")}</span>
+                <span>{t("buyerOrder")}</span>
+              </div>
+              <ul className="divide-y divide-border">
+                {o.buyers.map((b) => (
+                  <li
+                    key={b.orderId}
+                    className="grid gap-x-3 gap-y-1 px-3 py-2.5 md:grid-cols-[minmax(0,1.2fr)_5rem_minmax(0,1.5fr)_9rem_6rem]"
+                  >
+                    <span className="min-w-0">
+                      <span className="font-medium">{b.name || t("noName")}</span>
+                      <span className="text-muted-foreground md:hidden"> · {t("people", { count: b.people })}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{b.email}</span>
+                    </span>
+                    <span className="hidden text-right tabular-nums md:block">{b.people}</span>
+                    <span>
+                      {b.choices.map((c) => (
+                        <span key={c} className="block">{c}</span>
+                      ))}
+                    </span>
+                    <span className="flex flex-wrap gap-x-3 text-xs md:contents md:text-sm">
+                      {b.phone ? (
+                        <a href={`tel:${b.phone}`} className="whitespace-nowrap hover:text-primary hover:underline">
+                          {b.phone}
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground">–</span>
+                      )}
+                      <Link
+                        href={`/admin/orders/${b.orderId}`}
+                        className="font-mono text-xs text-muted-foreground hover:text-primary hover:underline"
+                      >
+                        {b.reference}
+                      </Link>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </details>
+        </div>
+      ))}
     </div>
   );
 }

@@ -1635,7 +1635,13 @@
       "title": "Box office booking",
       "intro": "For a group, a partner or a customer on the phone: enter the number of seats per category, then the payment — complimentary, cash, card payment link or payment on site on the evening of the show.",
       "introSeated": "For a group, a partner or a customer on the phone: pick the seats on the seating plan, free or blocked for guests, or enter a number of seats per tariff for automatic allocation, side by side when possible. Then choose the settlement.",
-      "seatMode": {"title": "Seats", "plan": "Choose on the seating plan", "planHint": "Tap the seats you want on the plan, free or blocked (guests). The tariff is then chosen for each seat.", "auto": "Automatic allocation", "autoHint": "Enter the quantities: the best free seats are allocated; blocked seats only if you ask for them."},
+      "seatMode": {
+        "title": "Seats",
+        "plan": "Choose on the seating plan",
+        "planHint": "Tap the seats you want on the plan, free or blocked (guests). The tariff is then chosen for each seat.",
+        "auto": "Automatic allocation",
+        "autoHint": "Enter the quantities: the best free seats are allocated; blocked seats only if you ask for them."
+      },
       "planInvitesHint": "A reservation made only of blocked seats counts against the guest allotment: if it falls through, the seats return there. With at least one free seat, they go back on sale.",
       "noTariffs": "No tariff on this session: add one before reserving.",
       "tariff": "Tariff",
@@ -1920,7 +1926,18 @@
         "sections": "Choose at least one part of the report."
       },
       "frequencyHint": "The report shows the situation when it is sent, date by date. “New”: since the previous automatic report.",
-      "sections": "Automatic report content"
+      "sections": "Automatic report content",
+      "optionsSummary": "{orders, plural, one {# order} other {# orders}} · {people, plural, one {# person} other {# people}}",
+      "optionsBuyers": "People signed up ({count})",
+      "optionsOther": "Label changed since",
+      "people": "{count, plural, =0 {–} one {# person} other {# people}}",
+      "orders": "{count, plural, =0 {no orders} one {# order} other {# orders}}",
+      "buyerName": "Name",
+      "buyerPeople": "People",
+      "buyerChoices": "Choices",
+      "buyerPhone": "Phone",
+      "buyerOrder": "Order",
+      "optionsHeading": "Options chosen — {date}"
     },
     "promotion": {
       "title": "Promotion",
@@ -2545,7 +2562,13 @@
     "promotionTotalRevenue": "Amount through your campaigns",
     "promotionTotalOther": "Other shows through your campaigns",
     "promotionEmpty": "No active campaign.",
-    "footerPromotion": "Promotion: purchases made after a click on your posts, within {days} days, on the same device — a floor, not the full effect. Net amount, service fees excluded."
+    "footerPromotion": "Promotion: purchases made after a click on your posts, within {days} days, on the same device — a floor, not the full effect. Net amount, service fees excluded.",
+    "optionsTitle": "Options chosen",
+    "optionsChoice": "Choice",
+    "optionsOrders": "Orders",
+    "optionsPeople": "People",
+    "optionsTotal": "Orders with this option",
+    "footerOptions": "Options: paid orders; People = tickets in those orders for the date."
   },
   "consent": {
     "title": "ticketick respects your privacy",

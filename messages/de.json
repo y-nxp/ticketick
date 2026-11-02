@@ -1635,7 +1635,13 @@
       "title": "Reservation an der Kasse",
       "intro": "Für eine Gruppe, einen Partner oder einen Kunden am Telefon: Geben Sie die Anzahl Plätze pro Tarif ein, dann die Zahlung — gratis, bar, Zahlungslink per Karte oder Zahlung vor Ort am Vorstellungsabend.",
       "introSeated": "Für eine Gruppe, einen Partner oder einen Kunden am Telefon: Wählen Sie die Plätze auf dem Saalplan, frei oder für Gäste gesperrt, oder geben Sie eine Anzahl Plätze pro Tarif für die automatische Zuteilung ein, wenn möglich nebeneinander. Wählen Sie danach die Zahlungsart.",
-      "seatMode": {"title": "Plätze", "plan": "Auf dem Saalplan wählen", "planHint": "Tippen Sie die gewünschten Plätze auf dem Plan an, frei oder gesperrt (Gäste). Der Tarif wird danach pro Platz gewählt.", "auto": "Automatische Zuteilung", "autoHint": "Geben Sie die Anzahl an: Die besten freien Plätze werden zugeteilt; gesperrte Plätze nur auf Wunsch."},
+      "seatMode": {
+        "title": "Plätze",
+        "plan": "Auf dem Saalplan wählen",
+        "planHint": "Tippen Sie die gewünschten Plätze auf dem Plan an, frei oder gesperrt (Gäste). Der Tarif wird danach pro Platz gewählt.",
+        "auto": "Automatische Zuteilung",
+        "autoHint": "Geben Sie die Anzahl an: Die besten freien Plätze werden zugeteilt; gesperrte Plätze nur auf Wunsch."
+      },
       "planInvitesHint": "Eine Reservation nur aus gesperrten Plätzen wird dem Gästekontingent angerechnet: Fällt sie weg, gehen die Plätze dorthin zurück. Mit mindestens einem freien Platz kommen sie wieder in den Verkauf.",
       "noTariffs": "Kein Tarif für diese Vorstellung: Legen Sie zuerst einen an.",
       "tariff": "Tarif",
@@ -1920,7 +1926,18 @@
         "sections": "Wählen Sie mindestens einen Teil des Berichts."
       },
       "frequencyHint": "Der Bericht zeigt den Stand beim Versand, Termin für Termin. «Neu»: seit dem vorherigen automatischen Bericht.",
-      "sections": "Inhalt des automatischen Berichts"
+      "sections": "Inhalt des automatischen Berichts",
+      "optionsSummary": "{orders, plural, one {# Bestellung} other {# Bestellungen}} · {people, plural, one {# Person} other {# Personen}}",
+      "optionsBuyers": "Angemeldete Personen ({count})",
+      "optionsOther": "Bezeichnung seither geändert",
+      "people": "{count, plural, =0 {–} one {# Person} other {# Personen}}",
+      "orders": "{count, plural, =0 {keine Bestellung} one {# Bestellung} other {# Bestellungen}}",
+      "buyerName": "Name",
+      "buyerPeople": "Personen",
+      "buyerChoices": "Auswahl",
+      "buyerPhone": "Telefon",
+      "buyerOrder": "Bestellung",
+      "optionsHeading": "Gewählte Optionen — {date}"
     },
     "promotion": {
       "title": "Promotion",
@@ -2545,7 +2562,13 @@
     "promotionTotalRevenue": "Betrag über Ihre Kampagnen",
     "promotionTotalOther": "Andere Veranstaltungen über Ihre Kampagnen",
     "promotionEmpty": "Keine aktive Kampagne.",
-    "footerPromotion": "Promotion: Käufe nach einem Klick auf Ihre Beiträge, innerhalb von {days} Tagen, auf demselben Gerät — eine Untergrenze, nicht die gesamte Wirkung. Nettobetrag ohne Servicegebühren."
+    "footerPromotion": "Promotion: Käufe nach einem Klick auf Ihre Beiträge, innerhalb von {days} Tagen, auf demselben Gerät — eine Untergrenze, nicht die gesamte Wirkung. Nettobetrag ohne Servicegebühren.",
+    "optionsTitle": "Gewählte Optionen",
+    "optionsChoice": "Auswahl",
+    "optionsOrders": "Bestellungen",
+    "optionsPeople": "Personen",
+    "optionsTotal": "Bestellungen mit dieser Option",
+    "footerOptions": "Optionen: bezahlte Bestellungen; Personen = Tickets dieser Bestellungen für das Datum."
   },
   "consent": {
     "title": "ticketick respektiert Ihre Privatsphäre",

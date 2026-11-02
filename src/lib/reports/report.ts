@@ -87,7 +87,7 @@ export async function sendOrganizerReport(
     options.period && !organizer.lastReportSentAt
       ? options.period.from
       : reportSince(organizer.lastReportSentAt, now);
-  const { sessions, totals } = await getOrganizerReport(organizerId, { since, now });
+  const { sessions, totals } = await getOrganizerReport(organizerId, { since, now, locale });
   const label = (s: (typeof sessions)[number]) =>
     `${tr(s.eventTitle as Translated, locale)} — ${format(s.startsAt, "session")}`;
 
@@ -115,6 +115,24 @@ export async function sendOrganizerReport(
         : []),
       ...(totals.pending > 0 ? [{ label: t("pending"), value: String(totals.pending) }] : []),
     );
+    // Options (navette…) : un tableau par option et par date, pour préparer le service.
+    for (const s of sessions) {
+      for (const option of s.options) {
+        const count = (n: number) => (n > 0 ? String(n) : "–");
+        tables.push({
+          title: `${t("optionsTitle")} — ${option.title} · ${label(s)}`,
+          columns: [t("optionsChoice"), t("optionsOrders"), t("optionsPeople")],
+          rows: [
+            ...option.groups.flatMap((g) =>
+              g.choices.map((c) => [[g.title, c.label].filter(Boolean).join(" : "), count(c.orders), count(c.people)]),
+            ),
+            ...option.other.map((c) => [c.label, count(c.orders), count(c.people)]),
+            [t("optionsTotal"), String(option.orders), String(option.people)],
+          ],
+          empty: t("empty"),
+        });
+      }
+    }
   }
   if (sections.includes("invitations")) {
     tables.push({
@@ -175,6 +193,9 @@ export async function sendOrganizerReport(
       summary,
       footer: [
         ...(sections.includes("sales") ? [t("footerSales")] : []),
+        ...(sections.includes("sales") && sessions.some((s) => s.options.length > 0)
+          ? [t("footerOptions")]
+          : []),
         ...(sections.includes("invitations") ? [t("footerInvitations")] : []),
         ...(promotion ? [promotion.footer] : []),
       ].join(" "),
