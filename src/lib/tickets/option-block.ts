@@ -171,7 +171,8 @@ function stripDirection(title: string): string {
 }
 
 function extractTime(label: string): string {
-  const fr = label.match(/\b(\d{1,2}h\d{2})\b/i);
+  // « 15h30 » comme « 19h » : les minutes sont facultatives.
+  const fr = label.match(/\b(\d{1,2}h(?:\d{2})?)\b/i);
   if (fr) return fr[1]!.toLowerCase();
   const clock = label.match(/\b(\d{1,2}:\d{2})\b/);
   if (clock) return clock[1]!;
