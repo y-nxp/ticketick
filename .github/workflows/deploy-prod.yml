@@ -36,12 +36,14 @@ jobs:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          # Chiffres pour la console du groupe (Clouboard › Chiffres), lecture seule.
+          GROUP_FIGURES_TOKEN: ${{ secrets.GROUP_FIGURES_TOKEN }}
         with:
           host: ${{ secrets.GB10_HOST }}
           username: ${{ secrets.GB10_USER }}
           key: ${{ secrets.GB10_SSH_PRIVATE_KEY }}
           port: ${{ secrets.GB10_PORT }}
-          envs: STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,PF_CHECKOUT_SPACE_ID,PF_CHECKOUT_USER,PF_CHECKOUT_SECRET,SMTP_HOST,SMTP_USER,SMTP_PASS
+          envs: STRIPE_SECRET_KEY,STRIPE_PUBLISHABLE_KEY,STRIPE_WEBHOOK_SECRET,PF_CHECKOUT_SPACE_ID,PF_CHECKOUT_USER,PF_CHECKOUT_SECRET,SMTP_HOST,SMTP_USER,SMTP_PASS,GROUP_FIGURES_TOKEN
           command_timeout: 30m
           script: |
             set -euo pipefail
@@ -150,6 +152,7 @@ jobs:
             MAIL_TO=${MAIL_TO:-info@ticketick.ch}
             LITELLM_API_URL=http://172.17.0.1:4010/v1/chat/completions
             LITELLM_API_KEY=${LITELLM_API_KEY}
+            GROUP_FIGURES_TOKEN=${GROUP_FIGURES_TOKEN:-}
             EOF
             cp "$APP_DIR/.env.prod" "$APP_DIR/.env"
             echo "   ✅ .env.prod créé"
