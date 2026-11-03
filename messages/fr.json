@@ -329,6 +329,8 @@
     "downloadPdf": "Télécharger / imprimer le PDF",
     "adminAccessHintViewer": "Consulter les ventes et les commandes de votre organisation.",
     "posAccess": "Espace point de vente",
+    "posShort": "Point de vente",
+    "posAccessHint": "Vendre des billets et suivre les ventes de votre point de vente.",
     "details": {
       "firstName": "Prénom",
       "lastName": "Nom",
@@ -2212,7 +2214,8 @@
     "nav": {
       "overview": "Vue d'ensemble",
       "sell": "Vendre",
-      "sales": "Ventes"
+      "sales": "Ventes",
+      "myTickets": "Mes billets"
     },
     "overview": {
       "title": "Vue d’ensemble",

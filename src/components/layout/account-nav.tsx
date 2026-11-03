@@ -44,14 +44,17 @@ export async function AccountNav() {
           <ScanLine className="size-5" />
         </Link>
       ) : null}
+      {/* Libellé visible : l'agent n'a que cette porte vers son espace, une
+          icône seule passait inaperçue. */}
       {user.role === "RESELLER_AGENT" ? (
         <Link
           href="/pos"
           aria-label={ta("posAccess")}
           title={ta("posAccess")}
-          className="inline-flex size-10 items-center justify-center rounded-full text-primary transition-colors hover:bg-primary/10"
+          className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
         >
-          <Store className="size-5" />
+          <Store className="size-5 shrink-0" />
+          <span className="hidden whitespace-nowrap lg:inline">{ta("posShort")}</span>
         </Link>
       ) : null}
       {user.role === "ADMIN" ||
