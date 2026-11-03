@@ -329,6 +329,8 @@
     "downloadPdf": "PDF herunterladen / drucken",
     "adminAccessHintViewer": "Verkäufe und Bestellungen Ihrer Organisation einsehen.",
     "posAccess": "Bereich der Verkaufsstelle",
+    "posShort": "Verkaufsstelle",
+    "posAccessHint": "Tickets verkaufen und die Verkäufe Ihrer Verkaufsstelle verfolgen.",
     "details": {
       "firstName": "Vorname",
       "lastName": "Nachname",
@@ -2212,7 +2214,8 @@
     "nav": {
       "overview": "Übersicht",
       "sell": "Verkaufen",
-      "sales": "Verkäufe"
+      "sales": "Verkäufe",
+      "myTickets": "Meine Tickets"
     },
     "overview": {
       "title": "Übersicht",

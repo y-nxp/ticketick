@@ -329,6 +329,8 @@
     "downloadPdf": "Download / print PDF",
     "adminAccessHintViewer": "View your organization's sales and orders.",
     "posAccess": "Point of sale area",
+    "posShort": "Point of sale",
+    "posAccessHint": "Sell tickets and follow your point of sale’s sales.",
     "details": {
       "firstName": "First name",
       "lastName": "Last name",
@@ -2212,7 +2214,8 @@
     "nav": {
       "overview": "Overview",
       "sell": "Sell",
-      "sales": "Sales"
+      "sales": "Sales",
+      "myTickets": "My tickets"
     },
     "overview": {
       "title": "Overview",

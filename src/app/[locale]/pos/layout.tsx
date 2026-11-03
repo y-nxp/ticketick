@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { LayoutDashboard, ListOrdered, TicketPlus } from "lucide-react";
+import { LayoutDashboard, ListOrdered, Ticket, TicketPlus } from "lucide-react";
 import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
 import { Link } from "@/i18n/navigation";
 import { requireResellerAgent } from "@/lib/auth/dal";
@@ -19,6 +19,8 @@ export default async function PosLayout({ children }: { children: React.ReactNod
     { href: "/pos", label: t("nav.overview"), icon: LayoutDashboard },
     { href: "/pos/sell", label: t("nav.sell"), icon: TicketPlus },
     { href: "/pos/sales", label: t("nav.sales"), icon: ListOrdered },
+    // Ses propres achats, faits comme n'importe quel acheteur.
+    { href: "/account", label: t("nav.myTickets"), icon: Ticket },
   ];
   return (
     <div className="container-page py-8">

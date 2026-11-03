@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Ticket, Receipt, LogOut, ShieldCheck, FileDown, ScanLine, Repeat } from "lucide-react";
+import { Ticket, Receipt, LogOut, ShieldCheck, FileDown, ScanLine, Repeat, Store } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -87,6 +87,20 @@ export default async function AccountPage({
               <p className="font-medium">{t("doorAccess")}</p>
               <p className="text-sm text-muted-foreground">
                 {t("doorAccessHint")}
+              </p>
+            </div>
+          </div>
+        </Link>
+      ) : null}
+
+      {user.role === "RESELLER_AGENT" ? (
+        <Link href="/pos" className="mt-8 block">
+          <div className="flex items-center gap-3 rounded-card border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10">
+            <Store className="size-5 text-primary" />
+            <div>
+              <p className="font-medium">{t("posAccess")}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("posAccessHint")}
               </p>
             </div>
           </div>
