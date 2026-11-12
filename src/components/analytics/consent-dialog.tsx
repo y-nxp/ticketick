@@ -73,13 +73,13 @@ export function ConsentDialog({ open, current }: { open: boolean; current: Conse
     <>
       <div className="flex items-center justify-between gap-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/ticketick-logo-small.svg?v=2" alt="ticketick" width={601} height={73} className="h-4 w-auto dark:hidden" />
+        <img src="/brand/ticketick-logo-small.svg?v=3" alt="ticketick" width={603} height={79} className="h-4 w-auto dark:hidden" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/brand/ticketick-logo-small-inverse.svg?v=2"
+          src="/brand/ticketick-logo-small-inverse.svg?v=3"
           alt="ticketick"
-          width={601}
-          height={73}
+          width={603}
+          height={79}
           className="hidden h-4 w-auto dark:block"
         />
         <div className="-mr-3">
