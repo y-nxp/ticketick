@@ -10,10 +10,16 @@
   "theme_color": "#6C5CE7",
   "icons": [
     {
-      "src": "/brand/ticketick-icone-512.png",
+      "src": "/brand/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/brand/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/brand/ticketick-icone.svg",

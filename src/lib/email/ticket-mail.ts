@@ -544,7 +544,7 @@ function footerLogosHtml(
   hasProducer: boolean,
 ): string {
   const brand = hasBrand
-    ? `<img src="cid:ticketick-logo" alt="ticketick" width="157" height="19" style="height:19px;width:157px;border:0;vertical-align:middle;margin:0 12px"/>`
+    ? `<img src="cid:ticketick-logo" alt="ticketick" width="160" height="21" style="height:21px;width:160px;border:0;vertical-align:middle;margin:0 12px"/>`
     : "";
   const href = ticket?.producerUrl ?? "https://illyria.ch";
   const producer =
