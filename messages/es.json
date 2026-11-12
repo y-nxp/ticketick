@@ -377,7 +377,9 @@
     "help": "Centro de ayuda",
     "rights": "Todos los derechos reservados.",
     "madeIn": "Diseñado y gestionado en Suiza",
-    "cookieSettings": "Cookies"
+    "cookieSettings": "Cookies",
+    "colInfo": "Información",
+    "colLegal": "Legal"
   },
   "auth": {
     "signIn": "Iniciar sesión",

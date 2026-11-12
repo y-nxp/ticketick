@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { hasLocale } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { ArrowRight, Sparkles, ShieldCheck, Mail, Ticket } from "lucide-react";
+import { ArrowRight, CalendarDays, Sparkles, ShieldCheck, Mail } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { TicketMark } from "@/components/ui/ticket-mark";
@@ -107,12 +107,12 @@ export default async function HomePage({
                 <Mail className="size-4 text-primary" />
                 {t("ticketsByEmail")}
               </span>
-              {/* Masqué tant que rien n'est à l'affiche : « 0+ billets »
-                  annoncerait le vide comme un argument de vente. */}
+              {/* Nombre de spectacles au catalogue, le même que sous
+                  « Tous les spectacles ». Masqué tant que le catalogue est vide. */}
               {events.length > 0 && (
                 <span className="inline-flex items-center gap-2">
-                  <Ticket className="size-4 text-primary" />
-                  {events.length}+ {te("tickets").toLowerCase()}
+                  <CalendarDays className="size-4 text-primary" />
+                  {t("resultsCount", { count: events.length })}
                 </span>
               )}
             </div>
