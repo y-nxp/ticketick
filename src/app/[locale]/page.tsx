@@ -5,7 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowRight, Sparkles, ShieldCheck, Mail, Ticket } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { ThreeBars } from "@/components/ui/three-bars";
+import { TicketMark } from "@/components/ui/ticket-mark";
 import { EventsBrowser } from "@/components/events/events-browser";
 import { EventCard } from "@/components/events/event-card";
 import {
@@ -125,7 +125,7 @@ export default async function HomePage({
         <section className="container-page">
           <div className="mb-5 flex items-end justify-between">
             <h2 className="flex items-center gap-3 text-2xl">
-              <ThreeBars />
+              <TicketMark />
               {t("sectionFeatured")}
             </h2>
           </div>
@@ -152,7 +152,7 @@ export default async function HomePage({
       {/* ALL EVENTS + FILTERS */}
       <section id="events" className="container-page mt-16 scroll-mt-20">
         <h2 className="mb-6 flex items-center gap-3 text-2xl">
-          <ThreeBars />
+          <TicketMark />
           {t("sectionAll")}
         </h2>
         <EventsBrowser
