@@ -519,7 +519,9 @@
     "help": "Centre d'aide",
     "rights": "Tous droits réservés.",
     "madeIn": "Conçu et opéré en Suisse",
-    "cookieSettings": "Cookies"
+    "cookieSettings": "Cookies",
+    "colInfo": "Infos",
+    "colLegal": "Légal"
   },
   "auth": {
     "signIn": "Se connecter",

@@ -19,13 +19,13 @@ export function Footer({ cookieSettings = false }: { cookieSettings?: boolean })
           </p>
         </div>
 
-        <FooterCol title={t("about")}>
+        <FooterCol title={t("colInfo")}>
           <FooterLink href="/about">{t("about")}</FooterLink>
           <FooterLink href="/contact">{t("contact")}</FooterLink>
           <FooterLink href="/help">{t("help")}</FooterLink>
         </FooterCol>
 
-        <FooterCol title={t("terms")}>
+        <FooterCol title={t("colLegal")}>
           <FooterLink href="/terms">{t("terms")}</FooterLink>
           <FooterLink href="/privacy">{t("privacy")}</FooterLink>
         </FooterCol>
