@@ -1227,7 +1227,8 @@
       "seatPlanNone": "Aucun (placement libre)",
       "seatPlanHint": "Places numérotées : le plan doit appartenir au lieu choisi. Jauge vide = nombre de sièges du plan. Non modifiable une fois des billets vendus.",
       "seatPlanOption": "{name} — {venue} ({seats} places)",
-      "reserve": "Réserver"
+      "reserve": "Réserver",
+      "programme": "Programme modifié"
     },
     "options": {
       "title": "Options de commande",
@@ -1851,7 +1852,8 @@
       },
       "cancelNoticeSentOn": "E-mail envoyé le {date}",
       "cancelNoticeNotYet": "Pas encore annoncé",
-      "refundReseller": "Rendu par le point de vente"
+      "refundReseller": "Rendu par le point de vente",
+      "refundAccount": "Compte à créditer"
     },
     "reports": {
       "title": "Rapports",
@@ -2159,6 +2161,51 @@
           "code": "Code de campagne",
           "link": "Lien direct"
         }
+      }
+    },
+    "programme": {
+      "back": "← Retour au spectacle",
+      "title": "Programme modifié",
+      "intro": "Envoyez aux acheteurs de cette séance un lien personnel. Jusqu'à la date limite, chacun peut garder ses billets, les annuler (remboursé de ce qu'il a payé, rabais déduit) ou les échanger contre un autre spectacle. Les billets de ses autres spectacles ne sont pas touchés.",
+      "buyers": "{count, plural, =0 {Aucun acheteur} =1 {1 acheteur} other {# acheteurs}}",
+      "selected": "{count, plural, =0 {aucun coché} =1 {1 coché} other {# cochés}}",
+      "selectAll": "Tout cocher",
+      "colBuyer": "Acheteur",
+      "colTickets": "Billets",
+      "colPaid": "Payé",
+      "colRefund": "Remboursement",
+      "colLink": "Lien",
+      "noEmail": "sans e-mail",
+      "otherShows": "{count, plural, =1 {+ 1 autre spectacle (non concerné)} other {+ # autres spectacles (non concernés)}}",
+      "reseller": "Vendu par {name} : à traiter depuis la fiche commande",
+      "refund": {
+        "provider": "Auto (carte, PayPal)",
+        "transfer": "Virement (IBAN du client)",
+        "none": "Rien encaissé"
+      },
+      "sentAt": "Envoyé le {date}",
+      "usedAt": "Répondu le {date}",
+      "until": "Valable jusqu'au {date}",
+      "notSent": "Pas encore envoyé",
+      "messageFr": "Message en français",
+      "messageEn": "Message en anglais",
+      "messagePlaceholder": "Nous venons d'apprendre que…",
+      "messageHint": "Placé après « Bonjour Prénom Nom, » et avant les trois choix (garder, annuler, échanger) et le bouton, qui sont ajoutés d'office. Séparez les paragraphes par une ligne vide. Les clients francophones reçoivent le message français ; tous les autres reçoivent l'e-mail en anglais.",
+      "untilLabel": "Date limite",
+      "untilHint": "Le lien fonctionne jusqu'à ce jour à minuit (heure suisse). Passé ce délai, les billets restent valables tels quels.",
+      "sendTest": "M'envoyer un essai",
+      "send": "{count, plural, =0 {Envoyer} =1 {Envoyer à 1 acheteur} other {Envoyer à # acheteurs}}",
+      "sending": "Envoi…",
+      "confirmSend": "{count, plural, =1 {Envoyer le lien à 1 acheteur ?} other {Envoyer le lien à # acheteurs ?}} Un lien déjà envoyé est remplacé.",
+      "testSent": "Essai envoyé à {email} : version française et version anglaise, avec un lien factice.",
+      "sent": "{count, plural, =0 {Aucun e-mail envoyé.} =1 {1 e-mail envoyé.} other {# e-mails envoyés.}}",
+      "failedList": "Non envoyés : {list}",
+      "errors": {
+        "noneSelected": "Cochez au moins un acheteur.",
+        "untilPast": "Choisissez une date limite à venir.",
+        "testFailed": "L'essai n'a pas pu être envoyé.",
+        "notFound": "Séance introuvable.",
+        "failed": "L'envoi n'a pas pu être fait."
       }
     }
   },
@@ -2487,7 +2534,9 @@
         "seatCount": "Choisissez exactement autant de nouvelles places que de billets rendus.",
         "freeSeats": "Une place gratuite ne s'obtient qu'en échange d'une place gratuite.",
         "attendeeLocked": "Les bénéficiaires des billets rendus doivent rester les mêmes sur les nouveaux billets.",
-        "companionLeft": "Une place gratuite resterait seule sur ce spectacle, sans la place payante qui l'accompagne. Échangez-les ensemble."
+        "companionLeft": "Une place gratuite resterait seule sur ce spectacle, sans la place payante qui l'accompagne. Échangez-les ensemble.",
+        "ibanMissing": "Indiquez le titulaire et l'IBAN du compte à créditer.",
+        "ibanInvalid": "Cet IBAN n'est pas valable. Vérifiez-le."
       },
       "stepsLabel": "Étapes de l'échange",
       "steps": {
@@ -2517,7 +2566,19 @@
       "edit": "Modifier",
       "remove": "Retirer du panier",
       "seatsChosen": "Places : {chosen} sur {total}",
-      "holderKept": "Bénéficiaire repris du billet rendu : il ne peut pas être changé."
+      "holderKept": "Bénéficiaire repris du billet rendu : il ne peut pas être changé.",
+      "refunded": "Remboursé",
+      "refundCardHint": "La différence est remboursée sur le moyen de paiement utilisé lors de l'achat.",
+      "refundTransferHint": "Vous aviez payé par virement ou au guichet : indiquez le compte sur lequel rembourser la différence.",
+      "ibanHolder": "Titulaire du compte",
+      "iban": "IBAN",
+      "ibanHint": "Par ex. CH93 0076 2011 6238 5295 7",
+      "confirmRefund": "Confirmer l'échange (remboursé : {amount})",
+      "doneRefundCard": "La différence est remboursée sur votre moyen de paiement d'origine.",
+      "doneRefundTransfer": "La différence vous sera remboursée par virement sur le compte indiqué.",
+      "doneRefundLater": "Le remboursement de la différence est enregistré ; l'organisateur le finalise dans les prochains jours.",
+      "introProgramme": "Choisissez les billets à rendre, puis le spectacle et vos nouvelles places. Si le nouveau choix est moins cher, la différence vous est remboursée ; s'il est plus cher, vous payez le supplément.",
+      "introProgrammeNoPayment": "Choisissez les billets à rendre, puis le spectacle et vos nouvelles places. S'il est plus cher, vous payez le supplément."
     },
     "loginTitle": "Connectez-vous pour modifier vos billets",
     "loginText": "Cette commande est liée à votre compte ticketick. Pour protéger vos billets, connectez-vous avec l'adresse e-mail de la commande : vous reviendrez ensuite sur cette page.",
@@ -2525,7 +2586,45 @@
     "otherAccount": "Cette commande est liée à un autre compte que celui-ci ({email}). Déconnectez-vous, puis rouvrez ce lien et connectez-vous avec l'adresse e-mail de la commande.",
     "inviteText": "Créez votre compte ticketick avec l'adresse {email} : vous retrouverez vos billets et pourrez les modifier plus simplement la prochaine fois.",
     "inviteButton": "Créer mon compte",
-    "lockedNote": "{count, plural, one {Un billet de cette commande a déjà été échangé : il ne peut plus l'être ici.} other {# billets de cette commande ont déjà été échangés : ils ne peuvent plus l'être ici.}} Pour un nouveau changement, contactez l'organisateur."
+    "lockedNote": "{count, plural, one {Un billet de cette commande a déjà été échangé : il ne peut plus l'être ici.} other {# billets de cette commande ont déjà été échangés : ils ne peuvent plus l'être ici.}} Pour un nouveau changement, contactez l'organisateur.",
+    "programme": {
+      "title": "Changement de programme",
+      "intro": "Le programme de « {show} » du {when} a changé.",
+      "keep": "Vous pouvez garder vos billets : vous n'avez rien à faire, ils restent valables. Vous pouvez aussi les annuler ou les échanger ci-dessous, billet par billet.",
+      "others": "Les billets d'autres spectacles de votre commande ne sont pas concernés.",
+      "nothingLeft": "Votre choix est enregistré : il ne reste plus de billet de ce spectacle dans votre commande. Une confirmation vous a été envoyée par e-mail.",
+      "cancelTitle": "Annuler mes billets",
+      "cancelIntro": "Cochez les billets à annuler : nous vous remboursons ce que vous avez payé pour eux, rabais déduit.",
+      "cancelIntroNoPayment": "Cochez les billets à annuler. Aucun paiement n'ayant été fait sur ticketick pour cette commande, il n'y a rien à rembourser ici.",
+      "free": "Gratuit",
+      "refundTotal": "Montant remboursé",
+      "refundCardHint": "Remboursé sur le moyen de paiement utilisé lors de l'achat (carte, PayPal…), en général sous 5 à 10 jours.",
+      "refundTransferHint": "Vous aviez payé par virement ou au guichet : indiquez le compte sur lequel vous rembourser.",
+      "ibanHolder": "Titulaire du compte",
+      "iban": "IBAN",
+      "confirmWarning": "{count, plural, =1 {Ce billet sera annulé et ne sera plus valable à l'entrée.} other {Ces # billets seront annulés et ne seront plus valables à l'entrée.}} Confirmez-vous ?",
+      "back": "Retour",
+      "saving": "Enregistrement…",
+      "cancelButton": "{count, plural, =0 {Annuler} =1 {Annuler 1 billet} other {Annuler # billets}}",
+      "confirmCancel": "{count, plural, =1 {Oui, annuler ce billet} other {Oui, annuler ces # billets}}",
+      "doneTitle": "Annulation confirmée",
+      "doneRefundCard": "Le remboursement de {amount} est lancé sur votre moyen de paiement d'origine.",
+      "doneRefundTransfer": "Le remboursement de {amount} vous sera fait par virement sur le compte indiqué.",
+      "doneRefundLater": "Le remboursement de {amount} est enregistré ; l'organisateur le finalise dans les prochains jours.",
+      "doneNoRefund": "Vos billets sont annulés.",
+      "doneEmail": "Une confirmation vous a été envoyée par e-mail.",
+      "errors": {
+        "ibanMissing": "Indiquez le titulaire et l'IBAN du compte à créditer.",
+        "ibanInvalid": "Cet IBAN n'est pas valable. Vérifiez-le.",
+        "expired": "Ce lien n'est plus valable. Rechargez la page.",
+        "notFound": "Un de ces billets ne peut plus être annulé. Rechargez la page.",
+        "retry": "L'annulation n'a pas pu être enregistrée. Réessayez dans un instant.",
+        "accountRequired": "Cette commande est liée à un compte : connectez-vous pour la modifier.",
+        "failed": "L'annulation n'a pas pu être faite. Rechargez la page et réessayez."
+      },
+      "order": "Commande {reference}.",
+      "continue": "Continuer"
+    }
   },
   "promotionPublisher": {
     "subjectFailed": "Publication {channel} non parue — {event}",

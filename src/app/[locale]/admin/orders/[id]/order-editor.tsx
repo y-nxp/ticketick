@@ -49,6 +49,8 @@ export interface EditorCharge {
   amountCents: number;
   due: string | null;
   when: string;
+  /** Remboursement par virement demandé par le client : compte à créditer. */
+  account?: { iban: string; holder: string } | null;
 }
 
 export interface EditorProps {
@@ -596,6 +598,12 @@ function ChargesPanel({ orderId, locale, charges }: EditorProps) {
                   {charge.due && open ? ` · ${t("dueOn", { date: charge.due })}` : ""}
                 </span>
               </div>
+              {charge.account ? (
+                <p className="text-xs">
+                  {t("refundAccount")} : {charge.account.holder} ·{" "}
+                  <span className="font-mono">{charge.account.iban}</span>
+                </p>
+              ) : null}
               {open || failed ? (
                 <div className="flex flex-wrap gap-2">
                   {charge.kind === "PAYMENT" && open ? (

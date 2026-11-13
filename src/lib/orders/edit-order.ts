@@ -43,6 +43,9 @@ export type EditError =
   | "emailMissing"
   | "cardMissing"
   | "retry"
+  /** Remboursement par virement : compte du client absent ou invalide. */
+  | "ibanMissing"
+  | "ibanInvalid"
   /** Échange qui ne respecte pas le billet pour billet (voir `exchangeRuleError`). */
   | ExchangeRuleError;
 
@@ -195,6 +198,11 @@ export async function releaseTickets(
         where: { id: item.id },
         data: {
           quantity: item.quantity - take,
+          // Le rabais suit les places : celles qui restent gardent leur prix payé.
+          discountCents:
+            item.quantity > 0
+              ? Math.round((item.discountCents * (item.quantity - take)) / item.quantity)
+              : 0,
           seatKeys: item.seatKeys.filter((k) => !keys.has(k)),
         },
       });

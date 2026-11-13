@@ -7,6 +7,7 @@ import { cancellationOutcome, type CancellationCase } from "@/lib/orders/cancell
 import { orderHasAccount } from "@/lib/orders/change-access";
 import { prisma } from "@/lib/prisma";
 import { t as translate, type Translated } from "@/lib/types";
+import { formatIban } from "@/lib/iban";
 import { formatDate, formatPrice } from "@/lib/utils";
 
 /**
@@ -293,6 +294,8 @@ export async function sendCreditNoteEmail(chargeId: string): Promise<{ sent: boo
 export async function sendCancellationEmail(input: {
   orderId: string;
   ticketIds: string[];
+  /** Annulation faite par le client lui-même (programme modifié). */
+  byCustomer?: boolean;
 }): Promise<{ sent: boolean; case?: CancellationCase }> {
   const order = await prisma.order.findUnique({
     where: { id: input.orderId },
@@ -361,7 +364,12 @@ export async function sendCancellationEmail(input: {
       seat: ticket.seatLabel ?? "",
     };
   });
-  const paragraphs = [t.bonjour(name), t.corps(organizer.name, order.reference, lines.length)];
+  const paragraphs = [
+    t.bonjour(name),
+    input.byCustomer
+      ? t.corpsClient(order.reference, lines.length)
+      : t.corps(organizer.name, order.reference, lines.length),
+  ];
   const after = [
     kind === "refund" ? t.refund(refund) : t[kind],
     t.questions,
@@ -416,6 +424,10 @@ const CANCEL_TEXTES = {
       n > 1
         ? `${org} a annulé les billets ci-dessous de votre commande ${ref}. Ils ne sont plus valables à l'entrée.`
         : `${org} a annulé le billet ci-dessous de votre commande ${ref}. Il n'est plus valable à l'entrée.`,
+    corpsClient: (ref: string, n: number) =>
+      n > 1
+        ? `Comme vous l'avez demandé, les billets ci-dessous de votre commande ${ref} sont annulés. Ils ne sont plus valables à l'entrée.`
+        : `Comme vous l'avez demandé, le billet ci-dessous de votre commande ${ref} est annulé. Il n'est plus valable à l'entrée.`,
     total: "Montant remboursé",
     refund: (m: string) =>
       `Le remboursement de ${m} est en cours : vous recevrez l'argent prochainement.`,
@@ -433,6 +445,10 @@ const CANCEL_TEXTES = {
       n > 1
         ? `${org} has cancelled the tickets below from your order ${ref}. They are no longer valid at the door.`
         : `${org} has cancelled the ticket below from your order ${ref}. It is no longer valid at the door.`,
+    corpsClient: (ref: string, n: number) =>
+      n > 1
+        ? `As you requested, the tickets below from your order ${ref} are cancelled. They are no longer valid at the door.`
+        : `As you requested, the ticket below from your order ${ref} is cancelled. It is no longer valid at the door.`,
     total: "Amount refunded",
     refund: (m: string) =>
       `The refund of ${m} is under way: you will receive the money shortly.`,
@@ -450,6 +466,10 @@ const CANCEL_TEXTES = {
       n > 1
         ? `${org} hat die untenstehenden Tickets Ihrer Bestellung ${ref} storniert. Sie sind am Eingang nicht mehr gültig.`
         : `${org} hat das untenstehende Ticket Ihrer Bestellung ${ref} storniert. Es ist am Eingang nicht mehr gültig.`,
+    corpsClient: (ref: string, n: number) =>
+      n > 1
+        ? `Wie gewünscht sind die folgenden Tickets Ihrer Bestellung ${ref} storniert. Sie sind am Eingang nicht mehr gültig.`
+        : `Wie gewünscht ist das folgende Ticket Ihrer Bestellung ${ref} storniert. Es ist am Eingang nicht mehr gültig.`,
     total: "Rückerstatteter Betrag",
     refund: (m: string) =>
       `Die Rückerstattung von ${m} ist in Bearbeitung: Sie erhalten das Geld in Kürze.`,
@@ -468,6 +488,10 @@ const CANCEL_TEXTES = {
       n > 1
         ? `${org} ha annullato i biglietti qui sotto del vostro ordine ${ref}. Non sono più validi all'ingresso.`
         : `${org} ha annullato il biglietto qui sotto del vostro ordine ${ref}. Non è più valido all'ingresso.`,
+    corpsClient: (ref: string, n: number) =>
+      n > 1
+        ? `Come da sua richiesta, i biglietti qui sotto del suo ordine ${ref} sono annullati. Non sono più validi all'ingresso.`
+        : `Come da sua richiesta, il biglietto qui sotto del suo ordine ${ref} è annullato. Non è più valido all'ingresso.`,
     total: "Importo rimborsato",
     refund: (m: string) =>
       `Il rimborso di ${m} è in corso: riceverete il denaro prossimamente.`,
@@ -485,6 +509,10 @@ const CANCEL_TEXTES = {
       n > 1
         ? `${org} ha anulado las entradas siguientes de tu pedido ${ref}. Ya no son válidas en la entrada.`
         : `${org} ha anulado la entrada siguiente de tu pedido ${ref}. Ya no es válida en la entrada.`,
+    corpsClient: (ref: string, n: number) =>
+      n > 1
+        ? `Tal como solicitó, las entradas siguientes de su pedido ${ref} quedan anuladas. Ya no son válidas en la entrada.`
+        : `Tal como solicitó, la entrada siguiente de su pedido ${ref} queda anulada. Ya no es válida en la entrada.`,
     total: "Importe reembolsado",
     refund: (m: string) =>
       `El reembolso de ${m} está en curso: recibirás el dinero próximamente.`,
@@ -828,5 +856,293 @@ const CREDIT_TEXTES = {
       "Se te reembolsará por transferencia: responde a este mensaje indicando tu IBAN y el nombre del titular de la cuenta.",
     reference: (n: string) => `Referencia: ${n}`,
     salutations: "Un cordial saludo,",
+  },
+};
+
+// ─────────────────────────────── Programme modifié
+
+/**
+ * Programme modifié : lien de deux semaines envoyé aux acheteurs d'une
+ * séance. Seuls ses billets sont listés ; les autres spectacles de la
+ * commande ne changent pas.
+ */
+export async function sendProgrammeLinkEmail(input: {
+  orderId: string;
+  sessionId: string;
+  url: string;
+  expiresAt: Date;
+  /**
+   * Mot de l'organisateur, tel quel, en tête du message : le français pour
+   * les clients francophones, l'anglais pour tous les autres (l'e-mail
+   * entier passe alors en anglais).
+   */
+  messages?: { fr?: string; en?: string };
+  /** Essai : envoyé à cette adresse seulement, sans copie. */
+  testTo?: string;
+  /** Essai : version française ou anglaise, quelle que soit la langue du client. */
+  forceLocale?: "fr" | "en";
+}): Promise<{ sent: boolean }> {
+  const order = await prisma.order.findUnique({
+    where: { id: input.orderId },
+    select: {
+      email: true,
+      firstName: true,
+      lastName: true,
+      locale: true,
+      reference: true,
+      tickets: {
+        where: { status: "VALID", ticketType: { sessionId: input.sessionId } },
+        orderBy: [{ seatKey: "asc" }, { createdAt: "asc" }],
+        select: {
+          seatLabel: true,
+          ticketType: {
+            select: {
+              name: true,
+              session: {
+                select: {
+                  startsAt: true,
+                  venue: { select: { name: true, city: true } },
+                  event: {
+                    select: { title: true, organizer: { select: { name: true, email: true } } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  const session = order?.tickets[0]?.ticketType.session;
+  const organizer = session?.event.organizer;
+  if (!order?.email || !session || !organizer) return { sent: false };
+
+  const fr = input.messages?.fr?.trim() ?? "";
+  const en = input.messages?.en?.trim() ?? "";
+  const locale =
+    input.forceLocale ?? (order.locale === "fr" ? "fr" : en ? "en" : order.locale);
+  const message = locale === "fr" ? fr : en || fr;
+  const t = byLocale(PROGRAMME_TEXTES, locale);
+  const name = `${order.firstName} ${order.lastName}`.trim();
+  const show = translate(session.event.title as Translated, locale);
+  const when = dateTime(session.startsAt, locale);
+  const lines = order.tickets.map((ticket) => ({
+    event: show,
+    when,
+    venue: session.venue ? `${session.venue.name}, ${session.venue.city}` : "",
+    tariff: translate(ticket.ticketType.name as Translated, locale),
+    seat: ticket.seatLabel ?? "",
+  }));
+  const paragraphs = [
+    t.bonjour(name),
+    ...(message ? message.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean) : []),
+    t.corps(show, when),
+    t.garder,
+    t.annuler,
+    t.echanger,
+  ];
+  const after = [
+    t.echeance(dateTime(input.expiresAt, locale)),
+    t.autres,
+    (await orderHasAccount(input.orderId)) ? t.compte : "",
+    t.questions,
+  ].filter(Boolean);
+  const html = layout({
+    locale,
+    organizer: organizer.name,
+    title: t.titre,
+    paragraphs,
+    lines,
+    button: { href: input.url, label: t.bouton },
+    after,
+    closing: t.salutations,
+  });
+  const text = [
+    ...paragraphs,
+    "",
+    ...lines.map((l) => [l.event, l.when, l.venue, l.tariff, l.seat].filter(Boolean).join(" — ")),
+    "",
+    `${t.bouton} : ${input.url}`,
+    "",
+    ...after,
+    "",
+    t.salutations,
+    organizer.name,
+  ].join("\n");
+
+  return envoyer({
+    to: input.testTo ?? order.email,
+    bcc: input.testTo ? undefined : await orderCopies(input.orderId, order.email),
+    subject: `${input.testTo ? "[ESSAI] " : ""}${t.sujet(show, order.reference)}`,
+    text,
+    html,
+    fromName: organizer.name,
+    replyTo: organizer.email,
+    etiquette: "programme modifié",
+  });
+}
+
+/**
+ * Remboursement par virement demandé par le client (programme modifié) :
+ * l'organisateur reçoit le compte à créditer. Le client, lui, a reçu la
+ * confirmation de son annulation ou ses nouveaux billets.
+ */
+export async function sendTransferRefundAlert(chargeId: string): Promise<{ sent: boolean }> {
+  const charge = await prisma.orderCharge.findUnique({
+    where: { id: chargeId },
+    select: {
+      number: true,
+      amountCents: true,
+      currency: true,
+      refundIban: true,
+      refundHolder: true,
+      order: {
+        select: {
+          id: true,
+          reference: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          items: {
+            take: 1,
+            select: {
+              ticketType: {
+                select: {
+                  session: {
+                    select: {
+                      event: {
+                        select: { organizer: { select: { name: true, email: true, notifyEmails: true } } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+  const organizer = charge?.order.items[0]?.ticketType.session.event.organizer;
+  if (!charge?.refundIban || !organizer) return { sent: false };
+  const to = [organizer.email, ...organizer.notifyEmails]
+    .map((a) => a.trim().toLowerCase())
+    .filter(Boolean);
+  if (to.length === 0) return { sent: false };
+
+  const amount = formatPrice(charge.amountCents, "fr-CH", charge.currency);
+  const text = [
+    "Remboursement à faire par virement",
+    "",
+    `Commande  : ${charge.order.reference}`,
+    `Client    : ${`${charge.order.firstName} ${charge.order.lastName}`.trim()} <${charge.order.email}>`,
+    `Montant   : ${amount}`,
+    `Titulaire : ${charge.refundHolder ?? ""}`,
+    `IBAN      : ${formatIban(charge.refundIban)}`,
+    `Référence : ${charge.number}`,
+    "",
+    "Le client a annulé ou échangé ses billets après le changement de programme.",
+    "Il avait payé par virement ou au guichet : le remboursement ne peut pas",
+    "partir automatiquement. Une fois le virement fait, marquez le règlement",
+    `${charge.number} comme réglé dans la fiche de la commande.`,
+  ].join("\n");
+
+  const [first, ...rest] = [...new Set(to)];
+  return envoyer({
+    to: first!,
+    bcc: rest.length > 0 ? rest : undefined,
+    subject: `À rembourser par virement — ${charge.order.reference} (${amount})`,
+    text,
+    html: `<pre style="font:14px/1.5 system-ui,sans-serif;color:#2A2C30">${echapper(text)}</pre>`,
+    etiquette: "remboursement par virement",
+  });
+}
+
+const PROGRAMME_TEXTES = {
+  fr: {
+    sujet: (show: string, ref: string) => `Changement de programme — ${show} (${ref})`,
+    titre: "Changement de programme",
+    bonjour: (nom: string) => (nom ? `Bonjour ${nom},` : "Bonjour,"),
+    corps: (show: string, when: string) =>
+      `Le programme de « ${show} » du ${when} a changé. Pour vos billets ci-dessous, vous avez le choix :`,
+    garder: "• Les garder : vous n'avez rien à faire, ils restent valables.",
+    annuler:
+      "• Les annuler : nous vous remboursons ce que vous avez payé pour eux (rabais déduit).",
+    echanger:
+      "• Les échanger contre un autre spectacle : si le nouveau est moins cher, la différence vous est remboursée ; s'il est plus cher, vous payez le supplément.",
+    bouton: "Choisir",
+    echeance: (date: string) => `Ce lien est valable jusqu'au ${date}. Passé ce délai, vos billets restent valables tels quels.`,
+    autres: "Les billets d'autres spectacles de votre commande ne sont pas concernés.",
+    compte: "Votre commande est liée à votre compte : connectez-vous pour faire votre choix.",
+    questions: "Une question ? Répondez simplement à ce message.",
+    salutations: "Avec nos meilleures salutations,",
+  },
+  en: {
+    sujet: (show: string, ref: string) => `Programme change — ${show} (${ref})`,
+    titre: "Programme change",
+    bonjour: (nom: string) => (nom ? `Hello ${nom},` : "Hello,"),
+    corps: (show: string, when: string) =>
+      `The programme of “${show}” on ${when} has changed. For your tickets below, you can choose:`,
+    garder: "• Keep them: there is nothing to do, they remain valid.",
+    annuler: "• Cancel them: we refund what you paid for them (discount deducted).",
+    echanger:
+      "• Exchange them for another show: if the new one is cheaper, the difference is refunded; if it costs more, you pay the extra.",
+    bouton: "Choose",
+    echeance: (date: string) => `This link is valid until ${date}. After that, your tickets simply remain valid.`,
+    autres: "Tickets for other shows in your order are not affected.",
+    compte: "Your order is linked to your account: please sign in to make your choice.",
+    questions: "Any question? Simply reply to this message.",
+    salutations: "Best regards,",
+  },
+  de: {
+    sujet: (show: string, ref: string) => `Programmänderung — ${show} (${ref})`,
+    titre: "Programmänderung",
+    bonjour: (nom: string) => (nom ? `Guten Tag ${nom},` : "Guten Tag,"),
+    corps: (show: string, when: string) =>
+      `Das Programm von «${show}» am ${when} hat sich geändert. Für Ihre unten aufgeführten Tickets haben Sie die Wahl:`,
+    garder: "• Behalten: Sie müssen nichts tun, die Tickets bleiben gültig.",
+    annuler: "• Stornieren: Wir erstatten Ihnen den bezahlten Betrag (abzüglich Rabatt).",
+    echanger:
+      "• Gegen eine andere Vorstellung tauschen: Ist sie günstiger, erstatten wir die Differenz; ist sie teurer, zahlen Sie den Aufpreis.",
+    bouton: "Auswählen",
+    echeance: (date: string) => `Dieser Link ist bis ${date} gültig. Danach bleiben Ihre Tickets unverändert gültig.`,
+    autres: "Tickets für andere Vorstellungen Ihrer Bestellung sind nicht betroffen.",
+    compte: "Ihre Bestellung ist mit Ihrem Konto verknüpft: Bitte melden Sie sich an, um zu wählen.",
+    questions: "Fragen? Antworten Sie einfach auf diese Nachricht.",
+    salutations: "Freundliche Grüsse",
+  },
+  it: {
+    sujet: (show: string, ref: string) => `Cambio di programma — ${show} (${ref})`,
+    titre: "Cambio di programma",
+    bonjour: (nom: string) => (nom ? `Buongiorno ${nom},` : "Buongiorno,"),
+    corps: (show: string, when: string) =>
+      `Il programma di «${show}» del ${when} è cambiato. Per i suoi biglietti qui sotto può scegliere:`,
+    garder: "• Tenerli: non deve fare nulla, restano validi.",
+    annuler: "• Annullarli: le rimborsiamo quanto ha pagato (sconto dedotto).",
+    echanger:
+      "• Cambiarli con un altro spettacolo: se costa meno, le rimborsiamo la differenza; se costa di più, paga il supplemento.",
+    bouton: "Scegliere",
+    echeance: (date: string) => `Questo link è valido fino al ${date}. Dopo, i suoi biglietti restano validi così come sono.`,
+    autres: "I biglietti di altri spettacoli del suo ordine non sono interessati.",
+    compte: "Il suo ordine è collegato al suo account: acceda per fare la sua scelta.",
+    questions: "Domande? Risponda semplicemente a questo messaggio.",
+    salutations: "Cordiali saluti,",
+  },
+  es: {
+    sujet: (show: string, ref: string) => `Cambio de programa — ${show} (${ref})`,
+    titre: "Cambio de programa",
+    bonjour: (nom: string) => (nom ? `Hola ${nom}:` : "Hola:"),
+    corps: (show: string, when: string) =>
+      `El programa de «${show}» del ${when} ha cambiado. Para sus entradas siguientes, puede elegir:`,
+    garder: "• Conservarlas: no tiene que hacer nada, siguen siendo válidas.",
+    annuler: "• Anularlas: le reembolsamos lo que pagó por ellas (descuento deducido).",
+    echanger:
+      "• Cambiarlas por otro espectáculo: si es más barato, le reembolsamos la diferencia; si es más caro, paga el suplemento.",
+    bouton: "Elegir",
+    echeance: (date: string) => `Este enlace es válido hasta el ${date}. Después, sus entradas siguen siendo válidas tal cual.`,
+    autres: "Las entradas de otros espectáculos de su pedido no se ven afectadas.",
+    compte: "Su pedido está vinculado a su cuenta: inicie sesión para elegir.",
+    questions: "¿Alguna pregunta? Responda simplemente a este mensaje.",
+    salutations: "Atentamente,",
   },
 };

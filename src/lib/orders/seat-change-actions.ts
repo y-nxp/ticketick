@@ -2,11 +2,12 @@
 
 import * as z from "zod";
 import { getCurrentUser } from "@/lib/auth/dal";
-import { sendCancellationEmail } from "@/lib/email/charge-mail";
+import { sendCancellationEmail, sendTransferRefundAlert } from "@/lib/email/charge-mail";
 import { sendExchangeTickets } from "@/lib/email/ticket-mail";
 import type { ChangeAccess } from "./change-access";
-import { payPath } from "./charges";
+import { executeProviderRefund, payPath } from "./charges";
 import { applyExchange, cancelFreeTickets, type ExchangeError } from "./exchange";
+import { cancelProgrammeTickets, type ProgrammeError } from "./programme";
 import { applySeatChange, type ChangeError } from "./seat-change";
 
 /** Ce que la page transmet : le jeton du lien, ou la commande du compte connecté. */
@@ -59,7 +60,29 @@ export async function confirmSeatChangeAction(
   return { ok: true, kind: "done" };
 }
 
+const accountSchema = z
+  .object({ iban: z.string().max(60).optional(), holder: z.string().max(120).optional() })
+  .optional();
+
+/**
+ * Programme modifié : remboursement lancé chez le prestataire, ou virement
+ * annoncé à l'organisateur avec le compte du client.
+ */
+async function settleRefund(
+  refund: { chargeId: string; method: "PROVIDER" | "CREDIT_NOTE" } | null | undefined,
+): Promise<"provider" | "providerFailed" | "transfer" | null> {
+  if (!refund) return null;
+  if (refund.method === "PROVIDER") {
+    return (await executeProviderRefund(refund.chargeId)) ? "provider" : "providerFailed";
+  }
+  await sendTransferRefundAlert(refund.chargeId).catch((error) => {
+    console.error("[programme] alerte virement", error);
+  });
+  return "transfer";
+}
+
 const exchangeSchema = z.object({
+  account: accountSchema,
   give: z.array(z.string().min(1).max(40)).max(50),
   items: z
     .array(
@@ -86,7 +109,7 @@ const exchangeSchema = z.object({
 });
 
 export type ExchangeState =
-  | { ok: true; kind: "done" }
+  | { ok: true; kind: "done"; refund?: "provider" | "providerFailed" | "transfer" | null }
   | { ok: true; kind: "pay"; url: string }
   | { ok: false; error: ExchangeError | "invalid"; ticketTypeId?: string };
 
@@ -102,8 +125,40 @@ export async function confirmExchangeAction(
   if (result.kind === "pay") {
     return { ok: true, kind: "pay", url: payPath(result.payToken, result.locale) };
   }
+  const refund = await settleRefund(result.refund);
   await sendNewTickets(result.orderId, result.replacedTicketIds);
-  return { ok: true, kind: "done" };
+  return { ok: true, kind: "done", refund };
+}
+
+export type ProgrammeCancelState =
+  | { ok: true; refundCents: number; refund: "provider" | "providerFailed" | "transfer" | null }
+  | { ok: false; error: ProgrammeError | "invalid" };
+
+/** Programme modifié : le client annule des billets de la séance et récupère ce qu'il a payé. */
+export async function cancelProgrammeAction(
+  clientAccess: ClientAccess,
+  ticketIds: string[],
+  account?: { iban?: string; holder?: string },
+): Promise<ProgrammeCancelState> {
+  const access = await serverAccess(clientAccess);
+  const ids = z.array(id).min(1).max(50).safeParse(ticketIds);
+  const acc = accountSchema.safeParse(account);
+  if (!access || !("token" in access) || !ids.success || !acc.success) {
+    return { ok: false, error: "invalid" };
+  }
+  const result = await cancelProgrammeTickets({
+    access,
+    ticketIds: ids.data,
+    account: acc.data ?? {},
+  });
+  if (!result.ok) return result;
+  const refund = await settleRefund(result.refund);
+  await sendCancellationEmail({ orderId: result.orderId, ticketIds: ids.data, byCustomer: true }).catch(
+    (error) => {
+      console.error("[programme] courriel d'annulation", error);
+    },
+  );
+  return { ok: true, refundCents: result.refundCents, refund };
 }
 
 export type CancelFreeState = { ok: true } | { ok: false; error: string };

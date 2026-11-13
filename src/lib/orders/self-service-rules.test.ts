@@ -9,6 +9,8 @@ import {
   exchangeRuleError,
   holderKey,
   holdersKept,
+  endOfDayZurich,
+  netTicketPrices,
   tariffRoom,
 } from "./self-service-rules";
 
@@ -93,7 +95,7 @@ test("gratuité nominative : seulement avec une place payante", () => {
 test("on ne paie que la hausse nette, jamais de remboursement", () => {
   assert.deepEqual(
     exchangeDue({ givenCents: [6000, 6000], lines: [{ priceCents: 9000, quantity: 2 }] }),
-    { newCents: 18000, givenCents: 12000, dueCents: 6000 },
+    { newCents: 18000, givenCents: 12000, dueCents: 6000, refundCents: 0 },
   );
   assert.equal(
     exchangeDue({ givenCents: [9000], lines: [{ priceCents: 6000, quantity: 1 }] }).dueCents,
@@ -196,4 +198,78 @@ test("après l'échange, une gratuité ne reste pas sans place payante", () => {
     })?.error,
     "companionLimit",
   );
+});
+
+test("programme modifié : la baisse est rendue, une place moins chère est permise", () => {
+  assert.equal(
+    exchangeDue({ givenCents: [20000], lines: [{ priceCents: 5000, quantity: 1 }] }).refundCents,
+    15000,
+  );
+  const lower = {
+    viaAccount: false,
+    givenCount: 1,
+    newCount: 1,
+    givenFree: 0,
+    newFree: 0,
+    givenCents: 20000,
+    newCents: 5000,
+  };
+  assert.equal(exchangeRuleError(lower), "lowerValue");
+  assert.equal(exchangeRuleError({ ...lower, allowLower: true }), null);
+});
+
+test("prix payé par billet : rabais de la ligne déduit, au centime inférieur", () => {
+  const prices = netTicketPrices({
+    subtotalCents: 45000,
+    discountCents: 4500,
+    feeCents: 0,
+    items: [
+      { ticketTypeId: "premium", quantity: 2, unitPriceCents: 20000, discountCents: 4000 },
+      { ticketTypeId: "cat3", quantity: 1, unitPriceCents: 5000, discountCents: 500 },
+    ],
+  });
+  assert.equal(prices.get("premium"), 18000);
+  assert.equal(prices.get("cat3"), 4500);
+});
+
+test("prix payé par billet : commande ancienne, rabais réparti au prorata", () => {
+  const prices = netTicketPrices({
+    subtotalCents: 30000,
+    discountCents: 3000,
+    feeCents: 0,
+    items: [
+      { ticketTypeId: "a", quantity: 1, unitPriceCents: 20000, discountCents: 0 },
+      { ticketTypeId: "b", quantity: 3, unitPriceCents: 3333, discountCents: 0 },
+    ],
+  });
+  assert.equal(prices.get("a"), 18000);
+  // 9999 − 999.9 = 8999.1 pour 3 billets : 2999.7 → 2999.
+  assert.equal(prices.get("b"), 2999);
+});
+
+test("prix payé par billet : sans rabais, le prix ; gratuit reste gratuit ; frais répartis", () => {
+  const plain = netTicketPrices({
+    subtotalCents: 25000,
+    discountCents: 0,
+    feeCents: 0,
+    items: [
+      { ticketTypeId: "cat1", quantity: 1, unitPriceCents: 25000, discountCents: 0 },
+      { ticketTypeId: "jeune", quantity: 1, unitPriceCents: 0, discountCents: 0 },
+    ],
+  });
+  assert.equal(plain.get("cat1"), 25000);
+  assert.equal(plain.get("jeune"), 0);
+  const withFee = netTicketPrices({
+    subtotalCents: 10000,
+    discountCents: 0,
+    feeCents: 300,
+    items: [{ ticketTypeId: "cat1", quantity: 2, unitPriceCents: 5000, discountCents: 0 }],
+  });
+  assert.equal(withFee.get("cat1"), 5150);
+});
+
+test("date limite : fin de journée à Zurich, en hiver comme en été", () => {
+  assert.equal(endOfDayZurich("2026-11-27")?.toISOString(), "2026-11-27T22:59:59.000Z");
+  assert.equal(endOfDayZurich("2026-07-01")?.toISOString(), "2026-07-01T21:59:59.000Z");
+  assert.equal(endOfDayZurich("27.11.2026"), null);
 });

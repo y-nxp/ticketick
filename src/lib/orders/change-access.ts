@@ -21,6 +21,11 @@ export interface OrderAccess {
   actorId: string | null;
   expiresAt: Date | null;
   viaAccount: boolean;
+  /**
+   * Programme modifié : seule cette séance est concernée ; ses billets
+   * s'annulent ou s'échangent avec remboursement de ce qui a été payé.
+   */
+  programmeSessionId: string | null;
 }
 
 export type AccessError = "notFound" | "expired" | "accountRequired";
@@ -70,7 +75,7 @@ export async function resolveAccess(
     if (!access.token || access.token.length > 100) return { ok: false, error: "notFound" };
     const link = await prisma.orderChangeLink.findUnique({
       where: { tokenHash: hashHoldToken(access.token) },
-      select: { id: true, orderId: true, expiresAt: true, createdById: true },
+      select: { id: true, orderId: true, expiresAt: true, createdById: true, sessionId: true },
     });
     if (!link) return { ok: false, error: "notFound" };
     if (link.expiresAt <= new Date()) return { ok: false, error: "expired", orderId: link.orderId };
@@ -89,6 +94,7 @@ export async function resolveAccess(
         actorId: link.createdById,
         expiresAt: link.expiresAt,
         viaAccount: false,
+        programmeSessionId: link.sessionId,
       },
     };
   }
@@ -104,6 +110,7 @@ export async function resolveAccess(
       actorId: access.userId,
       expiresAt: null,
       viaAccount: true,
+      programmeSessionId: null,
     },
   };
 }

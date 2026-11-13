@@ -126,6 +126,8 @@ export async function getOrderEditContext(orderId: string, locale: string) {
           ticketIds: true,
           createdAt: true,
           settledAt: true,
+          refundIban: true,
+          refundHolder: true,
         },
       },
       changeLinks: {

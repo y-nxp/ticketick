@@ -1227,7 +1227,8 @@
       "seatPlanNone": "Keiner (freie Platzwahl)",
       "seatPlanHint": "Nummerierte Plätze: Der Plan muss zum gewählten Ort gehören. Leere Kapazität = Anzahl Sitze im Plan. Nach dem ersten Verkauf nicht mehr änderbar.",
       "seatPlanOption": "{name} — {venue} ({seats} Plätze)",
-      "reserve": "Reservieren"
+      "reserve": "Reservieren",
+      "programme": "Programmänderung"
     },
     "options": {
       "title": "Bestelloptionen",
@@ -1851,7 +1852,8 @@
       },
       "cancelNoticeSentOn": "E-Mail gesendet am {date}",
       "cancelNoticeNotYet": "Noch nicht mitgeteilt",
-      "refundReseller": "Von der Verkaufsstelle erstattet"
+      "refundReseller": "Von der Verkaufsstelle erstattet",
+      "refundAccount": "Gutschriftkonto"
     },
     "reports": {
       "title": "Berichte",
@@ -2159,6 +2161,51 @@
           "code": "Kampagnencode",
           "link": "Direkter Link"
         }
+      }
+    },
+    "programme": {
+      "back": "← Zurück zur Veranstaltung",
+      "title": "Programmänderung",
+      "intro": "Senden Sie den Käufern dieser Vorstellung einen persönlichen Link. Bis zur Frist kann jede Person ihre Tickets behalten, stornieren (Erstattung des bezahlten Betrags, abzüglich Rabatt) oder gegen eine andere Vorstellung tauschen. Tickets für andere Vorstellungen bleiben unberührt.",
+      "buyers": "{count, plural, =0 {Keine Käufer} =1 {1 Käufer} other {# Käufer}}",
+      "selected": "{count, plural, =0 {keiner ausgewählt} =1 {1 ausgewählt} other {# ausgewählt}}",
+      "selectAll": "Alle auswählen",
+      "colBuyer": "Käufer",
+      "colTickets": "Tickets",
+      "colPaid": "Bezahlt",
+      "colRefund": "Erstattung",
+      "colLink": "Link",
+      "noEmail": "ohne E-Mail",
+      "otherShows": "{count, plural, =1 {+ 1 andere Vorstellung (nicht betroffen)} other {+ # andere Vorstellungen (nicht betroffen)}}",
+      "reseller": "Verkauft von {name}: über die Bestellung bearbeiten",
+      "refund": {
+        "provider": "Automatisch (Karte, PayPal)",
+        "transfer": "Überweisung (IBAN des Kunden)",
+        "none": "Nichts eingenommen"
+      },
+      "sentAt": "Gesendet am {date}",
+      "usedAt": "Beantwortet am {date}",
+      "until": "Gültig bis {date}",
+      "notSent": "Noch nicht gesendet",
+      "messageFr": "Nachricht auf Französisch",
+      "messageEn": "Nachricht auf Englisch",
+      "messagePlaceholder": "Wir haben soeben erfahren, dass…",
+      "messageHint": "Steht nach «Guten Tag Vorname Name,» und vor den drei Möglichkeiten (behalten, stornieren, tauschen) und der Schaltfläche, die automatisch ergänzt werden. Absätze mit einer Leerzeile trennen. Französischsprachige Kunden erhalten die französische Nachricht, alle anderen die E-Mail auf Englisch.",
+      "untilLabel": "Frist",
+      "untilHint": "Der Link gilt bis Mitternacht dieses Tages (Schweizer Zeit). Danach bleiben die Tickets unverändert gültig.",
+      "sendTest": "Test an mich senden",
+      "send": "{count, plural, =0 {Senden} =1 {An 1 Käufer senden} other {An # Käufer senden}}",
+      "sending": "Wird gesendet…",
+      "confirmSend": "{count, plural, =1 {Link an 1 Käufer senden?} other {Link an # Käufer senden?}} Ein bereits gesendeter Link wird ersetzt.",
+      "testSent": "Test an {email} gesendet: französische und englische Fassung, mit einem Platzhalter-Link.",
+      "sent": "{count, plural, =0 {Keine E-Mail gesendet.} =1 {1 E-Mail gesendet.} other {# E-Mails gesendet.}}",
+      "failedList": "Nicht gesendet: {list}",
+      "errors": {
+        "noneSelected": "Wählen Sie mindestens einen Käufer.",
+        "untilPast": "Wählen Sie eine Frist in der Zukunft.",
+        "testFailed": "Der Test konnte nicht gesendet werden.",
+        "notFound": "Vorstellung nicht gefunden.",
+        "failed": "Senden fehlgeschlagen."
       }
     }
   },
@@ -2487,7 +2534,9 @@
         "seatCount": "Wählen Sie genau so viele neue Plätze, wie Sie Tickets zurückgeben.",
         "freeSeats": "Einen Gratisplatz erhalten Sie nur im Tausch gegen einen Gratisplatz.",
         "attendeeLocked": "Die Inhaber der zurückgegebenen Tickets müssen auf den neuen Tickets dieselben bleiben.",
-        "companionLeft": "Ein Gratisplatz bliebe bei dieser Vorstellung allein, ohne den bezahlten Platz, zu dem er gehört. Tauschen Sie beide zusammen."
+        "companionLeft": "Ein Gratisplatz bliebe bei dieser Vorstellung allein, ohne den bezahlten Platz, zu dem er gehört. Tauschen Sie beide zusammen.",
+        "ibanMissing": "Geben Sie Kontoinhaber/in und IBAN an.",
+        "ibanInvalid": "Diese IBAN ist ungültig. Bitte prüfen Sie sie."
       },
       "stepsLabel": "Schritte des Tauschs",
       "steps": {
@@ -2517,7 +2566,19 @@
       "edit": "Ändern",
       "remove": "Aus dem Warenkorb entfernen",
       "seatsChosen": "Plätze: {chosen} von {total}",
-      "holderKept": "Inhaber vom zurückgegebenen Ticket übernommen: Er kann nicht geändert werden."
+      "holderKept": "Inhaber vom zurückgegebenen Ticket übernommen: Er kann nicht geändert werden.",
+      "refunded": "Erstattet",
+      "refundCardHint": "Die Differenz wird auf das beim Kauf verwendete Zahlungsmittel erstattet.",
+      "refundTransferHint": "Sie haben per Überweisung oder an der Kasse bezahlt: Geben Sie das Konto für die Erstattung der Differenz an.",
+      "ibanHolder": "Kontoinhaber/in",
+      "iban": "IBAN",
+      "ibanHint": "Z. B. CH93 0076 2011 6238 5295 7",
+      "confirmRefund": "Tausch bestätigen (erstattet: {amount})",
+      "doneRefundCard": "Die Differenz wurde auf Ihr ursprüngliches Zahlungsmittel erstattet.",
+      "doneRefundTransfer": "Die Differenz wird per Überweisung auf das angegebene Konto erstattet.",
+      "doneRefundLater": "Die Erstattung der Differenz ist erfasst; der Veranstalter schliesst sie in den nächsten Tagen ab.",
+      "introProgramme": "Wählen Sie die zurückgegebenen Tickets, dann die Vorstellung und Ihre neuen Plätze. Ist die neue Wahl günstiger, erstatten wir die Differenz; ist sie teurer, zahlen Sie den Aufpreis.",
+      "introProgrammeNoPayment": "Wählen Sie die zurückgegebenen Tickets, dann die Vorstellung und Ihre neuen Plätze. Ist sie teurer, zahlen Sie den Aufpreis."
     },
     "loginTitle": "Melden Sie sich an, um Ihre Tickets zu ändern",
     "loginText": "Diese Bestellung ist mit Ihrem ticketick-Konto verknüpft. Zum Schutz Ihrer Tickets melden Sie sich mit der E-Mail-Adresse der Bestellung an: Danach kehren Sie auf diese Seite zurück.",
@@ -2525,7 +2586,45 @@
     "otherAccount": "Diese Bestellung ist mit einem anderen Konto als diesem ({email}) verknüpft. Melden Sie sich ab, öffnen Sie diesen Link erneut und melden Sie sich mit der E-Mail-Adresse der Bestellung an.",
     "inviteText": "Erstellen Sie Ihr ticketick-Konto mit der Adresse {email}: Dort finden Sie Ihre Tickets und können sie beim nächsten Mal einfacher ändern.",
     "inviteButton": "Konto erstellen",
-    "lockedNote": "{count, plural, one {Ein Ticket dieser Bestellung wurde bereits getauscht: Es kann hier nicht mehr getauscht werden.} other {# Tickets dieser Bestellung wurden bereits getauscht: Sie können hier nicht mehr getauscht werden.}} Für eine weitere Änderung kontaktieren Sie den Veranstalter."
+    "lockedNote": "{count, plural, one {Ein Ticket dieser Bestellung wurde bereits getauscht: Es kann hier nicht mehr getauscht werden.} other {# Tickets dieser Bestellung wurden bereits getauscht: Sie können hier nicht mehr getauscht werden.}} Für eine weitere Änderung kontaktieren Sie den Veranstalter.",
+    "programme": {
+      "title": "Programmänderung",
+      "intro": "Das Programm von «{show}» am {when} hat sich geändert.",
+      "keep": "Sie können Ihre Tickets behalten: Sie müssen nichts tun, sie bleiben gültig. Unten können Sie sie auch einzeln stornieren oder tauschen.",
+      "others": "Tickets für andere Vorstellungen Ihrer Bestellung sind nicht betroffen.",
+      "nothingLeft": "Ihre Wahl ist gespeichert: Für diese Vorstellung ist kein Ticket mehr in Ihrer Bestellung. Eine Bestätigung wurde Ihnen per E-Mail gesendet.",
+      "cancelTitle": "Meine Tickets stornieren",
+      "cancelIntro": "Wählen Sie die zu stornierenden Tickets: Wir erstatten den dafür bezahlten Betrag, abzüglich Rabatt.",
+      "cancelIntroNoPayment": "Wählen Sie die zu stornierenden Tickets. Für diese Bestellung wurde über ticketick nichts bezahlt, daher gibt es hier nichts zu erstatten.",
+      "free": "Gratis",
+      "refundTotal": "Erstatteter Betrag",
+      "refundCardHint": "Erstattung auf das beim Kauf verwendete Zahlungsmittel (Karte, PayPal…), meist innert 5 bis 10 Tagen.",
+      "refundTransferHint": "Sie haben per Überweisung oder an der Kasse bezahlt: Geben Sie das Konto für die Erstattung an.",
+      "ibanHolder": "Kontoinhaber/in",
+      "iban": "IBAN",
+      "confirmWarning": "{count, plural, =1 {Dieses Ticket wird storniert und ist am Eingang nicht mehr gültig.} other {Diese # Tickets werden storniert und sind am Eingang nicht mehr gültig.}} Bestätigen Sie?",
+      "back": "Zurück",
+      "saving": "Wird gespeichert…",
+      "cancelButton": "{count, plural, =0 {Stornieren} =1 {1 Ticket stornieren} other {# Tickets stornieren}}",
+      "confirmCancel": "{count, plural, =1 {Ja, dieses Ticket stornieren} other {Ja, diese # Tickets stornieren}}",
+      "doneTitle": "Stornierung bestätigt",
+      "doneRefundCard": "Die Erstattung von {amount} wurde auf Ihr ursprüngliches Zahlungsmittel veranlasst.",
+      "doneRefundTransfer": "Die Erstattung von {amount} erfolgt per Überweisung auf das angegebene Konto.",
+      "doneRefundLater": "Die Erstattung von {amount} ist erfasst; der Veranstalter schliesst sie in den nächsten Tagen ab.",
+      "doneNoRefund": "Ihre Tickets sind storniert.",
+      "doneEmail": "Eine Bestätigung wurde Ihnen per E-Mail gesendet.",
+      "errors": {
+        "ibanMissing": "Geben Sie Kontoinhaber/in und IBAN an.",
+        "ibanInvalid": "Diese IBAN ist ungültig. Bitte prüfen Sie sie.",
+        "expired": "Dieser Link ist nicht mehr gültig. Laden Sie die Seite neu.",
+        "notFound": "Eines dieser Tickets kann nicht mehr storniert werden. Laden Sie die Seite neu.",
+        "retry": "Die Stornierung konnte nicht gespeichert werden. Versuchen Sie es gleich nochmals.",
+        "accountRequired": "Diese Bestellung ist mit einem Konto verknüpft: Melden Sie sich an, um sie zu ändern.",
+        "failed": "Die Stornierung war nicht möglich. Laden Sie die Seite neu und versuchen Sie es nochmals."
+      },
+      "order": "Bestellung {reference}.",
+      "continue": "Weiter"
+    }
   },
   "promotionPublisher": {
     "subjectFailed": "{channel}-Beitrag nicht erschienen — {event}",

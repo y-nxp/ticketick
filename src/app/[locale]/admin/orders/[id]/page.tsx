@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { formatIban } from "@/lib/iban";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -381,6 +382,9 @@ export default async function AdminOrderDetailPage({
             amountCents: c.amountCents,
             due: c.dueAt ? formatDate(c.dueAt, fmt, short) : null,
             when: formatDate(c.settledAt ?? c.createdAt, fmt, short),
+            account: c.refundIban
+              ? { iban: formatIban(c.refundIban), holder: c.refundHolder ?? "" }
+              : null,
           }))}
           refundableCents={Math.max(
             0,
