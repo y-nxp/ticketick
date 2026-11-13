@@ -78,7 +78,7 @@ export default async function ChangePage({
   return (
     <div className="container-page py-10">
       <div className="mx-auto max-w-6xl">
-        <h1 className="text-3xl">{t("title")}</h1>
+        <h1 className="text-3xl">{data.programme ? t("programme.title") : t("title")}</h1>
         <ChangeScreen
           data={data}
           access={{ token }}

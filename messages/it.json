@@ -1227,7 +1227,8 @@
       "seatPlanNone": "Nessuna (posti liberi)",
       "seatPlanHint": "Posti numerati: la pianta deve appartenere al luogo scelto. Capienza vuota = numero di posti della pianta. Non modificabile dopo la prima vendita.",
       "seatPlanOption": "{name} — {venue} ({seats} posti)",
-      "reserve": "Prenota"
+      "reserve": "Prenota",
+      "programme": "Cambio di programma"
     },
     "options": {
       "title": "Opzioni d’ordine",
@@ -1851,7 +1852,8 @@
       },
       "cancelNoticeSentOn": "E-mail inviata il {date}",
       "cancelNoticeNotYet": "Non ancora comunicato",
-      "refundReseller": "Rimborsato dal punto vendita"
+      "refundReseller": "Rimborsato dal punto vendita",
+      "refundAccount": "Conto da accreditare"
     },
     "reports": {
       "title": "Rapporti",
@@ -2159,6 +2161,51 @@
           "code": "Codice di campagna",
           "link": "Link diretto"
         }
+      }
+    },
+    "programme": {
+      "back": "← Torna allo spettacolo",
+      "title": "Cambio di programma",
+      "intro": "Invii agli acquirenti di questa data un link personale. Fino alla scadenza, ognuno può tenere i biglietti, annullarli (rimborsato di quanto pagato, sconto dedotto) o cambiarli con un altro spettacolo. I biglietti degli altri spettacoli non sono toccati.",
+      "buyers": "{count, plural, =0 {Nessun acquirente} =1 {1 acquirente} other {# acquirenti}}",
+      "selected": "{count, plural, =0 {nessuno selezionato} =1 {1 selezionato} other {# selezionati}}",
+      "selectAll": "Seleziona tutti",
+      "colBuyer": "Acquirente",
+      "colTickets": "Biglietti",
+      "colPaid": "Pagato",
+      "colRefund": "Rimborso",
+      "colLink": "Link",
+      "noEmail": "senza e-mail",
+      "otherShows": "{count, plural, =1 {+ 1 altro spettacolo (non interessato)} other {+ # altri spettacoli (non interessati)}}",
+      "reseller": "Venduto da {name}: da gestire dalla scheda ordine",
+      "refund": {
+        "provider": "Automatico (carta, PayPal)",
+        "transfer": "Bonifico (IBAN del cliente)",
+        "none": "Nulla incassato"
+      },
+      "sentAt": "Inviato il {date}",
+      "usedAt": "Risposto il {date}",
+      "until": "Valido fino al {date}",
+      "notSent": "Non ancora inviato",
+      "messageFr": "Messaggio in francese",
+      "messageEn": "Messaggio in inglese",
+      "messagePlaceholder": "Abbiamo appena saputo che…",
+      "messageHint": "Inserito dopo «Buongiorno Nome Cognome,» e prima delle tre scelte (tenere, annullare, cambiare) e del pulsante, aggiunti automaticamente. Separi i paragrafi con una riga vuota. I clienti francofoni ricevono il messaggio francese; tutti gli altri l'e-mail in inglese.",
+      "untilLabel": "Scadenza",
+      "untilHint": "Il link funziona fino a mezzanotte di quel giorno (ora svizzera). Dopo, i biglietti restano validi così come sono.",
+      "sendTest": "Inviami una prova",
+      "send": "{count, plural, =0 {Invia} =1 {Invia a 1 acquirente} other {Invia a # acquirenti}}",
+      "sending": "Invio…",
+      "confirmSend": "{count, plural, =1 {Inviare il link a 1 acquirente?} other {Inviare il link a # acquirenti?}} Un link già inviato viene sostituito.",
+      "testSent": "Prova inviata a {email}: versione francese e inglese, con un link fittizio.",
+      "sent": "{count, plural, =0 {Nessuna e-mail inviata.} =1 {1 e-mail inviata.} other {# e-mail inviate.}}",
+      "failedList": "Non inviati: {list}",
+      "errors": {
+        "noneSelected": "Selezioni almeno un acquirente.",
+        "untilPast": "Scelga una scadenza futura.",
+        "testFailed": "Non è stato possibile inviare la prova.",
+        "notFound": "Data non trovata.",
+        "failed": "Invio non riuscito."
       }
     }
   },
@@ -2487,7 +2534,9 @@
         "seatCount": "Scegliete esattamente tanti nuovi posti quanti i biglietti restituiti.",
         "freeSeats": "Un posto gratuito si ottiene solo in cambio di un posto gratuito.",
         "attendeeLocked": "I titolari dei biglietti restituiti devono restare gli stessi sui nuovi biglietti.",
-        "companionLeft": "Un posto gratuito resterebbe solo a questo spettacolo, senza il posto a pagamento a cui è legato. Scambiateli insieme."
+        "companionLeft": "Un posto gratuito resterebbe solo a questo spettacolo, senza il posto a pagamento a cui è legato. Scambiateli insieme.",
+        "ibanMissing": "Indichi il titolare e l'IBAN del conto da accreditare.",
+        "ibanInvalid": "Questo IBAN non è valido. Lo verifichi."
       },
       "stepsLabel": "Fasi del cambio",
       "steps": {
@@ -2517,7 +2566,19 @@
       "edit": "Modifica",
       "remove": "Togli dal carrello",
       "seatsChosen": "Posti: {chosen} su {total}",
-      "holderKept": "Titolare ripreso dal biglietto restituito: non può essere cambiato."
+      "holderKept": "Titolare ripreso dal biglietto restituito: non può essere cambiato.",
+      "refunded": "Rimborsato",
+      "refundCardHint": "La differenza è rimborsata sul mezzo di pagamento usato per l'acquisto.",
+      "refundTransferHint": "Ha pagato con bonifico o alla cassa: indichi il conto su cui rimborsare la differenza.",
+      "ibanHolder": "Titolare del conto",
+      "iban": "IBAN",
+      "ibanHint": "Ad es. CH93 0076 2011 6238 5295 7",
+      "confirmRefund": "Confermare il cambio (rimborsato: {amount})",
+      "doneRefundCard": "La differenza è stata rimborsata sul suo mezzo di pagamento originale.",
+      "doneRefundTransfer": "La differenza le sarà rimborsata con bonifico sul conto indicato.",
+      "doneRefundLater": "Il rimborso della differenza è registrato; l'organizzatore lo completerà nei prossimi giorni.",
+      "introProgramme": "Scelga i biglietti da restituire, poi lo spettacolo e i nuovi posti. Se la nuova scelta costa meno, le rimborsiamo la differenza; se costa di più, paga il supplemento.",
+      "introProgrammeNoPayment": "Scelga i biglietti da restituire, poi lo spettacolo e i nuovi posti. Se costa di più, paga il supplemento."
     },
     "loginTitle": "Accedete per modificare i vostri biglietti",
     "loginText": "Questo ordine è collegato al vostro account ticketick. Per proteggere i vostri biglietti, accedete con l'indirizzo e-mail dell'ordine: tornerete poi su questa pagina.",
@@ -2525,7 +2586,45 @@
     "otherAccount": "Questo ordine è collegato a un account diverso da questo ({email}). Uscite, riaprite questo link e accedete con l'indirizzo e-mail dell'ordine.",
     "inviteText": "Create il vostro account ticketick con l'indirizzo {email}: ritroverete i vostri biglietti e potrete modificarli più facilmente la prossima volta.",
     "inviteButton": "Crea il mio account",
-    "lockedNote": "{count, plural, one {Un biglietto di questo ordine è già stato scambiato: non può più esserlo qui.} other {# biglietti di questo ordine sono già stati scambiati: non possono più esserlo qui.}} Per un nuovo cambio, contattate l'organizzatore."
+    "lockedNote": "{count, plural, one {Un biglietto di questo ordine è già stato scambiato: non può più esserlo qui.} other {# biglietti di questo ordine sono già stati scambiati: non possono più esserlo qui.}} Per un nuovo cambio, contattate l'organizzatore.",
+    "programme": {
+      "title": "Cambio di programma",
+      "intro": "Il programma di «{show}» del {when} è cambiato.",
+      "keep": "Può tenere i suoi biglietti: non deve fare nulla, restano validi. Qui sotto può anche annullarli o cambiarli, uno per uno.",
+      "others": "I biglietti di altri spettacoli del suo ordine non sono interessati.",
+      "nothingLeft": "La sua scelta è registrata: nel suo ordine non resta alcun biglietto per questo spettacolo. Le è stata inviata una conferma via e-mail.",
+      "cancelTitle": "Annullare i miei biglietti",
+      "cancelIntro": "Selezioni i biglietti da annullare: le rimborsiamo quanto ha pagato, sconto dedotto.",
+      "cancelIntroNoPayment": "Selezioni i biglietti da annullare. Per questo ordine non è stato effettuato alcun pagamento su ticketick, quindi non c'è nulla da rimborsare qui.",
+      "free": "Gratuito",
+      "refundTotal": "Importo rimborsato",
+      "refundCardHint": "Rimborsato sul mezzo di pagamento usato per l'acquisto (carta, PayPal…), di solito entro 5-10 giorni.",
+      "refundTransferHint": "Ha pagato con bonifico o alla cassa: indichi il conto su cui rimborsarla.",
+      "ibanHolder": "Titolare del conto",
+      "iban": "IBAN",
+      "confirmWarning": "{count, plural, =1 {Questo biglietto sarà annullato e non sarà più valido all'ingresso.} other {Questi # biglietti saranno annullati e non saranno più validi all'ingresso.}} Conferma?",
+      "back": "Indietro",
+      "saving": "Salvataggio…",
+      "cancelButton": "{count, plural, =0 {Annullare} =1 {Annullare 1 biglietto} other {Annullare # biglietti}}",
+      "confirmCancel": "{count, plural, =1 {Sì, annullare questo biglietto} other {Sì, annullare questi # biglietti}}",
+      "doneTitle": "Annullamento confermato",
+      "doneRefundCard": "Il rimborso di {amount} è stato avviato sul suo mezzo di pagamento originale.",
+      "doneRefundTransfer": "Il rimborso di {amount} le sarà effettuato con bonifico sul conto indicato.",
+      "doneRefundLater": "Il rimborso di {amount} è registrato; l'organizzatore lo completerà nei prossimi giorni.",
+      "doneNoRefund": "I suoi biglietti sono annullati.",
+      "doneEmail": "Le è stata inviata una conferma via e-mail.",
+      "errors": {
+        "ibanMissing": "Indichi il titolare e l'IBAN del conto da accreditare.",
+        "ibanInvalid": "Questo IBAN non è valido. Lo verifichi.",
+        "expired": "Questo link non è più valido. Ricarichi la pagina.",
+        "notFound": "Uno di questi biglietti non può più essere annullato. Ricarichi la pagina.",
+        "retry": "Non è stato possibile registrare l'annullamento. Riprovi tra un attimo.",
+        "accountRequired": "Questo ordine è collegato a un account: acceda per modificarlo.",
+        "failed": "Non è stato possibile annullare. Ricarichi la pagina e riprovi."
+      },
+      "order": "Ordine {reference}.",
+      "continue": "Continua"
+    }
   },
   "promotionPublisher": {
     "subjectFailed": "Pubblicazione {channel} non apparsa — {event}",

@@ -9,6 +9,7 @@ import { ticketPdfPath } from "@/lib/tickets/download";
 import { t as translate } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { Exchanger } from "./exchanger";
+import { ProgrammeCancel } from "./programme-cancel";
 import { SeatChanger } from "./seat-changer";
 
 /** Échange de spectacle puis choix des places, depuis un lien ou le compte. */
@@ -26,13 +27,66 @@ export async function ChangeScreen({
 }) {
   const t = await getTranslations("change");
   const fmt = intlLocale(locale);
-  const exchange = await exchangeOptions({ orderId: data.orderId, viaAccount: data.viaAccount });
+  const programme = data.programme;
+  const tp = await getTranslations("change.programme");
+  const exchange = await exchangeOptions({
+    orderId: data.orderId,
+    viaAccount: data.viaAccount,
+    programmeSessionId: programme?.sessionId ?? null,
+  });
   const canExchange = exchange.tickets.length > 0 && exchange.targets.length > 0;
+
+  const exchanger = canExchange ? (
+    <Exchanger
+      programme={programme ? { refundMode: programme.refundMode } : undefined}
+      access={access}
+      locale={locale}
+      currency={data.currency}
+      tickets={exchange.tickets.map((ticket) => ({
+        id: ticket.id,
+        ticketTypeId: ticket.ticketTypeId,
+        sessionId: ticket.sessionId,
+        seatKey: ticket.seatKey,
+        title: translate(ticket.eventTitle, locale),
+        when: formatDate(ticket.startsAt, fmt, { weekday: "long" }),
+        tariffName: translate(ticket.tariffName, locale),
+        seatLabel: ticket.seatLabel,
+        paidCents: ticket.paidCents,
+        holder: ticket.holder,
+      }))}
+      targets={exchange.targets.map((target) => ({
+        sessionId: target.sessionId,
+        title: translate(target.eventTitle, locale),
+        when: formatDate(target.startsAt, fmt, { weekday: "long" }),
+        startsAt: target.startsAt.toISOString(),
+        coverImage: target.coverImage,
+        categories: target.categories.map((c) => ({
+          id: c.id,
+          name: translate(c.name, locale),
+          color: c.color,
+        })),
+        tags: target.tags
+          ? translate(target.tags, locale)
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter(Boolean)
+          : [],
+        venue: target.venue,
+        seated: target.seated,
+        tariffs: target.tariffs.map((tariff) => ({
+          ...tariff,
+          name: translate(tariff.name, locale),
+        })),
+      }))}
+    />
+  ) : null;
 
   const intro = (
     <>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        {t("intro", { reference: data.reference })}
+        {data.programme
+          ? tp("order", { reference: data.reference })
+          : t("intro", { reference: data.reference })}
       </p>
       {data.expiresAt ? (
         <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
@@ -65,6 +119,42 @@ export async function ChangeScreen({
     </>
   );
 
+  if (programme) {
+    const when = formatDate(programme.startsAt, fmt, { weekday: "long" });
+    const show = translate(programme.eventTitle, locale);
+    return (
+      <>
+        <div className="mt-4 max-w-3xl space-y-2 rounded-card border border-primary/30 bg-primary/5 px-5 py-4 text-sm">
+          <p className="font-semibold">{tp("intro", { show, when })}</p>
+          <p>{tp("keep")}</p>
+          <p className="text-muted-foreground">{tp("others")}</p>
+        </div>
+        {intro}
+        {programme.tickets.length === 0 ? (
+          <p className="mt-8 rounded-card border border-border bg-card p-5 text-sm text-muted-foreground">
+            {tp("nothingLeft")}
+          </p>
+        ) : (
+          <div className="mt-8 space-y-10">
+            <ProgrammeCancel
+              access={access}
+              locale={locale}
+              currency={data.currency}
+              refundMode={programme.refundMode}
+              tickets={programme.tickets.map((ticket) => ({
+                id: ticket.id,
+                tariffName: translate(ticket.tariffName, locale),
+                seatLabel: ticket.seatLabel,
+                paidCents: ticket.paidCents,
+              }))}
+            />
+            {exchanger}
+          </div>
+        )}
+      </>
+    );
+  }
+
   if (!canExchange && data.sessions.length === 0) {
     return (
       <>
@@ -81,47 +171,7 @@ export async function ChangeScreen({
       {intro}
       {canExchange ? (
         <div className="mt-6">
-          <Exchanger
-            access={access}
-            locale={locale}
-            currency={data.currency}
-            tickets={exchange.tickets.map((ticket) => ({
-              id: ticket.id,
-              ticketTypeId: ticket.ticketTypeId,
-              sessionId: ticket.sessionId,
-              seatKey: ticket.seatKey,
-              title: translate(ticket.eventTitle, locale),
-              when: formatDate(ticket.startsAt, fmt, { weekday: "long" }),
-              tariffName: translate(ticket.tariffName, locale),
-              seatLabel: ticket.seatLabel,
-              paidCents: ticket.paidCents,
-              holder: ticket.holder,
-            }))}
-            targets={exchange.targets.map((target) => ({
-              sessionId: target.sessionId,
-              title: translate(target.eventTitle, locale),
-              when: formatDate(target.startsAt, fmt, { weekday: "long" }),
-              startsAt: target.startsAt.toISOString(),
-              coverImage: target.coverImage,
-              categories: target.categories.map((c) => ({
-                id: c.id,
-                name: translate(c.name, locale),
-                color: c.color,
-              })),
-              tags: target.tags
-                ? translate(target.tags, locale)
-                    .split(",")
-                    .map((tag) => tag.trim())
-                    .filter(Boolean)
-                : [],
-              venue: target.venue,
-              seated: target.seated,
-              tariffs: target.tariffs.map((tariff) => ({
-                ...tariff,
-                name: translate(tariff.name, locale),
-              })),
-            }))}
-          />
+          {exchanger}
         </div>
       ) : null}
 

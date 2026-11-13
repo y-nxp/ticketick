@@ -588,7 +588,9 @@
         "seatCount": "Elige exactamente tantas localidades nuevas como entradas devuelves.",
         "freeSeats": "Una localidad gratuita solo se obtiene a cambio de una localidad gratuita.",
         "attendeeLocked": "Los titulares de las entradas devueltas deben seguir siendo los mismos en las nuevas entradas.",
-        "companionLeft": "Una localidad gratuita quedaría sola en este espectáculo, sin la localidad de pago a la que va unida. Cámbialas juntas."
+        "companionLeft": "Una localidad gratuita quedaría sola en este espectáculo, sin la localidad de pago a la que va unida. Cámbialas juntas.",
+        "ibanMissing": "Indique el titular y el IBAN de la cuenta.",
+        "ibanInvalid": "Este IBAN no es válido. Compruébelo."
       },
       "stepsLabel": "Pasos del cambio",
       "steps": {
@@ -618,7 +620,19 @@
       "edit": "Modificar",
       "remove": "Quitar de la cesta",
       "seatsChosen": "Localidades: {chosen} de {total}",
-      "holderKept": "Titular tomado de la entrada devuelta: no se puede cambiar."
+      "holderKept": "Titular tomado de la entrada devuelta: no se puede cambiar.",
+      "refunded": "Reembolsado",
+      "refundCardHint": "La diferencia se reembolsa en el medio de pago usado para la compra.",
+      "refundTransferHint": "Pagó por transferencia o en taquilla: indique la cuenta en la que reembolsar la diferencia.",
+      "ibanHolder": "Titular de la cuenta",
+      "iban": "IBAN",
+      "ibanHint": "P. ej. CH93 0076 2011 6238 5295 7",
+      "confirmRefund": "Confirmar el cambio (reembolsado: {amount})",
+      "doneRefundCard": "La diferencia se ha reembolsado en su medio de pago original.",
+      "doneRefundTransfer": "La diferencia se le reembolsará por transferencia a la cuenta indicada.",
+      "doneRefundLater": "El reembolso de la diferencia está registrado; el organizador lo completará en los próximos días.",
+      "introProgramme": "Elija las entradas que devuelve, luego el espectáculo y sus nuevas butacas. Si la nueva elección es más barata, le reembolsamos la diferencia; si es más cara, paga el suplemento.",
+      "introProgrammeNoPayment": "Elija las entradas que devuelve, luego el espectáculo y sus nuevas butacas. Si es más cara, paga el suplemento."
     },
     "loginTitle": "Inicia sesión para cambiar tus entradas",
     "loginText": "Este pedido está vinculado a tu cuenta de ticketick. Para proteger tus entradas, inicia sesión con la dirección de correo del pedido: después volverás a esta página.",
@@ -626,7 +640,45 @@
     "otherAccount": "Este pedido está vinculado a otra cuenta distinta de esta ({email}). Cierra la sesión, vuelve a abrir este enlace e inicia sesión con la dirección de correo del pedido.",
     "inviteText": "Crea tu cuenta de ticketick con la dirección {email}: encontrarás tus entradas y podrás cambiarlas más fácilmente la próxima vez.",
     "inviteButton": "Crear mi cuenta",
-    "lockedNote": "{count, plural, one {Una entrada de este pedido ya se ha cambiado: ya no puede cambiarse aquí.} other {# entradas de este pedido ya se han cambiado: ya no pueden cambiarse aquí.}} Para un nuevo cambio, contacta con el organizador."
+    "lockedNote": "{count, plural, one {Una entrada de este pedido ya se ha cambiado: ya no puede cambiarse aquí.} other {# entradas de este pedido ya se han cambiado: ya no pueden cambiarse aquí.}} Para un nuevo cambio, contacta con el organizador.",
+    "programme": {
+      "title": "Cambio de programa",
+      "intro": "El programa de «{show}» del {when} ha cambiado.",
+      "keep": "Puede conservar sus entradas: no tiene que hacer nada, siguen siendo válidas. Abajo también puede anularlas o cambiarlas, una por una.",
+      "others": "Las entradas de otros espectáculos de su pedido no se ven afectadas.",
+      "nothingLeft": "Su elección está registrada: no queda ninguna entrada de este espectáculo en su pedido. Le hemos enviado una confirmación por correo electrónico.",
+      "cancelTitle": "Anular mis entradas",
+      "cancelIntro": "Marque las entradas que desea anular: le reembolsamos lo que pagó por ellas, descuento deducido.",
+      "cancelIntroNoPayment": "Marque las entradas que desea anular. No se realizó ningún pago en ticketick para este pedido, por lo que no hay nada que reembolsar aquí.",
+      "free": "Gratis",
+      "refundTotal": "Importe reembolsado",
+      "refundCardHint": "Reembolsado en el medio de pago usado para la compra (tarjeta, PayPal…), normalmente en 5 a 10 días.",
+      "refundTransferHint": "Pagó por transferencia o en taquilla: indique la cuenta en la que reembolsarle.",
+      "ibanHolder": "Titular de la cuenta",
+      "iban": "IBAN",
+      "confirmWarning": "{count, plural, =1 {Esta entrada se anulará y dejará de ser válida en la entrada.} other {Estas # entradas se anularán y dejarán de ser válidas en la entrada.}} ¿Lo confirma?",
+      "back": "Volver",
+      "saving": "Guardando…",
+      "cancelButton": "{count, plural, =0 {Anular} =1 {Anular 1 entrada} other {Anular # entradas}}",
+      "confirmCancel": "{count, plural, =1 {Sí, anular esta entrada} other {Sí, anular estas # entradas}}",
+      "doneTitle": "Anulación confirmada",
+      "doneRefundCard": "El reembolso de {amount} se ha enviado a su medio de pago original.",
+      "doneRefundTransfer": "El reembolso de {amount} se le hará por transferencia a la cuenta indicada.",
+      "doneRefundLater": "El reembolso de {amount} está registrado; el organizador lo completará en los próximos días.",
+      "doneNoRefund": "Sus entradas están anuladas.",
+      "doneEmail": "Le hemos enviado una confirmación por correo electrónico.",
+      "errors": {
+        "ibanMissing": "Indique el titular y el IBAN de la cuenta.",
+        "ibanInvalid": "Este IBAN no es válido. Compruébelo.",
+        "expired": "Este enlace ya no es válido. Recargue la página.",
+        "notFound": "Una de estas entradas ya no se puede anular. Recargue la página.",
+        "retry": "No se pudo registrar la anulación. Inténtelo de nuevo en un momento.",
+        "accountRequired": "Este pedido está vinculado a una cuenta: inicie sesión para modificarlo.",
+        "failed": "No se pudo realizar la anulación. Recargue la página e inténtelo de nuevo."
+      },
+      "order": "Pedido {reference}.",
+      "continue": "Continuar"
+    }
   },
   "consent": {
     "title": "ticketick respeta su privacidad",

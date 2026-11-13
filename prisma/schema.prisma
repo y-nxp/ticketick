@@ -535,8 +535,8 @@ model Event {
   /// Vente arrêtée pour un temps : la fiche reste en ligne, sans billets,
   /// avec un champ pour être prévenu de la reprise (`SalesAlert`). Le guichet
   /// de l'admin peut toujours réserver.
-  salesPaused  Boolean @default(false)
-  salesAlerts  SalesAlert[]
+  salesPaused Boolean      @default(false)
+  salesAlerts SalesAlert[]
 
   /// Vrai : la remise de groupe de l'organisateur (rabais `scope = EVENT`)
   /// ne s'applique pas à ce spectacle. Cas particuliers décidés par lui.
@@ -1162,6 +1162,10 @@ model OrderCharge {
   fromInvites       Boolean      @default(false)
   /// Changement de places : billets rendus une fois la différence payée.
   replacesTicketIds String[]     @default([])
+  /// Remboursement par virement demandé par le client lui-même (programme
+  /// modifié, paiement non remboursable chez un prestataire) : son compte.
+  refundIban        String?
+  refundHolder      String?
   createdById       String?
   createdAt         DateTime     @default(now())
   settledAt         DateTime?
@@ -1185,8 +1189,13 @@ model OrderChangeLink {
   usedAt      DateTime?
   createdById String?
   createdAt   DateTime  @default(now())
+  /// Programme modifié : le lien ne vaut que pour les billets de cette
+  /// séance, et le client peut les annuler (remboursés de ce qu'il a payé)
+  /// ou les échanger, la différence en sa faveur lui étant remboursée.
+  sessionId   String?
 
   @@index([orderId])
+  @@index([sessionId])
 }
 
 /// Reprises de données déjà passées (scripts lancés à chaque déploiement) :

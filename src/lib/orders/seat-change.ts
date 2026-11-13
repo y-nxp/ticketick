@@ -31,6 +31,7 @@ import {
   tariffForZone,
   type ChangeTariff,
 } from "./seat-change-quote";
+import { programmeTickets, refundModeOf, type ProgrammeTicket, type RefundMode } from "./programme";
 import { changeOpen, exchangeRuleError, type ExchangeRuleError } from "./self-service-rules";
 
 /**
@@ -134,7 +135,8 @@ export async function createChangeLink(input: {
   const expiresAt = startsAt < limit ? startsAt : limit;
   const { token, tokenHash } = newChangeToken();
   await prisma.$transaction([
-    prisma.orderChangeLink.deleteMany({ where: { orderId: input.orderId } }),
+    // Les liens « programme modifié » d'une séance restent valables.
+    prisma.orderChangeLink.deleteMany({ where: { orderId: input.orderId, sessionId: null } }),
     prisma.orderChangeLink.create({
       data: { orderId: input.orderId, tokenHash, expiresAt, createdById: input.actorId },
     }),
@@ -208,7 +210,42 @@ export type ChangePage =
       /** Client du lien sans compte : on l'invite à en créer un. */
       inviteAccount: boolean;
       sessions: ChangeSession[];
+      /** Lien « programme modifié » : la séance concernée et ses billets. */
+      programme: ProgrammeInfo | null;
     };
+
+export interface ProgrammeInfo {
+  sessionId: string;
+  eventTitle: Translated;
+  startsAt: Date;
+  venue: string | null;
+  refundMode: RefundMode;
+  tickets: (Omit<ProgrammeTicket, "tariffName"> & { tariffName: Translated })[];
+}
+
+async function programmeInfo(orderId: string, sessionId: string): Promise<ProgrammeInfo | null> {
+  const [session, payment, tickets] = await Promise.all([
+    prisma.eventSession.findUnique({
+      where: { id: sessionId },
+      select: {
+        startsAt: true,
+        venue: { select: { name: true, city: true } },
+        event: { select: { title: true } },
+      },
+    }),
+    prisma.payment.findUnique({ where: { orderId }, select: { provider: true, status: true } }),
+    programmeTickets(orderId, sessionId),
+  ]);
+  if (!session) return null;
+  return {
+    sessionId,
+    eventTitle: session.event.title as Translated,
+    startsAt: session.startsAt,
+    venue: session.venue ? `${session.venue.name}, ${session.venue.city}` : null,
+    refundMode: refundModeOf(payment),
+    tickets: tickets.map((t) => ({ ...t, tariffName: t.tariffName as Translated })),
+  };
+}
 
 export async function changePageData(access: ChangeAccess): Promise<ChangePage> {
   const resolved = await resolveAccess(access);
@@ -234,7 +271,8 @@ export async function changePageData(access: ChangeAccess): Promise<ChangePage> 
       reference: order.reference,
     };
   }
-  const { viaAccount, expiresAt } = resolved.access;
+  const { viaAccount, expiresAt, programmeSessionId } = resolved.access;
+  const programme = programmeSessionId ? await programmeInfo(order.id, programmeSessionId) : null;
 
   const tickets = allowedForChange(
     await prisma.ticket.findMany({
@@ -335,7 +373,9 @@ export async function changePageData(access: ChangeAccess): Promise<ChangePage> 
     viaAccount,
     pending: pending > 0,
     inviteAccount: !viaAccount && !(await orderHasAccount(order.id)),
-    sessions: out,
+    // Programme modifié : on ne déplace pas les places des autres spectacles.
+    sessions: programmeSessionId ? [] : out,
+    programme,
   };
 }
 

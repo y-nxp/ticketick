@@ -1227,7 +1227,8 @@
       "seatPlanNone": "None (free seating)",
       "seatPlanHint": "Numbered seats: the plan must belong to the selected venue. Empty capacity = number of seats in the plan. Locked once tickets are sold.",
       "seatPlanOption": "{name} — {venue} ({seats} seats)",
-      "reserve": "Reserve"
+      "reserve": "Reserve",
+      "programme": "Programme change"
     },
     "options": {
       "title": "Order options",
@@ -1851,7 +1852,8 @@
       },
       "cancelNoticeSentOn": "Email sent on {date}",
       "cancelNoticeNotYet": "Not notified yet",
-      "refundReseller": "Refunded by the point of sale"
+      "refundReseller": "Refunded by the point of sale",
+      "refundAccount": "Account to credit"
     },
     "reports": {
       "title": "Reports",
@@ -2159,6 +2161,51 @@
           "code": "Campaign code",
           "link": "Direct link"
         }
+      }
+    },
+    "programme": {
+      "back": "← Back to the show",
+      "title": "Programme change",
+      "intro": "Send the buyers of this session a personal link. Until the deadline, each can keep their tickets, cancel them (refunded what they paid, discount deducted) or exchange them for another show. Tickets for their other shows are not touched.",
+      "buyers": "{count, plural, =0 {No buyers} =1 {1 buyer} other {# buyers}}",
+      "selected": "{count, plural, =0 {none ticked} =1 {1 ticked} other {# ticked}}",
+      "selectAll": "Tick all",
+      "colBuyer": "Buyer",
+      "colTickets": "Tickets",
+      "colPaid": "Paid",
+      "colRefund": "Refund",
+      "colLink": "Link",
+      "noEmail": "no email",
+      "otherShows": "{count, plural, =1 {+ 1 other show (not affected)} other {+ # other shows (not affected)}}",
+      "reseller": "Sold by {name}: handle from the order page",
+      "refund": {
+        "provider": "Automatic (card, PayPal)",
+        "transfer": "Bank transfer (customer IBAN)",
+        "none": "Nothing collected"
+      },
+      "sentAt": "Sent on {date}",
+      "usedAt": "Answered on {date}",
+      "until": "Valid until {date}",
+      "notSent": "Not sent yet",
+      "messageFr": "Message in French",
+      "messageEn": "Message in English",
+      "messagePlaceholder": "We have just learned that…",
+      "messageHint": "Placed after “Hello First Last,” and before the three choices (keep, cancel, exchange) and the button, which are added automatically. Separate paragraphs with a blank line. French-speaking customers get the French message; all others get the email in English.",
+      "untilLabel": "Deadline",
+      "untilHint": "The link works until midnight that day (Swiss time). After that, tickets simply remain valid.",
+      "sendTest": "Send me a test",
+      "send": "{count, plural, =0 {Send} =1 {Send to 1 buyer} other {Send to # buyers}}",
+      "sending": "Sending…",
+      "confirmSend": "{count, plural, =1 {Send the link to 1 buyer?} other {Send the link to # buyers?}} A link already sent is replaced.",
+      "testSent": "Test sent to {email}: French and English versions, with a dummy link.",
+      "sent": "{count, plural, =0 {No email sent.} =1 {1 email sent.} other {# emails sent.}}",
+      "failedList": "Not sent: {list}",
+      "errors": {
+        "noneSelected": "Tick at least one buyer.",
+        "untilPast": "Choose a deadline in the future.",
+        "testFailed": "The test could not be sent.",
+        "notFound": "Session not found.",
+        "failed": "Sending failed."
       }
     }
   },
@@ -2487,7 +2534,9 @@
         "seatCount": "Choose exactly as many new seats as tickets given back.",
         "freeSeats": "A free seat can only be obtained in exchange for a free seat.",
         "attendeeLocked": "The holders of the tickets given back must stay the same on the new tickets.",
-        "companionLeft": "A free seat would be left alone at this show, without the paid seat it goes with. Exchange them together."
+        "companionLeft": "A free seat would be left alone at this show, without the paid seat it goes with. Exchange them together.",
+        "ibanMissing": "Enter the account holder and the IBAN to credit.",
+        "ibanInvalid": "This IBAN is not valid. Please check it."
       },
       "stepsLabel": "Exchange steps",
       "steps": {
@@ -2517,7 +2566,19 @@
       "edit": "Edit",
       "remove": "Remove from basket",
       "seatsChosen": "Seats: {chosen} of {total}",
-      "holderKept": "Holder taken from the ticket given back: it cannot be changed."
+      "holderKept": "Holder taken from the ticket given back: it cannot be changed.",
+      "refunded": "Refunded",
+      "refundCardHint": "The difference is refunded to the payment method used for the purchase.",
+      "refundTransferHint": "You paid by bank transfer or at the box office: enter the account to refund the difference to.",
+      "ibanHolder": "Account holder",
+      "iban": "IBAN",
+      "ibanHint": "E.g. CH93 0076 2011 6238 5295 7",
+      "confirmRefund": "Confirm the exchange (refunded: {amount})",
+      "doneRefundCard": "The difference has been refunded to your original payment method.",
+      "doneRefundTransfer": "The difference will be refunded by bank transfer to the account you entered.",
+      "doneRefundLater": "The refund of the difference is recorded; the organiser will complete it in the coming days.",
+      "introProgramme": "Choose the tickets to give back, then the show and your new seats. If the new choice is cheaper, the difference is refunded; if it costs more, you pay the extra.",
+      "introProgrammeNoPayment": "Choose the tickets to give back, then the show and your new seats. If it costs more, you pay the extra."
     },
     "loginTitle": "Sign in to change your tickets",
     "loginText": "This order is linked to your ticketick account. To protect your tickets, sign in with the order's email address: you will then come back to this page.",
@@ -2525,7 +2586,45 @@
     "otherAccount": "This order is linked to another account than this one ({email}). Sign out, then reopen this link and sign in with the order's email address.",
     "inviteText": "Create your ticketick account with {email}: you will find your tickets there and can change them more easily next time.",
     "inviteButton": "Create my account",
-    "lockedNote": "{count, plural, one {One ticket of this order has already been exchanged: it can no longer be exchanged here.} other {# tickets of this order have already been exchanged: they can no longer be exchanged here.}} For another change, contact the organiser."
+    "lockedNote": "{count, plural, one {One ticket of this order has already been exchanged: it can no longer be exchanged here.} other {# tickets of this order have already been exchanged: they can no longer be exchanged here.}} For another change, contact the organiser.",
+    "programme": {
+      "title": "Programme change",
+      "intro": "The programme of “{show}” on {when} has changed.",
+      "keep": "You can keep your tickets: there is nothing to do, they remain valid. You can also cancel or exchange them below, ticket by ticket.",
+      "others": "Tickets for other shows in your order are not affected.",
+      "nothingLeft": "Your choice is saved: there are no tickets left for this show in your order. A confirmation has been sent to you by email.",
+      "cancelTitle": "Cancel my tickets",
+      "cancelIntro": "Tick the tickets to cancel: we refund what you paid for them, discount deducted.",
+      "cancelIntroNoPayment": "Tick the tickets to cancel. No payment was made on ticketick for this order, so there is nothing to refund here.",
+      "free": "Free",
+      "refundTotal": "Amount refunded",
+      "refundCardHint": "Refunded to the payment method used for the purchase (card, PayPal…), usually within 5 to 10 days.",
+      "refundTransferHint": "You paid by bank transfer or at the box office: enter the account to refund.",
+      "ibanHolder": "Account holder",
+      "iban": "IBAN",
+      "confirmWarning": "{count, plural, =1 {This ticket will be cancelled and no longer valid at the door.} other {These # tickets will be cancelled and no longer valid at the door.}} Do you confirm?",
+      "back": "Back",
+      "saving": "Saving…",
+      "cancelButton": "{count, plural, =0 {Cancel} =1 {Cancel 1 ticket} other {Cancel # tickets}}",
+      "confirmCancel": "{count, plural, =1 {Yes, cancel this ticket} other {Yes, cancel these # tickets}}",
+      "doneTitle": "Cancellation confirmed",
+      "doneRefundCard": "The refund of {amount} has been sent to your original payment method.",
+      "doneRefundTransfer": "The refund of {amount} will be made by bank transfer to the account you entered.",
+      "doneRefundLater": "The refund of {amount} is recorded; the organiser will complete it in the coming days.",
+      "doneNoRefund": "Your tickets are cancelled.",
+      "doneEmail": "A confirmation has been sent to you by email.",
+      "errors": {
+        "ibanMissing": "Enter the account holder and the IBAN to credit.",
+        "ibanInvalid": "This IBAN is not valid. Please check it.",
+        "expired": "This link is no longer valid. Reload the page.",
+        "notFound": "One of these tickets can no longer be cancelled. Reload the page.",
+        "retry": "The cancellation could not be saved. Try again in a moment.",
+        "accountRequired": "This order is linked to an account: sign in to change it.",
+        "failed": "The cancellation could not be made. Reload the page and try again."
+      },
+      "order": "Order {reference}.",
+      "continue": "Continue"
+    }
   },
   "promotionPublisher": {
     "subjectFailed": "{channel} post not published — {event}",

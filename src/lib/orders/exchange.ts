@@ -19,6 +19,13 @@ import {
   run,
   type EditError,
 } from "./edit-order";
+import {
+  openProgrammeRefund,
+  paidByTicketType,
+  readRefundAccount,
+  refundModeOf,
+  type RefundAccount,
+} from "./programme";
 import { allowedForChange, dropPendingChanges, PAY_HOURS } from "./seat-change";
 import {
   cancelOpen,
@@ -210,6 +217,8 @@ async function targetSessions(organizerIds: string[]): Promise<ExchangeTarget[]>
 export async function exchangeOptions(input: {
   orderId: string;
   viaAccount: boolean;
+  /** Programme modifié : seuls les billets de cette séance, valorisés au prix payé. */
+  programmeSessionId?: string | null;
 }): Promise<ExchangeOptions> {
   const order = await prisma.order.findUnique({
     where: { id: input.orderId },
@@ -227,10 +236,14 @@ export async function exchangeOptions(input: {
     orderBy: [{ ticketType: { session: { startsAt: "asc" } } }, { seatKey: "asc" }],
     select: ticketSelect,
   });
-  const tickets = allowedForChange(upcoming, input.viaAccount);
+  const tickets = allowedForChange(upcoming, input.viaAccount).filter(
+    (t) => !input.programmeSessionId || t.ticketType.sessionId === input.programmeSessionId,
+  );
   const locked = input.viaAccount ? upcoming.filter((t) => t.selfChangedAt).length : 0;
   if (tickets.length === 0) return { tickets: [], targets: [], locked };
-  const paidOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
+  const paidOf = input.programmeSessionId
+    ? await paidByTicketType(prisma, input.orderId)
+    : new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
   const organizerIds = [...new Set(tickets.map((t) => t.ticketType.session.event.organizerId))];
   return {
     tickets: tickets.map((t) => ({
@@ -254,7 +267,14 @@ export async function exchangeOptions(input: {
 }
 
 export type ExchangeResult =
-  | { ok: true; kind: "done"; orderId: string; replacedTicketIds: string[] }
+  | {
+      ok: true;
+      kind: "done";
+      orderId: string;
+      replacedTicketIds: string[];
+      /** Programme modifié : différence rendue au client. */
+      refund?: { chargeId: string; method: "PROVIDER" | "CREDIT_NOTE" } | null;
+    }
   | { ok: true; kind: "pay"; payToken: string; locale: string }
   | { ok: false; error: ExchangeError; ticketTypeId?: string };
 
@@ -322,6 +342,8 @@ export async function applyExchange(input: {
   access: ChangeAccess;
   give: string[];
   items: ExchangeItem[];
+  /** Programme modifié, remboursement par virement : compte du client. */
+  account?: RefundAccount;
 }): Promise<ExchangeResult> {
   const give = [...new Set(input.give)];
   const items = input.items
@@ -354,7 +376,10 @@ export async function applyExchange(input: {
     access.viaAccount,
   );
   if (owned.length === 0) return { ok: false, error: "notFound" };
-  const given = owned.filter((t) => give.includes(t.id));
+  const programme = access.programmeSessionId;
+  const given = owned.filter(
+    (t) => give.includes(t.id) && (!programme || t.ticketType.sessionId === programme),
+  );
   if (given.length !== give.length) return { ok: false, error: "notFound" };
   const left = await companionLeftAlone(access.orderId, given, items);
   if (left) return { ok: false, error: "companionLeft", ticketTypeId: left };
@@ -422,13 +447,17 @@ export async function applyExchange(input: {
       const active = new Set(order.tickets.filter((t) => t.status === "VALID").map((t) => t.id));
       if (give.some((id) => !active.has(id))) throw new EditFailure("notFound");
 
-      const paidOf = new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
+      // Programme modifié : chaque billet rendu vaut ce que le client a payé, rabais déduit.
+      const paidOf = programme
+        ? await paidByTicketType(tx, order.id)
+        : new Map(order.items.map((i) => [i.ticketTypeId, i.unitPriceCents]));
       const quote = exchangeDue({
         givenCents: given.map((t) => paidOf.get(t.ticketTypeId) ?? 0),
         lines: lines.map((l) => ({ priceCents: tariffOf.get(l.ticketTypeId)!.priceCents, quantity: l.quantity })),
       });
       const rule = exchangeRuleError({
         viaAccount: access.viaAccount,
+        allowLower: programme != null,
         givenCount: give.length,
         newCount: lines.reduce((sum, l) => sum + l.quantity, 0),
         givenFree: given.filter((t) => (paidOf.get(t.ticketTypeId) ?? 0) === 0).length,
@@ -440,6 +469,14 @@ export async function applyExchange(input: {
       });
       if (rule) throw new EditFailure(rule);
       const { dueCents } = quote;
+      const mode = refundModeOf(order.payment);
+      const refundCents = programme && dueCents === 0 && mode !== "none" ? quote.refundCents : 0;
+      let account: { iban: string; holder: string } | null = null;
+      if (refundCents > 0 && mode === "transfer") {
+        const read = readRefundAccount(input.account ?? {});
+        if (!read.ok) throw new EditFailure(read.error);
+        account = { iban: read.iban, holder: read.holder };
+      }
 
       if (dueCents === 0 && give.length > 0) {
         await releaseTickets(tx, order, give, false);
@@ -487,12 +524,20 @@ export async function applyExchange(input: {
       }
 
       if (dueCents === 0) {
+        const refund = await openProgrammeRefund(tx, order, {
+          amountCents: refundCents,
+          ticketIds: give,
+          mode,
+          account,
+          actorId: access.actorId,
+        });
         await markLinkUsed(tx, access.linkId);
         return {
           ok: true as const,
           kind: "done" as const,
           orderId: order.id,
           replacedTicketIds: give,
+          refund,
         };
       }
       if (!added.chargeId || !added.token) throw new EditFailure("retry");

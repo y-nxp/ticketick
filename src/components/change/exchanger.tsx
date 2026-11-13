@@ -121,6 +121,8 @@ const ERRORS: string[] = [
   "lowerValue",
   "attendeeLocked",
   "companionLeft",
+  "ibanMissing",
+  "ibanInvalid",
 ];
 
 export function Exchanger({
@@ -129,12 +131,18 @@ export function Exchanger({
   currency,
   tickets,
   targets,
+  programme,
 }: {
   access: ClientAccess;
   locale: string;
   currency: string;
   tickets: ExchangerTicket[];
   targets: ExchangerTarget[];
+  /**
+   * Programme modifié : une place moins chère est permise et la différence
+   * est rendue (sur la carte, ou par virement sur le compte indiqué).
+   */
+  programme?: { refundMode: "provider" | "transfer" | "none" };
 }) {
   const t = useTranslations("change.exchange");
   const tc = useTranslations("checkout");
@@ -147,6 +155,7 @@ export function Exchanger({
   const [attendees, setAttendees] = React.useState<Record<string, Attendee>>({});
   const [sessionId, setSessionId] = React.useState("");
   const [state, setState] = React.useState<ExchangeState | null>(null);
+  const [account, setAccount] = React.useState({ iban: "", holder: "" });
   const [pending, startTransition] = React.useTransition();
   const price = (cents: number) => formatPrice(cents, locale, currency);
 
@@ -199,6 +208,7 @@ export function Exchanger({
   // Un échange billet pour billet : le serveur applique la même règle.
   const rule = exchangeRuleError({
     viaAccount: !("token" in access),
+    allowLower: programme != null,
     givenCount: given.length,
     newCount: seatCount,
     givenFree,
@@ -206,6 +216,10 @@ export function Exchanger({
     givenCents: quote.givenCents,
     newCents: quote.newCents,
   });
+  const refundCents =
+    programme && programme.refundMode !== "none" && quote.dueCents === 0 ? quote.refundCents : 0;
+  const needsAccount = refundCents > 0 && programme?.refundMode === "transfer";
+  const accountDone = !needsAccount || (account.iban.trim().length >= 15 && account.holder.trim().length >= 3);
   const ready = shows.length > 0 && !failing;
 
   const slots: Slot[] = shows.flatMap(({ target: show, lines }) =>
@@ -327,6 +341,17 @@ export function Exchanger({
         <p className="mt-2 text-sm text-muted-foreground">
           {t("doneText")}
         </p>
+        {state.refund ? (
+          <p className="mt-2 text-sm text-muted-foreground">
+            {t(
+              state.refund === "provider"
+                ? "doneRefundCard"
+                : state.refund === "transfer"
+                  ? "doneRefundTransfer"
+                  : "doneRefundLater",
+            )}
+          </p>
+        ) : null}
         <Button
           className="mt-6"
           variant="outline"
@@ -342,13 +367,14 @@ export function Exchanger({
   }
 
   function confirm() {
-    if (!ready || rule || !attendeesDone) return;
+    if (!ready || rule || !attendeesDone || !accountDone) return;
     const attendeesFor = (sid: string, ticketTypeId: string) =>
       slots.flatMap((slot, i) =>
         slot.sessionId === sid && slot.ticketTypeId === ticketTypeId ? [attendeeOf(slot, i)] : [],
       );
     startTransition(async () => {
       const result = await confirmExchangeAction(access, {
+        ...(needsAccount ? { account } : {}),
         give,
         items: shows.map((show) => ({
           sessionId: show.target.sessionId,
@@ -367,7 +393,9 @@ export function Exchanger({
         return;
       }
       setState(result);
-      if (result.ok) router.refresh();
+      // Programme modifié : la page n'aurait peut-être plus de billet à montrer ;
+      // la confirmation reste affichée et « Continuer » recharge.
+      if (result.ok && !programme) router.refresh();
     });
   }
 
@@ -394,7 +422,11 @@ export function Exchanger({
   return (
     <section ref={top} className="scroll-mt-24 rounded-card border border-border bg-card p-5 shadow-sm">
       <h2 className="text-xl">{t("title")}</h2>
-      <p className="mt-1 text-sm text-muted-foreground">{t("intro")}</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {programme
+          ? t(programme.refundMode === "none" ? "introProgrammeNoPayment" : "introProgramme")
+          : t("intro")}
+      </p>
 
       <nav aria-label={t("stepsLabel")} className="mt-5">
         <ol className="flex items-center gap-x-0.5 overflow-x-auto text-sm sm:flex-wrap sm:gap-x-1 sm:gap-y-2">
@@ -798,13 +830,42 @@ export function Exchanger({
                 <span className="font-semibold">{t("due")}</span>
                 <span className="text-xl font-extrabold tabular-nums">{dueLabel}</span>
               </div>
-              {quote.newCents < quote.givenCents && !rule ? (
+              {refundCents > 0 ? (
+                <div className="flex items-baseline justify-between pt-1">
+                  <span className="font-semibold">{t("refunded")}</span>
+                  <span className="text-xl font-extrabold tabular-nums text-[var(--success)]">
+                    {price(refundCents)}
+                  </span>
+                </div>
+              ) : null}
+              {refundCents > 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  {t(needsAccount ? "refundTransferHint" : "refundCardHint")}
+                </p>
+              ) : quote.newCents < quote.givenCents && !rule && !programme ? (
                 <p className="text-xs text-muted-foreground">{t("noRefund")}</p>
               ) : null}
               {quote.dueCents > 0 && given.length > 0 ? (
                 <p className="text-xs text-muted-foreground">{t("keepNote")}</p>
               ) : null}
             </div>
+
+            {needsAccount ? (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <Field
+                  label={t("ibanHolder")}
+                  value={account.holder}
+                  onChange={(holder) => setAccount((a) => ({ ...a, holder }))}
+                  autoComplete="name"
+                />
+                <Field
+                  label={t("iban")}
+                  value={account.iban}
+                  onChange={(iban) => setAccount((a) => ({ ...a, iban }))}
+                  hint={t("ibanHint")}
+                />
+              </div>
+            ) : null}
 
             {shows.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">{t("errors.empty")}</p>
@@ -833,12 +894,17 @@ export function Exchanger({
                 <ArrowLeft className="size-4" />
                 {t("back")}
               </Button>
-              <Button onClick={confirm} disabled={pending || !ready || rule != null || !attendeesDone}>
+              <Button
+                onClick={confirm}
+                disabled={pending || !ready || rule != null || !attendeesDone || !accountDone}
+              >
                 {pending
                   ? t("saving")
                   : quote.dueCents > 0
                     ? t("confirmPay", { amount: price(quote.dueCents) })
-                    : t("confirmFree")}
+                    : refundCents > 0
+                      ? t("confirmRefund", { amount: price(refundCents) })
+                      : t("confirmFree")}
               </Button>
             </StepFooter>
           </>

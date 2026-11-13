@@ -161,6 +161,8 @@ export type ExchangeRuleError = "nothingGiven" | "seatCount" | "freeSeats" | "lo
  */
 export function exchangeRuleError(input: {
   viaAccount: boolean;
+  /** Programme modifié : une place moins chère est permise, la différence est remboursée. */
+  allowLower?: boolean;
   givenCount: number;
   newCount: number;
   givenFree: number;
@@ -171,7 +173,9 @@ export function exchangeRuleError(input: {
   if (input.givenCount === 0) return "nothingGiven";
   if (input.newCount !== input.givenCount) return "seatCount";
   if (input.newFree > input.givenFree) return "freeSeats";
-  if (!input.viaAccount && input.newCents < input.givenCents) return "lowerValue";
+  if (!input.viaAccount && !input.allowLower && input.newCents < input.givenCents) {
+    return "lowerValue";
+  }
   return null;
 }
 
@@ -199,12 +203,75 @@ export function holdersKept(given: string[], named: string[]): boolean {
   return kept >= Math.min(given.length, named.length);
 }
 
-/** Ce que le client paie : la hausse nette, jamais de remboursement. */
+/**
+ * Ce que le client paie : la hausse nette. La baisse (`refundCents`) ne lui
+ * est rendue que si le programme a changé ; sinon elle est perdue.
+ */
 export function exchangeDue(input: {
   givenCents: number[];
   lines: { priceCents: number; quantity: number }[];
-}): { newCents: number; givenCents: number; dueCents: number } {
+}): { newCents: number; givenCents: number; dueCents: number; refundCents: number } {
   const newCents = input.lines.reduce((sum, l) => sum + l.priceCents * l.quantity, 0);
   const givenCents = input.givenCents.reduce((sum, c) => sum + c, 0);
-  return { newCents, givenCents, dueCents: Math.max(0, newCents - givenCents) };
+  return {
+    newCents,
+    givenCents,
+    dueCents: Math.max(0, newCents - givenCents),
+    refundCents: Math.max(0, givenCents - newCents),
+  };
+}
+
+export interface PricedOrder {
+  subtotalCents: number;
+  discountCents: number;
+  feeCents: number;
+  items: { ticketTypeId: string; quantity: number; unitPriceCents: number; discountCents: number }[];
+}
+
+/**
+ * Ce que le client a réellement payé pour un billet de chaque tarif : prix
+ * moins sa part des rabais, plus sa part des frais. Les commandes anciennes
+ * n'ont pas la part du rabais par ligne : il est alors réparti au prorata du
+ * montant de chaque ligne. Arrondi au centime inférieur, pour ne jamais rendre
+ * plus que payé.
+ */
+export function netTicketPrices(order: PricedOrder): Map<string, number> {
+  const lines = new Map<string, { gross: number; discount: number; quantity: number }>();
+  for (const item of order.items) {
+    const line = lines.get(item.ticketTypeId) ?? { gross: 0, discount: 0, quantity: 0 };
+    line.gross += item.unitPriceCents * item.quantity;
+    line.discount += item.discountCents;
+    line.quantity += item.quantity;
+    lines.set(item.ticketTypeId, line);
+  }
+  const perLine = order.items.some((i) => i.discountCents > 0);
+  const base = order.subtotalCents - order.discountCents;
+  const feeRatio = base > 0 ? (base + order.feeCents) / base : 1;
+
+  const out = new Map<string, number>();
+  for (const [ticketTypeId, line] of lines) {
+    if (line.quantity <= 0) continue;
+    const discount = perLine
+      ? line.discount
+      : order.subtotalCents > 0
+        ? (order.discountCents * line.gross) / order.subtotalCents
+        : 0;
+    const net = Math.max(0, line.gross - discount) * feeRatio;
+    out.set(ticketTypeId, Math.floor(net / line.quantity));
+  }
+  return out;
+}
+
+/** Fin de journée à Zurich (23:59:59, heure d'hiver ou d'été) d'une date AAAA-MM-JJ. */
+export function endOfDayZurich(day: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+  const guess = new Date(`${day}T23:59:59Z`);
+  if (Number.isNaN(guess.getTime())) return null;
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Zurich", hour: "2-digit", hourCycle: "h23" }).format(
+      guess,
+    ),
+  );
+  const offsetHours = (hour - 23 + 24) % 24;
+  return new Date(guess.getTime() - offsetHours * 3600 * 1000);
 }
