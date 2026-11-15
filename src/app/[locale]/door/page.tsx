@@ -21,9 +21,12 @@ export async function generateMetadata(): Promise<Metadata> {
       title: t("title"),
       statusBarStyle: "default",
     },
-    icons: { apple: "/apple-icon" },
+    // Pas d'`icons` ici : une page qui en déclare remplace les icônes du site
+    // (src/app/icon.svg, apple-icon.png) au lieu de s'y ajouter.
     manifest: "/door.webmanifest",
-    other: { "mobile-web-app-capable": "yes" },
+    // Next n'écrit que « mobile-web-app-capable » ; l'iPhone lit encore l'ancienne
+    // balise pour ouvrir l'app installée en plein écran, sans barre Safari.
+    other: { "apple-mobile-web-app-capable": "yes" },
   };
 }
 
