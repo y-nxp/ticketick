@@ -29,8 +29,12 @@ export type DoorLookup =
   | { ok: false; reason: "otherSession"; ticket: DoorTicket }
   | {
       ok: true;
-      /** `already` : billet déjà passé, à l'heure indiquée par `usedAt`. */
-      outcome: "admitted" | "already";
+      /**
+       * `admitted` : entrée enregistrée à l'instant ;
+       * `valid` : mode vérification, billet valable mais pas enregistré ;
+       * `already` : billet déjà passé, à l'heure indiquée par `usedAt`.
+       */
+      outcome: "admitted" | "valid" | "already";
       usedAt: string | null;
       ticket: DoorTicket;
     };
@@ -45,6 +49,27 @@ export async function admitTicket(
   code: string,
   sessionId: string,
   locale: string,
+): Promise<DoorLookup> {
+  return lookupTicket(code, sessionId, locale, true);
+}
+
+/**
+ * Mode vérification : dit si le billet serait accepté pour la séance, sans
+ * rien enregistrer. Le billet reste valable pour l'entrée.
+ */
+export async function checkTicket(
+  code: string,
+  sessionId: string,
+  locale: string,
+): Promise<DoorLookup> {
+  return lookupTicket(code, sessionId, locale, false);
+}
+
+async function lookupTicket(
+  code: string,
+  sessionId: string,
+  locale: string,
+  admit: boolean,
 ): Promise<DoorLookup> {
   const user = await requireRole(DOOR_ROLES, "/door");
   const normalized = code.trim().toUpperCase();
@@ -104,6 +129,12 @@ export async function admitTicket(
 
   if (session.id !== sessionId) {
     return { ok: false, reason: "otherSession", ticket: info };
+  }
+
+  if (!admit) {
+    return ticket.status === "USED"
+      ? { ok: true, outcome: "already", usedAt: ticket.usedAt?.toISOString() ?? null, ticket: info }
+      : { ok: true, outcome: "valid", usedAt: null, ticket: info };
   }
 
   const now = new Date();

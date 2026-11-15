@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { UserPlus } from "lucide-react";
+import { ChartColumn, ScanLine, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getTeam } from "@/lib/data/admin";
 import { formatDate } from "@/lib/utils";
@@ -51,17 +51,28 @@ export default async function AdminTeamPage({
               <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-semibold">{t("person")}</th>
+                  <th className="px-4 py-3 font-semibold">{t("access")}</th>
                   <th className="px-4 py-3 font-semibold">{t("status")}</th>
                   <th className="px-4 py-3 font-semibold">{t("lastLogin")}</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {team.viewers.map((v) => (
+                {team.members.map((v) => (
                   <tr key={v.id}>
                     <td className="px-4 py-3">
                       <p className="font-medium">{v.name ?? "—"}</p>
                       <p className="text-xs text-muted-foreground">{v.email}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1.5 font-medium">
+                        {v.access === "door" ? (
+                          <ScanLine className="size-4 shrink-0 text-primary" />
+                        ) : (
+                          <ChartColumn className="size-4 shrink-0 text-primary" />
+                        )}
+                        {t(v.access === "door" ? "accessDoor" : "accessStats")}
+                      </span>
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={v.activated ? "default" : "secondary"}>
@@ -88,7 +99,7 @@ export default async function AdminTeamPage({
                 ))}
               </tbody>
             </table>
-            {team.viewers.length === 0 ? (
+            {team.members.length === 0 ? (
               <p className="py-10 text-center text-sm text-muted-foreground">
                 {t("empty")}
               </p>
