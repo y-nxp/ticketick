@@ -8,6 +8,7 @@ import {
   getDoorCounts,
   getDoorSessions,
 } from "@/lib/door/scope";
+import { DoorHeader } from "./door-header";
 import { DoorScanner } from "./door-scanner";
 
 export const dynamic = "force-dynamic";
@@ -48,30 +49,26 @@ export default async function DoorPage({
     sessions.find((x) => x.id === s) ?? defaultDoorSession(sessions);
   const counts = selected ? await getDoorCounts(selected.id) : null;
 
+  if (selected && counts) {
+    return (
+      <DoorScanner
+        key={selected.id}
+        sessions={sessions}
+        sessionId={selected.id}
+        initialCounts={counts}
+      />
+    );
+  }
+
   return (
-    <div className="container-page max-w-lg py-8">
-      <h1 className="text-2xl">
-        {t("title")}
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
-      <p className="mt-2 text-xs text-muted-foreground">{t("installHint")}</p>
-      <div className="mt-6">
-        {selected && counts ? (
-          <DoorScanner
-            key={selected.id}
-            sessions={sessions}
-            sessionId={selected.id}
-            initialCounts={counts}
-          />
-        ) : (
-          <div className="rounded-card border border-border bg-card p-6 text-center">
-            <CalendarX2 className="mx-auto size-8 text-muted-foreground" />
-            <p className="mt-3 font-medium">{t("noSessions")}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {t("noSessionsHint")}
-            </p>
-          </div>
-        )}
+    <div className="flex min-h-dvh flex-col">
+      <DoorHeader />
+      <div className="mx-auto w-full max-w-lg px-4 py-8">
+        <div className="rounded-card border border-border bg-card p-6 text-center">
+          <CalendarX2 className="mx-auto size-8 text-muted-foreground" />
+          <p className="mt-3 font-medium">{t("noSessions")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{t("noSessionsHint")}</p>
+        </div>
       </div>
     </div>
   );

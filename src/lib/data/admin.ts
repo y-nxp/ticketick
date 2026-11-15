@@ -222,14 +222,20 @@ export async function getTeam(requestedOrganizerId?: string) {
       : (organizers.find((o) => o.id === requestedOrganizerId) ?? organizers[0])
           ?.id;
 
-  const viewers = organizerId
+  const members = organizerId
     ? await prisma.user.findMany({
-        where: { role: "ORGANIZER_VIEWER", statsOrganizerId: organizerId },
+        where: {
+          OR: [
+            { role: "ORGANIZER_VIEWER", statsOrganizerId: organizerId },
+            { role: "DOOR_STAFF", doorOrganizerId: organizerId },
+          ],
+        },
         orderBy: { createdAt: "asc" },
         select: {
           id: true,
           email: true,
           name: true,
+          role: true,
           lastLoginAt: true,
           passwordHash: true,
         },
@@ -239,8 +245,9 @@ export async function getTeam(requestedOrganizerId?: string) {
   return {
     organizers,
     organizerId: organizerId ?? null,
-    viewers: viewers.map(({ passwordHash, ...v }) => ({
-      ...v,
+    members: members.map(({ passwordHash, role, ...m }) => ({
+      ...m,
+      access: (role === "DOOR_STAFF" ? "door" : "stats") as "door" | "stats",
       activated: passwordHash != null,
     })),
   };

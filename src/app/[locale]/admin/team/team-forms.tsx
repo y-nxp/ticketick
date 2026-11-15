@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import { Send, UserMinus } from "lucide-react";
+import { ChartColumn, ScanLine, Send, UserMinus } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,7 +59,7 @@ export function InviteForm({
   );
 
   return (
-    <form action={action} className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+    <form action={action} className="mt-4 grid gap-3 sm:grid-cols-2">
       <input type="hidden" name="organizerId" value={organizerId} />
       <input type="hidden" name="locale" value={locale} />
       <label className="flex flex-col gap-1.5">
@@ -70,19 +70,50 @@ export function InviteForm({
         <span className="text-sm font-medium">{t("name")}</span>
         <input type="text" name="name" className={fieldClass} />
       </label>
-      <div className="flex items-end">
-        <Button type="submit" size="lg" disabled={pending} className="w-full">
+      <fieldset className="sm:col-span-2">
+        <legend className="text-sm font-medium">{t("access")}</legend>
+        <div className="mt-1.5 grid gap-2 sm:grid-cols-2">
+          {(
+            [
+              { value: "stats", icon: ChartColumn, title: "accessStats", hint: "accessStatsHint" },
+              { value: "door", icon: ScanLine, title: "accessDoor", hint: "accessDoorHint" },
+            ] as const
+          ).map((o) => (
+            <label
+              key={o.value}
+              className="flex cursor-pointer gap-3 rounded-control border border-border p-3 has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+            >
+              <input
+                type="radio"
+                name="access"
+                value={o.value}
+                defaultChecked={o.value === "stats"}
+                className="mt-1 accent-primary"
+              />
+              <span>
+                <span className="flex items-center gap-1.5 text-sm font-semibold">
+                  <o.icon className="size-4 text-primary" />
+                  {t(o.title)}
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">{t(o.hint)}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <div className="sm:col-span-2">
+        <Button type="submit" size="lg" disabled={pending} className="w-full sm:w-auto">
           <Send className="size-4" />
           {t("send")}
         </Button>
       </div>
       {state?.ok ? (
-        <p className="text-sm text-emerald-700 sm:col-span-3">
+        <p className="text-sm text-emerald-700 sm:col-span-2">
           {t("sent", { email: state.email })}
         </p>
       ) : null}
       {state && !state.ok ? (
-        <p role="alert" className="text-sm text-destructive sm:col-span-3">
+        <p role="alert" className="text-sm text-destructive sm:col-span-2">
           {t(`errors.${state.error}`)}
         </p>
       ) : null}

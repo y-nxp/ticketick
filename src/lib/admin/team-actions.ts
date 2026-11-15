@@ -11,11 +11,14 @@ import { prisma } from "@/lib/prisma";
 import { consume } from "@/lib/rate-limit";
 
 /**
- * Responsables invités par un organisateur.
+ * Équipe d'un organisateur : les personnes qu'il invite.
  *
- * Un responsable consulte les ventes de l'organisateur qui l'a invité, sans
- * pouvoir rien modifier. L'organisateur n'agit que sur son équipe ;
- * l'administrateur choisit l'organisateur concerné.
+ * Chacune reçoit un seul accès, choisi à l'invitation :
+ * - « ventes » (ORGANIZER_VIEWER) : consulte les ventes, sans rien modifier ;
+ * - « contrôle » (DOOR_STAFF) : scanne les billets à l'entrée de ses
+ *   spectacles, et ne voit rien d'autre.
+ * L'organisateur n'agit que sur son équipe ; l'administrateur choisit
+ * l'organisateur concerné.
  */
 
 export type TeamState =
@@ -30,7 +33,10 @@ const InviteSchema = z.object({
   name: z.string().trim().max(120).optional(),
   organizerId: z.string().optional(),
   locale: z.enum(["fr", "en", "de", "it"]).default("fr"),
+  access: z.enum(["stats", "door"]).default("stats"),
 });
+
+export type TeamAccess = "stats" | "door";
 
 async function actorOrganizer(
   requested: string | undefined,
@@ -55,6 +61,7 @@ export async function inviteStatsViewer(
     name: formData.get("name") || undefined,
     organizerId: formData.get("organizerId") || undefined,
     locale: formData.get("locale") || undefined,
+    access: formData.get("access") || undefined,
   });
   if (!parsed.success) return { ok: false, error: "invalid" };
 
@@ -65,30 +72,38 @@ export async function inviteStatsViewer(
     return { ok: false, error: "throttled" };
   }
 
-  const { email, name, locale } = parsed.data;
+  const { email, name, locale, access } = parsed.data;
   const existing = await prisma.user.findUnique({
     where: { email },
-    select: { id: true, role: true, statsOrganizerId: true, name: true, locale: true },
+    select: {
+      id: true,
+      role: true,
+      statsOrganizerId: true,
+      doorOrganizerId: true,
+      name: true,
+      locale: true,
+    },
   });
 
-  // Un compte client devient responsable : il garde ses billets. Tout autre
-  // rôle (organisateur, contrôleur, admin, responsable ailleurs) reste tel
-  // quel : l'inviter ici lui retirerait des droits sans qu'il le sache.
-  if (
-    existing &&
-    existing.role !== "CUSTOMER" &&
-    !(existing.role === "ORGANIZER_VIEWER" && existing.statsOrganizerId === actor.organizerId)
-  ) {
+  // Un compte client entre dans l'équipe : il garde ses billets. Un membre de
+  // cette même équipe peut changer d'accès. Tout autre rôle (organisateur,
+  // admin, membre d'une autre équipe) reste tel quel : l'inviter ici lui
+  // retirerait des droits sans qu'il le sache.
+  if (existing && existing.role !== "CUSTOMER" && !isMember(existing, actor.organizerId)) {
     return { ok: false, error: "otherRole" };
   }
+
+  const roleData =
+    access === "door"
+      ? { role: "DOOR_STAFF" as const, doorOrganizerId: actor.organizerId, statsOrganizerId: null }
+      : { role: "ORGANIZER_VIEWER" as const, statsOrganizerId: actor.organizerId, doorOrganizerId: null };
 
   try {
     const user = existing
       ? await prisma.user.update({
           where: { id: existing.id },
           data: {
-            role: "ORGANIZER_VIEWER",
-            statsOrganizerId: actor.organizerId,
+            ...roleData,
             name: existing.name ?? name ?? null,
           },
           select: { id: true, name: true, locale: true },
@@ -98,8 +113,7 @@ export async function inviteStatsViewer(
             email,
             name: name || null,
             locale,
-            role: "ORGANIZER_VIEWER",
-            statsOrganizerId: actor.organizerId,
+            ...roleData,
           },
           select: { id: true, name: true, locale: true },
         });
@@ -123,6 +137,7 @@ export async function inviteStatsViewer(
       name: user.name,
       locale: lang,
       organizerName: organizer.name,
+      access,
       url: `${publicAppOrigin()}/${lang}/reset-password?token=${token}`,
       expiresInDays: INVITATION_DAYS,
     });
@@ -146,16 +161,31 @@ export async function revokeStatsViewer(
   if (!actor || !userId) return { ok: false, error: "forbidden" };
 
   const { count } = await prisma.user.updateMany({
-    where: {
-      id: userId,
-      role: "ORGANIZER_VIEWER",
-      statsOrganizerId: actor.organizerId,
-    },
-    data: { role: "CUSTOMER", statsOrganizerId: null },
+    where: { id: userId, ...memberWhere(actor.organizerId) },
+    data: { role: "CUSTOMER", statsOrganizerId: null, doorOrganizerId: null },
   });
   if (count !== 1) return { ok: false, error: "forbidden" };
 
   await destroyAllSessions(userId);
   revalidatePath("/admin/team");
   return { ok: true, email: "" };
+}
+
+function isMember(
+  user: { role: string; statsOrganizerId: string | null; doorOrganizerId: string | null },
+  organizerId: string,
+): boolean {
+  return (
+    (user.role === "ORGANIZER_VIEWER" && user.statsOrganizerId === organizerId) ||
+    (user.role === "DOOR_STAFF" && user.doorOrganizerId === organizerId)
+  );
+}
+
+function memberWhere(organizerId: string) {
+  return {
+    OR: [
+      { role: "ORGANIZER_VIEWER" as const, statsOrganizerId: organizerId },
+      { role: "DOOR_STAFF" as const, doorOrganizerId: organizerId },
+    ],
+  };
 }
