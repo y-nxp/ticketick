@@ -1,4 +1,5 @@
 {
+  "id": "/door",
   "name": "Contrôle ticketick",
   "short_name": "Contrôle",
   "description": "Contrôle des billets par QR code",
