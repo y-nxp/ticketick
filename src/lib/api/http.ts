@@ -1,6 +1,8 @@
 import "server-only";
 
 import { NextResponse } from "next/server";
+import { agentHitFor, trackAgentAfter } from "@/lib/analytics/agent-tracking";
+import { summarizeCall } from "@/lib/analytics/agents";
 import { publicAppOrigin } from "@/lib/app-url";
 import { clientIpFrom } from "@/lib/rate-limit";
 import { ApiError } from "./errors";
@@ -34,6 +36,13 @@ function apiError(error: ApiError, extra: Record<string, string> = {}) {
   return apiJson(errorBody(error), error.status, extra);
 }
 
+/** Détail Matomo d'un appel : le code d'erreur s'ajoute quand l'appel échoue. */
+export function withOutcome(detail: string, outcome: { status: number; body: unknown }): string {
+  if (outcome.status < 400) return detail;
+  const code = (outcome.body as { error?: { code?: string } })?.error?.code ?? "erreur";
+  return [detail, `échec ${outcome.status} ${code}`].filter(Boolean).join(" · ");
+}
+
 export function preflight() {
   return new Response(null, { status: 204, headers: CORS_HEADERS });
 }
@@ -43,6 +52,7 @@ export async function handleRest(request: Request, segments: string[]): Promise<
   const url = new URL(request.url);
 
   if (path === "/openapi.json" && request.method === "GET") {
+    trackAgentAfter(agentHitFor(request, "Doc · openapi.json", "/api/v1/openapi.json", true));
     return apiJson(buildOpenApi(publicAppOrigin(request)), 200, { "cache-control": "public, max-age=3600" });
   }
 
@@ -80,9 +90,18 @@ export async function handleRest(request: Request, segments: string[]): Promise<
     ? { ...query, ...match.params }
     : { ...body, ...match.params };
 
-  const outcome = await execute(match.op, auth.kind === "key" ? auth.actor : null, input, {
+  const actor = auth.kind === "key" ? auth.actor : null;
+  const outcome = await execute(match.op, actor, input, {
     ip,
     idempotencyKey: request.headers.get("idempotency-key"),
   });
+  trackAgentAfter(
+    agentHitFor(
+      request,
+      `API · ${match.op.name}`,
+      withOutcome(summarizeCall(match.op.name, input, actor?.organizerName ?? null), outcome),
+      true,
+    ),
+  );
   return apiJson(outcome.body, outcome.status, outcome.replayed ? { "idempotent-replayed": "true" } : {});
 }

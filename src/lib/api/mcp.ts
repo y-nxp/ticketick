@@ -1,8 +1,10 @@
 import "server-only";
 
+import { agentHitFor, trackAgentAfter } from "@/lib/analytics/agent-tracking";
+import { summarizeCall } from "@/lib/analytics/agents";
 import { publicAppOrigin } from "@/lib/app-url";
 import { clientIpFrom } from "@/lib/rate-limit";
-import { apiJson, CORS_HEADERS } from "./http";
+import { apiJson, CORS_HEADERS, withOutcome } from "./http";
 import { jsonSchemaOf } from "./openapi";
 import { OPERATIONS, type Operation } from "./operations";
 import { authenticate, execute } from "./runtime";
@@ -121,6 +123,37 @@ async function dispatch(
   }
 }
 
+/**
+ * Passage MCP pour le site Matomo des agents : la connexion (avec le nom du
+ * client, « claude-ai », « openai-mcp »…), la liste des outils et chaque appel
+ * d'outil avec ce qu'il demandait.
+ */
+function trackMcp(request: Request, message: Message, actor: ApiActor | null, reply: unknown) {
+  const params = message.params ?? {};
+  let action: string;
+  let detail: string;
+  if (message.method === "initialize") {
+    const client = (params.clientInfo ?? {}) as { name?: unknown; version?: unknown };
+    action = "MCP · connexion";
+    detail = [client.name, client.version].filter((v) => typeof v === "string" && v).join(" ") || "client inconnu";
+    if (actor) detail = `${actor.organizerName} · ${detail}`;
+  } else if (message.method === "tools/list") {
+    action = "MCP · liste des outils";
+    detail = actor ? actor.organizerName : "sans clé";
+  } else if (message.method === "tools/call") {
+    const name = typeof params.name === "string" ? params.name : "?";
+    const args = (params.arguments ?? {}) as Record<string, unknown>;
+    const result = (reply as { result?: { isError?: boolean; structuredContent?: unknown } }).result;
+    const body = result?.structuredContent ?? {};
+    const status = result?.isError ? 400 : 200;
+    action = `MCP · ${name}`;
+    detail = withOutcome(summarizeCall(name, args, actor?.organizerName ?? null), { status, body });
+  } else {
+    return;
+  }
+  trackAgentAfter(agentHitFor(request, action, detail, true));
+}
+
 export async function handleMcp(request: Request): Promise<Response> {
   if (request.method !== "POST") {
     return new Response(null, { status: 405, headers: { ...CORS_HEADERS, allow: "POST, OPTIONS" } });
@@ -153,7 +186,9 @@ export async function handleMcp(request: Request): Promise<Response> {
     }
     // Notifications (sans id) et réponses du client : rien à renvoyer.
     if (message.id === undefined || !message.method) continue;
-    replies.push(await dispatch(message, actor, ip, origin));
+    const reply = await dispatch(message, actor, ip, origin);
+    trackMcp(request, message, actor, reply);
+    replies.push(reply);
   }
   if (replies.length === 0) {
     return new Response(null, { status: 202, headers: CORS_HEADERS });
