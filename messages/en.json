@@ -550,7 +550,8 @@
     "madeIn": "Designed and operated in Switzerland",
     "cookieSettings": "Cookies",
     "colInfo": "Info",
-    "colLegal": "Legal"
+    "colLegal": "Legal",
+    "developers": "API & AI agents"
   },
   "auth": {
     "signIn": "Sign in",
@@ -652,7 +653,8 @@
       "seatPlans": "Seating plans",
       "payments": "Payments",
       "reports": "Reports",
-      "promotion": "Promotion"
+      "promotion": "Promotion",
+      "api": "API & AI agents"
     },
     "overview": {
       "title": "Overview",
@@ -2240,6 +2242,46 @@
         "testFailed": "The test could not be sent.",
         "notFound": "Session not found.",
         "failed": "Sending failed."
+      }
+    },
+    "api": {
+      "title": "API & AI agents",
+      "subtitle": "A key lets an AI agent (Claude, ChatGPT, Cursor…) or a third-party tool create your events, sessions and ticket types. It acts only for this organizer, and you can revoke it at any time.",
+      "newKey": "New key",
+      "newKeyHint": "One key per agent or tool: you will know who did what, and you can cut one off without touching the others.",
+      "keyName": "Name",
+      "keyNamePlaceholder": "E.g. Marie's Claude, festival website",
+      "canPublish": "Can publish",
+      "canPublishHint": "Unticked, the agent creates drafts that you review and publish in the admin. Ticked, it can also put events online and change published events.",
+      "create": "Create key",
+      "createdTitle": "Key “{name}” created",
+      "createdHint": "Copy it now and give it to your agent: it will never be shown again. Treat it like a password.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "rights": "Rights",
+      "rightsPublish": "Drafts and publishing",
+      "rightsDraft": "Drafts only",
+      "revoked": "Revoked",
+      "events": "Events created",
+      "lastUsed": "Last used",
+      "never": "Never",
+      "createdOn": "created {date}",
+      "revoke": "Revoke",
+      "revokeConfirm": "Revoke the key “{name}”? The agent using it loses access immediately.",
+      "empty": "No key yet.",
+      "connectTitle": "Connect an AI agent",
+      "connectHint": "Add this MCP server to your agent, with the key in the Authorization header. It can then create an event from a single sentence.",
+      "mcpUrl": "MCP server address",
+      "claudeCode": "Claude Code",
+      "mcpJson": "MCP configuration (Cursor, Claude Desktop, others)",
+      "mcpJsonHint": "Replace tt_… with your key.",
+      "docsHint": "REST API, list of tools and rules:",
+      "docsLink": "developer documentation",
+      "errors": {
+        "nameRequired": "Give the key a name.",
+        "organizer": "Organizer not found.",
+        "tooMany": "Twenty active keys at most: revoke one.",
+        "unavailable": "Could not create the key right now. Try again."
       }
     }
   },

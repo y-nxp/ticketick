@@ -23,6 +23,7 @@ export function Footer({ cookieSettings = false }: { cookieSettings?: boolean })
           <FooterLink href="/about">{t("about")}</FooterLink>
           <FooterLink href="/contact">{t("contact")}</FooterLink>
           <FooterLink href="/help">{t("help")}</FooterLink>
+          <FooterLink href="/developers">{t("developers")}</FooterLink>
         </FooterCol>
 
         <FooterCol title={t("colLegal")}>

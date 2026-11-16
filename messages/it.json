@@ -550,7 +550,8 @@
     "madeIn": "Concepito e gestito in Svizzera",
     "cookieSettings": "Cookie",
     "colInfo": "Info",
-    "colLegal": "Note legali"
+    "colLegal": "Note legali",
+    "developers": "API & agenti IA"
   },
   "auth": {
     "signIn": "Accedi",
@@ -652,7 +653,8 @@
       "seatPlans": "Piante di sala",
       "payments": "Incassi",
       "reports": "Rapporti",
-      "promotion": "Promozione"
+      "promotion": "Promozione",
+      "api": "API & agenti IA"
     },
     "overview": {
       "title": "Panoramica",
@@ -2240,6 +2242,46 @@
         "testFailed": "Non è stato possibile inviare la prova.",
         "notFound": "Data non trovata.",
         "failed": "Invio non riuscito."
+      }
+    },
+    "api": {
+      "title": "API & agenti IA",
+      "subtitle": "Una chiave permette a un agente IA (Claude, ChatGPT, Cursor…) o a uno strumento terzo di creare i tuoi spettacoli, rappresentazioni e tariffe. Agisce solo per questo organizzatore e puoi revocarla in qualsiasi momento.",
+      "newKey": "Nuova chiave",
+      "newKeyHint": "Una chiave per agente o strumento: saprai chi ha fatto cosa e potrai disattivarne una senza toccare le altre.",
+      "keyName": "Nome",
+      "keyNamePlaceholder": "Es. Claude di Marie, sito del festival",
+      "canPublish": "Può pubblicare",
+      "canPublishHint": "Senza questa casella, l'agente crea bozze che rileggi e pubblichi nell'admin. Con essa, può anche mettere online e modificare gli spettacoli già pubblicati.",
+      "create": "Crea la chiave",
+      "createdTitle": "Chiave «{name}» creata",
+      "createdHint": "Copiala ora e dalla al tuo agente: non verrà più mostrata. Trattala come una password.",
+      "copy": "Copia",
+      "copied": "Copiato",
+      "rights": "Diritti",
+      "rightsPublish": "Bozze e pubblicazione",
+      "rightsDraft": "Solo bozze",
+      "revoked": "Revocata",
+      "events": "Spettacoli creati",
+      "lastUsed": "Ultimo utilizzo",
+      "never": "Mai",
+      "createdOn": "creata il {date}",
+      "revoke": "Revoca",
+      "revokeConfirm": "Revocare la chiave «{name}»? L'agente che la usa perde subito l'accesso.",
+      "empty": "Nessuna chiave per ora.",
+      "connectTitle": "Collegare un agente IA",
+      "connectHint": "Aggiungi questo server MCP al tuo agente, con la chiave nell'intestazione Authorization. Potrà poi creare uno spettacolo da una semplice frase.",
+      "mcpUrl": "Indirizzo del server MCP",
+      "claudeCode": "Claude Code",
+      "mcpJson": "Configurazione MCP (Cursor, Claude Desktop, altri)",
+      "mcpJsonHint": "Sostituisci tt_… con la tua chiave.",
+      "docsHint": "API REST, elenco degli strumenti e regole:",
+      "docsLink": "documentazione per sviluppatori",
+      "errors": {
+        "nameRequired": "Dai un nome alla chiave.",
+        "organizer": "Organizzatore non trovato.",
+        "tooMany": "Al massimo venti chiavi attive: revocane una.",
+        "unavailable": "Creazione impossibile al momento. Riprova."
       }
     }
   },

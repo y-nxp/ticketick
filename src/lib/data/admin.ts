@@ -411,3 +411,45 @@ export async function getAdminInquiries() {
     take: 200,
   });
 }
+
+/**
+ * Clés de l'API publique d'un organisateur : l'organisateur voit les
+ * siennes, l'admin choisit l'organisateur. Jamais l'empreinte.
+ */
+export async function getApiKeys(requestedOrganizerId?: string) {
+  const user = await requireCatalog();
+  const organizers =
+    user.role === "ADMIN"
+      ? await prisma.organizer.findMany({
+          orderBy: { name: "asc" },
+          select: { id: true, name: true },
+        })
+      : [];
+  const organizerId =
+    user.role === "ORGANIZER"
+      ? user.organizerId!
+      : (organizers.find((o) => o.id === requestedOrganizerId) ?? organizers[0])?.id;
+
+  const keys = organizerId
+    ? await prisma.apiKey.findMany({
+        where: { organizerId },
+        orderBy: [{ revokedAt: { sort: "desc", nulls: "first" } }, { createdAt: "desc" }],
+        select: {
+          id: true,
+          name: true,
+          prefix: true,
+          canPublish: true,
+          createdAt: true,
+          lastUsedAt: true,
+          revokedAt: true,
+          _count: { select: { events: true } },
+        },
+      })
+    : [];
+
+  return {
+    organizers,
+    organizerId: organizerId ?? null,
+    keys: keys.map(({ _count, ...k }) => ({ ...k, events: _count.events })),
+  };
+}

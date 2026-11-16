@@ -550,7 +550,8 @@
     "madeIn": "Conçu et opéré en Suisse",
     "cookieSettings": "Cookies",
     "colInfo": "Infos",
-    "colLegal": "Légal"
+    "colLegal": "Légal",
+    "developers": "API & agents IA"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -652,7 +653,8 @@
       "seatPlans": "Plans de salle",
       "payments": "Encaissement",
       "reports": "Rapports",
-      "promotion": "Promotion"
+      "promotion": "Promotion",
+      "api": "API & agents IA"
     },
     "overview": {
       "title": "Vue d’ensemble",
@@ -2240,6 +2242,46 @@
         "testFailed": "L'essai n'a pas pu être envoyé.",
         "notFound": "Séance introuvable.",
         "failed": "L'envoi n'a pas pu être fait."
+      }
+    },
+    "api": {
+      "title": "API & agents IA",
+      "subtitle": "Une clé permet à un agent IA (Claude, ChatGPT, Cursor…) ou à un outil tiers de créer vos spectacles, séances et tarifs. Elle n'agit que pour cet organisateur, et vous la révoquez à tout moment.",
+      "newKey": "Nouvelle clé",
+      "newKeyHint": "Une clé par agent ou par outil : vous saurez qui a fait quoi, et vous pourrez en couper une sans toucher aux autres.",
+      "keyName": "Nom",
+      "keyNamePlaceholder": "Ex. Claude de Marie, site du festival",
+      "canPublish": "Peut publier",
+      "canPublishHint": "Sans cette case, l'agent crée des brouillons que vous relisez et publiez dans l'admin. Avec, il peut aussi mettre en ligne et modifier les spectacles déjà publiés.",
+      "create": "Créer la clé",
+      "createdTitle": "Clé « {name} » créée",
+      "createdHint": "Copiez-la maintenant et donnez-la à votre agent : elle ne sera plus jamais affichée. Traitez-la comme un mot de passe.",
+      "copy": "Copier",
+      "copied": "Copié",
+      "rights": "Droits",
+      "rightsPublish": "Brouillons et publication",
+      "rightsDraft": "Brouillons seulement",
+      "revoked": "Révoquée",
+      "events": "Spectacles créés",
+      "lastUsed": "Dernier usage",
+      "never": "Jamais",
+      "createdOn": "créée le {date}",
+      "revoke": "Révoquer",
+      "revokeConfirm": "Révoquer la clé « {name} » ? L'agent qui l'utilise n'aura plus accès, immédiatement.",
+      "empty": "Aucune clé pour le moment.",
+      "connectTitle": "Brancher un agent IA",
+      "connectHint": "Ajoutez ce serveur MCP à votre agent, avec la clé dans l'en-tête Authorization. Il pourra ensuite créer un spectacle à partir d'une simple phrase.",
+      "mcpUrl": "Adresse du serveur MCP",
+      "claudeCode": "Claude Code",
+      "mcpJson": "Configuration MCP (Cursor, Claude Desktop, autres)",
+      "mcpJsonHint": "Remplacez tt_… par votre clé.",
+      "docsHint": "API REST, liste des outils et règles :",
+      "docsLink": "documentation développeurs",
+      "errors": {
+        "nameRequired": "Donnez un nom à la clé.",
+        "organizer": "Organisateur introuvable.",
+        "tooMany": "Vingt clés actives au plus : révoquez-en une.",
+        "unavailable": "Création impossible pour le moment. Réessayez."
       }
     }
   },
