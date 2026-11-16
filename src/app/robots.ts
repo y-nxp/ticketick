@@ -31,7 +31,9 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: "/",
+      // L'API publique et ses descriptions sont faites pour être lues par
+      // les moteurs et les agents IA ; le reste de `/api/` ne l'est pas.
+      allow: ["/", "/api/v1/public/", "/api/v1/openapi.json", "/llms.txt", "/llms-full.txt", "/openapi.json"],
       disallow: [
         "/api/",
         ...prefixes.flatMap((p) => privatePaths.map((path) => `${p}${path}`)),

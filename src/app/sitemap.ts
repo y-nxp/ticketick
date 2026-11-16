@@ -15,6 +15,7 @@ const pages = [
   "/friends",
   "/help",
   "/contact",
+  "/developers",
   "/terms",
   "/privacy",
 ];

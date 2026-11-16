@@ -550,7 +550,8 @@
     "madeIn": "Konzipiert und betrieben in der Schweiz",
     "cookieSettings": "Cookies",
     "colInfo": "Infos",
-    "colLegal": "Rechtliches"
+    "colLegal": "Rechtliches",
+    "developers": "API & KI-Agenten"
   },
   "auth": {
     "signIn": "Anmelden",
@@ -652,7 +653,8 @@
       "seatPlans": "Saalpläne",
       "payments": "Zahlungen",
       "reports": "Berichte",
-      "promotion": "Promotion"
+      "promotion": "Promotion",
+      "api": "API & KI-Agenten"
     },
     "overview": {
       "title": "Übersicht",
@@ -2240,6 +2242,46 @@
         "testFailed": "Der Test konnte nicht gesendet werden.",
         "notFound": "Vorstellung nicht gefunden.",
         "failed": "Senden fehlgeschlagen."
+      }
+    },
+    "api": {
+      "title": "API & KI-Agenten",
+      "subtitle": "Mit einem Schlüssel kann ein KI-Agent (Claude, ChatGPT, Cursor…) oder ein Drittwerkzeug Ihre Veranstaltungen, Vorstellungen und Tarife anlegen. Er handelt nur für diesen Veranstalter, und Sie können ihn jederzeit widerrufen.",
+      "newKey": "Neuer Schlüssel",
+      "newKeyHint": "Ein Schlüssel pro Agent oder Werkzeug: So wissen Sie, wer was getan hat, und können einen sperren, ohne die anderen zu berühren.",
+      "keyName": "Name",
+      "keyNamePlaceholder": "z. B. Claude von Marie, Festival-Website",
+      "canPublish": "Darf veröffentlichen",
+      "canPublishHint": "Ohne Häkchen legt der Agent Entwürfe an, die Sie im Admin prüfen und veröffentlichen. Mit Häkchen kann er auch veröffentlichen und veröffentlichte Veranstaltungen ändern.",
+      "create": "Schlüssel erstellen",
+      "createdTitle": "Schlüssel «{name}» erstellt",
+      "createdHint": "Kopieren Sie ihn jetzt und geben Sie ihn Ihrem Agenten: Er wird nie wieder angezeigt. Behandeln Sie ihn wie ein Passwort.",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "rights": "Rechte",
+      "rightsPublish": "Entwürfe und Veröffentlichung",
+      "rightsDraft": "Nur Entwürfe",
+      "revoked": "Widerrufen",
+      "events": "Angelegte Veranstaltungen",
+      "lastUsed": "Zuletzt verwendet",
+      "never": "Nie",
+      "createdOn": "erstellt am {date}",
+      "revoke": "Widerrufen",
+      "revokeConfirm": "Schlüssel «{name}» widerrufen? Der Agent, der ihn nutzt, verliert sofort den Zugang.",
+      "empty": "Noch kein Schlüssel.",
+      "connectTitle": "KI-Agenten verbinden",
+      "connectHint": "Fügen Sie diesen MCP-Server Ihrem Agenten hinzu, mit dem Schlüssel im Authorization-Header. Danach legt er eine Veranstaltung aus einem einzigen Satz an.",
+      "mcpUrl": "Adresse des MCP-Servers",
+      "claudeCode": "Claude Code",
+      "mcpJson": "MCP-Konfiguration (Cursor, Claude Desktop, andere)",
+      "mcpJsonHint": "Ersetzen Sie tt_… durch Ihren Schlüssel.",
+      "docsHint": "REST-API, Liste der Werkzeuge und Regeln:",
+      "docsLink": "Entwicklerdokumentation",
+      "errors": {
+        "nameRequired": "Geben Sie dem Schlüssel einen Namen.",
+        "organizer": "Veranstalter nicht gefunden.",
+        "tooMany": "Höchstens zwanzig aktive Schlüssel: Widerrufen Sie einen.",
+        "unavailable": "Erstellung zurzeit nicht möglich. Bitte erneut versuchen."
       }
     }
   },

@@ -1,7 +1,7 @@
 import "server-only";
 
 import * as z from "zod";
-import { EVENT_TIME_ZONE } from "@/lib/utils";
+import { zurichToUtc } from "@/lib/zurich-time";
 import type { FormState } from "./types";
 
 export type { FormState } from "./types";
@@ -123,31 +123,6 @@ export function readOptionalDateTime(
   const raw = readText(data, name);
   if (raw === "") return undefined;
   return readDateTime(data, name);
-}
-
-/**
- * Convertit une heure locale suisse en instant absolu.
- *
- * Le décalage varie selon l'heure d'été : il est mesuré à la date visée plutôt
- * que supposé constant, faute de quoi les séances d'hiver seraient décalées
- * d'une heure.
- */
-function zurichToUtc(local: string): Date {
-  const presume = new Date(`${local}:00Z`);
-  const offset = zurichOffsetMs(presume);
-  // Deuxième passe : près d'un changement d'heure, le décalage retenu peut
-  // être celui de l'autre côté de la bascule.
-  return new Date(
-    presume.getTime() - zurichOffsetMs(new Date(presume.getTime() - offset)),
-  );
-}
-
-function zurichOffsetMs(instant: Date): number {
-  const zurich = new Date(
-    instant.toLocaleString("en-US", { timeZone: EVENT_TIME_ZONE }),
-  );
-  const utc = new Date(instant.toLocaleString("en-US", { timeZone: "UTC" }));
-  return zurich.getTime() - utc.getTime();
 }
 
 /**

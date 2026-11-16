@@ -14,6 +14,7 @@ import {
   Armchair,
   BarChart3,
   Megaphone,
+  Bot,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { canSeePromotionUi } from "@/lib/admin/promotion-visibility";
@@ -65,6 +66,7 @@ export default async function AdminLayout({
           { href: "/admin/discounts", label: t("nav.discounts"), icon: BadgePercent },
           { href: "/admin/resellers", label: t("nav.resellers"), icon: Store },
           { href: "/admin/team", label: t("nav.team"), icon: UserPlus },
+          { href: "/admin/api", label: t("nav.api"), icon: Bot },
           { href: "/door", label: t("nav.door"), icon: ScanLine },
           { href: "/admin/settings", label: t("nav.settings"), icon: Settings },
         ]),

@@ -21,7 +21,7 @@ export function OrganizerPicker({
 }: {
   organizers: { id: string; name: string }[];
   value: string;
-  pathname?: "/admin/team" | "/admin/payments";
+  pathname?: "/admin/team" | "/admin/payments" | "/admin/api";
 }) {
   const t = useTranslations("admin.team");
   const router = useRouter();

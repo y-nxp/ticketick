@@ -300,7 +300,8 @@ model User {
   resellerId String?
 
   orders     Order[]
-  soldOrders Order[] @relation("OrderSoldBy")
+  soldOrders Order[]  @relation("OrderSoldBy")
+  apiKeys    ApiKey[]
 
   /// Offres des organisateurs suivis. Jamais implicite : case décochée
   /// à l'inscription, révocable depuis le compte.
@@ -394,6 +395,7 @@ model Organizer {
 
   socialAccounts     OrganizerSocialAccount[]
   promotionCampaigns PromotionCampaign[]
+  apiKeys            ApiKey[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -564,6 +566,11 @@ model Event {
   options   EventOption[]
 
   promotionCampaigns PromotionCampaign[]
+
+  /// Clé d'API (agent IA, outil tiers) qui a créé le spectacle. Vide : créé
+  /// dans l'admin.
+  apiKey   ApiKey? @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  apiKeyId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1386,4 +1393,46 @@ model PromotionClickDay {
   clicks     Int               @default(0)
 
   @@id([campaignId, day, source])
+}
+
+/// Clé de l'API publique (`/api/v1`, serveur MCP) : un agent IA ou un outil
+/// tiers agit au nom d'un seul organisateur. Seule l'empreinte SHA-256 est
+/// gardée : la clé n'est montrée qu'une fois, à sa création.
+model ApiKey {
+  id          String    @id @default(cuid())
+  organizer   Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  organizerId String
+  name        String
+  /// Début de la clé (« tt_AbCdEfGh »), pour la reconnaître dans la liste.
+  prefix      String
+  hash        String    @unique
+  /// Peut mettre en ligne. Sans ce droit, tout reste en brouillon.
+  canPublish  Boolean   @default(false)
+  createdBy   User?     @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdById String?
+  lastUsedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  events      Event[]
+  idempotency ApiIdempotency[]
+
+  @@index([organizerId])
+}
+
+/// Réponse rejouée quand un agent renvoie la même création (même
+/// `Idempotency-Key`) : un réseau instable ne doit pas doubler un spectacle.
+model ApiIdempotency {
+  id        String   @id @default(cuid())
+  apiKey    ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  apiKeyId  String
+  key       String
+  operation String
+  /// 0 tant que la première requête est en cours.
+  status    Int      @default(0)
+  response  Json?
+  createdAt DateTime @default(now())
+
+  @@unique([apiKeyId, key])
+  @@index([createdAt])
 }
