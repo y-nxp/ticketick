@@ -1,3 +1,4 @@
+import { AUTOMATED_USER_AGENT } from "./automation";
 import type { AnalyticsConfig } from "./config";
 import { googleConsentState, type Consent } from "./consent";
 
@@ -31,16 +32,19 @@ export function googleInitSnippet(config: AnalyticsConfig, consent: Consent | nu
 
 /**
  * Amorce de Matomo, sans cookie. Les pages vues partent du composant
- * `MatomoTracker`, qui suit aussi les changements d'adresse.
+ * `MatomoTracker`, qui suit aussi les changements d'adresse. Pour un robot
+ * ou un agent IA, `_paq` n'est jamais créé : chaque mesure reste sans effet.
  */
 export function matomoInitSnippet(url: string, siteId: string): string {
   return [
+    `if(!navigator.webdriver&&!${AUTOMATED_USER_AGENT.toString()}.test(navigator.userAgent)){`,
     "var _paq=window._paq=window._paq||[];",
     "_paq.push(['disableCookies']);",
     "_paq.push(['enableLinkTracking']);",
     `_paq.push(['setTrackerUrl','${url}/matomo.php']);`,
     `_paq.push(['setSiteId','${siteId}']);`,
     `(function(){var g=document.createElement('script');g.async=true;g.src='${url}/matomo.js';document.head.appendChild(g);})();`,
+    "}",
   ].join("");
 }
 
