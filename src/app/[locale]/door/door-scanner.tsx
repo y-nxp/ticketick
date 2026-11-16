@@ -7,10 +7,12 @@ import {
   Camera,
   CameraOff,
   Check,
+  CloudOff,
   Info,
   Keyboard,
   Loader2,
   LogIn,
+  RefreshCw,
   SearchCheck,
   TriangleAlert,
   Users,
@@ -18,10 +20,12 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
-import { admitTicket, checkTicket, doorCounts, type DoorLookup } from "@/lib/door/actions";
-import { playSound, soundOf, unlockSounds } from "@/lib/door/sounds";
+import { admitTicket, checkTicket } from "@/lib/door/actions";
+import { clearDoorStorage, type DoorConflict, type ScanLookup } from "@/lib/door/offline";
+import { playSound, soundOf, unlockSounds, type DoorSound } from "@/lib/door/sounds";
 import { cn, EVENT_TIME_ZONE } from "@/lib/utils";
 import { DoorHeader, InstallHint, useDoorSound } from "./door-header";
+import { useDoorSync, withTimeout, type DoorSyncState } from "./use-door-sync";
 
 interface DoorSessionOption {
   id: string;
@@ -31,13 +35,14 @@ interface DoorSessionOption {
 /** `entry` : chaque billet valable est enregistré. `check` : rien n'est enregistré. */
 type Mode = "entry" | "check";
 
-const REFRESH_MS = 15_000;
+/** Billet absent de la liste du téléphone : le serveur a ce délai pour répondre. */
+const SERVER_TIMEOUT_MS = 8_000;
 /** Un même code vu en continu par la caméra n'est traité qu'une fois. */
 const SAME_CODE_MS = 6_000;
 /** Durée d'affichage du résultat : courte si tout va bien, plus longue sinon. */
 const RESULT_MS = { good: 2_500, attention: 6_000 } as const;
 
-type Scan = { lookup: DoorLookup; mode: Mode; id: number };
+type Scan = { lookup: ScanLookup; mode: Mode; id: number };
 
 export function DoorScanner({
   sessions,
@@ -61,7 +66,8 @@ export function DoorScanner({
   const [scan, setScan] = React.useState<Scan | null>(null);
   const [occupe, setOccupe] = React.useState(false);
   const [camera, setCamera] = React.useState<"off" | "on" | "denied">("off");
-  const [counts, setCounts] = React.useState(initialCounts);
+  const sync = useDoorSync(sessionId, locale);
+  const counts = sync.counts ?? initialCounts;
   const dernier = React.useRef<{ code: string; at: number }>({ code: "", at: 0 });
   const occupeRef = React.useRef(false);
   const modeRef = React.useRef<Mode>(mode);
@@ -72,17 +78,12 @@ export function DoorScanner({
     soundRef.current = sound.on;
   }, [mode, sound.on]);
 
-  const rafraichir = React.useCallback(async () => {
-    const next = await doorCounts(sessionId).catch(() => null);
-    if (next) setCounts(next);
-  }, [sessionId]);
-
-  // Plusieurs contrôleurs à plusieurs portes : le compteur reflète aussi
-  // les entrées scannées ailleurs.
+  // Les listes des séances qui ne sont plus à contrôler (noms des acheteurs)
+  // ne restent pas sur le téléphone, sauf entrées encore à envoyer.
+  const sessionIds = sessions.map((s) => s.id).join(",");
   React.useEffect(() => {
-    const id = window.setInterval(() => void rafraichir(), REFRESH_MS);
-    return () => window.clearInterval(id);
-  }, [rafraichir]);
+    clearDoorStorage(sessionIds.split(","));
+  }, [sessionIds]);
 
   // Le premier toucher, où qu'il soit, autorise le son.
   React.useEffect(() => {
@@ -116,32 +117,46 @@ export function DoorScanner({
         return;
       }
       dernier.current = { code, at: now };
-      occupeRef.current = true;
-      setOccupe(true);
       const modeScan = modeRef.current;
-      try {
-        const lookup =
-          modeScan === "entry"
-            ? await admitTicket(code, sessionId, locale)
-            : await checkTicket(code, sessionId, locale);
+
+      const montrer = (lookup: ScanLookup) => {
         setScan({ lookup, mode: modeScan, id: now });
-        const kind = soundOf(lookup);
+        const kind: DoorSound =
+          !lookup.ok && lookup.reason === "offlineUnknown" ? "already" : soundOf(lookup);
         if (soundRef.current) playSound(kind);
         if (navigator.vibrate) {
           navigator.vibrate(kind === "admitted" || kind === "valid" ? 40 : [120, 60, 120]);
         }
-        if (lookup.ok && lookup.outcome === "admitted") {
-          setCounts((c) => ({ ...c, entered: c.entered + 1 }));
-        }
-        if (modeScan === "entry") void rafraichir();
+      };
+
+      // 1. La liste du téléphone répond tout de suite, réseau ou pas.
+      const local = sync.lookup(code, modeScan);
+      if (local.kind === "found") {
+        if (local.admit) sync.recordAdmission(code);
+        montrer(local.lookup);
+        return;
+      }
+
+      // 2. Billet absent de la liste (acheté à l'instant, autre séance…) : le serveur.
+      occupeRef.current = true;
+      setOccupe(true);
+      try {
+        const lookup = await withTimeout(
+          modeScan === "entry"
+            ? admitTicket(code, sessionId, locale)
+            : checkTicket(code, sessionId, locale),
+          SERVER_TIMEOUT_MS,
+        );
+        montrer(lookup);
+        if (lookup.ok) void sync.sync();
       } catch {
-        setScan(null);
+        montrer({ ok: false, reason: "offlineUnknown" });
       } finally {
         occupeRef.current = false;
         setOccupe(false);
       }
     },
-    [sessionId, locale, rafraichir],
+    [sessionId, locale, sync],
   );
 
   // Caméra : lecture continue des QR codes, écran maintenu allumé.
@@ -278,6 +293,11 @@ export function DoorScanner({
             );
           })}
         </div>
+
+        <SyncBar state={sync.state} onSync={() => void sync.sync()} />
+        {sync.state.conflicts.length > 0 ? (
+          <Conflicts conflicts={sync.state.conflicts} onClear={sync.clearConflicts} />
+        ) : null}
 
         {verif ? (
           <p className="flex items-start gap-2 rounded-control bg-sky-700/10 px-3 py-2 text-sm font-medium text-sky-800 dark:text-sky-300">
@@ -457,7 +477,11 @@ function Resultat({
   let detail: string | null = null;
 
   if (!lookup.ok) {
-    if (lookup.reason === "otherSession" && mode === "check") {
+    if (lookup.reason === "offlineUnknown") {
+      tone = "warn";
+      Icon = CloudOff;
+      title = t("offlineUnknownTitle");
+    } else if (lookup.reason === "otherSession" && mode === "check") {
       tone = "warn";
       Icon = TriangleAlert;
       title = t("otherSessionTitle");
@@ -532,5 +556,93 @@ function Resultat({
 
       <span className="mt-4 text-xs text-white/70">{t("tapToClose")}</span>
     </button>
+  );
+}
+
+function heureCourte(iso: string | number, locale: string, seconds = false): string {
+  return new Intl.DateTimeFormat(`${locale}-CH`, {
+    hour: "2-digit",
+    minute: "2-digit",
+    ...(seconds ? { second: "2-digit" } : {}),
+    timeZone: EVENT_TIME_ZONE,
+  }).format(new Date(iso));
+}
+
+/** État de la synchronisation : à jour, hors ligne, dernière synchro, entrées en attente. */
+function SyncBar({ state, onSync }: { state: DoorSyncState; onSync: () => void }) {
+  const t = useTranslations("door");
+  const locale = useLocale();
+  const { snapshot, syncedAt, pending, online, syncing } = state;
+
+  const statut = !online
+    ? { label: t("syncOffline"), dot: "bg-amber-500" }
+    : !snapshot
+      ? { label: t("syncLoading"), dot: "bg-muted-foreground" }
+      : { label: t("syncOk"), dot: "bg-emerald-500" };
+
+  return (
+    <div className="flex items-center gap-2 rounded-control border border-border bg-card px-3 py-2 text-xs">
+      <span className={cn("size-2 shrink-0 rounded-full", statut.dot)} aria-hidden />
+      <p className="min-w-0 flex-1 leading-snug">
+        <span className="font-semibold">{statut.label}</span>
+        <span className="text-muted-foreground">
+          {" · "}
+          {syncedAt ? t("lastSync", { time: heureCourte(syncedAt, locale, true) }) : t("syncNever")}
+          {snapshot ? ` · ${t("ticketsLoaded", { count: snapshot.tickets.length })}` : ""}
+        </span>
+        {pending.length > 0 ? (
+          <span className="font-semibold text-amber-700 dark:text-amber-400">
+            {" · "}
+            {t("pending", { count: pending.length })}
+          </span>
+        ) : null}
+      </p>
+      <button
+        type="button"
+        onClick={onSync}
+        disabled={syncing}
+        aria-label={syncing ? t("syncing") : t("syncNow")}
+        title={syncing ? t("syncing") : t("syncNow")}
+        className="-my-1 grid size-9 shrink-0 place-items-center rounded-control text-muted-foreground hover:bg-secondary/70 disabled:opacity-60"
+      >
+        <RefreshCw className={cn("size-4", syncing && "animate-spin")} />
+      </button>
+    </div>
+  );
+}
+
+/** Billets validés ici hors connexion alors que le serveur les avait déjà vus passer, ou refusés. */
+function Conflicts({ conflicts, onClear }: { conflicts: DoorConflict[]; onClear: () => void }) {
+  const t = useTranslations("door");
+  const locale = useLocale();
+  return (
+    <div role="alert" className="rounded-control border border-amber-500/50 bg-amber-500/10 px-3 py-2.5 text-sm">
+      <p className="flex items-center gap-2 font-semibold text-amber-800 dark:text-amber-300">
+        <TriangleAlert className="size-4 shrink-0" />
+        {t("conflictsTitle", { count: conflicts.length })}
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">{t("conflictsHint")}</p>
+      <ul className="mt-2 space-y-1 text-xs">
+        {conflicts.map((c) => (
+          <li key={`${c.code}-${c.usedAt ?? c.reason}`}>
+            <span className="font-mono font-semibold">{c.code}</span>
+            {c.buyer ? ` · ${c.buyer}` : ""}
+            {" · "}
+            {c.kind === "already"
+              ? c.usedAt
+                ? t("conflictAt", { time: heureCourte(c.usedAt, locale) })
+                : t("alreadyUsed")
+              : t(c.reason ?? "unknown")}
+          </li>
+        ))}
+      </ul>
+      <button
+        type="button"
+        onClick={onClear}
+        className="mt-2 text-xs font-semibold text-amber-800 underline underline-offset-2 dark:text-amber-300"
+      >
+        {t("conflictsClear")}
+      </button>
+    </div>
   );
 }
