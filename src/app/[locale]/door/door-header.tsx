@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { LogOut, Volume2, VolumeX } from "lucide-react";
 import { TicketMark } from "@/components/ui/ticket-mark";
 import { logout } from "@/lib/auth/actions";
+import { clearDoorStorage, pendingTotal } from "@/lib/door/offline";
 import { readSoundPref, unlockSounds, writeSoundPref } from "@/lib/door/sounds";
 
 /** Préférence de son partagée par l'en-tête et le scanner, retenue sur l'appareil. */
@@ -48,7 +49,19 @@ export function DoorHeader({ sound }: { sound?: { on: boolean; toggle: () => voi
             {sound.on ? <Volume2 className="size-5" /> : <VolumeX className="size-5 text-destructive" />}
           </button>
         ) : null}
-        <form action={logout}>
+        <form
+          action={logout}
+          onSubmit={(e) => {
+            // Les entrées pas encore envoyées seraient perdues ; la liste des
+            // billets (noms des acheteurs) ne reste pas sur le téléphone.
+            const n = pendingTotal();
+            if (n > 0 && !window.confirm(t("logoutPending", { count: n }))) {
+              e.preventDefault();
+              return;
+            }
+            clearDoorStorage("none", true);
+          }}
+        >
           <button
             type="submit"
             aria-label={t("logout")}
