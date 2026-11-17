@@ -1,6 +1,8 @@
 import createMiddleware from "next-intl/middleware";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
+import { agentHitFor, sendAgentHit } from "./lib/analytics/agent-tracking";
+import { pageAction } from "./lib/analytics/agents";
 import {
   PROMOTION_COOKIE,
   PROMOTION_COOKIE_OPTIONS,
@@ -70,7 +72,26 @@ function withCampaignCookie(
   return response;
 }
 
-export default function proxy(request: NextRequest) {
+/**
+ * Page demandée par un robot ou un agent IA : envoyée au site Matomo des
+ * agents après la réponse. Pour un humain, rien ne part.
+ */
+function trackAgentPage(request: NextRequest, event: NextFetchEvent) {
+  if (request.method !== "GET") return;
+  const { pathname } = request.nextUrl;
+  let detail = pathname;
+  try {
+    detail = decodeURIComponent(pathname);
+  } catch {
+    // Adresse mal encodée : gardée telle quelle.
+  }
+  const hit = agentHitFor(request, pageAction(pathname), detail, false);
+  if (hit) event.waitUntil(sendAgentHit(hit));
+}
+
+export default function proxy(request: NextRequest, event: NextFetchEvent) {
+  trackAgentPage(request, event);
+
   // `/p/{code}` répond sans préfixe de langue (route hors de `[locale]`) :
   // next-intl le réécrirait en `/fr/p/…`, introuvable. Un code mal formé
   // repart vers l'accueil sans atteindre la base.

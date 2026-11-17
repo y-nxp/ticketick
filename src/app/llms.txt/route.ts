@@ -1,3 +1,4 @@
+import { agentHitFor, trackAgentAfter } from "@/lib/analytics/agent-tracking";
 import { publicAppOrigin } from "@/lib/app-url";
 import { llmsTxt } from "@/lib/api/docs";
 
@@ -6,6 +7,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const body = await llmsTxt(publicAppOrigin(request));
+  trackAgentAfter(agentHitFor(request, "Doc · llms.txt", "/llms.txt", true));
   return new Response(body, {
     headers: {
       "content-type": "text/markdown; charset=utf-8",
