@@ -233,10 +233,15 @@ export default async function SuisaReportPage({
                       {readOnly ? null : (
                         <DoorSalesForm
                           sessionId={r.sessionId}
-                          tickets={r.doorTickets || null}
-                          amount={r.doorCents ? (r.doorCents / 100).toFixed(2) : ""}
+                          tickets={r.doorTickets - r.tillTickets || null}
+                          amount={r.doorCents - r.tillCents ? ((r.doorCents - r.tillCents) / 100).toFixed(2) : ""}
                         />
                       )}
+                      {r.tillTickets || r.tillCents ? (
+                        <span className="block text-xs text-muted-foreground print:hidden">
+                          {t("tillSales", { count: r.tillTickets, amount: money(r.tillCents) })}
+                        </span>
+                      ) : null}
                       <span className={readOnly ? "" : "hidden print:inline"}>
                         {r.doorTickets || r.doorCents ? `${r.doorTickets} · ${money(r.doorCents)}` : "–"}
                       </span>

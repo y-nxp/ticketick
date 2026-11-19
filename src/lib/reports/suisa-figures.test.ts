@@ -122,3 +122,17 @@ test("box-office total is spread over tickets and adds up exactly", () => {
 test("csv cells with separators or quotes are quoted", () => {
   assert.equal(csvLine(["Arias", 77, "Lauenen; Kirche", 'Le "Duo"']), 'Arias;77;"Lauenen; Kirche";"Le ""Duo"""');
 });
+
+test("on-site till sales add to the hand-entered door takings", () => {
+  const [row] = buildSuisaReport(
+    [session("grigolo", { doorTickets: 2, doorRevenueCents: 10_000, tillTickets: 3, tillCents: 59_000 })],
+    [],
+    new Map(),
+    0,
+  ).rows;
+  assert.equal(row.doorTickets, 5);
+  assert.equal(row.doorCents, 69_000);
+  assert.equal(row.tillTickets, 3);
+  assert.equal(row.tillCents, 59_000);
+  assert.equal(row.grossCents, 69_000);
+});

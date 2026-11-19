@@ -13,8 +13,12 @@ export interface SaleFormTariff {
   id: string;
   name: string;
   priceCents: number;
-  left: number;
+  /** Déjà vendus à la caisse pour ce concert. */
+  soldAtTill: number;
 }
+
+/** Plafond d'une ligne : bien au-delà d'une vente au guichet. */
+const MAX_PER_LINE = 50;
 
 export function DoorSaleForm({
   sessionId,
@@ -36,15 +40,15 @@ export function DoorSaleForm({
       // Collect s'ouvre, encaisse sur le lecteur, puis revient sur ticketick.
       window.location.href = state.url;
     } else {
-      router.push(`/door/sell/order/${state.orderId}`);
+      router.push(`/door/sell/sale/${state.saleId}`);
     }
   }, [state, router]);
 
   const intl = `${locale}-CH`;
   const total = tariffs.reduce((sum, tt) => sum + tt.priceCents * (quantities[tt.id] ?? 0), 0);
   const count = Object.values(quantities).reduce((a, b) => a + b, 0);
-  const change = (id: string, delta: number, max: number) =>
-    setQuantities((q) => ({ ...q, [id]: Math.max(0, Math.min(max, (q[id] ?? 0) + delta)) }));
+  const change = (id: string, delta: number) =>
+    setQuantities((q) => ({ ...q, [id]: Math.max(0, Math.min(MAX_PER_LINE, (q[id] ?? 0) + delta)) }));
   // Collect est en train de s'ouvrir : on ne revend pas en double.
   const busy = pending || (state?.ok === true && state.kind === "collect");
 
@@ -54,7 +58,6 @@ export function DoorSaleForm({
       <ul className="divide-y divide-border rounded-card border border-border bg-card">
         {tariffs.map((tt) => {
           const qty = quantities[tt.id] ?? 0;
-          const max = Math.min(tt.left, 30);
           const failed = state && !state.ok && state.ticketTypeId === tt.id;
           return (
             <li key={tt.id} className="flex items-center gap-3 px-4 py-3">
@@ -62,14 +65,14 @@ export function DoorSaleForm({
               <div className="min-w-0 flex-1">
                 <p className="font-medium">{tt.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {formatPrice(tt.priceCents, intl)} ·{" "}
-                  {tt.left > 0 ? t("left", { count: tt.left }) : t("soldOut")}
+                  {formatPrice(tt.priceCents, intl)}
+                  {tt.soldAtTill > 0 ? ` · ${t("soldAtTill", { count: tt.soldAtTill })}` : ""}
                 </p>
                 {failed ? <p className="text-sm text-destructive">{t(`errors.${state.error}`)}</p> : null}
               </div>
               <button
                 type="button"
-                onClick={() => change(tt.id, -1, max)}
+                onClick={() => change(tt.id, -1)}
                 disabled={qty === 0 || busy}
                 aria-label={t("less", { tariff: tt.name })}
                 className="grid size-11 place-items-center rounded-full border border-border disabled:opacity-40"
@@ -81,8 +84,8 @@ export function DoorSaleForm({
               </span>
               <button
                 type="button"
-                onClick={() => change(tt.id, 1, max)}
-                disabled={qty >= max || busy}
+                onClick={() => change(tt.id, 1)}
+                disabled={qty >= MAX_PER_LINE || busy}
                 aria-label={t("more", { tariff: tt.name })}
                 className="grid size-11 place-items-center rounded-full border border-border disabled:opacity-40"
               >

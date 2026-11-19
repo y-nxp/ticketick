@@ -30,10 +30,10 @@ export default async function DoorSaleDonePage({
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <DoorHeader active="sell" />
+      <DoorHeader active="sell" till />
       <div className="mx-auto w-full max-w-lg flex-1 px-4 py-5">
         {outcome.status === "done" ? (
-          <SaleSummary orderId={outcome.orderId} locale={locale} again={outcome.again} />
+          <SaleSummary saleId={outcome.saleId} locale={locale} again={outcome.again} />
         ) : (
           <div className="space-y-5">
             <div className="rounded-card border border-border bg-card p-5 text-center">

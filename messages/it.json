@@ -477,9 +477,6 @@
       "title": "Cassa",
       "chooseConcert": "Scegliere il concerto",
       "noSessions": "Nessun concerto in vendita alla cassa.",
-      "seatedHint": "I posti vengono assegnati automaticamente, se possibile vicini.",
-      "left": "{count, plural, one {# posto} other {# posti}}",
-      "soldOut": "esaurito",
       "less": "Togliere un biglietto {tariff}",
       "more": "Aggiungere un biglietto {tariff}",
       "chooseTariff": "Scegliere i biglietti",
@@ -489,10 +486,6 @@
       "recorded": "Vendita registrata",
       "alreadyRecorded": "Vendita già registrata",
       "free": "Gratuito",
-      "ticketsUsed": "Biglietti segnati come entrati.",
-      "ticketsValid": "Biglietti validi per l’ingresso.",
-      "next": "Nuova vendita",
-      "toDoor": "Controllo biglietti",
       "cancelled": "Pagamento annullato",
       "cancelledHint": "Nulla è stato incassato né venduto.",
       "refunded": "Pagamento rimborsato",
@@ -501,12 +494,6 @@
       "errors": {
         "empty": "Scegliete almeno un biglietto.",
         "notFound": "Questo concerto non è più in vendita alla cassa.",
-        "sessionPast": "Questo concerto è iniziato più di 3 ore fa.",
-        "soldOut": "Non ci sono più abbastanza posti.",
-        "seatsUnavailable": "Non ci sono più abbastanza posti liberi per questa tariffa.",
-        "invitesUnavailable": "Non ci sono più abbastanza posti ospiti.",
-        "seatsTaken": "Questi posti non sono più liberi.",
-        "retry": "Vendita in registrazione: riaprite il link di ritorno tra poco.",
         "quantity": "Quantità non valida.",
         "noStripe": "Il conto Stripe dell’organizzatore non è collegato in ticketick: il pagamento non può essere verificato.",
         "expired": "Vendita troppo vecchia o link danneggiato: verificate in Stripe se un pagamento è stato fatto.",
@@ -514,7 +501,14 @@
         "amountMismatch": "Importo incassato diverso dal prezzo (tassa o mancia nelle impostazioni di Collect?). Il pagamento è stato rimborsato.",
         "stripe": "Stripe non risponde: verificate il pagamento in Stripe prima di riprovare."
       },
-      "otherConcert": "Altro concerto"
+      "otherConcert": "Altro concerto",
+      "noticeTitle": "Cassa di vendita sul posto.",
+      "notice": "Vendita dei biglietti cartacei riservati in anticipo: nessun biglietto viene emesso e nessun posto viene occupato. Ogni vendita è contata per tariffa.",
+      "next": "Prossimo",
+      "soldAtTill": "{count, plural, one {# venduto} other {# venduti}} alla cassa",
+      "nextSale": "Nuova vendita per questo concerto",
+      "handPaper": "Consegnate i biglietti cartacei.",
+      "tillTotal": "Cassa {title}, {when}: {count, plural, one {# biglietto venduto} other {# biglietti venduti}}"
     }
   },
   "about": {
@@ -2104,7 +2098,8 @@
       "errors": {
         "forbidden": "Accesso negato.",
         "invalid": "Valore non valido."
-      }
+      },
+      "tillSales": "+ cassa sul posto: {count} · {amount}"
     },
     "promotion": {
       "title": "Promozione",

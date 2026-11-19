@@ -477,9 +477,6 @@
       "title": "Till",
       "chooseConcert": "Choose the concert",
       "noSessions": "No concert on sale at the till.",
-      "seatedHint": "Seats are assigned automatically, side by side when possible.",
-      "left": "{count, plural, one {# seat} other {# seats}}",
-      "soldOut": "sold out",
       "less": "Remove one {tariff} ticket",
       "more": "Add one {tariff} ticket",
       "chooseTariff": "Choose tickets",
@@ -489,10 +486,6 @@
       "recorded": "Sale recorded",
       "alreadyRecorded": "Sale already recorded",
       "free": "Free",
-      "ticketsUsed": "Tickets marked as entered.",
-      "ticketsValid": "Tickets valid for entry.",
-      "next": "New sale",
-      "toDoor": "Ticket check",
       "cancelled": "Payment cancelled",
       "cancelledHint": "Nothing was charged or sold.",
       "refunded": "Payment refunded",
@@ -501,12 +494,6 @@
       "errors": {
         "empty": "Choose at least one ticket.",
         "notFound": "This concert is no longer on sale at the till.",
-        "sessionPast": "This concert started more than 3 hours ago.",
-        "soldOut": "Not enough seats left.",
-        "seatsUnavailable": "Not enough free seats for this price.",
-        "invitesUnavailable": "Not enough guest seats.",
-        "seatsTaken": "These seats are no longer free.",
-        "retry": "Sale being recorded: reopen the return link in a moment.",
         "quantity": "Invalid quantity.",
         "noStripe": "The organiser’s Stripe account is not connected in ticketick: the payment cannot be checked.",
         "expired": "Sale too old or link damaged: check in Stripe whether a payment was made.",
@@ -514,7 +501,14 @@
         "amountMismatch": "Amount charged differs from the price (tax or tip in Collect settings?). The payment was refunded.",
         "stripe": "Stripe is not responding: check the payment in Stripe before trying again."
       },
-      "otherConcert": "Another concert"
+      "otherConcert": "Another concert",
+      "noticeTitle": "On-site sales till.",
+      "notice": "Sale of paper tickets reserved in advance: no ticket is issued and no seat is taken. Each sale is counted by price.",
+      "next": "Next",
+      "soldAtTill": "{count} sold at the till",
+      "nextSale": "New sale for this concert",
+      "handPaper": "Hand over the paper tickets.",
+      "tillTotal": "Till {title}, {when}: {count, plural, one {# ticket sold} other {# tickets sold}}"
     }
   },
   "about": {
@@ -2104,7 +2098,8 @@
       "errors": {
         "forbidden": "Access denied.",
         "invalid": "Invalid value."
-      }
+      },
+      "tillSales": "+ door till: {count} · {amount}"
     },
     "promotion": {
       "title": "Promotion",

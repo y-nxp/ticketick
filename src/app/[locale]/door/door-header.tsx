@@ -32,8 +32,11 @@ export function useDoorSound(): { on: boolean; toggle: () => void } {
 export function DoorHeader({
   sound,
   active = "door",
+  till = false,
 }: {
   sound?: { on: boolean; toggle: () => void };
+  /** Caisse sur place (organisateur avec Stripe) : onglets Contrôle / Caisse. */
+  till?: boolean;
   /** Onglet ouvert : contrôle des billets ou caisse. */
   active?: "door" | "sell";
 }) {
@@ -47,12 +50,16 @@ export function DoorHeader({
           <TicketMark className="h-6" />
           {active === "sell" ? t("sell.title") : t("title")}
         </h1>
-        <Link href="/door" aria-label={t("title")} title={t("title")} aria-current={active === "door" ? "page" : undefined} className={tab(active === "door")}>
-          <ScanLine className="size-5" />
-        </Link>
-        <Link href="/door/sell" aria-label={t("sell.title")} title={t("sell.title")} aria-current={active === "sell" ? "page" : undefined} className={tab(active === "sell")}>
-          <CreditCard className="size-5" />
-        </Link>
+        {till ? (
+          <>
+            <Link href="/door" aria-label={t("title")} title={t("title")} aria-current={active === "door" ? "page" : undefined} className={tab(active === "door")}>
+              <ScanLine className="size-5" />
+            </Link>
+            <Link href="/door/sell" aria-label={t("sell.title")} title={t("sell.title")} aria-current={active === "sell" ? "page" : undefined} className={tab(active === "sell")}>
+              <CreditCard className="size-5" />
+            </Link>
+          </>
+        ) : null}
         {sound ? (
           <button
             type="button"

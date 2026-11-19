@@ -311,7 +311,8 @@ model User {
   resellerId String?
 
   orders     Order[]
-  soldOrders Order[]  @relation("OrderSoldBy")
+  soldOrders Order[]    @relation("OrderSoldBy")
+  doorSales  DoorSale[]
   apiKeys    ApiKey[]
 
   /// Offres des organisateurs suivis. Jamais implicite : case décochée
@@ -635,9 +636,11 @@ model EventSession {
   inviteSeats Int  @default(0)
 
   /// Caisse du soir tenue hors ticketick (espèces, TWINT), saisie après la
-  /// séance pour le rapport SUISA : billets payants et montant TTC.
+  /// séance pour le rapport SUISA : billets payants et montant TTC. Les
+  /// ventes de la caisse de l'app de contrôle (`DoorSale`) s'y ajoutent.
   doorTickets      Int?
   doorRevenueCents Int?
+  doorSales        DoorSale[]
 
   /// Rapport d'événement « dans une heure » envoyé (ou réservé) à cet instant.
   hourReportAt DateTime?
@@ -1465,4 +1468,30 @@ model ApiIdempotency {
 
   @@unique([apiKeyId, key])
   @@index([createdAt])
+}
+
+/// Vente de la caisse sur place (app de contrôle › Caisse) : billets papier
+/// réservés en amont, encaissés par carte sur le lecteur (Collect for
+/// Stripe). Aucun billet ticketick n'est émis ni aucune place prise : la
+/// vente est comptée, pour savoir ce qui reste à vendre et pour le SUISA.
+model DoorSale {
+  id          String       @id @default(cuid())
+  session     EventSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId   String
+  /// Paiement Stripe vérifié (`ch_…`), une seule vente par paiement. Vide :
+  /// billets gratuits.
+  chargeId    String?      @unique
+  /// "collect" | "free"
+  provider    String
+  amountCents Int
+  currency    String
+  /// Billets payants de la vente (pour le SUISA).
+  paidTickets Int
+  /// [{ ticketTypeId, name, quantity, unitPriceCents }]
+  lines       Json
+  soldBy      User?        @relation(fields: [soldById], references: [id], onDelete: SetNull)
+  soldById    String?
+  createdAt   DateTime     @default(now())
+
+  @@index([sessionId])
 }

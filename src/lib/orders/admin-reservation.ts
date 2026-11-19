@@ -64,8 +64,6 @@ export interface ReservationInput {
   holders?: Map<string, Holder[]>;
   /** Rabais automatiques appliqués, dont la part est portée par les lignes. */
   discounts?: { discountId: string; amountCents: number }[];
-  /** Caisse du soir : vente encore admise ce délai après le début. */
-  lateSaleMs?: number;
 }
 
 export type ReservationError =
@@ -118,8 +116,7 @@ export async function createReservation(
   const byId = new Map(sessions.map((s) => [s.id, s]));
   if (wanted.some((p) => !byId.has(p.sessionId))) return { ok: false, error: "notFound" };
   const now = new Date();
-  const lastSale = now.getTime() - (input.lateSaleMs ?? 0);
-  if (sessions.some((s) => s.startsAt.getTime() <= lastSale)) return { ok: false, error: "sessionPast" };
+  if (sessions.some((s) => s.startsAt <= now)) return { ok: false, error: "sessionPast" };
 
   const types = new Map(sessions.flatMap((s) => s.ticketTypes.map((tt) => [tt.id, tt] as const)));
   const parts = wanted.map((p) => {

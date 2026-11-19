@@ -65,13 +65,7 @@ export type EditResult =
 /** Différence due par le client pour des places ajoutées. */
 export type PaymentSettle =
   | { method: "FREE" }
-  | {
-      method: "CASH" | "DOOR" | "TERMINAL" | "TRANSFER";
-      amountCents: number;
-      /** Prestataire et référence du paiement déjà fait (caisse Collect : `collect`, `ch_…`). */
-      provider?: string;
-      providerRef?: string;
-    }
+  | { method: "CASH" | "DOOR" | "TERMINAL" | "TRANSFER"; amountCents: number }
   | { method: "LINK"; amountCents: number; dueAt: Date };
 
 /**
@@ -725,10 +719,7 @@ export async function openPaymentCharge(
       currency: order.currency,
       dueAt: settle.method === "LINK" ? settle.dueAt : null,
       tokenHash: link?.tokenHash ?? null,
-      provider: cash
-        ? (("provider" in settle && settle.provider) || CASH_PROVIDER[method as keyof typeof CASH_PROVIDER])
-        : null,
-      providerRef: ("providerRef" in settle && settle.providerRef) || null,
+      provider: cash ? CASH_PROVIDER[method as keyof typeof CASH_PROVIDER] : null,
       ticketIds: input.ticketIds,
       fromInvites: input.fromInvites,
       createdById: input.actorId,
