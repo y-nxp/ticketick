@@ -218,7 +218,7 @@ export type SaleError =
   | "stripe";
 
 export type PrepareResult =
-  | { ok: true; kind: "collect"; url: string }
+  | { ok: true; kind: "collect"; url: string; webUrl: string }
   | { ok: true; kind: "done"; saleId: string }
   | { ok: false; error: SaleError; ticketTypeId?: string };
 
@@ -267,7 +267,7 @@ export async function prepareDoorSale(
   return {
     ok: true,
     kind: "collect",
-    url: collectLaunchUrl({
+    ...collectLinks({
       amountCents,
       description: saleDescription({
         organizer: session.organizerName,
@@ -279,6 +279,11 @@ export async function prepareDoorSale(
       callback: `${publicAppOrigin()}${prefix}/door/sell/done/${token.replaceAll(".", "~")}`,
     }),
   };
+}
+
+/** Lien de l'app (à toucher) et lien web de Collect, en secours. */
+function collectLinks(input: Parameters<typeof collectLaunchUrl>[0]): { url: string; webUrl: string } {
+  return { url: collectLaunchUrl(input, "app"), webUrl: collectLaunchUrl(input, "web") };
 }
 
 async function recordSale(
