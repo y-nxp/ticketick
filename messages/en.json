@@ -2384,7 +2384,7 @@
       "syncing": "Synchronising…",
       "result": "Done: {created} created, {updated} updated, {archived} removed, {unchanged} already up to date.",
       "resultFailed": "{failed} failed: run the synchronisation again.",
-      "howTo": "In Collect for Stripe, tap the concert, then the price. Past dates and deleted prices are removed from sale at the next synchronisation; free prices are not sent.",
+      "howTo": "In Collect for Stripe, concerts are listed by date (2026-12-26, 2026-12-27…), each price on its own line. Past dates and deleted prices are removed from sale at the next synchronisation; free prices are not sent.",
       "stockNote": "A sale on the reader does not create a ticket in ticketick and does not reduce the allocation: count it in the door takings.",
       "noTariffs": "No paid price on an upcoming published date.",
       "eventSummary": "{dates, plural, one {# date} other {# dates}} · {tariffs, plural, one {# price} other {# prices}}",

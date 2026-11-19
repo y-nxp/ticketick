@@ -2384,7 +2384,7 @@
       "syncing": "Synchronisierung…",
       "result": "Erledigt: {created} erstellt, {updated} aktualisiert, {archived} entfernt, {unchanged} bereits aktuell.",
       "resultFailed": "{failed} fehlgeschlagen: Synchronisierung erneut starten.",
-      "howTo": "In Collect for Stripe das Konzert antippen, dann den Tarif. Vergangene Daten und gelöschte Tarife werden bei der nächsten Synchronisierung aus dem Verkauf genommen; Gratistarife werden nicht übertragen.",
+      "howTo": "In Collect for Stripe sind die Konzerte nach Datum geordnet (2026-12-26, 2026-12-27…), jeder Tarif auf einer eigenen Zeile. Vergangene Daten und gelöschte Tarife werden bei der nächsten Synchronisierung aus dem Verkauf genommen; Gratistarife werden nicht übertragen.",
       "stockNote": "Ein Verkauf am Lesegerät erstellt kein Ticket in ticketick und verringert das Kontingent nicht: Zählen Sie ihn zur Abendkasse.",
       "noTariffs": "Kein kostenpflichtiger Tarif an einem kommenden veröffentlichten Datum.",
       "eventSummary": "{dates, plural, one {# Datum} other {# Daten}} · {tariffs, plural, one {# Tarif} other {# Tarife}}",

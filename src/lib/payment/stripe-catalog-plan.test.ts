@@ -53,14 +53,14 @@ const product = (s: CatalogSession, over: Partial<CatalogProduct> = {}): Catalog
   ...over,
 });
 
-test("product name starts with the Zurich date, then the show", () => {
+test("product name starts with the sortable Zurich date, then the show", () => {
   assert.equal(
     productName({
       startsAt: new Date("2026-12-26T18:00:00Z"),
       timeZone: "Europe/Zurich",
       eventTitle: "Juliana Grigoryan & Hasmik Antonyan",
     }),
-    "26.12.2026 19:00 · Juliana Grigoryan & Hasmik Antonyan",
+    "2026-12-26 19:00 · Juliana Grigoryan & Hasmik Antonyan",
   );
   assert.equal(
     productName({
@@ -69,8 +69,12 @@ test("product name starts with the Zurich date, then the show", () => {
       eventTitle: "Récital",
       sessionLabel: "Matinée",
     }),
-    "01.07.2027 10:00 · Récital (Matinée)",
+    "2027-07-01 10:00 · Récital (Matinée)",
   );
+  const names = ["2027-01-01T16:30:00Z", "2026-12-26T18:00:00Z", "2026-12-30T18:00:00Z"].map((iso) =>
+    productName({ startsAt: new Date(iso), timeZone: "Europe/Zurich", eventTitle: "X" }),
+  );
+  assert.deepEqual([...names].sort(), [names[1], names[2], names[0]]);
 });
 
 test("one product per date: create, keep, and archive old per-tariff products", () => {

@@ -188,7 +188,12 @@ export function countSteps(steps: CatalogStep[]): CatalogCounts {
   return counts;
 }
 
-/** Nom du produit : la date en tête, puis le spectacle. */
+/**
+ * Nom du produit : la date en tête, au format année-mois-jour, puis le
+ * spectacle. Collect for Stripe trie les produits par ordre alphabétique :
+ * « 2026-12-26 » passe ainsi avant « 2027-01-01 », ce que « 26.12.2026 »
+ * ne permettait pas.
+ */
 export function productName(input: {
   startsAt: Date;
   timeZone: string;
@@ -208,7 +213,7 @@ export function productName(input: {
       .formatToParts(input.startsAt)
       .map((p) => [p.type, p.value]),
   );
-  const when = `${parts.day}.${parts.month}.${parts.year} ${parts.hour}:${parts.minute}`;
+  const when = `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`;
   const title = input.sessionLabel ? `${input.eventTitle} (${input.sessionLabel})` : input.eventTitle;
   return clip(`${when} · ${title}`, 250);
 }

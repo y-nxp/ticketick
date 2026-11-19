@@ -2384,7 +2384,7 @@
       "syncing": "Sincronizzazione…",
       "result": "Fatto: {created} creati, {updated} aggiornati, {archived} ritirati, {unchanged} già aggiornati.",
       "resultFailed": "{failed} non riusciti: rilanciare la sincronizzazione.",
-      "howTo": "In Collect for Stripe toccate il concerto, poi la tariffa. Le date passate e le tariffe eliminate vengono ritirate dalla vendita alla sincronizzazione successiva; le tariffe gratuite non vengono inviate.",
+      "howTo": "In Collect for Stripe i concerti sono ordinati per data (2026-12-26, 2026-12-27…), ogni tariffa su una riga. Le date passate e le tariffe eliminate vengono ritirate dalla vendita alla sincronizzazione successiva; le tariffe gratuite non vengono inviate.",
       "stockNote": "Una vendita al lettore non crea un biglietto in ticketick e non riduce il contingente: contatela nella cassa serale.",
       "noTariffs": "Nessuna tariffa a pagamento su una data pubblicata in arrivo.",
       "eventSummary": "{dates, plural, one {# data} other {# date}} · {tariffs, plural, one {# tariffa} other {# tariffe}}",
