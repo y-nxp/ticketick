@@ -480,7 +480,6 @@
       "less": "Ein Ticket {tariff} entfernen",
       "more": "Ein Ticket {tariff} hinzufügen",
       "chooseTariff": "Tickets wählen",
-      "charge": "Kassieren von {amount} vorbereiten",
       "recordFree": "{count, plural, one {# Gratisticket} other {# Gratistickets}} erfassen",
       "collectHint": "«Collect öffnen» antippen, Karte ans Lesegerät halten: Danach geht es automatisch hierher zurück.",
       "recorded": "Verkauf erfasst",
@@ -508,10 +507,25 @@
       "soldAtTill": "{count} an der Kasse verkauft",
       "nextSale": "Neuer Verkauf für dieses Konzert",
       "handPaper": "Papiertickets übergeben.",
-      "tillTotal": "Kasse {title}, {when}: {count, plural, one {# Ticket verkauft} other {# Tickets verkauft}}",
       "openCollect": "Collect öffnen · {amount}",
       "editSale": "Verkauf ändern",
-      "collectFallback": "Collect öffnet sich nicht?"
+      "collectFallback": "Collect öffnet sich nicht?",
+      "totalToPay": "{count, plural, one {# Ticket} other {# Tickets}} · {amount} — Zahlungsmittel:",
+      "methodCard": "Karte",
+      "methodTwint": "TWINT",
+      "methodCash": "Bar",
+      "twintAsk": "Der Kunde zahlt mit TWINT",
+      "twintTo": "an die Nummer",
+      "twintNoNumber": "TWINT-Nummer nicht eingestellt (Seite Stripe-Kasse): Verwenden Sie Ihre übliche Nummer.",
+      "twintPaid": "TWINT-Zahlung erhalten",
+      "backToMethods": "Anderes Zahlungsmittel",
+      "cashAsk": "Der Kunde zahlt bar",
+      "cashReceived": "Erhalten (CHF)",
+      "cashChange": "Rückgeld:",
+      "cashPaid": "Bar kassiert",
+      "totalsTitle": "Kasse dieses Konzerts: {count, plural, one {# Ticket verkauft} other {# Tickets verkauft}}",
+      "totalsAll": "Total kassiert",
+      "salesCount": "{count, plural, one {# Verkauf} other {# Verkäufe}}"
     }
   },
   "about": {
@@ -2452,6 +2466,13 @@
         "stripe": "Stripe antwortet gerade nicht. Versuchen Sie es gleich nochmals.",
         "busy": "Eine Synchronisierung läuft bereits.",
         "forbidden": "Sie haben keinen Zugriff auf diesen Veranstalter."
+      },
+      "twint": {
+        "label": "TWINT-Nummer der Kasse vor Ort",
+        "hint": "Wird dem Kunden angezeigt, der TWINT wählt; die Kasse bestätigt den Eingang. Ein verbundenes TWINT (QR, automatische Bestätigung) kann später angeschlossen werden.",
+        "save": "Speichern",
+        "saved": "Nummer gespeichert.",
+        "error": "Ungültige Nummer."
       }
     }
   },
