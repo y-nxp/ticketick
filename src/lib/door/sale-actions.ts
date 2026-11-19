@@ -7,7 +7,7 @@ import { DOOR_ROLES } from "./scope";
 
 export type DoorSaleState =
   | { ok: true; kind: "collect"; url: string }
-  | { ok: true; kind: "done"; orderId: string }
+  | { ok: true; kind: "done"; saleId: string }
   | { ok: false; error: string; ticketTypeId?: string }
   | null;
 

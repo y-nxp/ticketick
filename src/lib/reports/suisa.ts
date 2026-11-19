@@ -55,6 +55,7 @@ export async function getSuisaReport(
       seatPlanId: true,
       doorTickets: true,
       doorRevenueCents: true,
+      doorSales: { select: { paidTickets: true, amountCents: true } },
       venue: { select: { name: true, city: true } },
       event: { select: { id: true, title: true, suisaMusic: true } },
       ticketTypes: { select: { quantity: true } },
@@ -166,6 +167,9 @@ export async function getSuisaReport(
       music: s.event.suisaMusic,
       doorTickets: s.doorTickets,
       doorRevenueCents: s.doorRevenueCents,
+      // Ventes de la caisse sur place, ajoutées à la caisse du soir.
+      tillTickets: s.doorSales.reduce((n, sale) => n + sale.paidTickets, 0),
+      tillCents: s.doorSales.reduce((n, sale) => n + sale.amountCents, 0),
     })),
     sold,
     pending,

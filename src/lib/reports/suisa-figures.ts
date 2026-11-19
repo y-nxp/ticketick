@@ -25,8 +25,12 @@ export interface SuisaSessionInput {
   /** Jauge connue de ticketick ; null si la séance n'en a pas. */
   capacity: number | null;
   music: SuisaMusicValue | null;
+  /** Caisse du soir saisie à la main (espèces, TWINT…). */
   doorTickets: number | null;
   doorRevenueCents: number | null;
+  /** Ventes de la caisse sur place (app de contrôle), qui s'y ajoutent. */
+  tillTickets?: number;
+  tillCents?: number;
 }
 
 /** Billet valable d'une commande payée, avec sa part de la recette. */
@@ -62,6 +66,9 @@ export interface SuisaRow
     SuisaFigures {
   /** Grand concert au sens du ch. 4.1. */
   large: boolean;
+  /** Part de la caisse du soir venue de la caisse sur place (comprise dans `door…`). */
+  tillTickets: number;
+  tillCents: number;
 }
 
 export interface SuisaReport {
@@ -115,8 +122,10 @@ export function buildSuisaReport(
     .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
     .map((session) => {
       const s = sold.get(session.sessionId) ?? { paid: 0, offered: 0, cents: 0 };
-      const doorTickets = session.doorTickets ?? 0;
-      const doorCents = session.doorRevenueCents ?? 0;
+      const tillTickets = session.tillTickets ?? 0;
+      const tillCents = session.tillCents ?? 0;
+      const doorTickets = (session.doorTickets ?? 0) + tillTickets;
+      const doorCents = (session.doorRevenueCents ?? 0) + tillCents;
       const grossCents = s.cents + doorCents;
       const baseCents = withoutVat(grossCents, vatPercent);
       return {
@@ -132,6 +141,8 @@ export function buildSuisaReport(
         ticketickCents: s.cents,
         doorTickets,
         doorCents,
+        tillTickets,
+        tillCents,
         paidTotal: s.paid + doorTickets,
         tickets: s.paid + s.offered + doorTickets,
         grossCents,

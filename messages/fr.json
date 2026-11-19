@@ -477,9 +477,6 @@
       "title": "Caisse",
       "chooseConcert": "Choisir le concert",
       "noSessions": "Aucun concert en vente à la caisse.",
-      "seatedHint": "Les sièges sont attribués d’office, côte à côte si possible.",
-      "left": "{count, plural, one {# place} other {# places}}",
-      "soldOut": "complet",
       "less": "Retirer un billet {tariff}",
       "more": "Ajouter un billet {tariff}",
       "chooseTariff": "Choisir les billets",
@@ -489,10 +486,6 @@
       "recorded": "Vente enregistrée",
       "alreadyRecorded": "Vente déjà enregistrée",
       "free": "Gratuit",
-      "ticketsUsed": "Billets marqués comme entrés.",
-      "ticketsValid": "Billets valables pour l’entrée.",
-      "next": "Nouvelle vente",
-      "toDoor": "Contrôle des billets",
       "cancelled": "Paiement annulé",
       "cancelledHint": "Rien n’a été encaissé ni vendu.",
       "refunded": "Paiement remboursé",
@@ -501,12 +494,6 @@
       "errors": {
         "empty": "Choisissez au moins un billet.",
         "notFound": "Ce concert n’est plus en vente à la caisse.",
-        "sessionPast": "Ce concert a commencé il y a plus de 3 heures.",
-        "soldOut": "Plus assez de places.",
-        "seatsUnavailable": "Plus assez de sièges libres pour ce tarif.",
-        "invitesUnavailable": "Plus assez de places invités.",
-        "seatsTaken": "Ces sièges ne sont plus libres.",
-        "retry": "Vente en cours d’enregistrement : rouvrez le retour dans un instant.",
         "quantity": "Quantité non valable.",
         "noStripe": "Le compte Stripe de l’organisateur n’est pas branché dans ticketick : le paiement ne peut pas être vérifié.",
         "expired": "Vente trop ancienne ou lien abîmé : vérifiez dans Stripe si un paiement a été fait.",
@@ -514,7 +501,14 @@
         "amountMismatch": "Montant encaissé différent du prix (taxe ou pourboire dans les réglages de Collect ?). Le paiement a été remboursé.",
         "stripe": "Stripe ne répond pas : vérifiez le paiement dans Stripe avant de recommencer."
       },
-      "otherConcert": "Autre concert"
+      "otherConcert": "Autre concert",
+      "noticeTitle": "Caisse de vente sur place.",
+      "notice": "Vente des billets papier réservés en amont : aucun billet n’est émis, aucune place n’est prise. Chaque vente est comptée par tarif.",
+      "next": "Prochain",
+      "soldAtTill": "{count, plural, one {# vendu} other {# vendus}} à la caisse",
+      "nextSale": "Nouvelle vente pour ce concert",
+      "handPaper": "Remettez les billets papier.",
+      "tillTotal": "Caisse {title}, {when} : {count, plural, one {# billet vendu} other {# billets vendus}}"
     }
   },
   "about": {
@@ -2104,7 +2098,8 @@
       "errors": {
         "forbidden": "Accès refusé.",
         "invalid": "Valeur non valable."
-      }
+      },
+      "tillSales": "+ caisse sur place : {count} · {amount}"
     },
     "promotion": {
       "title": "Promotion",

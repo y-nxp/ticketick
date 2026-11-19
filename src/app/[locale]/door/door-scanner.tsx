@@ -51,10 +51,13 @@ export function DoorScanner({
   sessions,
   sessionId,
   initialCounts,
+  till = false,
 }: {
   sessions: DoorSessionOption[];
   sessionId: string;
   initialCounts: { entered: number; expected: number };
+  /** Caisse sur place : onglet Caisse dans l'en-tête. */
+  till?: boolean;
 }) {
   const t = useTranslations("door");
   const locale = useLocale();
@@ -275,7 +278,7 @@ export function DoorScanner({
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <DoorHeader sound={sound} />
+      <DoorHeader sound={sound} till={till} />
 
       <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-3 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
         <select

@@ -1,40 +1,40 @@
 import "server-only";
 
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { jwtVerify, SignJWT } from "jose";
 import type Stripe from "stripe";
 import type { CurrentUser } from "@/lib/auth/dal";
 import { publicAppOrigin } from "@/lib/app-url";
-import { createReservation, type ReservationError } from "@/lib/orders/admin-reservation";
 import { anyStripeAccountForOrganizer, stripeAccountForOrganizer, stripeClient } from "@/lib/payment/stripe-account";
 import { prisma } from "@/lib/prisma";
-import { readLayout, zoneAllowed } from "@/lib/seating/layout";
-import { syncSessionSeats } from "@/lib/seating/seats";
 import { t as translate, type Translated } from "@/lib/types";
 import { EVENT_TIME_ZONE } from "@/lib/utils";
 import { collectLaunchUrl, saleDescription, type CollectReturn } from "./collect-link";
-import { isEntryOpen } from "./entry-window";
-
-export { currentSaleSession } from "./current-sale";
 import { doorEventWhere } from "./scope";
 
+export { currentSaleSession } from "./current-sale";
+
 /**
- * Caisse du soir : la personne à l'entrée choisit le concert et les tarifs
- * dans ticketick, Collect for Stripe encaisse sur le lecteur, puis renvoie
- * vers ticketick qui vérifie le paiement chez Stripe et enregistre la vente
- * (contingent, rapports, SUISA).
+ * Caisse sur place : on vend les billets papier réservés en amont (lots de
+ * réservations). La personne à l'entrée choisit le concert et les tarifs,
+ * Collect for Stripe encaisse sur le lecteur, puis renvoie vers ticketick
+ * qui vérifie le paiement chez Stripe et compte la vente.
+ *
+ * Aucun billet ticketick n'est émis ni aucune place prise : les places sont
+ * déjà retenues par les lots. La vente est comptée par tarif, pour savoir ce
+ * qu'il reste de papier, et s'ajoute à la caisse du soir du rapport SUISA.
  *
  * Entre les deux, la vente voyage dans un jeton signé placé dans l'adresse de
- * retour : au retour de Collect, le navigateur n'est pas forcément celui où
- * l'on était connecté (app installée sur l'écran d'accueil de l'iPhone).
- * Le paiement vérifié chez Stripe, et jamais utilisé deux fois, fait foi.
+ * retour : le navigateur ouvert par Collect n'est pas forcément celui où l'on
+ * était connecté (app installée sur l'écran d'accueil de l'iPhone). Le
+ * paiement vérifié chez Stripe, et jamais compté deux fois, fait foi.
  */
 
 /** Vente encore possible jusqu'à trois heures après le début (retardataires). */
 export const LATE_SALE_MS = 3 * 60 * 60 * 1000;
 const TOKEN_TTL = "3h";
 const AUDIENCE = "door-sale";
-const MAX_PER_LINE = 30;
+const MAX_PER_LINE = 50;
 /** Un paiement plus ancien que la vente préparée ne peut pas lui appartenir. */
 const CHARGE_MAX_AGE_MS = 4 * 60 * 60 * 1000;
 
@@ -43,8 +43,8 @@ export interface SaleTariff {
   name: string;
   priceCents: number;
   currency: string;
-  /** Places encore disponibles pour ce tarif. */
-  left: number;
+  /** Billets de ce tarif déjà vendus à la caisse pour ce concert. */
+  soldAtTill: number;
 }
 
 export interface SaleSession {
@@ -54,7 +54,6 @@ export interface SaleSession {
   venue: string | null;
   organizerId: string;
   organizerName: string;
-  seated: boolean;
   tariffs: SaleTariff[];
 }
 
@@ -62,41 +61,35 @@ const sessionSelect = {
   id: true,
   startsAt: true,
   label: true,
-  capacity: true,
-  sold: true,
-  seatPlanId: true,
   venue: { select: { name: true } },
   event: { select: { title: true, organizerId: true, organizer: { select: { name: true } } } },
   ticketTypes: {
     orderBy: [{ priceCents: "desc" as const }, { id: "asc" as const }],
-    select: { id: true, name: true, priceCents: true, currency: true, quantity: true, sold: true },
+    select: { id: true, name: true, priceCents: true, currency: true },
   },
 } satisfies Prisma.EventSessionSelect;
 
-function sellableWhere(user: CurrentUser, now: Date) {
+/**
+ * Concerts de la caisse : ceux des organisateurs qui encaissent avec Stripe
+ * (sans compte Stripe, le paiement ne peut pas être vérifié).
+ */
+function sellableWhere(user: CurrentUser, now: Date): Prisma.EventSessionWhereInput {
   return {
     startsAt: { gte: new Date(now.getTime() - LATE_SALE_MS) },
-    status: { in: ["PUBLISHED" as const, "SOLD_OUT" as const] },
-    event: { ...doorEventWhere(user), status: { in: ["PUBLISHED" as const, "SOLD_OUT" as const] } },
+    status: { in: ["PUBLISHED", "SOLD_OUT"] },
+    event: {
+      ...doorEventWhere(user),
+      status: { in: ["PUBLISHED", "SOLD_OUT"] },
+      organizer: { stripe: { enabled: true } },
+    },
   };
 }
 
-type SessionRow = {
-  id: string;
-  startsAt: Date;
-  label: unknown;
-  capacity: number | null;
-  sold: number;
-  seatPlanId: string | null;
-  venue: { name: string } | null;
-  event: { title: unknown; organizerId: string; organizer: { name: string } };
-  ticketTypes: { id: string; name: unknown; priceCents: number; currency: string; quantity: number; sold: number }[];
-};
+type SessionRow = Prisma.EventSessionGetPayload<{ select: typeof sessionSelect }>;
 
-function toSaleSession(s: SessionRow, locale: string): SaleSession {
+function toSaleSession(s: SessionRow, locale: string, sold: Map<string, number> = new Map()): SaleSession {
   const title = translate(s.event.title as Translated, locale);
   const label = s.label ? translate(s.label as Translated, locale) : null;
-  const room = s.capacity != null ? Math.max(0, s.capacity - s.sold) : Infinity;
   return {
     id: s.id,
     title: label ? `${title} (${label})` : title,
@@ -104,13 +97,12 @@ function toSaleSession(s: SessionRow, locale: string): SaleSession {
     venue: s.venue?.name ?? null,
     organizerId: s.event.organizerId,
     organizerName: s.event.organizer.name,
-    seated: s.seatPlanId != null,
     tariffs: s.ticketTypes.map((tt) => ({
       id: tt.id,
       name: translate(tt.name as Translated, locale),
       priceCents: tt.priceCents,
       currency: tt.currency,
-      left: Math.max(0, Math.min(tt.quantity - tt.sold, room)),
+      soldAtTill: sold.get(tt.id) ?? 0,
     })),
   };
 }
@@ -133,41 +125,43 @@ export async function getSaleSession(
 ): Promise<SaleSession | null> {
   const row = await prisma.eventSession.findFirst({
     where: { id: sessionId, ...sellableWhere(user, new Date()) },
-    select: { ...sessionSelect, seatPlan: { select: { layout: true } } },
+    select: sessionSelect,
   });
-  if (!row) return null;
-  const session = toSaleSession(row, locale);
-  const layout = readLayout(row.seatPlan?.layout);
-  if (!layout) return session;
+  return row ? toSaleSession(row, locale, await soldAtTill(row.id)) : null;
+}
 
-  // Placement numéroté : seuls les sièges libres de la zone du tarif se vendent
-  // (les places invités, bloquées, restent à l'admin).
-  await syncSessionSeats(session.id);
-  const free = new Set(
-    (
-      await prisma.sessionSeat.findMany({
-        where: { sessionId: session.id, status: "AVAILABLE" },
-        select: { seatKey: true },
-      })
-    ).map((seat) => seat.seatKey),
-  );
-  const zones = new Map(
-    (
-      await prisma.ticketType.findMany({
-        where: { sessionId: session.id },
-        select: { id: true, seatZones: true },
-      })
-    ).map((tt) => [tt.id, tt.seatZones]),
-  );
-  return {
-    ...session,
-    tariffs: session.tariffs.map((tt) => {
-      const seats = layout.seats.filter(
-        (seat) => free.has(seat.key) && zoneAllowed(zones.get(tt.id) ?? [], seat.zone),
-      ).length;
-      return { ...tt, left: Math.min(tt.left, seats) };
-    }),
-  };
+/** La caisse existe-t-elle pour ce compte (un organisateur avec Stripe) ? */
+export async function doorTillEnabled(user: CurrentUser): Promise<boolean> {
+  if (user.role === "ADMIN") {
+    return (await prisma.organizerStripeAccount.count({ where: { enabled: true } })) > 0;
+  }
+  const organizerId =
+    user.role === "DOOR_STAFF" ? user.doorOrganizerId : user.role === "ORGANIZER" ? user.organizerId : null;
+  if (!organizerId) return false;
+  return (await prisma.organizerStripeAccount.count({ where: { organizerId, enabled: true } })) > 0;
+}
+
+/** Billets vendus à la caisse pour un concert, par tarif. */
+async function soldAtTill(sessionId: string): Promise<Map<string, number>> {
+  const sales = await prisma.doorSale.findMany({ where: { sessionId }, select: { lines: true } });
+  const sold = new Map<string, number>();
+  for (const sale of sales) {
+    for (const line of readLines(sale.lines)) {
+      sold.set(line.ticketTypeId, (sold.get(line.ticketTypeId) ?? 0) + line.quantity);
+    }
+  }
+  return sold;
+}
+
+export interface SaleLine {
+  ticketTypeId: string;
+  name: string;
+  quantity: number;
+  unitPriceCents: number;
+}
+
+export function readLines(value: Prisma.JsonValue): SaleLine[] {
+  return Array.isArray(value) ? (value as unknown as SaleLine[]) : [];
 }
 
 // ───────────────────────────── Jeton de la vente
@@ -214,7 +208,8 @@ async function readSale(token: string): Promise<SaleClaim | null> {
 // ───────────────────────────── Préparer la vente
 
 export type SaleError =
-  | ReservationError
+  | "empty"
+  | "notFound"
   | "quantity"
   | "noStripe"
   | "expired"
@@ -224,7 +219,7 @@ export type SaleError =
 
 export type PrepareResult =
   | { ok: true; kind: "collect"; url: string }
-  | { ok: true; kind: "done"; orderId: string }
+  | { ok: true; kind: "done"; saleId: string }
   | { ok: false; error: SaleError; ticketTypeId?: string };
 
 export async function prepareDoorSale(
@@ -237,17 +232,15 @@ export async function prepareDoorSale(
   if (lines.length === 0) return { ok: false, error: "empty" };
   const tariffs = new Map(session.tariffs.map((tt) => [tt.id, tt]));
   for (const line of lines) {
-    const tt = tariffs.get(line.ticketTypeId);
-    if (!tt || !Number.isInteger(line.quantity) || line.quantity > MAX_PER_LINE) {
+    if (!tariffs.has(line.ticketTypeId) || !Number.isInteger(line.quantity) || line.quantity > MAX_PER_LINE) {
       return { ok: false, error: "quantity", ticketTypeId: line.ticketTypeId };
     }
-    if (line.quantity > tt.left) return { ok: false, error: "soldOut", ticketTypeId: tt.id };
   }
   const amountCents = lines.reduce((sum, l) => sum + tariffs.get(l.ticketTypeId)!.priceCents * l.quantity, 0);
 
   if (amountCents === 0) {
-    const result = await record(session, user.id, lines, input.locale, { method: "FREE" });
-    return result.ok ? { ok: true, kind: "done", orderId: result.orderId } : result;
+    const sale = await recordSale(session, user.id, lines, { provider: "free", chargeId: null, amountCents: 0 });
+    return { ok: true, kind: "done", saleId: sale.id };
   }
 
   // Le paiement sera vérifié dans le compte Stripe de l'organisateur.
@@ -288,101 +281,88 @@ export async function prepareDoorSale(
   };
 }
 
-async function record(
+async function recordSale(
   session: SaleSession,
   userId: string,
   lines: { ticketTypeId: string; quantity: number }[],
-  locale: string,
-  settle: { method: "FREE" } | { method: "TERMINAL"; amountCents: number; provider: string; providerRef: string },
-) {
-  const result = await createReservation({
-    parts: [{ sessionId: session.id, lines }],
-    holderName: "",
-    ticketNote: "",
-    locale,
-    soldByUserId: userId,
-    settle,
-    lateSaleMs: LATE_SALE_MS,
+  payment: { provider: "collect" | "free"; chargeId: string | null; amountCents: number },
+): Promise<{ id: string }> {
+  const tariffs = new Map(session.tariffs.map((tt) => [tt.id, tt]));
+  const saleLines: SaleLine[] = lines.map((l) => ({
+    ticketTypeId: l.ticketTypeId,
+    name: tariffs.get(l.ticketTypeId)?.name ?? "",
+    quantity: l.quantity,
+    unitPriceCents: tariffs.get(l.ticketTypeId)?.priceCents ?? 0,
+  }));
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+  return prisma.doorSale.create({
+    data: {
+      sessionId: session.id,
+      chargeId: payment.chargeId,
+      provider: payment.provider,
+      amountCents: payment.amountCents,
+      currency: (session.tariffs[0]?.currency ?? "CHF").toUpperCase(),
+      paidTickets: saleLines.filter((l) => l.unitPriceCents > 0).reduce((n, l) => n + l.quantity, 0),
+      lines: saleLines as unknown as Prisma.InputJsonValue,
+      soldById: user?.id ?? null,
+    },
+    select: { id: true },
   });
-  if (!result.ok) return result;
-  // Vendu à l'entrée, déjà ouverte : la personne entre tout de suite.
-  if (isEntryOpen(session.startsAt.toISOString())) {
-    await prisma.ticket.updateMany({
-      where: { orderId: result.orderId, status: "VALID" },
-      data: { status: "USED", usedAt: new Date() },
-    });
-  }
-  return result;
 }
 
 // ───────────────────────────── Retour de Collect
 
 export type CompleteResult =
-  | { status: "done"; orderId: string; again: boolean }
+  | { status: "done"; saleId: string; again: boolean }
   | { status: "cancelled" }
   | { status: "refunded"; error: SaleError }
   | { status: "error"; error: SaleError };
-
-const inFlight = new Set<string>();
 
 export async function completeDoorSale(token: string, ret: CollectReturn): Promise<CompleteResult> {
   const claim = await readSale(decodeURIComponent(token).replaceAll("~", "."));
   if (!claim) return { status: "error", error: "expired" };
   if (ret.result !== "success") return { status: "cancelled" };
 
-  const chargeId = ret.chargeId;
-  const already = await recordedOrder(chargeId);
-  if (already) return { status: "done", orderId: already, again: true };
-  // Retour ouvert deux fois de suite : une seule vente.
-  if (inFlight.has(chargeId)) return { status: "error", error: "retry" };
-  inFlight.add(chargeId);
+  const already = await prisma.doorSale.findUnique({ where: { chargeId: ret.chargeId }, select: { id: true } });
+  if (already) return { status: "done", saleId: already.id, again: true };
+
+  const row = await prisma.eventSession.findUnique({ where: { id: claim.s }, select: sessionSelect });
+  if (!row) return { status: "error", error: "notFound" };
+  const session = toSaleSession(row, claim.locale);
+
+  const account = await anyStripeAccountForOrganizer(session.organizerId);
+  if (!account) return { status: "error", error: "noStripe" };
+  const stripe = stripeClient(account.secretKey);
+  let charge: Stripe.Charge;
   try {
-    const row = await prisma.eventSession.findUnique({ where: { id: claim.s }, select: sessionSelect });
-    const user = await prisma.user.findUnique({ where: { id: claim.u }, select: { id: true, active: true } });
-    if (!row || !user?.active) return { status: "error", error: "notFound" };
-    const session = toSaleSession(row, claim.locale);
-
-    const account = await anyStripeAccountForOrganizer(session.organizerId);
-    if (!account) return { status: "error", error: "noStripe" };
-    const stripe = stripeClient(account.secretKey);
-    let charge: Stripe.Charge;
-    try {
-      charge = await retrieveCharge(stripe, chargeId);
-    } catch {
-      return { status: "error", error: "stripe" };
-    }
-    const paid = charge.status === "succeeded" && charge.paid && !charge.refunded;
-    const fresh = Date.now() - charge.created * 1000 < CHARGE_MAX_AGE_MS;
-    if (!paid || !fresh) return { status: "error", error: "notPaid" };
-    if (charge.amount !== claim.a || charge.currency !== claim.c) {
-      await refund(stripe, charge);
-      return { status: "refunded", error: "amountMismatch" };
-    }
-
-    const result = await record(
-      session,
-      user.id,
-      claim.l.map(([ticketTypeId, quantity]) => ({ ticketTypeId, quantity })),
-      claim.locale,
-      { method: "TERMINAL", amountCents: claim.a, provider: "collect", providerRef: charge.id },
-    );
-    if (!result.ok) {
-      // Plus de place entre-temps : l'argent repart tout de suite.
-      await refund(stripe, charge);
-      return { status: "refunded", error: result.error };
-    }
-    return { status: "done", orderId: result.orderId, again: false };
-  } finally {
-    inFlight.delete(chargeId);
+    charge = await retrieveCharge(stripe, ret.chargeId);
+  } catch {
+    return { status: "error", error: "stripe" };
   }
-}
+  const paid = charge.status === "succeeded" && charge.paid && !charge.refunded;
+  const fresh = Date.now() - charge.created * 1000 < CHARGE_MAX_AGE_MS;
+  if (!paid || !fresh) return { status: "error", error: "notPaid" };
+  if (charge.amount !== claim.a || charge.currency !== claim.c) {
+    await refund(stripe, charge);
+    return { status: "refunded", error: "amountMismatch" };
+  }
 
-async function recordedOrder(chargeId: string): Promise<string | null> {
-  const charge = await prisma.orderCharge.findFirst({
-    where: { provider: "collect", providerRef: chargeId },
-    select: { orderId: true },
-  });
-  return charge?.orderId ?? null;
+  try {
+    const sale = await recordSale(
+      session,
+      claim.u,
+      claim.l.map(([ticketTypeId, quantity]) => ({ ticketTypeId, quantity })),
+      { provider: "collect", chargeId: charge.id, amountCents: claim.a },
+    );
+    return { status: "done", saleId: sale.id, again: false };
+  } catch (error) {
+    // Retour ouvert deux fois en même temps : la première vente compte.
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      const sale = await prisma.doorSale.findUnique({ where: { chargeId: charge.id }, select: { id: true } });
+      if (sale) return { status: "done", saleId: sale.id, again: true };
+    }
+    throw error;
+  }
 }
 
 async function retrieveCharge(stripe: Stripe, id: string): Promise<Stripe.Charge> {
@@ -399,27 +379,13 @@ async function refund(stripe: Stripe, charge: Stripe.Charge): Promise<void> {
   await stripe.refunds.create({ charge: charge.id }, { idempotencyKey: `door-sale-refund-${charge.id}` });
 }
 
-/** Ce que la page de retour affiche : billets émis, sièges. */
-export async function getDoorSaleSummary(orderId: string) {
-  return prisma.order.findUnique({
-    where: { id: orderId },
-    select: {
-      reference: true,
-      totalCents: true,
-      currency: true,
-      tickets: {
-        orderBy: { seatLabel: "asc" },
-        select: {
-          status: true,
-          seatLabel: true,
-          ticketType: {
-            select: {
-              name: true,
-              session: { select: { id: true, startsAt: true, event: { select: { title: true } } } },
-            },
-          },
-        },
-      },
-    },
+/** Ce que la page de retour affiche : la vente, et le total de la caisse pour ce concert. */
+export async function getDoorSaleSummary(saleId: string, locale: string) {
+  const sale = await prisma.doorSale.findUnique({
+    where: { id: saleId },
+    select: { id: true, amountCents: true, currency: true, lines: true, sessionId: true, session: { select: sessionSelect } },
   });
+  if (!sale) return null;
+  const session = toSaleSession(sale.session, locale, await soldAtTill(sale.sessionId));
+  return { sale: { ...sale, lines: readLines(sale.lines) }, session };
 }

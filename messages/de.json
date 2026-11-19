@@ -477,9 +477,6 @@
       "title": "Kasse",
       "chooseConcert": "Konzert wählen",
       "noSessions": "Kein Konzert an der Kasse im Verkauf.",
-      "seatedHint": "Die Plätze werden automatisch zugeteilt, wenn möglich nebeneinander.",
-      "left": "{count, plural, one {# Platz} other {# Plätze}}",
-      "soldOut": "ausverkauft",
       "less": "Ein Ticket {tariff} entfernen",
       "more": "Ein Ticket {tariff} hinzufügen",
       "chooseTariff": "Tickets wählen",
@@ -489,10 +486,6 @@
       "recorded": "Verkauf erfasst",
       "alreadyRecorded": "Verkauf bereits erfasst",
       "free": "Gratis",
-      "ticketsUsed": "Tickets als eingetreten markiert.",
-      "ticketsValid": "Tickets gültig für den Eintritt.",
-      "next": "Neuer Verkauf",
-      "toDoor": "Ticketkontrolle",
       "cancelled": "Zahlung abgebrochen",
       "cancelledHint": "Nichts wurde kassiert oder verkauft.",
       "refunded": "Zahlung zurückerstattet",
@@ -501,12 +494,6 @@
       "errors": {
         "empty": "Mindestens ein Ticket wählen.",
         "notFound": "Dieses Konzert ist an der Kasse nicht mehr im Verkauf.",
-        "sessionPast": "Dieses Konzert hat vor mehr als 3 Stunden begonnen.",
-        "soldOut": "Nicht mehr genug Plätze.",
-        "seatsUnavailable": "Nicht mehr genug freie Sitze für diesen Tarif.",
-        "invitesUnavailable": "Nicht mehr genug Gästeplätze.",
-        "seatsTaken": "Diese Sitze sind nicht mehr frei.",
-        "retry": "Verkauf wird erfasst: Rücklink gleich nochmals öffnen.",
         "quantity": "Ungültige Menge.",
         "noStripe": "Das Stripe-Konto des Veranstalters ist in ticketick nicht verbunden: Die Zahlung kann nicht geprüft werden.",
         "expired": "Verkauf zu alt oder Link beschädigt: In Stripe prüfen, ob eine Zahlung erfolgt ist.",
@@ -514,7 +501,14 @@
         "amountMismatch": "Kassierter Betrag weicht vom Preis ab (Steuer oder Trinkgeld in den Collect-Einstellungen?). Die Zahlung wurde zurückerstattet.",
         "stripe": "Stripe antwortet nicht: Zahlung in Stripe prüfen, bevor Sie es erneut versuchen."
       },
-      "otherConcert": "Anderes Konzert"
+      "otherConcert": "Anderes Konzert",
+      "noticeTitle": "Verkaufskasse vor Ort.",
+      "notice": "Verkauf der im Voraus reservierten Papiertickets: Es wird kein Ticket ausgestellt und kein Platz belegt. Jeder Verkauf wird pro Tarif gezählt.",
+      "next": "Nächstes",
+      "soldAtTill": "{count} an der Kasse verkauft",
+      "nextSale": "Neuer Verkauf für dieses Konzert",
+      "handPaper": "Papiertickets übergeben.",
+      "tillTotal": "Kasse {title}, {when}: {count, plural, one {# Ticket verkauft} other {# Tickets verkauft}}"
     }
   },
   "about": {
@@ -2104,7 +2098,8 @@
       "errors": {
         "forbidden": "Zugriff verweigert.",
         "invalid": "Ungültiger Wert."
-      }
+      },
+      "tillSales": "+ Kasse vor Ort: {count} · {amount}"
     },
     "promotion": {
       "title": "Promotion",
