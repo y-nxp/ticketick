@@ -82,13 +82,15 @@ const EMPTY: ReportFigures = {
 
 export async function getOrganizerReport(
   organizerId: string,
-  options: { since: Date; now?: Date; locale?: string },
+  options: { since: Date; now?: Date; locale?: string; sessionIds?: string[] },
 ): Promise<{ sessions: ReportSession[]; totals: ReportFigures }> {
   const now = options.now ?? new Date();
   const sessions = await prisma.eventSession.findMany({
     where: {
       startsAt: { gte: new Date(now.getTime() - 12 * 60 * 60 * 1000) },
       status: { not: "CANCELLED" },
+      // Rapport d'événement : seulement les dates concernées.
+      ...(options.sessionIds ? { id: { in: options.sessionIds } } : {}),
       event: { organizerId, status: { not: "CANCELLED" } },
     },
     orderBy: { startsAt: "asc" },

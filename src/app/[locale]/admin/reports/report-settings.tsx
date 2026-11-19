@@ -54,6 +54,7 @@ export function ReportSettings({
   sections,
   promotionOffered,
   fallback,
+  eventReports,
 }: {
   organizerId: string;
   frequency: string;
@@ -65,6 +66,7 @@ export function ReportSettings({
   /** Case « Promotion » : module visible et organisateur avec des campagnes. */
   promotionOffered: boolean;
   fallback: string;
+  eventReports: boolean;
 }) {
   const t = useTranslations("admin.reports");
   const { state, pending, formProps } = useKeptForm(saveReportSettings);
@@ -119,6 +121,10 @@ export function ReportSettings({
           ))}
         </div>
       </fieldset>
+      <div key={String(eventReports)} className="space-y-1">
+        <Checkbox name="eventReports" value="1" label={t("eventReports")} defaultChecked={eventReports} />
+        <p className="pl-6.5 text-xs text-muted-foreground">{t("eventReportsHint")}</p>
+      </div>
       {state?.ok ? (
         <p role="status" className="rounded-control bg-primary/10 px-3.5 py-2.5 text-sm text-primary">
           {t("saved")}

@@ -167,6 +167,17 @@ enum EventVisibility {
 }
 
 /// Prix d'une option de commande : montant unique, ou par choix coché.
+/// Musique jouée, pour le décompte SUISA (tarif commun K). Vide : pas encore
+/// indiqué par l'organisateur.
+enum SuisaMusic {
+  /// Au moins une œuvre protégée au programme.
+  PROTECTED
+  /// Uniquement des œuvres du domaine public.
+  PUBLIC_DOMAIN
+  /// Hors tarif K : conférence, rencontre, spectacle sans musique.
+  NONE
+}
+
 enum EventOptionPriceMode {
   FLAT
   PER_CHOICE
@@ -366,19 +377,24 @@ model Organizer {
   cardProvider String?
 
   /// Rapport de l'organisateur par e-mail : ventes, invitations, places restantes.
-  reportFrequency  ReportFrequency @default(NONE)
+  reportFrequency    ReportFrequency @default(NONE)
   /// Jour du rapport hebdomadaire : 1 = lundi … 7 = dimanche.
-  reportWeekday    Int             @default(1)
+  reportWeekday      Int             @default(1)
   /// Heure d'envoi à Zurich, 0 à 23.
-  reportHour       Int             @default(7)
+  reportHour         Int             @default(7)
   /// Vide : le rapport part aux adresses de copie (`notifyEmails`).
-  reportEmails     String[]        @default([])
+  reportEmails       String[]        @default([])
   /// Parties du rapport : "sales", "invitations", "remaining".
-  reportSections   String[]        @default(["sales", "invitations", "remaining"])
+  reportSections     String[]        @default(["sales", "invitations", "remaining"])
   /// Fin de la période du dernier rapport envoyé automatiquement.
-  lastReportAt     DateTime?
+  lastReportAt       DateTime?
   /// Dernier rapport automatique envoyé : point de départ des « nouveaux ».
-  lastReportSentAt DateTime?
+  lastReportSentAt   DateTime?
+  /// Rapports d'événement : chaque matin à 7 h la semaine qui précède une
+  /// date (le jour même compris), puis une heure avant le début.
+  eventReports       Boolean         @default(true)
+  /// Jour (Zurich, « 2026-12-27 ») du dernier rapport d'événement du matin.
+  lastEventReportDay String?
 
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @unique
@@ -544,6 +560,9 @@ model Event {
   /// ne s'applique pas à ce spectacle. Cas particuliers décidés par lui.
   groupDiscountOff Boolean @default(false)
 
+  /// Rapport SUISA : œuvres protégées ou non. Indiqué depuis le rapport.
+  suisaMusic SuisaMusic?
+
   /// Depuis son compte, le client échange ses billets (places, spectacle du
   /// même organisateur) jusqu'à `changeUntilHours` avant le début. Jamais de
   /// remboursement : seule une hausse se paie.
@@ -611,6 +630,14 @@ model EventSession {
   /// Placement libre : places mises de côté pour les invités, en plus de `capacity`.
   /// Une réservation « invités » les fait passer dans la jauge.
   inviteSeats Int  @default(0)
+
+  /// Caisse du soir tenue hors ticketick (espèces, TWINT), saisie après la
+  /// séance pour le rapport SUISA : billets payants et montant TTC.
+  doorTickets      Int?
+  doorRevenueCents Int?
+
+  /// Rapport d'événement « dans une heure » envoyé (ou réservé) à cet instant.
+  hourReportAt DateTime?
 
   /// Surcharge les moyens du spectacle. `null` = on hérite.
   acceptCard Boolean?

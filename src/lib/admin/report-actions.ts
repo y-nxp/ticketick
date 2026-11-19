@@ -85,6 +85,7 @@ export async function saveReportSettings(_prev: FormState, formData: FormData): 
       reportHour: hour.data,
       reportEmails: emails,
       reportSections: sections,
+      eventReports: formData.get("eventReports") === "1",
       // Nouvel horaire : rien pour une échéance déjà passée, la prochaine part à l'heure choisie.
       ...(rescheduled
         ? {
