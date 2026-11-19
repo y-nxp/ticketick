@@ -46,7 +46,8 @@ function isBarePath(pathname: string, shopOrigin?: string | null): boolean {
     pathname === "/go" ||
     pathname.startsWith("/go/") ||
     // App de contrôle : plein écran, sans l'en-tête ni le pied de page du site.
-    pathname === "/door"
+    pathname === "/door" ||
+    pathname.startsWith("/door/")
   ) {
     return true;
   }

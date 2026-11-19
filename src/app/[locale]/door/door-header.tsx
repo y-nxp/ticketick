@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
-import { LogOut, Volume2, VolumeX } from "lucide-react";
+import { CreditCard, LogOut, ScanLine, Volume2, VolumeX } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { TicketMark } from "@/components/ui/ticket-mark";
 import { logout } from "@/lib/auth/actions";
 import { clearDoorStorage, pendingTotal } from "@/lib/door/offline";
@@ -28,15 +29,30 @@ export function useDoorSound(): { on: boolean; toggle: () => void } {
   return { on, toggle };
 }
 
-export function DoorHeader({ sound }: { sound?: { on: boolean; toggle: () => void } }) {
+export function DoorHeader({
+  sound,
+  active = "door",
+}: {
+  sound?: { on: boolean; toggle: () => void };
+  /** Onglet ouvert : contrôle des billets ou caisse. */
+  active?: "door" | "sell";
+}) {
   const t = useTranslations("door");
+  const tab = (on: boolean) =>
+    `grid size-11 place-items-center rounded-control ${on ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/70"}`;
   return (
     <header className="sticky top-0 z-10 border-b border-border bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="mx-auto flex h-14 max-w-lg items-center gap-2 px-4">
         <h1 className="flex flex-1 items-center gap-2 text-lg font-bold tracking-tight">
           <TicketMark className="h-6" />
-          {t("title")}
+          {active === "sell" ? t("sell.title") : t("title")}
         </h1>
+        <Link href="/door" aria-label={t("title")} title={t("title")} aria-current={active === "door" ? "page" : undefined} className={tab(active === "door")}>
+          <ScanLine className="size-5" />
+        </Link>
+        <Link href="/door/sell" aria-label={t("sell.title")} title={t("sell.title")} aria-current={active === "sell" ? "page" : undefined} className={tab(active === "sell")}>
+          <CreditCard className="size-5" />
+        </Link>
         {sound ? (
           <button
             type="button"
