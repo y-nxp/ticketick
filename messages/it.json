@@ -656,7 +656,8 @@
       "payments": "Incassi",
       "reports": "Rapporti",
       "promotion": "Promozione",
-      "api": "API & agenti IA"
+      "api": "API & agenti IA",
+      "stripeCatalog": "Cassa Stripe"
     },
     "overview": {
       "title": "Panoramica",
@@ -1658,7 +1659,8 @@
           "secretRequired": "La chiave segreta è obbligatoria.",
           "keyFormat": "Non è una chiave segreta Stripe (sk_live_…, sk_test_…, rk_live_… o rk_test_…). La chiave pubblicabile pk_… non va bene.",
           "credentials": "Stripe rifiuta questa chiave. Verificate che sia attiva e completa."
-        }
+        },
+        "catalogLink": "Tariffe in Stripe (cassa)"
       },
       "bank": {
         "title": "Bonifico bancario",
@@ -2356,6 +2358,59 @@
         "organizer": "Organizzatore non trovato.",
         "tooMany": "Al massimo venti chiavi attive: revocane una.",
         "unavailable": "Creazione impossibile al momento. Riprova."
+      }
+    },
+    "stripeCatalog": {
+      "title": "Cassa Stripe",
+      "subtitle": "Per incassare all'ingresso con il lettore Stripe (WisePad): ogni tariffa a pagamento delle date in arrivo diventa un prodotto del catalogo Stripe, al suo prezzo. Basta un clic per aggiornare il catalogo.",
+      "organizer": "Organizzatore",
+      "noOrganizer": "Nessun organizzatore ha un conto Stripe attivo.",
+      "noAccount": "Questo organizzatore non ha un conto Stripe attivo.",
+      "toPayments": "Collegare Stripe in Mezzi di pagamento.",
+      "account": "Conto Stripe",
+      "live": "Produzione",
+      "test": "Modalità test",
+      "syncedAt": "Ultima sincronizzazione: {date}",
+      "neverSynced": "Mai sincronizzato",
+      "counts": {
+        "create": "Da creare",
+        "update": "Da aggiornare",
+        "keep": "Aggiornati",
+        "archive": "Da ritirare"
+      },
+      "syncAll": "Sincronizza ({count, plural, one {# modifica} other {# modifiche}})",
+      "syncAgain": "Sincronizza di nuovo",
+      "syncEvent": "Sincronizza questo spettacolo",
+      "syncing": "Sincronizzazione…",
+      "result": "Fatto: {created} creati, {updated} aggiornati, {archived} ritirati, {unchanged} già aggiornati.",
+      "resultFailed": "{failed} non riusciti: rilanciare la sincronizzazione.",
+      "howTo": "Nell'app Stripe collegata al lettore, cercate la data (ad esempio «26.12») per vedere tutte le tariffe della serata. Le date passate e le tariffe eliminate vengono ritirate dalla vendita alla sincronizzazione successiva; le tariffe gratuite non vengono inviate.",
+      "stockNote": "Una vendita al lettore non crea un biglietto in ticketick e non riduce il contingente: contatela nella cassa serale.",
+      "noTariffs": "Nessuna tariffa a pagamento su una data pubblicata in arrivo.",
+      "eventSummary": "{dates, plural, one {# data} other {# date}} · {tariffs, plural, one {# tariffa} other {# tariffe}}",
+      "columns": {
+        "date": "Data",
+        "tariff": "Tariffa",
+        "price": "Prezzo",
+        "state": "In Stripe"
+      },
+      "state": {
+        "create": "Da creare",
+        "keep": "Aggiornato",
+        "newPrice": "Nuovo prezzo (prima {old})",
+        "price": "Prezzo da impostare",
+        "reactivate": "Da rimettere in vendita",
+        "details": "Nome o descrizione da correggere"
+      },
+      "archiveTitle": "Ritirati dalla vendita alla prossima sincronizzazione",
+      "archiveHint": "Date passate o annullate, tariffe eliminate. Il prodotto viene archiviato in Stripe, non cancellato: i pagamenti passati lo conservano.",
+      "errors": {
+        "noAccount": "Questo organizzatore non ha un conto Stripe attivo.",
+        "permission": "La chiave Stripe registrata non può gestire i prodotti. Datele la scrittura su «Products» e «Prices», oppure usate la chiave segreta.",
+        "credentials": "Stripe rifiuta la chiave registrata: va inserita di nuovo in Mezzi di pagamento, nell'amministrazione ticketick.",
+        "stripe": "Stripe non risponde al momento. Riprovate tra poco.",
+        "busy": "Una sincronizzazione è già in corso.",
+        "forbidden": "Non avete accesso a questo organizzatore."
       }
     }
   },

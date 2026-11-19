@@ -15,8 +15,10 @@ import {
   BarChart3,
   Megaphone,
   Bot,
+  CreditCard,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { prisma } from "@/lib/prisma";
 import { canSeePromotionUi } from "@/lib/admin/promotion-visibility";
 import { getCurrentUser } from "@/lib/auth/dal";
 import { ImpersonationBanner } from "@/components/admin/impersonation-banner";
@@ -38,6 +40,14 @@ export default async function AdminLayout({
   const viewer = user?.role === "ORGANIZER_VIEWER";
   const organizerView = user?.role === "ORGANIZER" || viewer;
   const admin = user?.role === "ADMIN";
+  // Caisse Stripe : seulement si l'organisateur encaisse avec Stripe.
+  const stripeTill =
+    admin ||
+    (user?.role === "ORGANIZER" && user.organizerId
+      ? (await prisma.organizerStripeAccount.count({
+          where: { organizerId: user.organizerId, enabled: true },
+        })) > 0
+      : false);
 
   const sections = [
     { href: "/admin", label: t("nav.overview"), icon: LayoutDashboard },
@@ -67,6 +77,9 @@ export default async function AdminLayout({
           { href: "/admin/resellers", label: t("nav.resellers"), icon: Store },
           { href: "/admin/team", label: t("nav.team"), icon: UserPlus },
           { href: "/admin/api", label: t("nav.api"), icon: Bot },
+          ...(stripeTill
+            ? [{ href: "/admin/stripe-catalog", label: t("nav.stripeCatalog"), icon: CreditCard }]
+            : []),
           { href: "/door", label: t("nav.door"), icon: ScanLine },
           { href: "/admin/settings", label: t("nav.settings"), icon: Settings },
         ]),

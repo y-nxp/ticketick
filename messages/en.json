@@ -656,7 +656,8 @@
       "payments": "Payments",
       "reports": "Reports",
       "promotion": "Promotion",
-      "api": "API & AI agents"
+      "api": "API & AI agents",
+      "stripeCatalog": "Stripe till"
     },
     "overview": {
       "title": "Overview",
@@ -1658,7 +1659,8 @@
           "secretRequired": "The secret key is required.",
           "keyFormat": "This is not a Stripe secret key (sk_live_…, sk_test_…, rk_live_… or rk_test_…). The publishable key pk_… will not work.",
           "credentials": "Stripe rejects this key. Check that it is active and complete."
-        }
+        },
+        "catalogLink": "Prices in Stripe (till)"
       },
       "bank": {
         "title": "Bank transfer",
@@ -2356,6 +2358,59 @@
         "organizer": "Organizer not found.",
         "tooMany": "Twenty active keys at most: revoke one.",
         "unavailable": "Could not create the key right now. Try again."
+      }
+    },
+    "stripeCatalog": {
+      "title": "Stripe till",
+      "subtitle": "To take payments at the door with the Stripe reader (WisePad): every paid price of upcoming dates becomes a product in the Stripe catalogue, at its price. One click updates the catalogue.",
+      "organizer": "Organiser",
+      "noOrganizer": "No organiser has an active Stripe account.",
+      "noAccount": "This organiser has no active Stripe account.",
+      "toPayments": "Connect Stripe in Payment methods.",
+      "account": "Stripe account",
+      "live": "Live",
+      "test": "Test mode",
+      "syncedAt": "Last synchronised: {date}",
+      "neverSynced": "Never synchronised",
+      "counts": {
+        "create": "To create",
+        "update": "To update",
+        "keep": "Up to date",
+        "archive": "To remove"
+      },
+      "syncAll": "Synchronise ({count, plural, one {# change} other {# changes}})",
+      "syncAgain": "Synchronise again",
+      "syncEvent": "Synchronise this show",
+      "syncing": "Synchronising…",
+      "result": "Done: {created} created, {updated} updated, {archived} removed, {unchanged} already up to date.",
+      "resultFailed": "{failed} failed: run the synchronisation again.",
+      "howTo": "In the Stripe app linked to the reader, search for the date (e.g. “26.12”) to see all prices for the evening. Past dates and deleted prices are removed from sale at the next synchronisation; free prices are not sent.",
+      "stockNote": "A sale on the reader does not create a ticket in ticketick and does not reduce the allocation: count it in the door takings.",
+      "noTariffs": "No paid price on an upcoming published date.",
+      "eventSummary": "{dates, plural, one {# date} other {# dates}} · {tariffs, plural, one {# price} other {# prices}}",
+      "columns": {
+        "date": "Date",
+        "tariff": "Price category",
+        "price": "Price",
+        "state": "In Stripe"
+      },
+      "state": {
+        "create": "To create",
+        "keep": "Up to date",
+        "newPrice": "New price (was {old})",
+        "price": "Price to set",
+        "reactivate": "Back on sale",
+        "details": "Name or description to fix"
+      },
+      "archiveTitle": "Removed from sale at the next synchronisation",
+      "archiveHint": "Past or cancelled dates, or deleted prices. The product is archived in Stripe, not erased: past payments keep it.",
+      "errors": {
+        "noAccount": "This organiser has no active Stripe account.",
+        "permission": "The saved Stripe key is not allowed to manage products. Give it write access to “Products” and “Prices”, or use the secret key.",
+        "credentials": "Stripe rejects the saved key: it must be entered again in Payment methods, in the ticketick administration.",
+        "stripe": "Stripe is not responding right now. Try again in a moment.",
+        "busy": "A synchronisation is already running.",
+        "forbidden": "You do not have access to this organiser."
       }
     }
   },

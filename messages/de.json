@@ -656,7 +656,8 @@
       "payments": "Zahlungen",
       "reports": "Berichte",
       "promotion": "Promotion",
-      "api": "API & KI-Agenten"
+      "api": "API & KI-Agenten",
+      "stripeCatalog": "Stripe-Kasse"
     },
     "overview": {
       "title": "Übersicht",
@@ -1658,7 +1659,8 @@
           "secretRequired": "Der geheime Schlüssel ist erforderlich.",
           "keyFormat": "Das ist kein geheimer Stripe-Schlüssel (sk_live_…, sk_test_…, rk_live_… oder rk_test_…). Der veröffentlichbare Schlüssel pk_… passt nicht.",
           "credentials": "Stripe lehnt diesen Schlüssel ab. Prüfen Sie, ob er aktiv und vollständig ist."
-        }
+        },
+        "catalogLink": "Tarife in Stripe (Kasse)"
       },
       "bank": {
         "title": "Banküberweisung",
@@ -2356,6 +2358,59 @@
         "organizer": "Veranstalter nicht gefunden.",
         "tooMany": "Höchstens zwanzig aktive Schlüssel: Widerrufen Sie einen.",
         "unavailable": "Erstellung zurzeit nicht möglich. Bitte erneut versuchen."
+      }
+    },
+    "stripeCatalog": {
+      "title": "Stripe-Kasse",
+      "subtitle": "Für den Verkauf am Eingang mit dem Stripe-Lesegerät (WisePad): Jeder kostenpflichtige Tarif der kommenden Daten wird ein Produkt im Stripe-Katalog, zu seinem Preis. Ein Klick aktualisiert den Katalog.",
+      "organizer": "Veranstalter",
+      "noOrganizer": "Kein Veranstalter hat ein aktives Stripe-Konto.",
+      "noAccount": "Dieser Veranstalter hat kein aktives Stripe-Konto.",
+      "toPayments": "Stripe unter Zahlungsmittel verbinden.",
+      "account": "Stripe-Konto",
+      "live": "Produktiv",
+      "test": "Testmodus",
+      "syncedAt": "Letzte Synchronisierung: {date}",
+      "neverSynced": "Noch nie synchronisiert",
+      "counts": {
+        "create": "Neu",
+        "update": "Zu aktualisieren",
+        "keep": "Aktuell",
+        "archive": "Zu entfernen"
+      },
+      "syncAll": "Synchronisieren ({count, plural, one {# Änderung} other {# Änderungen}})",
+      "syncAgain": "Erneut synchronisieren",
+      "syncEvent": "Diese Veranstaltung synchronisieren",
+      "syncing": "Synchronisierung…",
+      "result": "Erledigt: {created} erstellt, {updated} aktualisiert, {archived} entfernt, {unchanged} bereits aktuell.",
+      "resultFailed": "{failed} fehlgeschlagen: Synchronisierung erneut starten.",
+      "howTo": "Suchen Sie in der mit dem Lesegerät verbundenen Stripe-App nach dem Datum (z. B. «26.12»), um alle Tarife des Abends zu sehen. Vergangene Daten und gelöschte Tarife werden bei der nächsten Synchronisierung aus dem Verkauf genommen; Gratistarife werden nicht übertragen.",
+      "stockNote": "Ein Verkauf am Lesegerät erstellt kein Ticket in ticketick und verringert das Kontingent nicht: Zählen Sie ihn zur Abendkasse.",
+      "noTariffs": "Kein kostenpflichtiger Tarif an einem kommenden veröffentlichten Datum.",
+      "eventSummary": "{dates, plural, one {# Datum} other {# Daten}} · {tariffs, plural, one {# Tarif} other {# Tarife}}",
+      "columns": {
+        "date": "Datum",
+        "tariff": "Tarif",
+        "price": "Preis",
+        "state": "In Stripe"
+      },
+      "state": {
+        "create": "Neu",
+        "keep": "Aktuell",
+        "newPrice": "Neuer Preis (vorher {old})",
+        "price": "Preis fehlt",
+        "reactivate": "Wieder in den Verkauf",
+        "details": "Name oder Beschreibung anpassen"
+      },
+      "archiveTitle": "Bei der nächsten Synchronisierung aus dem Verkauf genommen",
+      "archiveHint": "Vergangene oder abgesagte Daten, gelöschte Tarife. Das Produkt wird in Stripe archiviert, nicht gelöscht: Frühere Zahlungen behalten es.",
+      "errors": {
+        "noAccount": "Dieser Veranstalter hat kein aktives Stripe-Konto.",
+        "permission": "Der gespeicherte Stripe-Schlüssel darf keine Produkte verwalten. Geben Sie ihm Schreibrechte für «Products» und «Prices» oder verwenden Sie den geheimen Schlüssel.",
+        "credentials": "Stripe lehnt den gespeicherten Schlüssel ab: Er muss in der ticketick-Administration unter Zahlungsmittel neu eingegeben werden.",
+        "stripe": "Stripe antwortet gerade nicht. Versuchen Sie es gleich nochmals.",
+        "busy": "Eine Synchronisierung läuft bereits.",
+        "forbidden": "Sie haben keinen Zugriff auf diesen Veranstalter."
       }
     }
   },
