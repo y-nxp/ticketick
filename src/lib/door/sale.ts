@@ -47,6 +47,16 @@ export interface SaleTariff {
   soldAtTill: number;
 }
 
+export type TillMethod = "card" | "twint" | "cash";
+
+/** Totaux de la caisse pour un concert, par moyen de paiement. */
+export interface TillTotals {
+  tickets: number;
+  card: { sales: number; cents: number };
+  twint: { sales: number; cents: number };
+  cash: { sales: number; cents: number };
+}
+
 export interface SaleSession {
   id: string;
   title: string;
@@ -54,15 +64,26 @@ export interface SaleSession {
   venue: string | null;
   organizerId: string;
   organizerName: string;
+  /** Numéro TWINT affiché à la caisse, si l'organisateur l'a réglé. */
+  twintNumber: string | null;
   tariffs: SaleTariff[];
+  totals: TillTotals;
 }
+
+const PROVIDER_OF: Record<TillMethod, string> = { card: "collect", twint: "twint", cash: "cash" };
 
 const sessionSelect = {
   id: true,
   startsAt: true,
   label: true,
   venue: { select: { name: true } },
-  event: { select: { title: true, organizerId: true, organizer: { select: { name: true } } } },
+  event: {
+    select: {
+      title: true,
+      organizerId: true,
+      organizer: { select: { name: true, tillTwintNumber: true } },
+    },
+  },
   ticketTypes: {
     orderBy: [{ priceCents: "desc" as const }, { id: "asc" as const }],
     select: { id: true, name: true, priceCents: true, currency: true },
@@ -87,7 +108,16 @@ function sellableWhere(user: CurrentUser, now: Date): Prisma.EventSessionWhereIn
 
 type SessionRow = Prisma.EventSessionGetPayload<{ select: typeof sessionSelect }>;
 
-function toSaleSession(s: SessionRow, locale: string, sold: Map<string, number> = new Map()): SaleSession {
+function emptyTotals(): TillTotals {
+  return { tickets: 0, card: { sales: 0, cents: 0 }, twint: { sales: 0, cents: 0 }, cash: { sales: 0, cents: 0 } };
+}
+
+function toSaleSession(
+  s: SessionRow,
+  locale: string,
+  till: { sold: Map<string, number>; totals: TillTotals } = { sold: new Map(), totals: emptyTotals() },
+): SaleSession {
+  const sold = till.sold;
   const title = translate(s.event.title as Translated, locale);
   const label = s.label ? translate(s.label as Translated, locale) : null;
   return {
@@ -97,6 +127,8 @@ function toSaleSession(s: SessionRow, locale: string, sold: Map<string, number> 
     venue: s.venue?.name ?? null,
     organizerId: s.event.organizerId,
     organizerName: s.event.organizer.name,
+    twintNumber: s.event.organizer.tillTwintNumber?.trim() || null,
+    totals: till.totals,
     tariffs: s.ticketTypes.map((tt) => ({
       id: tt.id,
       name: translate(tt.name as Translated, locale),
@@ -127,7 +159,7 @@ export async function getSaleSession(
     where: { id: sessionId, ...sellableWhere(user, new Date()) },
     select: sessionSelect,
   });
-  return row ? toSaleSession(row, locale, await soldAtTill(row.id)) : null;
+  return row ? toSaleSession(row, locale, await tillOf(row.id)) : null;
 }
 
 /** La caisse existe-t-elle pour ce compte (un organisateur avec Stripe) ? */
@@ -141,16 +173,27 @@ export async function doorTillEnabled(user: CurrentUser): Promise<boolean> {
   return (await prisma.organizerStripeAccount.count({ where: { organizerId, enabled: true } })) > 0;
 }
 
-/** Billets vendus à la caisse pour un concert, par tarif. */
-async function soldAtTill(sessionId: string): Promise<Map<string, number>> {
-  const sales = await prisma.doorSale.findMany({ where: { sessionId }, select: { lines: true } });
+/** Ventes de la caisse pour un concert : billets par tarif, totaux par moyen. */
+async function tillOf(sessionId: string): Promise<{ sold: Map<string, number>; totals: TillTotals }> {
+  const sales = await prisma.doorSale.findMany({
+    where: { sessionId },
+    select: { lines: true, provider: true, amountCents: true },
+  });
   const sold = new Map<string, number>();
+  const totals = emptyTotals();
   for (const sale of sales) {
     for (const line of readLines(sale.lines)) {
       sold.set(line.ticketTypeId, (sold.get(line.ticketTypeId) ?? 0) + line.quantity);
+      totals.tickets += line.quantity;
+    }
+    const bucket =
+      sale.provider === "collect" ? totals.card : sale.provider === "twint" ? totals.twint : sale.provider === "cash" ? totals.cash : null;
+    if (bucket) {
+      bucket.sales += 1;
+      bucket.cents += sale.amountCents;
     }
   }
-  return sold;
+  return { sold, totals };
 }
 
 export interface SaleLine {
@@ -224,7 +267,14 @@ export type PrepareResult =
 
 export async function prepareDoorSale(
   user: CurrentUser,
-  input: { sessionId: string; lines: { ticketTypeId: string; quantity: number }[]; locale: string },
+  input: {
+    sessionId: string;
+    lines: { ticketTypeId: string; quantity: number }[];
+    locale: string;
+    method: TillMethod;
+    /** Clé de la vente tirée par l'écran : un double appui ne compte qu'une vente. */
+    key: string;
+  },
 ): Promise<PrepareResult> {
   const session = await getSaleSession(user, input.sessionId, input.locale);
   if (!session) return { ok: false, error: "notFound" };
@@ -238,8 +288,16 @@ export async function prepareDoorSale(
   }
   const amountCents = lines.reduce((sum, l) => sum + tariffs.get(l.ticketTypeId)!.priceCents * l.quantity, 0);
 
-  if (amountCents === 0) {
-    const sale = await recordSale(session, user.id, lines, { provider: "free", chargeId: null, amountCents: 0 });
+  const key = /^[A-Za-z0-9-]{8,64}$/.test(input.key) ? input.key : null;
+  if (amountCents === 0 || input.method !== "card") {
+    // Gratuit, TWINT sur le numéro de l'organisateur ou espèces : la personne
+    // à la caisse a confirmé avoir reçu le paiement.
+    const sale = await recordSale(session, user.id, lines, {
+      provider: amountCents === 0 ? "free" : PROVIDER_OF[input.method],
+      chargeId: null,
+      amountCents,
+      clientKey: key,
+    });
     return { ok: true, kind: "done", saleId: sale.id };
   }
 
@@ -290,7 +348,7 @@ async function recordSale(
   session: SaleSession,
   userId: string,
   lines: { ticketTypeId: string; quantity: number }[],
-  payment: { provider: "collect" | "free"; chargeId: string | null; amountCents: number },
+  payment: { provider: string; chargeId: string | null; amountCents: number; clientKey?: string | null },
 ): Promise<{ id: string }> {
   const tariffs = new Map(session.tariffs.map((tt) => [tt.id, tt]));
   const saleLines: SaleLine[] = lines.map((l) => ({
@@ -300,8 +358,13 @@ async function recordSale(
     unitPriceCents: tariffs.get(l.ticketTypeId)?.priceCents ?? 0,
   }));
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+  if (payment.clientKey) {
+    const already = await prisma.doorSale.findUnique({ where: { clientKey: payment.clientKey }, select: { id: true } });
+    if (already) return already;
+  }
   return prisma.doorSale.create({
     data: {
+      clientKey: payment.clientKey ?? null,
       sessionId: session.id,
       chargeId: payment.chargeId,
       provider: payment.provider,
@@ -388,9 +451,17 @@ async function refund(stripe: Stripe, charge: Stripe.Charge): Promise<void> {
 export async function getDoorSaleSummary(saleId: string, locale: string) {
   const sale = await prisma.doorSale.findUnique({
     where: { id: saleId },
-    select: { id: true, amountCents: true, currency: true, lines: true, sessionId: true, session: { select: sessionSelect } },
+    select: {
+      id: true,
+      provider: true,
+      amountCents: true,
+      currency: true,
+      lines: true,
+      sessionId: true,
+      session: { select: sessionSelect },
+    },
   });
   if (!sale) return null;
-  const session = toSaleSession(sale.session, locale, await soldAtTill(sale.sessionId));
+  const session = toSaleSession(sale.session, locale, await tillOf(sale.sessionId));
   return { sale: { ...sale, lines: readLines(sale.lines) }, session };
 }

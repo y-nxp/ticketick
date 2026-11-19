@@ -375,7 +375,10 @@ model Organizer {
 
   /// Prestataire qui encaisse la carte quand PostFinance et Stripe sont
   /// tous deux actifs : "postfinance" | "stripe". Vide : PostFinance.
-  cardProvider String?
+  cardProvider    String?
+  /// Numéro TWINT affiché à la caisse sur place (paiement confirmé à la main).
+  /// Un TWINT relié, avec QR et confirmation automatique, pourra s'y ajouter.
+  tillTwintNumber String?
 
   /// Rapport de l'organisateur par e-mail : ventes, invitations, places restantes.
   reportFrequency    ReportFrequency @default(NONE)
@@ -1479,9 +1482,13 @@ model DoorSale {
   session     EventSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   sessionId   String
   /// Paiement Stripe vérifié (`ch_…`), une seule vente par paiement. Vide :
-  /// billets gratuits.
+  /// TWINT, espèces ou billets gratuits.
   chargeId    String?      @unique
-  /// "collect" | "free"
+  /// Clé tirée par l'écran de la caisse pour chaque vente : un double appui
+  /// sur « Encaissé » ne compte pas la vente deux fois.
+  clientKey   String?      @unique
+  /// Moyen de paiement : "collect" (carte, lecteur Stripe), "twint" (sur le
+  /// numéro de l'organisateur, confirmé à la main), "cash", "free".
   provider    String
   amountCents Int
   currency    String

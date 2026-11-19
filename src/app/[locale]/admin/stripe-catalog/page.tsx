@@ -8,6 +8,7 @@ import type { CatalogStep, TariffPlan } from "@/lib/payment/stripe-catalog-plan"
 import { prisma } from "@/lib/prisma";
 import { EVENT_TIME_ZONE, formatPrice } from "@/lib/utils";
 import { SyncButton } from "./sync-button";
+import { TwintNumberForm } from "./twint-number-form";
 
 export const dynamic = "force-dynamic";
 
@@ -95,6 +96,9 @@ export default async function StripeCatalogPage({
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
           {t(`errors.${outcome.error}`)}
         </p>
+        <section className="rounded-card border border-border bg-card p-5">
+          <TwintNumberForm organizerId={organizerId} number={await twintNumberOf(organizerId)} />
+        </section>
       </div>
     );
   }
@@ -170,6 +174,9 @@ export default async function StripeCatalogPage({
           organizerId={organizerId}
           label={toDo > 0 ? t("syncAll", { count: toDo }) : t("syncAgain")}
         />
+        <div className="border-t border-border pt-4">
+          <TwintNumberForm organizerId={organizerId} number={await twintNumberOf(organizerId)} />
+        </div>
         <p className="text-xs text-muted-foreground">{t("howTo")}</p>
         <p className="text-xs text-muted-foreground">{t("stockNote")}</p>
       </section>
@@ -254,4 +261,9 @@ export default async function StripeCatalogPage({
       ) : null}
     </div>
   );
+}
+
+async function twintNumberOf(organizerId: string): Promise<string | null> {
+  const row = await prisma.organizer.findUnique({ where: { id: organizerId }, select: { tillTwintNumber: true } });
+  return row?.tillTwintNumber ?? null;
 }

@@ -480,7 +480,6 @@
       "less": "Remove one {tariff} ticket",
       "more": "Add one {tariff} ticket",
       "chooseTariff": "Choose tickets",
-      "charge": "Prepare charge of {amount}",
       "recordFree": "Record {count, plural, one {# free ticket} other {# free tickets}}",
       "collectHint": "Tap “Open Collect”, tap the card on the reader: you come back here automatically.",
       "recorded": "Sale recorded",
@@ -508,10 +507,25 @@
       "soldAtTill": "{count} sold at the till",
       "nextSale": "New sale for this concert",
       "handPaper": "Hand over the paper tickets.",
-      "tillTotal": "Till {title}, {when}: {count, plural, one {# ticket sold} other {# tickets sold}}",
       "openCollect": "Open Collect · {amount}",
       "editSale": "Change the sale",
-      "collectFallback": "Collect doesn’t open?"
+      "collectFallback": "Collect doesn’t open?",
+      "totalToPay": "{count, plural, one {# ticket} other {# tickets}} · {amount} — payment method:",
+      "methodCard": "Card",
+      "methodTwint": "TWINT",
+      "methodCash": "Cash",
+      "twintAsk": "The customer pays with TWINT",
+      "twintTo": "to number",
+      "twintNoNumber": "TWINT number not set (Stripe till page): use your usual number.",
+      "twintPaid": "TWINT payment received",
+      "backToMethods": "Other payment method",
+      "cashAsk": "The customer pays in cash",
+      "cashReceived": "Received (CHF)",
+      "cashChange": "Change due:",
+      "cashPaid": "Cash received",
+      "totalsTitle": "Till for this concert: {count, plural, one {# ticket sold} other {# tickets sold}}",
+      "totalsAll": "Total taken",
+      "salesCount": "{count, plural, one {# sale} other {# sales}}"
     }
   },
   "about": {
@@ -2452,6 +2466,13 @@
         "stripe": "Stripe is not responding right now. Try again in a moment.",
         "busy": "A synchronisation is already running.",
         "forbidden": "You do not have access to this organiser."
+      },
+      "twint": {
+        "label": "TWINT number for the door till",
+        "hint": "Shown to the customer who chooses TWINT; the till staff confirm receipt. A connected TWINT (QR, automatic confirmation) can be added later.",
+        "save": "Save",
+        "saved": "Number saved.",
+        "error": "Invalid number."
       }
     }
   },

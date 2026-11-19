@@ -480,7 +480,6 @@
       "less": "Retirer un billet {tariff}",
       "more": "Ajouter un billet {tariff}",
       "chooseTariff": "Choisir les billets",
-      "charge": "Préparer l’encaissement de {amount}",
       "recordFree": "Enregistrer {count, plural, one {# billet gratuit} other {# billets gratuits}}",
       "collectHint": "Touchez « Ouvrir Collect », passez la carte sur le lecteur : vous revenez ici automatiquement.",
       "recorded": "Vente enregistrée",
@@ -508,10 +507,25 @@
       "soldAtTill": "{count, plural, one {# vendu} other {# vendus}} à la caisse",
       "nextSale": "Nouvelle vente pour ce concert",
       "handPaper": "Remettez les billets papier.",
-      "tillTotal": "Caisse {title}, {when} : {count, plural, one {# billet vendu} other {# billets vendus}}",
       "openCollect": "Ouvrir Collect · {amount}",
       "editSale": "Modifier la vente",
-      "collectFallback": "Collect ne s’ouvre pas ?"
+      "collectFallback": "Collect ne s’ouvre pas ?",
+      "totalToPay": "{count, plural, one {# billet} other {# billets}} · {amount} — moyen de paiement :",
+      "methodCard": "Carte",
+      "methodTwint": "TWINT",
+      "methodCash": "Espèces",
+      "twintAsk": "Le client paie par TWINT",
+      "twintTo": "au numéro",
+      "twintNoNumber": "Numéro TWINT non réglé (page Caisse Stripe) : utilisez votre numéro habituel.",
+      "twintPaid": "Paiement TWINT reçu",
+      "backToMethods": "Autre moyen de paiement",
+      "cashAsk": "Le client paie en espèces",
+      "cashReceived": "Reçu (CHF)",
+      "cashChange": "À rendre :",
+      "cashPaid": "Espèces encaissées",
+      "totalsTitle": "Caisse de ce concert : {count, plural, one {# billet vendu} other {# billets vendus}}",
+      "totalsAll": "Total encaissé",
+      "salesCount": "{count, plural, one {# vente} other {# ventes}}"
     }
   },
   "about": {
@@ -2452,6 +2466,13 @@
         "stripe": "Stripe ne répond pas pour l'instant. Réessayez dans un moment.",
         "busy": "Une synchronisation est déjà en cours.",
         "forbidden": "Vous n'avez pas accès à cet organisateur."
+      },
+      "twint": {
+        "label": "Numéro TWINT de la caisse sur place",
+        "hint": "Affiché au client quand il choisit TWINT ; la personne à la caisse confirme la réception. Un TWINT relié (QR, confirmation automatique) pourra être branché plus tard.",
+        "save": "Enregistrer",
+        "saved": "Numéro enregistré.",
+        "error": "Numéro non valable."
       }
     }
   },

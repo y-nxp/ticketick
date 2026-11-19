@@ -9,6 +9,7 @@ import { cn, EVENT_TIME_ZONE } from "@/lib/utils";
 import { DoorHeader } from "../door-header";
 import { DoorSaleForm } from "./sale-form";
 import { TillNotice } from "./till-notice";
+import { TillTotalsCard } from "./till-totals";
 
 export const dynamic = "force-dynamic";
 
@@ -71,6 +72,7 @@ export default async function DoorSellPage({
               key={selected.id}
               sessionId={selected.id}
               locale={locale}
+              twintNumber={selected.twintNumber}
               tariffs={selected.tariffs.map(({ id, name, priceCents, soldAtTill }) => ({
                 id,
                 name,
@@ -78,6 +80,7 @@ export default async function DoorSellPage({
                 soldAtTill,
               }))}
             />
+            <TillTotalsCard totals={selected.totals} locale={locale} />
           </div>
         ) : sessions.length === 0 ? (
           <div className="rounded-card border border-border bg-card p-6 text-center">

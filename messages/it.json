@@ -480,7 +480,6 @@
       "less": "Togliere un biglietto {tariff}",
       "more": "Aggiungere un biglietto {tariff}",
       "chooseTariff": "Scegliere i biglietti",
-      "charge": "Preparare l’incasso di {amount}",
       "recordFree": "Registrare {count, plural, one {# biglietto gratuito} other {# biglietti gratuiti}}",
       "collectHint": "Toccate «Aprire Collect», avvicinate la carta al lettore: si torna qui automaticamente.",
       "recorded": "Vendita registrata",
@@ -508,10 +507,25 @@
       "soldAtTill": "{count, plural, one {# venduto} other {# venduti}} alla cassa",
       "nextSale": "Nuova vendita per questo concerto",
       "handPaper": "Consegnate i biglietti cartacei.",
-      "tillTotal": "Cassa {title}, {when}: {count, plural, one {# biglietto venduto} other {# biglietti venduti}}",
       "openCollect": "Aprire Collect · {amount}",
       "editSale": "Modificare la vendita",
-      "collectFallback": "Collect non si apre?"
+      "collectFallback": "Collect non si apre?",
+      "totalToPay": "{count, plural, one {# biglietto} other {# biglietti}} · {amount} — mezzo di pagamento:",
+      "methodCard": "Carta",
+      "methodTwint": "TWINT",
+      "methodCash": "Contanti",
+      "twintAsk": "Il cliente paga con TWINT",
+      "twintTo": "al numero",
+      "twintNoNumber": "Numero TWINT non impostato (pagina Cassa Stripe): usate il vostro numero abituale.",
+      "twintPaid": "Pagamento TWINT ricevuto",
+      "backToMethods": "Altro mezzo di pagamento",
+      "cashAsk": "Il cliente paga in contanti",
+      "cashReceived": "Ricevuto (CHF)",
+      "cashChange": "Resto:",
+      "cashPaid": "Contanti incassati",
+      "totalsTitle": "Cassa di questo concerto: {count, plural, one {# biglietto venduto} other {# biglietti venduti}}",
+      "totalsAll": "Totale incassato",
+      "salesCount": "{count, plural, one {# vendita} other {# vendite}}"
     }
   },
   "about": {
@@ -2452,6 +2466,13 @@
         "stripe": "Stripe non risponde al momento. Riprovate tra poco.",
         "busy": "Una sincronizzazione è già in corso.",
         "forbidden": "Non avete accesso a questo organizzatore."
+      },
+      "twint": {
+        "label": "Numero TWINT della cassa sul posto",
+        "hint": "Mostrato al cliente che sceglie TWINT; la cassa conferma la ricezione. Un TWINT collegato (QR, conferma automatica) potrà essere aggiunto in seguito.",
+        "save": "Salva",
+        "saved": "Numero salvato.",
+        "error": "Numero non valido."
       }
     }
   },
