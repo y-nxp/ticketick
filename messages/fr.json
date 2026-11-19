@@ -2454,6 +2454,11 @@
         "stripe": "Stripe ne répond pas pour l'instant. Réessayez dans un moment.",
         "busy": "Une synchronisation est déjà en cours.",
         "forbidden": "Vous n'avez pas accès à cet organisateur."
+      },
+      "till": {
+        "label": "Caisse à l’entrée avec Collect for Stripe (WisePad)",
+        "hint": "Ajoute l’onglet « Caisse » dans l’app de contrôle : on choisit le concert et les billets, Collect encaisse sur le lecteur, la vente est enregistrée dans ticketick.",
+        "error": "Réglage non enregistré."
       }
     }
   },

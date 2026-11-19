@@ -2454,6 +2454,11 @@
         "stripe": "Stripe is not responding right now. Try again in a moment.",
         "busy": "A synchronisation is already running.",
         "forbidden": "You do not have access to this organiser."
+      },
+      "till": {
+        "label": "Door till with Collect for Stripe (WisePad)",
+        "hint": "Adds the “Till” tab to the check-in app: choose the concert and tickets, Collect charges on the reader, the sale is recorded in ticketick.",
+        "error": "Setting not saved."
       }
     }
   },

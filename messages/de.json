@@ -2454,6 +2454,11 @@
         "stripe": "Stripe antwortet gerade nicht. Versuchen Sie es gleich nochmals.",
         "busy": "Eine Synchronisierung läuft bereits.",
         "forbidden": "Sie haben keinen Zugriff auf diesen Veranstalter."
+      },
+      "till": {
+        "label": "Kasse am Eingang mit Collect for Stripe (WisePad)",
+        "hint": "Fügt der Kontroll-App den Reiter «Kasse» hinzu: Konzert und Tickets wählen, Collect kassiert am Lesegerät, der Verkauf wird in ticketick erfasst.",
+        "error": "Einstellung nicht gespeichert."
       }
     }
   },

@@ -77,7 +77,12 @@ function sellableWhere(user: CurrentUser, now: Date) {
   return {
     startsAt: { gte: new Date(now.getTime() - LATE_SALE_MS) },
     status: { in: ["PUBLISHED" as const, "SOLD_OUT" as const] },
-    event: { ...doorEventWhere(user), status: { in: ["PUBLISHED" as const, "SOLD_OUT" as const] } },
+    event: {
+      ...doorEventWhere(user),
+      status: { in: ["PUBLISHED" as const, "SOLD_OUT" as const] },
+      // Caisse activée par l'organisateur (Collect for Stripe, WisePad).
+      organizer: { doorTill: "collect" },
+    },
   };
 }
 

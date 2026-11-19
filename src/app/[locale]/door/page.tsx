@@ -8,6 +8,7 @@ import {
   getDoorCounts,
   getDoorSessions,
 } from "@/lib/door/scope";
+import { doorTillEnabled } from "@/lib/door/till";
 import { DoorHeader } from "./door-header";
 import { DoorScanner } from "./door-scanner";
 
@@ -47,7 +48,10 @@ export default async function DoorPage({
   const sessions = await getDoorSessions(user, locale);
   const selected =
     sessions.find((x) => x.id === s) ?? defaultDoorSession(sessions);
-  const counts = selected ? await getDoorCounts(selected.id) : null;
+  const [counts, till] = await Promise.all([
+    selected ? getDoorCounts(selected.id) : null,
+    doorTillEnabled(user),
+  ]);
 
   if (selected && counts) {
     return (
@@ -56,13 +60,14 @@ export default async function DoorPage({
         sessions={sessions}
         sessionId={selected.id}
         initialCounts={counts}
+        till={till}
       />
     );
   }
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <DoorHeader />
+      <DoorHeader till={till} />
       <div className="mx-auto w-full max-w-lg px-4 py-8">
         <div className="rounded-card border border-border bg-card p-6 text-center">
           <CalendarX2 className="mx-auto size-8 text-muted-foreground" />

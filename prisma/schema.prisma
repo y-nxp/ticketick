@@ -375,6 +375,9 @@ model Organizer {
   /// Prestataire qui encaisse la carte quand PostFinance et Stripe sont
   /// tous deux actifs : "postfinance" | "stripe". Vide : PostFinance.
   cardProvider String?
+  /// Caisse à l'entrée (app de contrôle › Caisse) : "collect" = encaissement
+  /// par Collect for Stripe sur un lecteur WisePad. Vide : pas de caisse.
+  doorTill     String?
 
   /// Rapport de l'organisateur par e-mail : ventes, invitations, places restantes.
   reportFrequency    ReportFrequency @default(NONE)

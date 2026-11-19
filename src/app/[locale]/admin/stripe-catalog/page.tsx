@@ -8,6 +8,7 @@ import type { CatalogStep, TariffPlan } from "@/lib/payment/stripe-catalog-plan"
 import { prisma } from "@/lib/prisma";
 import { EVENT_TIME_ZONE, formatPrice } from "@/lib/utils";
 import { SyncButton } from "./sync-button";
+import { TillToggle } from "./till-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -95,11 +96,15 @@ export default async function StripeCatalogPage({
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
           {t(`errors.${outcome.error}`)}
         </p>
+        <div className="rounded-card border border-border bg-card p-5">
+          <TillToggle organizerId={organizerId} enabled={await doorTillOf(organizerId)} />
+        </div>
       </div>
     );
   }
 
   const { account, steps, counts } = outcome.preview;
+  const doorTill = await doorTillOf(organizerId);
   const when = (date: Date) =>
     new Intl.DateTimeFormat(intl, {
       timeZone: EVENT_TIME_ZONE,
@@ -170,6 +175,9 @@ export default async function StripeCatalogPage({
           organizerId={organizerId}
           label={toDo > 0 ? t("syncAll", { count: toDo }) : t("syncAgain")}
         />
+        <div className="border-t border-border pt-4">
+          <TillToggle organizerId={organizerId} enabled={doorTill} />
+        </div>
         <p className="text-xs text-muted-foreground">{t("howTo")}</p>
         <p className="text-xs text-muted-foreground">{t("stockNote")}</p>
       </section>
@@ -254,4 +262,9 @@ export default async function StripeCatalogPage({
       ) : null}
     </div>
   );
+}
+
+async function doorTillOf(organizerId: string): Promise<boolean> {
+  const row = await prisma.organizer.findUnique({ where: { id: organizerId }, select: { doorTill: true } });
+  return row?.doorTill === "collect";
 }

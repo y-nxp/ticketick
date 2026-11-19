@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowLeft, CalendarX2, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { redirect } from "@/i18n/navigation";
 import { requireRole } from "@/lib/auth/dal";
+import { doorTillEnabled } from "@/lib/door/till";
 import { currentSaleSession, getSaleSession, getSaleSessions } from "@/lib/door/sale";
 import { DOOR_ROLES } from "@/lib/door/scope";
 import { EVENT_TIME_ZONE } from "@/lib/utils";
@@ -27,6 +29,7 @@ export default async function DoorSellPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const user = await requireRole(DOOR_ROLES, "/door/sell");
+  if (!(await doorTillEnabled(user))) redirect({ href: "/door", locale });
   const t = await getTranslations("door.sell");
   const { s, all } = await searchParams;
   const sessions = await getSaleSessions(user, locale);
@@ -46,7 +49,7 @@ export default async function DoorSellPage({
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <DoorHeader active="sell" />
+      <DoorHeader active="sell" till />
       <div className="mx-auto w-full max-w-lg flex-1 px-4 py-5">
         {selected ? (
           <div className="space-y-4">

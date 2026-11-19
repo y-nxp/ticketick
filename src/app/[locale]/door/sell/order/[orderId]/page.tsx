@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
+import { redirect } from "@/i18n/navigation";
 import { requireRole } from "@/lib/auth/dal";
+import { doorTillEnabled } from "@/lib/door/till";
 import { doorEventWhere, DOOR_ROLES } from "@/lib/door/scope";
 import { prisma } from "@/lib/prisma";
 import { DoorHeader } from "../../../door-header";
@@ -17,6 +19,7 @@ export default async function DoorSaleOrderPage({
   const { locale, orderId } = await params;
   setRequestLocale(locale);
   const user = await requireRole(DOOR_ROLES, "/door/sell");
+  if (!(await doorTillEnabled(user))) redirect({ href: "/door", locale });
   const allowed = await prisma.order.count({
     where: {
       id: orderId,
@@ -27,7 +30,7 @@ export default async function DoorSaleOrderPage({
   if (allowed === 0) notFound();
   return (
     <div className="flex min-h-dvh flex-col">
-      <DoorHeader active="sell" />
+      <DoorHeader active="sell" till />
       <div className="mx-auto w-full max-w-lg flex-1 px-4 py-5">
         <SaleSummary orderId={orderId} locale={locale} />
       </div>
