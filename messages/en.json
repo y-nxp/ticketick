@@ -470,7 +470,9 @@
     "conflictsHint": "Admitted on this phone while offline, but already used on another device or refused by the server.",
     "conflictAt": "already used at {time}",
     "conflictsClear": "Got it",
-    "logoutPending": "{count, plural, one {# entry has} other {# entries have}} not been sent yet. If you log out now, they will be lost. Continue?"
+    "logoutPending": "{count, plural, one {# entry has} other {# entries have}} not been sent yet. If you log out now, they will be lost. Continue?",
+    "entryOpensAt": "from {day} at {time}",
+    "entryClosedBanner": "Entry opens on {day} at {time}, 2 hours before the start. Until then, tickets are only checked: nothing is recorded."
   },
   "about": {
     "title": "About",
