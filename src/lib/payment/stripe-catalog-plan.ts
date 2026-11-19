@@ -1,42 +1,59 @@
 /**
- * Catalogue Stripe d'un organisateur : chaque tarif payant d'une date à venir
- * devient un produit, avec son prix. À la caisse, le lecteur Stripe (WisePad)
- * et l'app Stripe proposent ces produits : plus de montant à taper.
+ * Catalogue Stripe d'un organisateur : chaque date à venir devient un produit,
+ * et chacun de ses tarifs payants un prix de ce produit (Premium, Catégorie 1…).
+ * À la caisse (Collect for Stripe, lecteur WisePad), on choisit le concert,
+ * puis le tarif.
  *
- * Ce fichier ne parle pas à Stripe : il compare les tarifs de ticketick aux
- * produits déjà présents et en déduit ce qu'il faut créer, corriger ou retirer.
+ * Ce fichier ne parle pas à Stripe : il compare les dates et tarifs de
+ * ticketick aux produits déjà présents et en déduit ce qu'il faut créer,
+ * corriger ou retirer.
  */
 
-/** Préfixe des produits créés par ticketick (`ticketick_<id du tarif>`). */
+/** Préfixe de tout produit créé par ticketick. */
 export const PRODUCT_PREFIX = "ticketick_";
+/** Produit d'une date (`ticketick_s_<séance>`). */
+export const SESSION_PRODUCT_PREFIX = "ticketick_s_";
 
 export const META_ORGANIZER = "ticketick_organizer";
 export const META_EVENT = "ticketick_event";
 export const META_SESSION = "ticketick_session";
 export const META_TICKET_TYPE = "ticketick_ticket_type";
 
-export function productIdOf(ticketTypeId: string): string {
-  return `${PRODUCT_PREFIX}${ticketTypeId}`;
+export function productIdOf(sessionId: string): string {
+  return `${SESSION_PRODUCT_PREFIX}${sessionId}`;
 }
 
-/** Un tarif de ticketick tel qu'il doit apparaître dans Stripe. */
 export interface CatalogTariff {
   ticketTypeId: string;
+  tariff: string;
+  priceCents: number;
+  /** En minuscules, comme Stripe. */
+  currency: string;
+}
+
+/** Une date de ticketick telle qu'elle doit apparaître dans Stripe. */
+export interface CatalogSession {
   sessionId: string;
   eventId: string;
   eventTitle: string;
   startsAt: Date;
-  tariff: string;
   name: string;
   description: string;
-  priceCents: number;
-  /** En minuscules, comme Stripe. */
-  currency: string;
   url: string | null;
   image: string | null;
+  /** Du plus cher au moins cher : le premier est le prix par défaut. */
+  tariffs: CatalogTariff[];
 }
 
-/** Produit ticketick trouvé dans le compte Stripe. */
+/** Prix actif d'un produit ticketick. */
+export interface CatalogPrice {
+  id: string;
+  ticketTypeId: string | null;
+  nickname: string | null;
+  cents: number | null;
+  currency: string;
+}
+
 export interface CatalogProduct {
   id: string;
   name: string;
@@ -46,23 +63,45 @@ export interface CatalogProduct {
   images: string[];
   eventId: string | null;
   organizerId: string | null;
-  price: { id: string; cents: number | null; currency: string; active: boolean } | null;
+  defaultPriceId: string | null;
+  prices: CatalogPrice[];
 }
 
-export type CatalogChange = "name" | "description" | "price" | "reactivate" | "url" | "image";
+export type TariffState =
+  | { kind: "create" }
+  | { kind: "keep"; price: CatalogPrice }
+  | { kind: "rename"; price: CatalogPrice }
+  | { kind: "reprice"; old: CatalogPrice };
+
+export interface TariffPlan {
+  tariff: CatalogTariff;
+  state: TariffState;
+}
+
+export type CatalogChange = "name" | "description" | "url" | "image" | "reactivate" | "prices" | "default";
 
 export type CatalogStep =
-  | { kind: "create"; tariff: CatalogTariff }
-  | { kind: "update"; tariff: CatalogTariff; product: CatalogProduct; changes: CatalogChange[] }
-  | { kind: "keep"; tariff: CatalogTariff; product: CatalogProduct }
+  | { kind: "create"; session: CatalogSession; tariffs: TariffPlan[] }
+  | {
+      kind: "update";
+      session: CatalogSession;
+      product: CatalogProduct;
+      tariffs: TariffPlan[];
+      changes: CatalogChange[];
+      /** Prix actifs à archiver : ancien montant, tarif supprimé ou doublon. */
+      archivePrices: CatalogPrice[];
+    }
+  | { kind: "keep"; session: CatalogSession; product: CatalogProduct; tariffs: TariffPlan[] }
   | { kind: "archive"; product: CatalogProduct };
 
 /**
- * Compare les tarifs aux produits. `eventId` limite le retrait aux produits de
+ * Compare les dates aux produits. `eventId` limite le retrait aux produits de
  * ce spectacle : synchroniser un spectacle ne touche pas aux autres.
+ * Les anciens produits « un par tarif » (`ticketick_<tarif>`) ne sont plus
+ * voulus : ils sont retirés de la vente.
  */
 export function planCatalog(
-  tariffs: CatalogTariff[],
+  sessions: CatalogSession[],
   products: CatalogProduct[],
   scope: { organizerId: string; eventId?: string },
 ): CatalogStep[] {
@@ -70,17 +109,36 @@ export function planCatalog(
   const wanted = new Set<string>();
   const steps: CatalogStep[] = [];
 
-  for (const tariff of tariffs) {
-    const id = productIdOf(tariff.ticketTypeId);
+  for (const session of sessions) {
+    const id = productIdOf(session.sessionId);
     wanted.add(id);
     const product = byId.get(id);
     if (!product) {
-      steps.push({ kind: "create", tariff });
+      steps.push({
+        kind: "create",
+        session,
+        tariffs: session.tariffs.map((tariff) => ({ tariff, state: { kind: "create" } })),
+      });
       continue;
     }
-    const changes = changesOf(tariff, product);
+
+    const { tariffs, archivePrices } = planPrices(session.tariffs, product.prices);
+    const changes: CatalogChange[] = [];
+    if (!product.active) changes.push("reactivate");
+    if (product.name !== session.name) changes.push("name");
+    if ((product.description ?? "") !== session.description) changes.push("description");
+    if (session.url && product.url !== session.url) changes.push("url");
+    if (session.image && product.images[0] !== session.image) changes.push("image");
+    if (archivePrices.length > 0 || tariffs.some((t) => t.state.kind !== "keep")) changes.push("prices");
+    const first = tariffs[0]?.state;
+    if (first && (first.kind === "keep" || first.kind === "rename") && product.defaultPriceId !== first.price.id) {
+      changes.push("default");
+    }
+
     steps.push(
-      changes.length > 0 ? { kind: "update", tariff, product, changes } : { kind: "keep", tariff, product },
+      changes.length > 0
+        ? { kind: "update", session, product, tariffs, changes, archivePrices }
+        : { kind: "keep", session, product, tariffs },
     );
   }
 
@@ -94,23 +152,24 @@ export function planCatalog(
   return steps;
 }
 
-function changesOf(tariff: CatalogTariff, product: CatalogProduct): CatalogChange[] {
-  const changes: CatalogChange[] = [];
-  if (!product.active) changes.push("reactivate");
-  if (product.name !== tariff.name) changes.push("name");
-  if ((product.description ?? "") !== tariff.description) changes.push("description");
-  if (tariff.url && product.url !== tariff.url) changes.push("url");
-  if (tariff.image && product.images[0] !== tariff.image) changes.push("image");
-  const price = product.price;
-  if (
-    !price ||
-    !price.active ||
-    price.cents !== tariff.priceCents ||
-    price.currency !== tariff.currency
-  ) {
-    changes.push("price");
-  }
-  return changes;
+function planPrices(
+  tariffs: CatalogTariff[],
+  prices: CatalogPrice[],
+): { tariffs: TariffPlan[]; archivePrices: CatalogPrice[] } {
+  const used = new Set<string>();
+  const plans = tariffs.map((tariff): TariffPlan => {
+    const mine = prices.filter((p) => p.ticketTypeId === tariff.ticketTypeId);
+    const same = mine.find((p) => p.cents === tariff.priceCents && p.currency === tariff.currency);
+    if (same) {
+      used.add(same.id);
+      return {
+        tariff,
+        state: same.nickname === tariff.tariff ? { kind: "keep", price: same } : { kind: "rename", price: same },
+      };
+    }
+    return { tariff, state: mine[0] ? { kind: "reprice", old: mine[0] } : { kind: "create" } };
+  });
+  return { tariffs: plans, archivePrices: prices.filter((p) => !used.has(p.id)) };
 }
 
 export interface CatalogCounts {
@@ -126,14 +185,10 @@ export function countSteps(steps: CatalogStep[]): CatalogCounts {
   return counts;
 }
 
-/**
- * Nom du produit : la date en tête, pour que la recherche « 26.12 » dans l'app
- * Stripe trouve tous les tarifs du soir, puis le tarif et le spectacle.
- */
+/** Nom du produit : la date en tête, puis le spectacle. */
 export function productName(input: {
   startsAt: Date;
   timeZone: string;
-  tariff: string;
   eventTitle: string;
   sessionLabel?: string | null;
 }): string {
@@ -152,7 +207,7 @@ export function productName(input: {
   );
   const when = `${parts.day}.${parts.month}.${parts.year} ${parts.hour}:${parts.minute}`;
   const title = input.sessionLabel ? `${input.eventTitle} (${input.sessionLabel})` : input.eventTitle;
-  return clip(`${when} · ${input.tariff} · ${title}`, 250);
+  return clip(`${when} · ${title}`, 250);
 }
 
 export function clip(text: string, max: number): string {

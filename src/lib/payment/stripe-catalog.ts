@@ -17,15 +17,18 @@ import {
   productIdOf,
   productName,
   type CatalogCounts,
+  type CatalogPrice,
   type CatalogProduct,
+  type CatalogSession,
   type CatalogStep,
   type CatalogTariff,
+  type TariffPlan,
 } from "./stripe-catalog-plan";
 import { stripeAccountForOrganizer, stripeClient, type StripeAccount } from "./stripe-account";
 
 /**
- * Envoie les tarifs d'un organisateur dans le catalogue de son compte Stripe,
- * pour la vente à la caisse avec le lecteur Stripe. Voir `stripe-catalog-plan.ts`.
+ * Envoie les dates et tarifs d'un organisateur dans le catalogue de son compte
+ * Stripe, pour la vente à la caisse. Voir `stripe-catalog-plan.ts`.
  */
 
 /** Une date reste en vente à la caisse jusqu'à six heures après son début. */
@@ -34,10 +37,10 @@ const CONCURRENCY = 4;
 
 export type CatalogError = "noAccount" | "permission" | "credentials" | "stripe" | "busy";
 
-export async function loadCatalogTariffs(
+export async function loadCatalogSessions(
   organizerId: string,
   options: { eventId?: string; now?: Date } = {},
-): Promise<CatalogTariff[]> {
+): Promise<CatalogSession[]> {
   const now = options.now ?? new Date();
   const sessions = await prisma.eventSession.findMany({
     where: {
@@ -84,39 +87,33 @@ export async function loadCatalogTariffs(
     minute: "2-digit",
   });
 
-  return sessions.flatMap((session) => {
-    const event = session.event;
-    const eventTitle = translate(event.title as Translated, "fr");
-    const sessionLabel = session.label ? translate(session.label as Translated, "fr") : null;
-    const venue = session.venue ? `${session.venue.name}, ${session.venue.city}` : null;
-    const description = clip(
-      [event.organizer.name, venue, longDate.format(session.startsAt)].filter(Boolean).join(" · "),
-      500,
-    );
-    return session.ticketTypes.map((tt) => {
-      const tariff = translate(tt.name as Translated, "fr");
+  return sessions
+    .filter((session) => session.ticketTypes.length > 0)
+    .map((session) => {
+      const event = session.event;
+      const eventTitle = translate(event.title as Translated, "fr");
+      const sessionLabel = session.label ? translate(session.label as Translated, "fr") : null;
+      const venue = session.venue ? `${session.venue.name}, ${session.venue.city}` : null;
       return {
-        ticketTypeId: tt.id,
         sessionId: session.id,
         eventId: event.id,
         eventTitle,
         startsAt: session.startsAt,
-        tariff,
-        name: productName({
-          startsAt: session.startsAt,
-          timeZone: EVENT_TIME_ZONE,
-          tariff,
-          eventTitle,
-          sessionLabel,
-        }),
-        description,
-        priceCents: tt.priceCents,
-        currency: tt.currency.toLowerCase(),
+        name: productName({ startsAt: session.startsAt, timeZone: EVENT_TIME_ZONE, eventTitle, sessionLabel }),
+        description: clip(
+          [event.organizer.name, venue, longDate.format(session.startsAt)].filter(Boolean).join(" · "),
+          500,
+        ),
         url: origin.startsWith("https://") ? `${origin}/events/${event.slug}` : null,
         image: imageUrl(event.coverImage, origin),
+        tariffs: session.ticketTypes.map((tt) => ({
+          ticketTypeId: tt.id,
+          tariff: clip(translate(tt.name as Translated, "fr"), 250),
+          priceCents: tt.priceCents,
+          currency: tt.currency.toLowerCase(),
+        })),
       };
     });
-  });
 }
 
 /** Stripe n'accepte que des images joignables en HTTPS. */
@@ -126,28 +123,48 @@ function imageUrl(cover: string | null, origin: string): string | null {
   return url.startsWith("https://") && url.length <= 2048 ? url : null;
 }
 
-/** Produits ticketick du compte, actifs ou archivés. */
+/** Produits ticketick du compte (actifs ou archivés) et leurs prix actifs. */
 export async function listCatalogProducts(stripe: Stripe): Promise<CatalogProduct[]> {
+  const prices = new Map<string, CatalogPrice[]>();
+  for await (const price of stripe.prices.list({ limit: 100, active: true })) {
+    const productId = typeof price.product === "string" ? price.product : price.product.id;
+    if (!productId.startsWith(PRODUCT_PREFIX)) continue;
+    const list = prices.get(productId) ?? [];
+    list.push(priceOf(price));
+    prices.set(productId, list);
+  }
   const products: CatalogProduct[] = [];
-  for await (const product of stripe.products.list({ limit: 100, expand: ["data.default_price"] })) {
+  for await (const product of stripe.products.list({ limit: 100 })) {
     if (!product.id.startsWith(PRODUCT_PREFIX)) continue;
-    const price =
-      product.default_price && typeof product.default_price === "object" ? product.default_price : null;
-    products.push({
-      id: product.id,
-      name: product.name,
-      description: product.description ?? null,
-      active: product.active,
-      url: product.url ?? null,
-      images: product.images ?? [],
-      eventId: product.metadata?.[META_EVENT] ?? null,
-      organizerId: product.metadata?.[META_ORGANIZER] ?? null,
-      price: price
-        ? { id: price.id, cents: price.unit_amount, currency: price.currency, active: price.active }
-        : null,
-    });
+    products.push(productOf(product, prices.get(product.id) ?? []));
   }
   return products;
+}
+
+function priceOf(price: Stripe.Price): CatalogPrice {
+  return {
+    id: price.id,
+    ticketTypeId: price.metadata?.[META_TICKET_TYPE] ?? null,
+    nickname: price.nickname ?? null,
+    cents: price.unit_amount,
+    currency: price.currency,
+  };
+}
+
+function productOf(product: Stripe.Product, prices: CatalogPrice[]): CatalogProduct {
+  const defaultPrice = product.default_price;
+  return {
+    id: product.id,
+    name: product.name,
+    description: product.description ?? null,
+    active: product.active,
+    url: product.url ?? null,
+    images: product.images ?? [],
+    eventId: product.metadata?.[META_EVENT] ?? null,
+    organizerId: product.metadata?.[META_ORGANIZER] ?? null,
+    defaultPriceId: typeof defaultPrice === "string" ? defaultPrice : (defaultPrice?.id ?? null),
+    prices,
+  };
 }
 
 export interface CatalogPreview {
@@ -162,15 +179,15 @@ export async function previewStripeCatalog(
   const account = await stripeAccountForOrganizer(organizerId);
   if (!account) return { ok: false, error: "noAccount" };
   try {
-    const [tariffs, products, row] = await Promise.all([
-      loadCatalogTariffs(organizerId),
+    const [sessions, products, row] = await Promise.all([
+      loadCatalogSessions(organizerId),
       listCatalogProducts(stripeClient(account.secretKey)),
       prisma.organizerStripeAccount.findUnique({
         where: { organizerId },
         select: { accountName: true, catalogSyncedAt: true },
       }),
     ]);
-    const steps = planCatalog(tariffs, products, { organizerId });
+    const steps = planCatalog(sessions, products, { organizerId });
     return {
       ok: true,
       preview: {
@@ -184,6 +201,7 @@ export async function previewStripeCatalog(
   }
 }
 
+/** Nombre de dates (produits) créées, mises à jour, retirées, inchangées. */
 export interface CatalogSyncResult {
   created: number;
   updated: number;
@@ -208,11 +226,11 @@ export async function syncStripeCatalog(
   running.add(organizerId);
   try {
     const stripe = stripeClient(account.secretKey);
-    const [tariffs, products] = await Promise.all([
-      loadCatalogTariffs(organizerId, { eventId: options.eventId }),
+    const [sessions, products] = await Promise.all([
+      loadCatalogSessions(organizerId, { eventId: options.eventId }),
       listCatalogProducts(stripe),
     ]);
-    const steps = planCatalog(tariffs, products, { organizerId, eventId: options.eventId });
+    const steps = planCatalog(sessions, products, { organizerId, eventId: options.eventId });
     const result: CatalogSyncResult = { created: 0, updated: 0, archived: 0, unchanged: 0, failed: 0 };
     let blocking: CatalogError | null = null;
 
@@ -224,10 +242,10 @@ export async function syncStripeCatalog(
           await stripe.products.update(step.product.id, { active: false });
           result.archived += 1;
         } else if (step.kind === "update") {
-          await updateProduct(stripe, account, step.tariff, step.product);
+          await updateProduct(stripe, account, step.session, step.product, step.tariffs, step.archivePrices);
           result.updated += 1;
         } else {
-          const created = await createProduct(stripe, account, step.tariff);
+          const created = await createProduct(stripe, account, step.session);
           result[created ? "created" : "updated"] += 1;
         }
       } catch (error) {
@@ -256,94 +274,106 @@ export async function syncStripeCatalog(
   }
 }
 
-function metadataOf(account: StripeAccount, tariff: CatalogTariff): Stripe.MetadataParam {
+function productMetadata(account: StripeAccount, session: CatalogSession): Stripe.MetadataParam {
   return {
     [META_ORGANIZER]: account.organizerId,
-    [META_EVENT]: tariff.eventId,
-    [META_SESSION]: tariff.sessionId,
-    [META_TICKET_TYPE]: tariff.ticketTypeId,
+    [META_EVENT]: session.eventId,
+    [META_SESSION]: session.sessionId,
   };
 }
 
-function fieldsOf(tariff: CatalogTariff) {
+function productFields(session: CatalogSession) {
   return {
-    name: tariff.name,
-    description: tariff.description,
-    ...(tariff.url ? { url: tariff.url } : {}),
-    ...(tariff.image ? { images: [tariff.image] } : {}),
+    name: session.name,
+    description: session.description,
+    ...(session.url ? { url: session.url } : {}),
+    ...(session.image ? { images: [session.image] } : {}),
   };
+}
+
+async function createPrice(
+  stripe: Stripe,
+  account: StripeAccount,
+  productId: string,
+  session: CatalogSession,
+  tariff: CatalogTariff,
+): Promise<string> {
+  const price = await stripe.prices.create({
+    product: productId,
+    currency: tariff.currency,
+    unit_amount: tariff.priceCents,
+    nickname: tariff.tariff,
+    // Prix suisses TVA comprise.
+    tax_behavior: "inclusive",
+    metadata: {
+      [META_ORGANIZER]: account.organizerId,
+      [META_SESSION]: session.sessionId,
+      [META_TICKET_TYPE]: tariff.ticketTypeId,
+    },
+  });
+  return price.id;
 }
 
 /** `true` : créé ; `false` : il existait déjà (double clic), mis à jour. */
 async function createProduct(
   stripe: Stripe,
   account: StripeAccount,
-  tariff: CatalogTariff,
+  session: CatalogSession,
 ): Promise<boolean> {
-  const id = productIdOf(tariff.ticketTypeId);
+  const id = productIdOf(session.sessionId);
   try {
-    await stripe.products.create({
-      id,
-      ...fieldsOf(tariff),
-      metadata: metadataOf(account, tariff),
-      default_price_data: {
-        currency: tariff.currency,
-        unit_amount: tariff.priceCents,
-        // Prix suisses TVA comprise.
-        tax_behavior: "inclusive",
-      },
-    });
-    return true;
+    await stripe.products.create({ id, ...productFields(session), metadata: productMetadata(account, session) });
   } catch (error) {
     if ((error as { code?: string })?.code !== "resource_already_exists") throw error;
-    const existing = await stripe.products.retrieve(id, { expand: ["default_price"] });
-    const price =
-      existing.default_price && typeof existing.default_price === "object" ? existing.default_price : null;
-    await updateProduct(stripe, account, tariff, {
-      id,
-      name: existing.name,
-      description: existing.description ?? null,
-      active: existing.active,
-      url: existing.url ?? null,
-      images: existing.images ?? [],
-      eventId: existing.metadata?.[META_EVENT] ?? null,
-      organizerId: existing.metadata?.[META_ORGANIZER] ?? null,
-      price: price
-        ? { id: price.id, cents: price.unit_amount, currency: price.currency, active: price.active }
-        : null,
-    });
+    // Créé entre-temps par un autre clic : on repart de ce qui existe.
+    const [existing] = (await listCatalogProducts(stripe)).filter((p) => p.id === id);
+    const [step] = planCatalog([session], existing ? [existing] : [], { organizerId: account.organizerId });
+    if (step?.kind === "update") {
+      await updateProduct(stripe, account, session, step.product, step.tariffs, step.archivePrices);
+    }
     return false;
   }
+  const priceIds: string[] = [];
+  for (const tariff of session.tariffs) {
+    priceIds.push(await createPrice(stripe, account, id, session, tariff));
+  }
+  if (priceIds[0]) await stripe.products.update(id, { default_price: priceIds[0] });
+  return true;
 }
 
 /**
- * Un prix Stripe ne se modifie pas : nouveau prix, mis par défaut, puis
- * l'ancien est archivé (les paiements passés le gardent).
+ * Un montant Stripe ne se modifie pas : nouveau prix, puis l'ancien est
+ * archivé (les paiements passés le gardent). Le prix par défaut change avant
+ * l'archivage, Stripe refusant d'archiver le prix par défaut.
  */
 async function updateProduct(
   stripe: Stripe,
   account: StripeAccount,
-  tariff: CatalogTariff,
+  session: CatalogSession,
   product: CatalogProduct,
+  tariffs: TariffPlan[],
+  archivePrices: CatalogPrice[],
 ): Promise<void> {
-  const old = product.price;
-  const priceChanged =
-    !old || !old.active || old.cents !== tariff.priceCents || old.currency !== tariff.currency;
-  const price = priceChanged
-    ? await stripe.prices.create({
-        product: product.id,
-        currency: tariff.currency,
-        unit_amount: tariff.priceCents,
-        tax_behavior: "inclusive",
-      })
-    : null;
+  const priceIds: string[] = [];
+  for (const { tariff, state } of tariffs) {
+    if (state.kind === "keep") priceIds.push(state.price.id);
+    else if (state.kind === "rename") {
+      await stripe.prices.update(state.price.id, { nickname: tariff.tariff });
+      priceIds.push(state.price.id);
+    } else {
+      priceIds.push(await createPrice(stripe, account, product.id, session, tariff));
+    }
+  }
+  const defaultPrice = priceIds[0];
   await stripe.products.update(product.id, {
-    ...fieldsOf(tariff),
+    ...productFields(session),
     active: true,
-    metadata: metadataOf(account, tariff),
-    ...(price ? { default_price: price.id } : {}),
+    metadata: productMetadata(account, session),
+    ...(defaultPrice && defaultPrice !== product.defaultPriceId ? { default_price: defaultPrice } : {}),
   });
-  if (price && old?.active) await stripe.prices.update(old.id, { active: false });
+  for (const price of archivePrices) {
+    if (price.id !== defaultPrice) await stripe.prices.update(price.id, { active: false });
+  }
 }
 
 async function eachLimited<T>(items: T[], limit: number, run: (item: T) => Promise<void>): Promise<void> {

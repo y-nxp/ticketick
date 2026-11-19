@@ -4,18 +4,18 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { catalogActor } from "@/lib/admin/access";
 import { previewStripeCatalog } from "@/lib/payment/stripe-catalog";
-import type { CatalogStep, CatalogTariff } from "@/lib/payment/stripe-catalog-plan";
+import type { CatalogStep, TariffPlan } from "@/lib/payment/stripe-catalog-plan";
 import { prisma } from "@/lib/prisma";
 import { EVENT_TIME_ZONE, formatPrice } from "@/lib/utils";
 import { SyncButton } from "./sync-button";
 
 export const dynamic = "force-dynamic";
 
-type TariffStep = Exclude<CatalogStep, { kind: "archive" }>;
+type DateStep = Exclude<CatalogStep, { kind: "archive" }>;
 
 /**
- * Tarifs des dates à venir dans le catalogue Stripe de l'organisateur, pour
- * la vente à la caisse avec le lecteur Stripe (WisePad).
+ * Dates à venir dans le catalogue Stripe de l'organisateur (un produit par
+ * date, un prix par tarif), pour la vente à la caisse avec le lecteur Stripe.
  */
 export default async function StripeCatalogPage({
   params,
@@ -111,28 +111,32 @@ export default async function StripeCatalogPage({
       minute: "2-digit",
     }).format(date);
 
-  const events = new Map<string, { title: string; steps: TariffStep[] }>();
+  const events = new Map<string, { title: string; steps: DateStep[] }>();
   for (const step of steps) {
     if (step.kind === "archive") continue;
-    const group = events.get(step.tariff.eventId) ?? { title: step.tariff.eventTitle, steps: [] };
+    const group = events.get(step.session.eventId) ?? { title: step.session.eventTitle, steps: [] };
     group.steps.push(step);
-    events.set(step.tariff.eventId, group);
+    events.set(step.session.eventId, group);
   }
   const archived = steps.filter((s) => s.kind === "archive");
   const toDo = counts.create + counts.update + counts.archive;
 
-  const status = (step: TariffStep) => {
-    if (step.kind === "create") return <Badge>{t("state.create")}</Badge>;
-    if (step.kind === "keep") return <Badge variant="success">{t("state.keep")}</Badge>;
-    const old = step.product.price?.cents;
-    const detail = step.changes.includes("price")
-      ? old != null
-        ? t("state.newPrice", { old: formatPrice(old, intl) })
-        : t("state.price")
-      : step.changes.includes("reactivate")
-        ? t("state.reactivate")
-        : t("state.details");
-    return <Badge variant="secondary">{detail}</Badge>;
+  const status = (step: DateStep, plan: TariffPlan) => {
+    if (step.kind === "create" || plan.state.kind === "create") return <Badge>{t("state.create")}</Badge>;
+    if (plan.state.kind === "reprice") {
+      const old = plan.state.old.cents;
+      return (
+        <Badge variant="secondary">
+          {old != null ? t("state.newPrice", { old: formatPrice(old, intl) }) : t("state.price")}
+        </Badge>
+      );
+    }
+    if (plan.state.kind === "rename") return <Badge variant="secondary">{t("state.details")}</Badge>;
+    if (step.kind === "update") {
+      if (step.changes.includes("reactivate")) return <Badge variant="secondary">{t("state.reactivate")}</Badge>;
+      if (step.changes.some((c) => c !== "prices")) return <Badge variant="secondary">{t("state.details")}</Badge>;
+    }
+    return <Badge variant="success">{t("state.keep")}</Badge>;
   };
   const tile = (label: string, value: number) => (
     <div className="rounded-card border border-border bg-card p-4">
@@ -140,8 +144,6 @@ export default async function StripeCatalogPage({
       <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
     </div>
   );
-  const sessionsOf = (rows: TariffStep[]) => new Set(rows.map((r) => r.tariff.sessionId)).size;
-  const rowKey = (tariff: CatalogTariff) => tariff.ticketTypeId;
 
   return (
     <div className="space-y-8">
@@ -186,7 +188,10 @@ export default async function StripeCatalogPage({
               <div>
                 <h2 className="font-semibold">{group.title}</h2>
                 <p className="text-xs text-muted-foreground">
-                  {t("eventSummary", { dates: sessionsOf(group.steps), tariffs: group.steps.length })}
+                  {t("eventSummary", {
+                    dates: group.steps.length,
+                    tariffs: group.steps.reduce((n, step) => n + step.tariffs.length, 0),
+                  })}
                 </p>
               </div>
               <SyncButton
@@ -206,20 +211,27 @@ export default async function StripeCatalogPage({
                     <th className="px-4 py-2 font-semibold">{t("columns.state")}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
-                  {group.steps.map((step) => (
-                    <tr key={rowKey(step.tariff)}>
-                      <td className="whitespace-nowrap px-4 py-2 tabular-nums">{when(step.tariff.startsAt)}</td>
-                      <td className="px-4 py-2">
-                        {step.tariff.tariff}
-                        <span className="block text-xs text-muted-foreground">{step.tariff.name}</span>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-2 text-right tabular-nums">
-                        {formatPrice(step.tariff.priceCents, intl)}
-                      </td>
-                      <td className="px-4 py-2">{status(step)}</td>
-                    </tr>
-                  ))}
+                <tbody>
+                  {group.steps.flatMap((step) =>
+                    step.tariffs.map((plan, index) => (
+                      <tr
+                        key={plan.tariff.ticketTypeId}
+                        className={index === 0 ? "border-t border-border" : undefined}
+                      >
+                        {index === 0 ? (
+                          <td rowSpan={step.tariffs.length} className="px-4 py-2 align-top">
+                            <span className="whitespace-nowrap tabular-nums">{when(step.session.startsAt)}</span>
+                            <span className="block text-xs text-muted-foreground">{step.session.name}</span>
+                          </td>
+                        ) : null}
+                        <td className="px-4 py-2">{plan.tariff.tariff}</td>
+                        <td className="whitespace-nowrap px-4 py-2 text-right tabular-nums">
+                          {formatPrice(plan.tariff.priceCents, intl)}
+                        </td>
+                        <td className="px-4 py-2">{status(step, plan)}</td>
+                      </tr>
+                    )),
+                  )}
                 </tbody>
               </table>
             </div>
@@ -228,15 +240,17 @@ export default async function StripeCatalogPage({
       })}
 
       {archived.length > 0 ? (
-        <section className="rounded-card border border-border p-4">
-          <h2 className="font-semibold">{t("archiveTitle")}</h2>
+        <details className="rounded-card border border-border p-4">
+          <summary className="cursor-pointer font-semibold">
+            {t("archiveTitle")} ({archived.length})
+          </summary>
           <p className="mt-1 text-xs text-muted-foreground">{t("archiveHint")}</p>
           <ul className="mt-3 space-y-1 text-sm">
             {archived.map((step) => (
               <li key={step.product.id}>{step.product.name}</li>
             ))}
           </ul>
-        </section>
+        </details>
       ) : null}
     </div>
   );

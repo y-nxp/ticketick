@@ -2362,7 +2362,7 @@
     },
     "stripeCatalog": {
       "title": "Cassa Stripe",
-      "subtitle": "Per incassare all'ingresso con il lettore Stripe (WisePad): ogni tariffa a pagamento delle date in arrivo diventa un prodotto del catalogo Stripe, al suo prezzo. Basta un clic per aggiornare il catalogo.",
+      "subtitle": "Per incassare all'ingresso con il lettore Stripe (WisePad): ogni data in arrivo diventa un prodotto del catalogo Stripe, con le sue tariffe a pagamento come prezzi (Premium, Categoria 1…). Basta un clic per aggiornare il catalogo.",
       "organizer": "Organizzatore",
       "noOrganizer": "Nessun organizzatore ha un conto Stripe attivo.",
       "noAccount": "Questo organizzatore non ha un conto Stripe attivo.",
@@ -2373,10 +2373,10 @@
       "syncedAt": "Ultima sincronizzazione: {date}",
       "neverSynced": "Mai sincronizzato",
       "counts": {
-        "create": "Da creare",
-        "update": "Da aggiornare",
-        "keep": "Aggiornati",
-        "archive": "Da ritirare"
+        "create": "Date da creare",
+        "update": "Date da aggiornare",
+        "keep": "Date aggiornate",
+        "archive": "Prodotti da ritirare"
       },
       "syncAll": "Sincronizza ({count, plural, one {# modifica} other {# modifiche}})",
       "syncAgain": "Sincronizza di nuovo",
@@ -2384,12 +2384,12 @@
       "syncing": "Sincronizzazione…",
       "result": "Fatto: {created} creati, {updated} aggiornati, {archived} ritirati, {unchanged} già aggiornati.",
       "resultFailed": "{failed} non riusciti: rilanciare la sincronizzazione.",
-      "howTo": "Nell'app Stripe collegata al lettore, cercate la data (ad esempio «26.12») per vedere tutte le tariffe della serata. Le date passate e le tariffe eliminate vengono ritirate dalla vendita alla sincronizzazione successiva; le tariffe gratuite non vengono inviate.",
+      "howTo": "In Collect for Stripe toccate il concerto, poi la tariffa. Le date passate e le tariffe eliminate vengono ritirate dalla vendita alla sincronizzazione successiva; le tariffe gratuite non vengono inviate.",
       "stockNote": "Una vendita al lettore non crea un biglietto in ticketick e non riduce il contingente: contatela nella cassa serale.",
       "noTariffs": "Nessuna tariffa a pagamento su una data pubblicata in arrivo.",
       "eventSummary": "{dates, plural, one {# data} other {# date}} · {tariffs, plural, one {# tariffa} other {# tariffe}}",
       "columns": {
-        "date": "Data",
+        "date": "Data in Stripe",
         "tariff": "Tariffa",
         "price": "Prezzo",
         "state": "In Stripe"
@@ -2403,7 +2403,7 @@
         "details": "Nome o descrizione da correggere"
       },
       "archiveTitle": "Ritirati dalla vendita alla prossima sincronizzazione",
-      "archiveHint": "Date passate o annullate, tariffe eliminate. Il prodotto viene archiviato in Stripe, non cancellato: i pagamenti passati lo conservano.",
+      "archiveHint": "Date passate o annullate e vecchi prodotti «uno per tariffa». Il prodotto viene archiviato in Stripe, non cancellato: i pagamenti passati lo conservano.",
       "errors": {
         "noAccount": "Questo organizzatore non ha un conto Stripe attivo.",
         "permission": "La chiave Stripe registrata non può gestire i prodotti. Datele la scrittura su «Products» e «Prices», oppure usate la chiave segreta.",
