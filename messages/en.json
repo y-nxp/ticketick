@@ -2362,7 +2362,7 @@
     },
     "stripeCatalog": {
       "title": "Stripe till",
-      "subtitle": "To take payments at the door with the Stripe reader (WisePad): every paid price of upcoming dates becomes a product in the Stripe catalogue, at its price. One click updates the catalogue.",
+      "subtitle": "To take payments at the door with the Stripe reader (WisePad): every upcoming date becomes a product in the Stripe catalogue, with its paid prices (Premium, Category 1…). One click updates the catalogue.",
       "organizer": "Organiser",
       "noOrganizer": "No organiser has an active Stripe account.",
       "noAccount": "This organiser has no active Stripe account.",
@@ -2373,10 +2373,10 @@
       "syncedAt": "Last synchronised: {date}",
       "neverSynced": "Never synchronised",
       "counts": {
-        "create": "To create",
-        "update": "To update",
-        "keep": "Up to date",
-        "archive": "To remove"
+        "create": "Dates to create",
+        "update": "Dates to update",
+        "keep": "Dates up to date",
+        "archive": "Products to remove"
       },
       "syncAll": "Synchronise ({count, plural, one {# change} other {# changes}})",
       "syncAgain": "Synchronise again",
@@ -2384,12 +2384,12 @@
       "syncing": "Synchronising…",
       "result": "Done: {created} created, {updated} updated, {archived} removed, {unchanged} already up to date.",
       "resultFailed": "{failed} failed: run the synchronisation again.",
-      "howTo": "In the Stripe app linked to the reader, search for the date (e.g. “26.12”) to see all prices for the evening. Past dates and deleted prices are removed from sale at the next synchronisation; free prices are not sent.",
+      "howTo": "In Collect for Stripe, tap the concert, then the price. Past dates and deleted prices are removed from sale at the next synchronisation; free prices are not sent.",
       "stockNote": "A sale on the reader does not create a ticket in ticketick and does not reduce the allocation: count it in the door takings.",
       "noTariffs": "No paid price on an upcoming published date.",
       "eventSummary": "{dates, plural, one {# date} other {# dates}} · {tariffs, plural, one {# price} other {# prices}}",
       "columns": {
-        "date": "Date",
+        "date": "Date in Stripe",
         "tariff": "Price category",
         "price": "Price",
         "state": "In Stripe"
@@ -2403,7 +2403,7 @@
         "details": "Name or description to fix"
       },
       "archiveTitle": "Removed from sale at the next synchronisation",
-      "archiveHint": "Past or cancelled dates, or deleted prices. The product is archived in Stripe, not erased: past payments keep it.",
+      "archiveHint": "Past or cancelled dates, and old one-product-per-price items. The product is archived in Stripe, not erased: past payments keep it.",
       "errors": {
         "noAccount": "This organiser has no active Stripe account.",
         "permission": "The saved Stripe key is not allowed to manage products. Give it write access to “Products” and “Prices”, or use the secret key.",

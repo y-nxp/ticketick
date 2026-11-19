@@ -2362,7 +2362,7 @@
     },
     "stripeCatalog": {
       "title": "Stripe-Kasse",
-      "subtitle": "Für den Verkauf am Eingang mit dem Stripe-Lesegerät (WisePad): Jeder kostenpflichtige Tarif der kommenden Daten wird ein Produkt im Stripe-Katalog, zu seinem Preis. Ein Klick aktualisiert den Katalog.",
+      "subtitle": "Für den Verkauf am Eingang mit dem Stripe-Lesegerät (WisePad): Jedes kommende Datum wird ein Produkt im Stripe-Katalog, mit seinen kostenpflichtigen Tarifen als Preise (Premium, Kategorie 1…). Ein Klick aktualisiert den Katalog.",
       "organizer": "Veranstalter",
       "noOrganizer": "Kein Veranstalter hat ein aktives Stripe-Konto.",
       "noAccount": "Dieser Veranstalter hat kein aktives Stripe-Konto.",
@@ -2373,10 +2373,10 @@
       "syncedAt": "Letzte Synchronisierung: {date}",
       "neverSynced": "Noch nie synchronisiert",
       "counts": {
-        "create": "Neu",
+        "create": "Neue Daten",
         "update": "Zu aktualisieren",
-        "keep": "Aktuell",
-        "archive": "Zu entfernen"
+        "keep": "Aktuelle Daten",
+        "archive": "Zu entfernende Produkte"
       },
       "syncAll": "Synchronisieren ({count, plural, one {# Änderung} other {# Änderungen}})",
       "syncAgain": "Erneut synchronisieren",
@@ -2384,12 +2384,12 @@
       "syncing": "Synchronisierung…",
       "result": "Erledigt: {created} erstellt, {updated} aktualisiert, {archived} entfernt, {unchanged} bereits aktuell.",
       "resultFailed": "{failed} fehlgeschlagen: Synchronisierung erneut starten.",
-      "howTo": "Suchen Sie in der mit dem Lesegerät verbundenen Stripe-App nach dem Datum (z. B. «26.12»), um alle Tarife des Abends zu sehen. Vergangene Daten und gelöschte Tarife werden bei der nächsten Synchronisierung aus dem Verkauf genommen; Gratistarife werden nicht übertragen.",
+      "howTo": "In Collect for Stripe das Konzert antippen, dann den Tarif. Vergangene Daten und gelöschte Tarife werden bei der nächsten Synchronisierung aus dem Verkauf genommen; Gratistarife werden nicht übertragen.",
       "stockNote": "Ein Verkauf am Lesegerät erstellt kein Ticket in ticketick und verringert das Kontingent nicht: Zählen Sie ihn zur Abendkasse.",
       "noTariffs": "Kein kostenpflichtiger Tarif an einem kommenden veröffentlichten Datum.",
       "eventSummary": "{dates, plural, one {# Datum} other {# Daten}} · {tariffs, plural, one {# Tarif} other {# Tarife}}",
       "columns": {
-        "date": "Datum",
+        "date": "Datum in Stripe",
         "tariff": "Tarif",
         "price": "Preis",
         "state": "In Stripe"
@@ -2403,7 +2403,7 @@
         "details": "Name oder Beschreibung anpassen"
       },
       "archiveTitle": "Bei der nächsten Synchronisierung aus dem Verkauf genommen",
-      "archiveHint": "Vergangene oder abgesagte Daten, gelöschte Tarife. Das Produkt wird in Stripe archiviert, nicht gelöscht: Frühere Zahlungen behalten es.",
+      "archiveHint": "Vergangene oder abgesagte Daten und alte Produkte «eines pro Tarif». Das Produkt wird in Stripe archiviert, nicht gelöscht: Frühere Zahlungen behalten es.",
       "errors": {
         "noAccount": "Dieser Veranstalter hat kein aktives Stripe-Konto.",
         "permission": "Der gespeicherte Stripe-Schlüssel darf keine Produkte verwalten. Geben Sie ihm Schreibrechte für «Products» und «Prices» oder verwenden Sie den geheimen Schlüssel.",
