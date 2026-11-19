@@ -143,7 +143,10 @@ export function planCatalog(
   }
 
   for (const product of products) {
-    if (!product.active || wanted.has(product.id)) continue;
+    if (wanted.has(product.id)) continue;
+    // Déjà archivé sans prix actif : rien de plus à faire. Un produit archivé
+    // dont les prix sont restés actifs reste visible dans Collect for Stripe.
+    if (!product.active && product.prices.length === 0) continue;
     // Produit d'un autre organisateur sur le même compte : on n'y touche pas.
     if (product.organizerId !== scope.organizerId) continue;
     if (scope.eventId && product.eventId !== scope.eventId) continue;

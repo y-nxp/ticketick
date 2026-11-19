@@ -2403,7 +2403,7 @@
         "details": "Name oder Beschreibung anpassen"
       },
       "archiveTitle": "Bei der nächsten Synchronisierung aus dem Verkauf genommen",
-      "archiveHint": "Vergangene oder abgesagte Daten und alte Produkte «eines pro Tarif». Das Produkt wird in Stripe archiviert, nicht gelöscht: Frühere Zahlungen behalten es.",
+      "archiveHint": "Vergangene oder abgesagte Daten und alte Produkte «eines pro Tarif». Ihre Preise werden archiviert, dann wird das Produkt aus Stripe gelöscht; wurde es bereits für eine Zahlung verwendet, bleibt es archiviert.",
       "errors": {
         "noAccount": "Dieser Veranstalter hat kein aktives Stripe-Konto.",
         "permission": "Der gespeicherte Stripe-Schlüssel darf keine Produkte verwalten. Geben Sie ihm Schreibrechte für «Products» und «Prices» oder verwenden Sie den geheimen Schlüssel.",

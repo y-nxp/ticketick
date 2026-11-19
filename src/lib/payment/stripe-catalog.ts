@@ -239,7 +239,7 @@ export async function syncStripeCatalog(
       try {
         if (step.kind === "keep") result.unchanged += 1;
         else if (step.kind === "archive") {
-          await stripe.products.update(step.product.id, { active: false });
+          await retireProduct(stripe, step.product);
           result.archived += 1;
         } else if (step.kind === "update") {
           await updateProduct(stripe, account, step.session, step.product, step.tariffs, step.archivePrices);
@@ -373,6 +373,32 @@ async function updateProduct(
   });
   for (const price of archivePrices) {
     if (price.id !== defaultPrice) await stripe.prices.update(price.id, { active: false });
+  }
+}
+
+/**
+ * Retire un produit de la vente : ses prix sont archivés (un prix ne se
+ * supprime pas par l'API), puis le produit est supprimé. Stripe refuse la
+ * suppression d'un produit qui garde des prix : il reste alors archivé.
+ */
+async function retireProduct(stripe: Stripe, product: CatalogProduct): Promise<void> {
+  if (product.active) await stripe.products.update(product.id, { active: false });
+  // Stripe refuse d'archiver le prix par défaut : on le détache d'abord. Chaque
+  // étape suivante est tentée pour elle-même ; au pire le produit reste archivé.
+  if (product.defaultPriceId) {
+    await quietly(product.id, () => stripe.products.update(product.id, { default_price: "" }));
+  }
+  for (const price of product.prices) {
+    await quietly(price.id, () => stripe.prices.update(price.id, { active: false }));
+  }
+  await quietly(product.id, () => stripe.products.del(product.id));
+}
+
+async function quietly(id: string, run: () => Promise<unknown>): Promise<void> {
+  try {
+    await run();
+  } catch (error) {
+    console.info("[stripe-catalog] étape de retrait refusée", id, error instanceof Error ? error.message : error);
   }
 }
 

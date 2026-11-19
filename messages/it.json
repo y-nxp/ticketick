@@ -2403,7 +2403,7 @@
         "details": "Nome o descrizione da correggere"
       },
       "archiveTitle": "Ritirati dalla vendita alla prossima sincronizzazione",
-      "archiveHint": "Date passate o annullate e vecchi prodotti «uno per tariffa». Il prodotto viene archiviato in Stripe, non cancellato: i pagamenti passati lo conservano.",
+      "archiveHint": "Date passate o annullate e vecchi prodotti «uno per tariffa». I loro prezzi vengono archiviati, poi il prodotto viene eliminato da Stripe; se è già servito per un pagamento, Stripe lo conserva archiviato.",
       "errors": {
         "noAccount": "Questo organizzatore non ha un conto Stripe attivo.",
         "permission": "La chiave Stripe registrata non può gestire i prodotti. Datele la scrittura su «Products» e «Prices», oppure usate la chiave segreta.",

@@ -2403,7 +2403,7 @@
         "details": "Name or description to fix"
       },
       "archiveTitle": "Removed from sale at the next synchronisation",
-      "archiveHint": "Past or cancelled dates, and old one-product-per-price items. The product is archived in Stripe, not erased: past payments keep it.",
+      "archiveHint": "Past or cancelled dates, and old one-product-per-price items. Their prices are archived, then the product is deleted from Stripe; if it was already used for a payment, Stripe keeps it archived.",
       "errors": {
         "noAccount": "This organiser has no active Stripe account.",
         "permission": "The saved Stripe key is not allowed to manage products. Give it write access to “Products” and “Prices”, or use the secret key.",
