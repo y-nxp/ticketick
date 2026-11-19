@@ -83,7 +83,7 @@ test("one product per date: create, keep, and archive old per-tariff products", 
     // Ancien produit « un par tarif » : retiré.
     { ...product(s1), id: "ticketick_a", defaultPriceId: null, prices: [] },
     { ...product(s1), id: "ticketick_other", organizerId: "org2" },
-    { ...product(s1), id: "ticketick_archived", active: false },
+    { ...product(s1), id: "ticketick_archived", active: false, prices: [], defaultPriceId: null },
   ];
   const steps = planCatalog([s1, s2], products, { organizerId: "org1" });
   assert.deepEqual(
@@ -131,4 +131,11 @@ test("an archived date comes back on sale; event scope limits archiving", () => 
   const elsewhere = product(session("s9", [tariff("x", "Premium", 5000)], "ev2"));
   const scoped = planCatalog([s1], [product(s1), elsewhere], { organizerId: "org1", eventId: "ev1" });
   assert.deepEqual(scoped.map((s) => s.kind), ["keep"]);
+});
+
+test("an archived product whose prices stayed active is cleaned up, then left alone", () => {
+  const old = product(session("s1", [tariff("a", "Premium", 5000)]), { id: "ticketick_a", active: false });
+  assert.deepEqual(planCatalog([], [old], { organizerId: "org1" }).map((s) => s.kind), ["archive"]);
+  const done = { ...old, prices: [], defaultPriceId: null };
+  assert.deepEqual(planCatalog([], [done], { organizerId: "org1" }), []);
 });
