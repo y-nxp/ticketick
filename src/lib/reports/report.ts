@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { Prisma } from "@prisma/client";
 import { createTranslator } from "next-intl";
 import de from "../../../messages/de.json";
 import en from "../../../messages/en.json";
@@ -12,6 +13,13 @@ import { lastClosedPeriod } from "@/lib/resellers/report";
 import { t as tr, type Translated } from "@/lib/types";
 import { EVENT_TIME_ZONE, formatPrice } from "@/lib/utils";
 import { loadActiveCampaignFigures } from "@/lib/promotion/results-store";
+import {
+  hourWindow,
+  morningHeadline,
+  morningWindow,
+  titleList,
+  zurichDay,
+} from "./event-schedule";
 import { promotionReportBlock } from "./promotion-section";
 import { getOrganizerReport, readSections, type ReportSection } from "./summary";
 
@@ -45,6 +53,13 @@ export async function sendOrganizerReport(
     sections?: ReportSection[];
     /** Envoi du planificateur : début de la période si aucun rapport automatique n'est encore parti. */
     period?: { from: Date };
+    /**
+     * Rapport d'événement : seulement ces dates, « nouveaux » sur 24 heures,
+     * sans toucher au point de départ du rapport périodique.
+     */
+    event?: { kind: "morning" | "hour"; sessionIds: string[] };
+    /** Instant de la passe du planificateur (tests : une heure simulée). */
+    now?: Date;
   } = {},
 ): Promise<boolean> {
   const organizer = await prisma.organizer.findUnique({
@@ -61,7 +76,10 @@ export async function sendOrganizerReport(
   if (!organizer) return false;
   const to = options.recipients ?? reportRecipients(organizer);
   if (to.length === 0) return false;
-  const sections = options.sections ?? readSections(organizer.reportSections);
+  const event = options.event;
+  const sections = (options.sections ?? readSections(organizer.reportSections)).filter(
+    (s) => !event || s !== "promotion",
+  );
 
   const preferred = organizer.user?.locale ?? "fr";
   const locale = preferred in MESSAGES ? preferred : "fr";
@@ -82,12 +100,20 @@ export async function sendOrganizerReport(
           : { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }),
     }).format(date);
 
-  const now = new Date();
-  const since =
-    options.period && !organizer.lastReportSentAt
+  const now = options.now ?? new Date();
+  const since = event
+    ? new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    : options.period && !organizer.lastReportSentAt
       ? options.period.from
       : reportSince(organizer.lastReportSentAt, now);
-  const { sessions, totals } = await getOrganizerReport(organizerId, { since, now, locale });
+  const { sessions, totals } = await getOrganizerReport(organizerId, {
+    since,
+    now,
+    locale,
+    sessionIds: event?.sessionIds,
+  });
+  // Dates annulées ou passées entre-temps : rien à annoncer.
+  if (event && sessions.length === 0) return false;
   const label = (s: (typeof sessions)[number]) =>
     `${tr(s.eventTitle as Translated, locale)} — ${format(s.startsAt, "session")}`;
 
@@ -180,16 +206,26 @@ export async function sendOrganizerReport(
     summary.push(...promotion.summary);
   }
 
+  const titles = (list: typeof sessions) => titleList(list.map((s) => tr(s.eventTitle as Translated, locale)));
+  const headline = event?.kind === "morning" ? morningHeadline(zurichDay(now), sessions) : null;
+  const subject = !event
+    ? t("subject", { name: organizer.name, date: format(now, "day") })
+    : event.kind === "hour"
+      ? t("eventSubjectHour", { events: titles(sessions), name: organizer.name })
+      : headline && headline.days > 0
+        ? t("eventSubjectSoon", { days: headline.days, events: titles(headline.sessions), name: organizer.name })
+        : t("eventSubjectToday", { events: titles(headline?.sessions ?? sessions), name: organizer.name });
+
   const [first, ...bcc] = to;
   const result = await sendTableReportEmail(
     {
       to: first!,
       bcc,
-      subject: t("subject", { name: organizer.name, date: format(now, "day") }),
+      subject,
       heading: t("heading", { name: organizer.name }),
-      period: t("asOf", { date: format(now, "day") }),
+      period: event ? t("asOf", { date: format(now, "since") }) : t("asOf", { date: format(now, "day") }),
       tables,
-      summaryTitle: t("totals"),
+      summaryTitle: event ? t("eventTotals") : t("totals"),
       summary,
       footer: [
         ...(sections.includes("sales") ? [t("footerSales")] : []),
@@ -200,7 +236,7 @@ export async function sendOrganizerReport(
         ...(promotion ? [promotion.footer] : []),
       ].join(" "),
     },
-    "rapport organisateur",
+    event ? "rapport d'événement" : "rapport organisateur",
   );
   if (result.sent && options.period) {
     await prisma.organizer.update({
@@ -249,9 +285,79 @@ export async function sendDueOrganizerReports(now = new Date()): Promise<number>
   return n;
 }
 
+const LIVE_EVENT: Prisma.EventWhereInput = { status: { in: ["PUBLISHED", "SOLD_OUT"] } };
+
+/**
+ * Passe des rapports d'événement : le rapport du matin (7 h, semaine qui
+ * précède une date et jour même) et celui d'une heure avant le début. Chaque
+ * envoi est réservé en base avant de partir : deux instances ne l'envoient
+ * pas deux fois.
+ */
+export async function sendDueEventReports(now = new Date()): Promise<number> {
+  let n = 0;
+  const send = async (organizerId: string, event: { kind: "morning" | "hour"; sessionIds: string[] }) => {
+    try {
+      if (await sendOrganizerReport(organizerId, { event, now })) n += 1;
+    } catch (error) {
+      console.error("[rapports] rapport d'événement impossible", organizerId, error);
+    }
+  };
+
+  const organizers = await prisma.organizer.findMany({
+    where: { eventReports: true },
+    select: { id: true, lastEventReportDay: true },
+  });
+  for (const organizer of organizers) {
+    const window = morningWindow(now, organizer.lastEventReportDay);
+    if (!window) continue;
+    const { count } = await prisma.organizer.updateMany({
+      where: {
+        id: organizer.id,
+        OR: [{ lastEventReportDay: null }, { lastEventReportDay: { not: window.day } }],
+      },
+      data: { lastEventReportDay: window.day },
+    });
+    if (count !== 1) continue;
+    const sessions = await prisma.eventSession.findMany({
+      where: {
+        startsAt: { gte: window.from, lt: window.to },
+        status: { not: "CANCELLED" },
+        event: { ...LIVE_EVENT, organizerId: organizer.id },
+      },
+      select: { id: true },
+    });
+    if (sessions.length > 0) await send(organizer.id, { kind: "morning", sessionIds: sessions.map((s) => s.id) });
+  }
+
+  const hour = hourWindow(now);
+  const starting = await prisma.eventSession.findMany({
+    where: {
+      startsAt: { gt: hour.from, lte: hour.to },
+      hourReportAt: null,
+      status: { not: "CANCELLED" },
+      event: { ...LIVE_EVENT, organizer: { eventReports: true } },
+    },
+    select: { id: true, event: { select: { organizerId: true } } },
+  });
+  const byOrganizer = new Map<string, string[]>();
+  for (const s of starting) {
+    const { count } = await prisma.eventSession.updateMany({
+      where: { id: s.id, hourReportAt: null },
+      data: { hourReportAt: now },
+    });
+    if (count !== 1) continue;
+    byOrganizer.set(s.event.organizerId, [...(byOrganizer.get(s.event.organizerId) ?? []), s.id]);
+  }
+  for (const [organizerId, sessionIds] of byOrganizer) await send(organizerId, { kind: "hour", sessionIds });
+  return n;
+}
+
 const INTERVAL_MS = 15 * 60 * 1000;
+/** Rapports d'événement : toutes les 5 minutes, pour tenir « une heure avant ». */
+const EVENT_INTERVAL_MS = 5 * 60 * 1000;
 let started = false;
 let running = false;
+let eventRunning = false;
 
 export function startOrganizerReports(): void {
   if (started) return;
@@ -268,6 +374,20 @@ export function startOrganizerReports(): void {
       running = false;
     }
   };
+  const eventPass = async () => {
+    if (eventRunning) return;
+    eventRunning = true;
+    try {
+      const n = await sendDueEventReports();
+      if (n > 0) console.log(`[rapports] ${n} rapport(s) d'événement envoyé(s)`);
+    } catch (error) {
+      console.error("[rapports] rapports d'événement", error);
+    } finally {
+      eventRunning = false;
+    }
+  };
   setTimeout(() => void pass(), 90 * 1000).unref();
   setInterval(() => void pass(), INTERVAL_MS).unref();
+  setTimeout(() => void eventPass(), 2 * 60 * 1000).unref();
+  setInterval(() => void eventPass(), EVENT_INTERVAL_MS).unref();
 }

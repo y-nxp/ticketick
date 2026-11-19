@@ -81,6 +81,7 @@ export default async function ReportsPage({
       reportSections: true,
       lastReportAt: true,
       lastReportSentAt: true,
+      eventReports: true,
     },
   });
   const since = reportSince(organizer.lastReportSentAt);
@@ -372,6 +373,7 @@ export default async function ReportsPage({
               sections={savedSections}
               promotionOffered={promotionOffered}
               fallback={organizer.notifyEmails.join(", ")}
+              eventReports={organizer.eventReports}
             />
           </>
         )}

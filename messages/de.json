@@ -1986,7 +1986,9 @@
       "buyerPhone": "Telefon",
       "buyerOrder": "Bestellung",
       "optionsHeading": "Gewählte Optionen — {date}",
-      "suisaLink": "SUISA-Bericht"
+      "suisaLink": "SUISA-Bericht",
+      "eventReports": "Berichte vor jeder Veranstaltung",
+      "eventReportsHint": "Jeden Morgen um 7 Uhr in der Woche vor einem Datum und am Tag selbst, dann eine Stunde vor Beginn: nur die betroffenen Daten, in einem einzigen Bericht, wenn mehrere gleichzeitig stattfinden. An dieselben Empfänger."
     },
     "suisa": {
       "title": "SUISA-Bericht",
@@ -2842,7 +2844,11 @@
     "optionsOrders": "Bestellungen",
     "optionsPeople": "Personen",
     "optionsTotal": "Total",
-    "footerOptions": "Optionen: bezahlte Bestellungen; Personen = Tickets dieser Bestellungen für das Datum."
+    "footerOptions": "Optionen: bezahlte Bestellungen; Personen = Tickets dieser Bestellungen für das Datum.",
+    "eventSubjectToday": "Heute — {events} · {name}",
+    "eventSubjectSoon": "{days, plural, one {Morgen} other {In # Tagen}} — {events} · {name}",
+    "eventSubjectHour": "In einer Stunde — {events} · {name}",
+    "eventTotals": "Total dieser Daten"
   },
   "consent": {
     "title": "ticketick respektiert Ihre Privatsphäre",
