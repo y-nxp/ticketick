@@ -9,6 +9,12 @@
  */
 
 export const COLLECT_LAUNCH_URL = "https://app.collectforstripe.com/launchApp";
+/**
+ * Adresse propre à l'app. Le lien universel ci-dessus n'ouvre l'app que si
+ * l'on touche le lien soi-même ; ouvert par le script de la page, Safari
+ * affiche la page web de Collect (« Not Found »).
+ */
+export const COLLECT_APP_URL = "collectforstripe://";
 
 /** Description Stripe du paiement, limitée comme Stripe l'accepte. */
 export function saleDescription(input: {
@@ -22,18 +28,17 @@ export function saleDescription(input: {
   return text.length <= 1000 ? text : `${text.slice(0, 999)}…`;
 }
 
-export function collectLaunchUrl(input: {
-  amountCents: number;
-  description: string;
-  callback: string;
-}): string {
+export function collectLaunchUrl(
+  input: { amountCents: number; description: string; callback: string },
+  via: "app" | "web" = "web",
+): string {
   const query = new URLSearchParams({
     action: "beginTransaction",
     amount: String(input.amountCents),
     description: input.description,
     callback: input.callback,
   });
-  return `${COLLECT_LAUNCH_URL}?${query}`;
+  return `${via === "app" ? COLLECT_APP_URL : COLLECT_LAUNCH_URL}?${query}`;
 }
 
 export type CollectReturn =

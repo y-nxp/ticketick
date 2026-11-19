@@ -32,3 +32,8 @@ test("Collect return: success needs a Stripe charge id, anything else is a failu
   assert.deepEqual(readCollectReturn({ result: "success" }), { result: "fail" });
   assert.deepEqual(readCollectReturn({ result: "success", chargeId: "ch_1'; drop" }), { result: "fail" });
 });
+
+test("the app link uses Collect's own scheme, for a tap that opens the app", () => {
+  const url = collectLaunchUrl({ amountCents: 100, description: "Test", callback: "https://ticketick.ch/x" }, "app");
+  assert.ok(url.startsWith("collectforstripe://?action=beginTransaction&amount=100&"));
+});

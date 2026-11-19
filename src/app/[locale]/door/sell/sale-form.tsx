@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
-import { CreditCard, Loader2, Minus, Plus } from "lucide-react";
+import { CreditCard, ExternalLink, Loader2, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { startDoorSale, type DoorSaleState } from "@/lib/door/sale-actions";
@@ -31,26 +31,38 @@ export function DoorSaleForm({
 }) {
   const t = useTranslations("door.sell");
   const router = useRouter();
-  const [quantities, setQuantities] = React.useState<Record<string, number>>({});
-  const [state, action, pending] = useActionState<DoorSaleState, FormData>(startDoorSale, null);
+  const [quantities, setQuantities] = React.useState<Record<string, number>>(
+    {},
+  );
+  const [state, action, pending] = useActionState<DoorSaleState, FormData>(
+    startDoorSale,
+    null,
+  );
 
+  // Vente gratuite : comptée tout de suite.
   React.useEffect(() => {
-    if (!state?.ok) return;
-    if (state.kind === "collect") {
-      // Collect s'ouvre, encaisse sur le lecteur, puis revient sur ticketick.
-      window.location.href = state.url;
-    } else {
+    if (state?.ok && state.kind === "done")
       router.push(`/door/sell/sale/${state.saleId}`);
-    }
   }, [state, router]);
+  // Vente prête pour Collect. Le lien doit être touché : ouvert par le script,
+  // l'iPhone affiche la page web de Collect au lieu d'ouvrir l'app.
+  const [dismissed, setDismissed] = React.useState<DoorSaleState>(null);
+  const ready =
+    state?.ok && state.kind === "collect" && state !== dismissed ? state : null;
 
   const intl = `${locale}-CH`;
-  const total = tariffs.reduce((sum, tt) => sum + tt.priceCents * (quantities[tt.id] ?? 0), 0);
+  const total = tariffs.reduce(
+    (sum, tt) => sum + tt.priceCents * (quantities[tt.id] ?? 0),
+    0,
+  );
   const count = Object.values(quantities).reduce((a, b) => a + b, 0);
   const change = (id: string, delta: number) =>
-    setQuantities((q) => ({ ...q, [id]: Math.max(0, Math.min(MAX_PER_LINE, (q[id] ?? 0) + delta)) }));
-  // Collect est en train de s'ouvrir : on ne revend pas en double.
-  const busy = pending || (state?.ok === true && state.kind === "collect");
+    setQuantities((q) => ({
+      ...q,
+      [id]: Math.max(0, Math.min(MAX_PER_LINE, (q[id] ?? 0) + delta)),
+    }));
+  // Lien Collect affiché : la vente ne se modifie plus sans repartir.
+  const busy = pending || ready != null;
 
   return (
     <form action={action} className="space-y-4">
@@ -66,9 +78,15 @@ export function DoorSaleForm({
                 <p className="font-medium">{tt.name}</p>
                 <p className="text-sm text-muted-foreground">
                   {formatPrice(tt.priceCents, intl)}
-                  {tt.soldAtTill > 0 ? ` · ${t("soldAtTill", { count: tt.soldAtTill })}` : ""}
+                  {tt.soldAtTill > 0
+                    ? ` · ${t("soldAtTill", { count: tt.soldAtTill })}`
+                    : ""}
                 </p>
-                {failed ? <p className="text-sm text-destructive">{t(`errors.${state.error}`)}</p> : null}
+                {failed ? (
+                  <p className="text-sm text-destructive">
+                    {t(`errors.${state.error}`)}
+                  </p>
+                ) : null}
               </div>
               <button
                 type="button"
@@ -79,7 +97,10 @@ export function DoorSaleForm({
               >
                 <Minus className="size-5" />
               </button>
-              <span className="w-8 text-center text-lg font-semibold tabular-nums" aria-live="polite">
+              <span
+                className="w-8 text-center text-lg font-semibold tabular-nums"
+                aria-live="polite"
+              >
                 {qty}
               </span>
               <button
@@ -103,15 +124,55 @@ export function DoorSaleForm({
       ) : null}
 
       <div className="sticky bottom-0 -mx-4 border-t border-border bg-background/95 px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-3 backdrop-blur">
-        <Button type="submit" size="lg" className="h-14 w-full text-base" disabled={count === 0 || busy}>
-          {busy ? <Loader2 className="size-5 animate-spin" /> : <CreditCard className="size-5" />}
-          {count === 0
-            ? t("chooseTariff")
-            : total === 0
-              ? t("recordFree", { count })
-              : t("charge", { amount: formatPrice(total, intl) })}
-        </Button>
-        {total > 0 ? <p className="mt-2 text-center text-xs text-muted-foreground">{t("collectHint")}</p> : null}
+        {ready ? (
+          <div className="space-y-2">
+            <a
+              href={ready.url}
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-control bg-primary text-base font-medium text-primary-foreground shadow-sm"
+            >
+              <ExternalLink className="size-5" />
+              {t("openCollect", { amount: formatPrice(total, intl) })}
+            </a>
+            <div className="flex items-center justify-between text-sm">
+              <button
+                type="button"
+                onClick={() => setDismissed(ready)}
+                className="text-muted-foreground underline"
+              >
+                {t("editSale")}
+              </button>
+              <a
+                href={ready.webUrl}
+                className="text-muted-foreground underline"
+              >
+                {t("collectFallback")}
+              </a>
+            </div>
+          </div>
+        ) : (
+          <Button
+            type="submit"
+            size="lg"
+            className="h-14 w-full text-base"
+            disabled={count === 0 || busy}
+          >
+            {busy ? (
+              <Loader2 className="size-5 animate-spin" />
+            ) : (
+              <CreditCard className="size-5" />
+            )}
+            {count === 0
+              ? t("chooseTariff")
+              : total === 0
+                ? t("recordFree", { count })
+                : t("charge", { amount: formatPrice(total, intl) })}
+          </Button>
+        )}
+        {total > 0 ? (
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            {t("collectHint")}
+          </p>
+        ) : null}
       </div>
     </form>
   );

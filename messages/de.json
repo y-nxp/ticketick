@@ -480,9 +480,9 @@
       "less": "Ein Ticket {tariff} entfernen",
       "more": "Ein Ticket {tariff} hinzufügen",
       "chooseTariff": "Tickets wählen",
-      "charge": "{amount} mit Collect kassieren",
+      "charge": "Kassieren von {amount} vorbereiten",
       "recordFree": "{count, plural, one {# Gratisticket} other {# Gratistickets}} erfassen",
-      "collectHint": "Collect öffnet sich mit dem Betrag; Karte an das Lesegerät halten, danach geht es automatisch hierher zurück.",
+      "collectHint": "«Collect öffnen» antippen, Karte ans Lesegerät halten: Danach geht es automatisch hierher zurück.",
       "recorded": "Verkauf erfasst",
       "alreadyRecorded": "Verkauf bereits erfasst",
       "free": "Gratis",
@@ -508,7 +508,10 @@
       "soldAtTill": "{count} an der Kasse verkauft",
       "nextSale": "Neuer Verkauf für dieses Konzert",
       "handPaper": "Papiertickets übergeben.",
-      "tillTotal": "Kasse {title}, {when}: {count, plural, one {# Ticket verkauft} other {# Tickets verkauft}}"
+      "tillTotal": "Kasse {title}, {when}: {count, plural, one {# Ticket verkauft} other {# Tickets verkauft}}",
+      "openCollect": "Collect öffnen · {amount}",
+      "editSale": "Verkauf ändern",
+      "collectFallback": "Collect öffnet sich nicht?"
     }
   },
   "about": {

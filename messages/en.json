@@ -480,9 +480,9 @@
       "less": "Remove one {tariff} ticket",
       "more": "Add one {tariff} ticket",
       "chooseTariff": "Choose tickets",
-      "charge": "Charge {amount} with Collect",
+      "charge": "Prepare charge of {amount}",
       "recordFree": "Record {count, plural, one {# free ticket} other {# free tickets}}",
-      "collectHint": "Collect opens with the amount; tap the card on the reader, then you come back here automatically.",
+      "collectHint": "Tap “Open Collect”, tap the card on the reader: you come back here automatically.",
       "recorded": "Sale recorded",
       "alreadyRecorded": "Sale already recorded",
       "free": "Free",
@@ -508,7 +508,10 @@
       "soldAtTill": "{count} sold at the till",
       "nextSale": "New sale for this concert",
       "handPaper": "Hand over the paper tickets.",
-      "tillTotal": "Till {title}, {when}: {count, plural, one {# ticket sold} other {# tickets sold}}"
+      "tillTotal": "Till {title}, {when}: {count, plural, one {# ticket sold} other {# tickets sold}}",
+      "openCollect": "Open Collect · {amount}",
+      "editSale": "Change the sale",
+      "collectFallback": "Collect doesn’t open?"
     }
   },
   "about": {
