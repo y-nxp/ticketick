@@ -167,6 +167,17 @@ enum EventVisibility {
 }
 
 /// Prix d'une option de commande : montant unique, ou par choix coché.
+/// Musique jouée, pour le décompte SUISA (tarif commun K). Vide : pas encore
+/// indiqué par l'organisateur.
+enum SuisaMusic {
+  /// Au moins une œuvre protégée au programme.
+  PROTECTED
+  /// Uniquement des œuvres du domaine public.
+  PUBLIC_DOMAIN
+  /// Hors tarif K : conférence, rencontre, spectacle sans musique.
+  NONE
+}
+
 enum EventOptionPriceMode {
   FLAT
   PER_CHOICE
@@ -544,6 +555,9 @@ model Event {
   /// ne s'applique pas à ce spectacle. Cas particuliers décidés par lui.
   groupDiscountOff Boolean @default(false)
 
+  /// Rapport SUISA : œuvres protégées ou non. Indiqué depuis le rapport.
+  suisaMusic SuisaMusic?
+
   /// Depuis son compte, le client échange ses billets (places, spectacle du
   /// même organisateur) jusqu'à `changeUntilHours` avant le début. Jamais de
   /// remboursement : seule une hausse se paie.
@@ -611,6 +625,11 @@ model EventSession {
   /// Placement libre : places mises de côté pour les invités, en plus de `capacity`.
   /// Une réservation « invités » les fait passer dans la jauge.
   inviteSeats Int  @default(0)
+
+  /// Caisse du soir tenue hors ticketick (espèces, TWINT), saisie après la
+  /// séance pour le rapport SUISA : billets payants et montant TTC.
+  doorTickets      Int?
+  doorRevenueCents Int?
 
   /// Surcharge les moyens du spectacle. `null` = on hérite.
   acceptCard Boolean?
