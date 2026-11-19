@@ -470,7 +470,9 @@
     "conflictsHint": "Offline auf diesem Telefon eingelassen, aber bereits auf einem anderen Gerät verwendet oder vom Server abgelehnt.",
     "conflictAt": "bereits um {time} verwendet",
     "conflictsClear": "Verstanden",
-    "logoutPending": "{count, plural, one {# Einlass wurde} other {# Einlässe wurden}} noch nicht gesendet. Wenn Sie sich jetzt abmelden, gehen sie verloren. Fortfahren?"
+    "logoutPending": "{count, plural, one {# Einlass wurde} other {# Einlässe wurden}} noch nicht gesendet. Wenn Sie sich jetzt abmelden, gehen sie verloren. Fortfahren?",
+    "entryOpensAt": "ab {day} um {time}",
+    "entryClosedBanner": "Der Einlass öffnet am {day} um {time}, 2 Stunden vor Beginn. Bis dahin werden Tickets nur geprüft: nichts wird erfasst."
   },
   "about": {
     "title": "Über uns",

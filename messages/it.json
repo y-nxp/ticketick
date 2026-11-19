@@ -470,7 +470,9 @@
     "conflictsHint": "Convalidati su questo telefono offline, ma già usati su un altro dispositivo o rifiutati dal server.",
     "conflictAt": "già usato alle {time}",
     "conflictsClear": "Ho capito",
-    "logoutPending": "{count, plural, one {# ingresso non è ancora stato inviato} other {# ingressi non sono ancora stati inviati}}. Se esci ora, andranno persi. Continuare?"
+    "logoutPending": "{count, plural, one {# ingresso non è ancora stato inviato} other {# ingressi non sono ancora stati inviati}}. Se esci ora, andranno persi. Continuare?",
+    "entryOpensAt": "da {day} alle {time}",
+    "entryClosedBanner": "L’ingresso apre {day} alle {time}, 2 ore prima dell’inizio. Fino ad allora i biglietti sono solo verificati: nulla viene registrato."
   },
   "about": {
     "title": "Chi siamo",

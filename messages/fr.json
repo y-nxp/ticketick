@@ -470,7 +470,9 @@
     "conflictsHint": "Validés sur ce téléphone hors connexion, mais déjà passés sur un autre appareil ou refusés par le serveur.",
     "conflictAt": "déjà passé à {time}",
     "conflictsClear": "J’ai compris",
-    "logoutPending": "{count, plural, one {# entrée n’a pas encore été envoyée} other {# entrées n’ont pas encore été envoyées}}. En vous déconnectant maintenant, elles seront perdues. Continuer ?"
+    "logoutPending": "{count, plural, one {# entrée n’a pas encore été envoyée} other {# entrées n’ont pas encore été envoyées}}. En vous déconnectant maintenant, elles seront perdues. Continuer ?",
+    "entryOpensAt": "dès {day} à {time}",
+    "entryClosedBanner": "L’entrée s’ouvre le {day} à {time}, 2 h avant le début. D’ici là, les billets sont seulement vérifiés : rien n’est enregistré."
   },
   "about": {
     "title": "À propos",
