@@ -5,6 +5,8 @@ import {
   planCatalog,
   productIdOf,
   productName,
+  seasonNumbers,
+  seasonOf,
   type CatalogPrice,
   type CatalogProduct,
   type CatalogSession,
@@ -138,4 +140,31 @@ test("an archived product whose prices stayed active is cleaned up, then left al
   assert.deepEqual(planCatalog([], [old], { organizerId: "org1" }).map((s) => s.kind), ["archive"]);
   const done = { ...old, prices: [], defaultPriceId: null };
   assert.deepEqual(planCatalog([], [done], { organizerId: "org1" }), []);
+});
+
+test("season numbers follow the dates, past ones included, and prefix the name", () => {
+  const tz = "Europe/Zurich";
+  const at = (iso: string) => new Date(iso);
+  assert.equal(seasonOf(at("2026-12-26T18:00:00Z"), tz), 2026);
+  assert.equal(seasonOf(at("2027-01-10T14:00:00Z"), tz), 2026);
+  assert.equal(seasonOf(at("2027-06-30T21:30:00Z"), tz), 2026);
+  // 1er juillet à 00:30 à Zurich, encore le 30 juin en UTC.
+  assert.equal(seasonOf(at("2027-06-30T22:30:00Z"), tz), 2027);
+
+  const numbers = seasonNumbers(
+    [
+      { id: "jan", startsAt: at("2027-01-01T16:30:00Z") },
+      { id: "dec26", startsAt: at("2026-12-26T18:00:00Z") },
+      { id: "dec30", startsAt: at("2026-12-30T18:00:00Z") },
+      { id: "next", startsAt: at("2027-12-26T18:00:00Z") },
+    ],
+    tz,
+  );
+  assert.deepEqual(Object.fromEntries(numbers), { dec26: "01", dec30: "02", jan: "03", next: "01" });
+
+  const name = (id: string, iso: string) =>
+    productName({ startsAt: at(iso), timeZone: tz, eventTitle: "X", number: numbers.get(id) });
+  const names = [name("jan", "2027-01-01T16:30:00Z"), name("dec26", "2026-12-26T18:00:00Z")];
+  assert.equal(names[1], "01 · 26.12.2026 19:00 · X");
+  assert.deepEqual([...names].sort(), [names[1], names[0]]);
 });

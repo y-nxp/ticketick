@@ -188,16 +188,29 @@ export function countSteps(steps: CatalogStep[]): CatalogCounts {
   return counts;
 }
 
-/** Nom du produit : la date en tête, puis le spectacle. */
+/**
+ * Nom du produit : numéro dans la saison, date, puis spectacle. Collect for
+ * Stripe trie par ordre alphabétique : le numéro range les concerts dans
+ * l'ordre des dates, que « 26.12.2026 » seul ne permet pas (le 1er janvier
+ * passerait avant).
+ */
 export function productName(input: {
   startsAt: Date;
   timeZone: string;
   eventTitle: string;
   sessionLabel?: string | null;
+  number?: string | null;
 }): string {
-  const parts = Object.fromEntries(
+  const parts = zurichParts(input.startsAt, input.timeZone);
+  const when = `${parts.day}.${parts.month}.${parts.year} ${parts.hour}:${parts.minute}`;
+  const title = input.sessionLabel ? `${input.eventTitle} (${input.sessionLabel})` : input.eventTitle;
+  return clip(`${input.number ? `${input.number} · ` : ""}${when} · ${title}`, 250);
+}
+
+function zurichParts(date: Date, timeZone: string): Record<string, string> {
+  return Object.fromEntries(
     new Intl.DateTimeFormat("fr-CH", {
-      timeZone: input.timeZone,
+      timeZone,
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -205,12 +218,48 @@ export function productName(input: {
       minute: "2-digit",
       hourCycle: "h23",
     })
-      .formatToParts(input.startsAt)
+      .formatToParts(date)
       .map((p) => [p.type, p.value]),
   );
-  const when = `${parts.day}.${parts.month}.${parts.year} ${parts.hour}:${parts.minute}`;
-  const title = input.sessionLabel ? `${input.eventTitle} (${input.sessionLabel})` : input.eventTitle;
-  return clip(`${when} · ${title}`, 250);
+}
+
+/** Saison du 1er juillet au 30 juin : 2026 pour la saison 2026-2027. */
+export function seasonOf(date: Date, timeZone: string): number {
+  const parts = zurichParts(date, timeZone);
+  const year = Number(parts.year);
+  return Number(parts.month) >= 7 ? year : year - 1;
+}
+
+/** Bornes de la saison, larges d'un jour pour couvrir le décalage horaire. */
+export function seasonRange(season: number): { from: Date; to: Date } {
+  return {
+    from: new Date(Date.UTC(season, 5, 30)),
+    to: new Date(Date.UTC(season + 1, 6, 2)),
+  };
+}
+
+/**
+ * Numéro de chaque date dans sa saison, dans l'ordre chronologique : « 01 »,
+ * « 02 »… Les dates passées comptent aussi, si bien qu'un numéro ne bouge pas
+ * au fil du festival ; seule une date ajoutée en cours de route décale les
+ * suivantes.
+ */
+export function seasonNumbers(
+  sessions: { id: string; startsAt: Date }[],
+  timeZone: string,
+): Map<string, string> {
+  const bySeason = new Map<number, { id: string; startsAt: Date }[]>();
+  for (const session of sessions) {
+    const season = seasonOf(session.startsAt, timeZone);
+    bySeason.set(season, [...(bySeason.get(season) ?? []), session]);
+  }
+  const numbers = new Map<string, string>();
+  for (const list of bySeason.values()) {
+    list.sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime() || a.id.localeCompare(b.id));
+    const width = Math.max(2, String(list.length).length);
+    list.forEach((session, index) => numbers.set(session.id, String(index + 1).padStart(width, "0")));
+  }
+  return numbers;
 }
 
 export function clip(text: string, max: number): string {

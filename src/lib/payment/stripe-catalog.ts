@@ -16,6 +16,9 @@ import {
   PRODUCT_PREFIX,
   productIdOf,
   productName,
+  seasonNumbers,
+  seasonOf,
+  seasonRange,
   type CatalogCounts,
   type CatalogPrice,
   type CatalogProduct,
@@ -87,6 +90,8 @@ export async function loadCatalogSessions(
     minute: "2-digit",
   });
 
+  const numbers = await seasonNumbersOf(organizerId, sessions);
+
   return sessions
     .filter((session) => session.ticketTypes.length > 0)
     .map((session) => {
@@ -99,7 +104,13 @@ export async function loadCatalogSessions(
         eventId: event.id,
         eventTitle,
         startsAt: session.startsAt,
-        name: productName({ startsAt: session.startsAt, timeZone: EVENT_TIME_ZONE, eventTitle, sessionLabel }),
+        name: productName({
+          startsAt: session.startsAt,
+          timeZone: EVENT_TIME_ZONE,
+          eventTitle,
+          sessionLabel,
+          number: numbers.get(session.id),
+        }),
         description: clip(
           [event.organizer.name, venue, longDate.format(session.startsAt)].filter(Boolean).join(" · "),
           500,
@@ -114,6 +125,36 @@ export async function loadCatalogSessions(
         })),
       };
     });
+}
+
+/**
+ * Numéros des dates dans leur saison, comptés sur toutes les dates de
+ * l'organisateur qui ont un tarif payant, passées comprises, et quel que soit
+ * le spectacle synchronisé.
+ */
+async function seasonNumbersOf(
+  organizerId: string,
+  sessions: { startsAt: Date }[],
+): Promise<Map<string, string>> {
+  const seasons = [...new Set(sessions.map((s) => seasonOf(s.startsAt, EVENT_TIME_ZONE)))];
+  if (seasons.length === 0) return new Map();
+  const all = await prisma.eventSession.findMany({
+    where: {
+      OR: seasons.map((season) => {
+        const { from, to } = seasonRange(season);
+        return { startsAt: { gte: from, lt: to } };
+      }),
+      status: { in: ["PUBLISHED", "SOLD_OUT", "PAST"] },
+      event: { organizerId, status: { in: ["PUBLISHED", "SOLD_OUT", "PAST"] } },
+      ticketTypes: { some: { priceCents: { gt: 0 } } },
+    },
+    select: { id: true, startsAt: true },
+  });
+  const wanted = new Set(seasons);
+  return seasonNumbers(
+    all.filter((s) => wanted.has(seasonOf(s.startsAt, EVENT_TIME_ZONE))),
+    EVENT_TIME_ZONE,
+  );
 }
 
 /** Stripe n'accepte que des images joignables en HTTPS. */
