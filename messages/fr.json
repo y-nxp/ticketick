@@ -656,7 +656,8 @@
       "payments": "Encaissement",
       "reports": "Rapports",
       "promotion": "Promotion",
-      "api": "API & agents IA"
+      "api": "API & agents IA",
+      "stripeCatalog": "Caisse Stripe"
     },
     "overview": {
       "title": "Vue d’ensemble",
@@ -1658,7 +1659,8 @@
           "secretRequired": "La clé secrète est obligatoire.",
           "keyFormat": "Ce n’est pas une clé secrète Stripe (sk_live_…, sk_test_…, rk_live_… ou rk_test_…). La clé publiable pk_… ne convient pas.",
           "credentials": "Stripe refuse cette clé. Vérifiez qu’elle est active et complète."
-        }
+        },
+        "catalogLink": "Tarifs dans Stripe (caisse)"
       },
       "bank": {
         "title": "Virement bancaire",
@@ -2356,6 +2358,59 @@
         "organizer": "Organisateur introuvable.",
         "tooMany": "Vingt clés actives au plus : révoquez-en une.",
         "unavailable": "Création impossible pour le moment. Réessayez."
+      }
+    },
+    "stripeCatalog": {
+      "title": "Caisse Stripe",
+      "subtitle": "Pour encaisser à l'entrée avec le lecteur Stripe (WisePad) : chaque tarif payant des dates à venir devient un produit du catalogue Stripe, à son prix. Un clic suffit pour mettre le catalogue à jour.",
+      "organizer": "Organisateur",
+      "noOrganizer": "Aucun organisateur n'a de compte Stripe actif.",
+      "noAccount": "Cet organisateur n'a pas de compte Stripe actif.",
+      "toPayments": "Brancher Stripe dans Moyens de paiement.",
+      "account": "Compte Stripe",
+      "live": "Production",
+      "test": "Mode test",
+      "syncedAt": "Dernière synchronisation : {date}",
+      "neverSynced": "Jamais synchronisé",
+      "counts": {
+        "create": "À créer",
+        "update": "À mettre à jour",
+        "keep": "À jour",
+        "archive": "À retirer"
+      },
+      "syncAll": "Synchroniser ({count, plural, one {# changement} other {# changements}})",
+      "syncAgain": "Synchroniser à nouveau",
+      "syncEvent": "Synchroniser ce spectacle",
+      "syncing": "Synchronisation…",
+      "result": "Fait : {created} créés, {updated} mis à jour, {archived} retirés, {unchanged} déjà à jour.",
+      "resultFailed": "{failed} en échec : relancez la synchronisation.",
+      "howTo": "Dans l'app Stripe reliée au lecteur, cherchez la date (par exemple « 26.12 ») pour voir tous les tarifs du soir. Les dates passées et les tarifs supprimés sont retirés de la vente à la synchronisation suivante ; les tarifs gratuits ne sont pas envoyés.",
+      "stockNote": "Une vente au lecteur ne crée pas de billet dans ticketick et ne réduit pas le contingent : comptez-la dans la caisse du soir.",
+      "noTariffs": "Aucun tarif payant sur une date à venir publiée.",
+      "eventSummary": "{dates, plural, one {# date} other {# dates}} · {tariffs, plural, one {# tarif} other {# tarifs}}",
+      "columns": {
+        "date": "Date",
+        "tariff": "Tarif",
+        "price": "Prix",
+        "state": "Dans Stripe"
+      },
+      "state": {
+        "create": "À créer",
+        "keep": "À jour",
+        "newPrice": "Nouveau prix (avant {old})",
+        "price": "Prix à poser",
+        "reactivate": "À remettre en vente",
+        "details": "Nom ou description à corriger"
+      },
+      "archiveTitle": "Retirés de la vente à la prochaine synchronisation",
+      "archiveHint": "Dates passées, annulées ou tarifs supprimés. Le produit est archivé dans Stripe, pas effacé : les paiements passés le gardent.",
+      "errors": {
+        "noAccount": "Cet organisateur n'a pas de compte Stripe actif.",
+        "permission": "La clé Stripe enregistrée n'a pas le droit de gérer les produits. Donnez-lui l'écriture sur « Products » et « Prices », ou utilisez la clé secrète.",
+        "credentials": "Stripe refuse la clé enregistrée : elle est à ressaisir dans Moyens de paiement, côté administration ticketick.",
+        "stripe": "Stripe ne répond pas pour l'instant. Réessayez dans un moment.",
+        "busy": "Une synchronisation est déjà en cours.",
+        "forbidden": "Vous n'avez pas accès à cet organisateur."
       }
     }
   },

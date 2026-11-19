@@ -452,6 +452,9 @@ model OrganizerStripeAccount {
   webhookEndpointId String?
   webhookSecretEnc  String?
   enabled           Boolean   @default(true)
+  /// Dernière synchronisation complète des tarifs dans le catalogue Stripe
+  /// (vente à la caisse avec le lecteur Stripe).
+  catalogSyncedAt   DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 }
