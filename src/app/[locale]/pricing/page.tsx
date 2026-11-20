@@ -10,7 +10,10 @@ import {
   EXAMPLE_TICKET_PRICES_CENTS,
   percentLabel,
   PLATFORM_FEES,
+  CURRENT_PRICING,
   platformFeeCents,
+  PRICING_HISTORY,
+  pricingDate,
   type PlatformPlan,
 } from "@/lib/pricing/platform-fees";
 import { pageAlternates } from "@/lib/seo/site";
@@ -19,6 +22,13 @@ import { pageAlternates } from "@/lib/seo/site";
 // `{plan}` est remplacé par le prix du plan de salle complexe.
 const content = {
   fr: {
+    inForce: "Tarifs en vigueur depuis le {date}.",
+    historyTitle: "Historique des tarifs",
+    historyLead: "Chaque changement de prix est daté ; les grilles précédentes restent ici pour référence.",
+    historyPeriod: "Période",
+    historySince: "Depuis le {date}",
+    historyRange: "Du {from} au {to}",
+    historySeating: "Plan de salle complexe",
     badge: "Tarifs",
     title: "Des tarifs clairs, sans abonnement",
     description:
@@ -73,6 +83,13 @@ const content = {
     cta: "Parler de mon événement",
   },
   en: {
+    inForce: "Prices in force since {date}.",
+    historyTitle: "Price history",
+    historyLead: "Every price change is dated; previous price lists stay here for reference.",
+    historyPeriod: "Period",
+    historySince: "Since {date}",
+    historyRange: "{from} to {to}",
+    historySeating: "Complex seating plan",
     badge: "Pricing",
     title: "Clear pricing, no subscription",
     description:
@@ -127,6 +144,13 @@ const content = {
     cta: "Talk about my event",
   },
   de: {
+    inForce: "Preise gültig seit {date}.",
+    historyTitle: "Preisverlauf",
+    historyLead: "Jede Preisänderung ist datiert; frühere Preislisten bleiben hier zum Nachschlagen.",
+    historyPeriod: "Zeitraum",
+    historySince: "Seit {date}",
+    historyRange: "{from} bis {to}",
+    historySeating: "Komplexer Saalplan",
     badge: "Preise",
     title: "Klare Preise, kein Abonnement",
     description:
@@ -181,6 +205,13 @@ const content = {
     cta: "Über meine Veranstaltung sprechen",
   },
   it: {
+    inForce: "Tariffe in vigore dal {date}.",
+    historyTitle: "Storico delle tariffe",
+    historyLead: "Ogni cambiamento di prezzo è datato; i listini precedenti restano qui per riferimento.",
+    historyPeriod: "Periodo",
+    historySince: "Dal {date}",
+    historyRange: "Dal {from} al {to}",
+    historySeating: "Pianta della sala complessa",
     badge: "Tariffe",
     title: "Tariffe chiare, senza abbonamento",
     description:
@@ -240,6 +271,13 @@ type Content = (typeof content)[keyof typeof content];
 
 const paidPlans: PlatformPlan[] = ["selfService", "premium"];
 
+/** Veille d'un jour AAAA-MM-JJ. */
+function dayBefore(day: string): string {
+  const date = new Date(`${day}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString().slice(0, 10);
+}
+
 function planPrice(plan: PlatformPlan, locale: string): string {
   const { fixedCents, bps } = PLATFORM_FEES[plan];
   return `CHF ${chf(fixedCents)} + ${percentLabel(bps, locale)}`;
@@ -281,6 +319,9 @@ export default async function PricingPage({
         </span>
         <h1 className="mt-5 text-4xl font-bold tracking-tight sm:text-5xl">{c.title}</h1>
         <p className="mt-4 text-lg text-muted-foreground">{c.lead}</p>
+        <p className="mt-3 text-sm font-medium">
+          {c.inForce.replace("{date}", pricingDate(CURRENT_PRICING.from))}
+        </p>
       </div>
 
       <ul className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -353,6 +394,47 @@ export default async function PricingPage({
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="mt-14 max-w-2xl" aria-labelledby="pricing-history">
+        <h2 id="pricing-history" className="text-2xl font-bold tracking-tight">
+          {c.historyTitle}
+        </h2>
+        <p className="mt-2 text-muted-foreground">{c.historyLead}</p>
+        <div className="mt-6 overflow-x-auto rounded-card border border-border bg-card">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left">
+                <th scope="col" className="px-5 py-3 font-semibold">{c.historyPeriod}</th>
+                <th scope="col" className="px-5 py-3 font-semibold">{c.selfService.name}</th>
+                <th scope="col" className="px-5 py-3 font-semibold">{c.premium.name}</th>
+                <th scope="col" className="px-5 py-3 font-semibold">{c.historySeating}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...PRICING_HISTORY].reverse().map((version, i, list) => {
+                // Grille suivante (plus récente) : la veille de son début clôt celle-ci.
+                const next = i > 0 ? list[i - 1] : null;
+                const until = next ? pricingDate(dayBefore(next.from)) : null;
+                return (
+                  <tr key={version.from} className={i > 0 ? "border-t border-border text-muted-foreground" : undefined}>
+                    <th scope="row" className="px-5 py-3 text-left font-medium">
+                      {until
+                        ? c.historyRange.replace("{from}", pricingDate(version.from)).replace("{to}", until)
+                        : c.historySince.replace("{date}", pricingDate(version.from))}
+                    </th>
+                    {paidPlans.map((plan) => (
+                      <td key={plan} className="px-5 py-3 tabular-nums">
+                        CHF {chf(version.fees[plan].fixedCents)} + {percentLabel(version.fees[plan].bps, numberLocale)}
+                      </td>
+                    ))}
+                    <td className="px-5 py-3 tabular-nums">CHF {chf(version.complexSeatingPlanCents)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="mt-14 max-w-2xl rounded-card border border-border bg-card p-6 sm:p-8">

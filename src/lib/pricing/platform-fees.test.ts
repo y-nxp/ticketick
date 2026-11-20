@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { chf, percentLabel, platformFeeCents, PLATFORM_FEES } from "./platform-fees";
+import { chf, CURRENT_PRICING, percentLabel, platformFeeCents, PLATFORM_FEES, PRICING_HISTORY, pricingAt, pricingDate } from "./platform-fees";
 
 test("commission : billet à CHF 35 en libre-service et en premium", () => {
   assert.equal(platformFeeCents("selfService", 3_500), 113);
@@ -34,4 +34,15 @@ test("les textes du site citent les taux de la grille", async () => {
       if (plan === "selfService") assert.ok(band.includes(price), `${locale} : l'accueil ne cite pas « ${price} »`);
     }
   }
+});
+
+test("historique : grilles datées dans l'ordre, la dernière est en vigueur", () => {
+  const days = PRICING_HISTORY.map((v) => v.from);
+  assert.deepEqual([...days].sort(), days, "grilles dans l'ordre des dates");
+  assert.equal(new Set(days).size, days.length, "une seule grille par date");
+  for (const day of days) assert.match(day, /^\d{4}-\d{2}-\d{2}$/);
+  assert.equal(CURRENT_PRICING, PRICING_HISTORY.at(-1));
+  assert.equal(pricingAt("2099-01-01"), CURRENT_PRICING);
+  assert.equal(pricingAt(PRICING_HISTORY[0]!.from), PRICING_HISTORY[0]);
+  assert.equal(pricingDate("2026-11-20"), "20.11.2026");
 });
