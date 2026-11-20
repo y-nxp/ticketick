@@ -1,8 +1,9 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getLocale } from "next-intl/server";
 import { requireRole } from "@/lib/auth/dal";
-import { prepareDoorSale } from "./sale";
+import { cancelDoorSale, prepareDoorSale } from "./sale";
 import { DOOR_ROLES } from "./scope";
 
 export type DoorSaleState =
@@ -33,4 +34,23 @@ export async function startDoorSale(_prev: DoorSaleState, formData: FormData): P
     method: method === "twint" || method === "cash" ? method : "card",
     key: String(formData.get("key") ?? ""),
   });
+}
+
+export type CancelSaleState =
+  | { ok: true; refunded: boolean }
+  | { ok: false; error: "forbidden" | "notFound" | "already" | "refund" | "reason" }
+  | null;
+
+/** Annule une vente de la caisse (responsable de caisse, organisateur, admin). */
+export async function cancelSale(_prev: CancelSaleState, formData: FormData): Promise<CancelSaleState> {
+  const user = await requireRole(["ADMIN", "ORGANIZER", "DOOR_STAFF"], "/door/sell");
+  const saleId = String(formData.get("saleId") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!reason) return { ok: false, error: "reason" };
+  const result = await cancelDoorSale(user, saleId, reason);
+  if (result.ok) {
+    revalidatePath("/[locale]/door/sell", "layout");
+    revalidatePath("/[locale]/admin/reports/till", "page");
+  }
+  return result;
 }

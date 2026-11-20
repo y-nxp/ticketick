@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Undo2 } from "lucide-react";
+import { CancelSale } from "@/components/door/cancel-sale";
 import { Link } from "@/i18n/navigation";
 import { formatPrice } from "@/lib/utils";
 import { bucketOf, getDoorSaleSummary } from "@/lib/door/sale";
@@ -10,10 +11,13 @@ export async function SaleSummary({
   saleId,
   locale,
   again,
+  canCancel = false,
 }: {
   saleId: string;
   locale: string;
   again?: boolean;
+  /** Responsable de caisse : peut annuler cette vente. */
+  canCancel?: boolean;
 }) {
   const t = await getTranslations("door.sell");
   const summary = await getDoorSaleSummary(saleId, locale);
@@ -29,6 +33,16 @@ export async function SaleSummary({
 
   return (
     <div className="space-y-5">
+      {sale.cancelledAt ? (
+        <div className="rounded-card border border-destructive/40 bg-destructive/5 p-5 text-center">
+          <Undo2 className="mx-auto size-10 text-destructive" />
+          <p className="mt-2 text-lg font-semibold">{t("cancel.cancelled")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {formatPrice(sale.amountCents, intl)} · {methodLabel(sale.provider)}
+            {sale.cancelReason ? ` · ${sale.cancelReason}` : ""}
+          </p>
+        </div>
+      ) : (
       <div className="rounded-card border border-emerald-600/30 bg-emerald-50 p-5 text-center dark:bg-emerald-950/30">
         <CheckCircle2 className="mx-auto size-10 text-emerald-600" />
         <p className="mt-2 text-lg font-semibold">{again ? t("alreadyRecorded") : t("recorded")}</p>
@@ -39,6 +53,7 @@ export async function SaleSummary({
         </p>
         <p className="mt-2 text-sm font-medium">{t("handPaper")}</p>
       </div>
+      )}
       <ul className="divide-y divide-border rounded-card border border-border bg-card">
         {sale.lines.map((line) => (
           <li key={line.ticketTypeId} className="flex justify-between px-4 py-3">
@@ -51,6 +66,11 @@ export async function SaleSummary({
           </li>
         ))}
       </ul>
+      {canCancel && !sale.cancelledAt ? (
+        <div className="flex justify-center">
+          <CancelSale saleId={sale.id} provider={sale.provider} />
+        </div>
+      ) : null}
       <TillTotalsCard totals={session.totals} locale={locale} />
       <div className="grid gap-2">
         <Link

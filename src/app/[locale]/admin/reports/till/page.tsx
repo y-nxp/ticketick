@@ -1,6 +1,8 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowLeft, Store } from "lucide-react";
+import { CancelSale } from "@/components/door/cancel-sale";
 import { Link } from "@/i18n/navigation";
+import { canManageTill } from "@/lib/door/scope";
 import { statsActor } from "@/lib/admin/access";
 import { prisma } from "@/lib/prisma";
 import { getTillReport, getTillSessions } from "@/lib/reports/till";
@@ -31,8 +33,10 @@ export default async function TillReportPage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { organizerId: own } = await statsActor();
+  const { organizerId: own, user } = await statsActor();
+  const canCancel = canManageTill(user);
   const t = await getTranslations("admin.tillReport");
+  const tc = await getTranslations("door.sell.cancel");
   const intl = `${locale}-CH`;
   const money = (cents: number) => formatPrice(cents, intl);
   const query = await searchParams;
@@ -232,18 +236,34 @@ export default async function TillReportPage({
                         <th className="px-4 py-2 font-semibold">{t("method")}</th>
                         <th className="px-4 py-2 font-semibold">{t("tickets")}</th>
                         <th className="px-4 py-2 text-right font-semibold">{t("amount")}</th>
+                        {canCancel ? <th className="px-4 py-2" /> : null}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {report.sales.map((sale) => (
-                        <tr key={sale.id}>
+                        <tr key={sale.id} className={sale.cancelledAt ? "bg-muted/40 text-muted-foreground" : undefined}>
                           <td className="px-4 py-2 tabular-nums">{when(sale.at, false)}</td>
                           <td className="px-4 py-2">{sale.seller}</td>
                           <td className="px-4 py-2">{label(bucketOf(sale.provider))}</td>
                           <td className="px-4 py-2">
-                            {sale.lines.map((l) => `${l.quantity}× ${l.name}`).join(", ")}
+                            <span className={sale.cancelledAt ? "line-through" : undefined}>
+                              {sale.lines.map((l) => `${l.quantity}× ${l.name}`).join(", ")}
+                            </span>
+                            {sale.cancelledAt ? (
+                              <span className="block text-xs text-destructive">
+                                {tc("cancelledBy", { date: when(sale.cancelledAt), who: sale.cancelledBy ?? "—" })}
+                                {sale.cancelReason ? ` · ${sale.cancelReason}` : ""}
+                              </span>
+                            ) : null}
                           </td>
-                          <td className="px-4 py-2 text-right tabular-nums">{money(sale.amountCents)}</td>
+                          <td className={`px-4 py-2 text-right tabular-nums ${sale.cancelledAt ? "line-through" : ""}`}>
+                            {money(sale.amountCents)}
+                          </td>
+                          {canCancel ? (
+                            <td className="px-4 py-2 text-right">
+                              {sale.cancelledAt ? null : <CancelSale saleId={sale.id} provider={sale.provider} compact />}
+                            </td>
+                          ) : null}
                         </tr>
                       ))}
                     </tbody>

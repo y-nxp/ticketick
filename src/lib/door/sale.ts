@@ -11,7 +11,7 @@ import { t as translate, type Translated } from "@/lib/types";
 import { EVENT_TIME_ZONE } from "@/lib/utils";
 import { collectLaunchUrl, saleDescription, type CollectReturn } from "./collect-link";
 import { bucketOf, TILL_BUCKETS, type TillBucket, type TillPart } from "@/lib/reports/till-summary";
-import { tillEventWhere } from "./scope";
+import { canManageTill, tillEventWhere } from "./scope";
 
 export { bucketOf, TILL_BUCKETS, type TillBucket, type TillPart };
 
@@ -178,7 +178,7 @@ async function tillOf(
   sellerId?: string | null,
 ): Promise<{ sold: Map<string, number>; totals: TillTotals }> {
   const sales = await prisma.doorSale.findMany({
-    where: { sessionId },
+    where: { sessionId, cancelledAt: null },
     select: { lines: true, provider: true, amountCents: true, soldById: true },
   });
   const sold = new Map<string, number>();
@@ -473,10 +473,115 @@ export async function getDoorSaleSummary(saleId: string, locale: string) {
       lines: true,
       sessionId: true,
       soldById: true,
+      cancelledAt: true,
+      cancelReason: true,
       session: { select: sessionSelect },
     },
   });
   if (!sale) return null;
   const session = toSaleSession(sale.session, locale, await tillOf(sale.sessionId, sale.soldById));
   return { sale: { ...sale, lines: readLines(sale.lines) }, session };
+}
+
+// ───────────────────────────── Ventes du soir et annulation
+
+export interface TillSaleItem {
+  id: string;
+  at: Date;
+  provider: string;
+  amountCents: number;
+  seller: string;
+  lines: SaleLine[];
+  cancelledAt: Date | null;
+  cancelledBy: string | null;
+  cancelReason: string | null;
+}
+
+/** Ventes d'un concert, les plus récentes d'abord (responsable de caisse). */
+export async function getSessionSales(user: CurrentUser, sessionId: string): Promise<TillSaleItem[] | null> {
+  if (!canManageTill(user)) return null;
+  const allowed = await prisma.eventSession.count({ where: { id: sessionId, event: tillEventWhere(user) } });
+  if (allowed === 0) return null;
+  const rows = await prisma.doorSale.findMany({
+    where: { sessionId },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      createdAt: true,
+      provider: true,
+      amountCents: true,
+      lines: true,
+      soldBy: { select: { name: true, email: true } },
+      cancelledAt: true,
+      cancelReason: true,
+      cancelledBy: { select: { name: true, email: true } },
+    },
+  });
+  const who = (u: { name: string | null; email: string } | null) => (u ? u.name?.trim() || u.email : null);
+  return rows.map((r) => ({
+    id: r.id,
+    at: r.createdAt,
+    provider: r.provider,
+    amountCents: r.amountCents,
+    seller: who(r.soldBy) ?? "—",
+    lines: readLines(r.lines),
+    cancelledAt: r.cancelledAt,
+    cancelledBy: who(r.cancelledBy),
+    cancelReason: r.cancelReason,
+  }));
+}
+
+export type CancelResult =
+  | { ok: true; refunded: boolean }
+  | { ok: false; error: "forbidden" | "notFound" | "already" | "refund" };
+
+/**
+ * Annule une vente de la caisse : elle sort des totaux, des rapports et du
+ * SUISA, mais reste visible (qui, quand, pourquoi). Une carte payée en ligne
+ * (Collect) est remboursée chez Stripe ; pour les autres moyens, la caisse
+ * rend l'argent elle-même. Réservé au responsable de caisse, à
+ * l'organisateur et à l'admin, sur les concerts qu'ils gèrent.
+ */
+export async function cancelDoorSale(
+  user: CurrentUser,
+  saleId: string,
+  reason: string,
+): Promise<CancelResult> {
+  if (!canManageTill(user)) return { ok: false, error: "forbidden" };
+  const sale = await prisma.doorSale.findFirst({
+    where: { id: saleId, session: { event: tillEventWhere(user) } },
+    select: {
+      id: true,
+      provider: true,
+      chargeId: true,
+      cancelledAt: true,
+      session: { select: { event: { select: { organizerId: true } } } },
+    },
+  });
+  if (!sale) return { ok: false, error: "notFound" };
+  if (sale.cancelledAt) return { ok: false, error: "already" };
+
+  let refunded = false;
+  if (sale.provider === "collect" && sale.chargeId) {
+    const account = await anyStripeAccountForOrganizer(sale.session.event.organizerId);
+    if (!account) return { ok: false, error: "refund" };
+    try {
+      const stripe = stripeClient(account.secretKey);
+      const charge = await retrieveCharge(stripe, sale.chargeId);
+      if (!charge.refunded) {
+        await stripe.refunds.create({ charge: charge.id }, { idempotencyKey: `door-sale-cancel-${sale.id}` });
+      }
+      refunded = true;
+    } catch (error) {
+      console.error("[caisse] remboursement impossible", { saleId: sale.id, error });
+      return { ok: false, error: "refund" };
+    }
+  }
+
+  const { count } = await prisma.doorSale.updateMany({
+    where: { id: sale.id, cancelledAt: null },
+    data: { cancelledAt: new Date(), cancelledById: user.id, cancelReason: reason.trim().slice(0, 200) || null },
+  });
+  if (count === 0) return { ok: false, error: "already" };
+  return { ok: true, refunded };
 }

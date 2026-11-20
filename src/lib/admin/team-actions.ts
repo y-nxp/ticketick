@@ -36,6 +36,7 @@ const InviteSchema = z.object({
   access: z.enum(["stats", "door"]).default("stats"),
   scan: z.boolean().default(false),
   till: z.boolean().default(false),
+  manager: z.boolean().default(false),
   tillEventId: z.string().max(40).optional(),
 });
 
@@ -67,6 +68,7 @@ export async function inviteStatsViewer(
     access: formData.get("access") || undefined,
     scan: formData.get("scan") === "on",
     till: formData.get("till") === "on",
+    manager: formData.get("manager") === "on",
     tillEventId: formData.get("tillEventId") || undefined,
   });
   if (!parsed.success) return { ok: false, error: "invalid" };
@@ -80,7 +82,7 @@ export async function inviteStatsViewer(
     return { ok: false, error: "throttled" };
   }
 
-  const { email, name, locale, access, scan, till } = parsed.data;
+  const { email, name, locale, access, scan, till, manager } = parsed.data;
   // Caisse d'un seul spectacle : il doit appartenir à cet organisateur.
   let tillEventId: string | null = null;
   if (door && till && parsed.data.tillEventId) {
@@ -120,6 +122,7 @@ export async function inviteStatsViewer(
           doorScan: scan,
           doorTill: till,
           doorTillEventId: till ? tillEventId : null,
+          doorTillManager: till && manager,
         }
       : {
           role: "ORGANIZER_VIEWER" as const,
@@ -128,6 +131,7 @@ export async function inviteStatsViewer(
           doorScan: true,
           doorTill: false,
           doorTillEventId: null,
+          doorTillManager: false,
         };
 
   try {
@@ -202,6 +206,7 @@ export async function revokeStatsViewer(
       doorScan: true,
       doorTill: false,
       doorTillEventId: null,
+      doorTillManager: false,
     },
   });
   if (count !== 1) return { ok: false, error: "forbidden" };

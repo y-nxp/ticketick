@@ -540,7 +540,30 @@
       "offline": "hors ligne",
       "cardAsk": "Encaissez ce montant sur le terminal de paiement",
       "cardPaid": "Paiement carte reçu",
-      "myCash": "Vos espèces : {amount} ({count, plural, one {# vente} other {# ventes}})"
+      "myCash": "Vos espèces : {amount} ({count, plural, one {# vente} other {# ventes}})",
+      "cancel": {
+        "button": "Annuler la vente",
+        "reason": "Raison de l'annulation",
+        "reasonPlaceholder": "Test, erreur de saisie, client qui renonce…",
+        "refundHint": "La carte sera remboursée automatiquement par Stripe.",
+        "giveBackHint": "Rendez vous-même l'argent au client (espèces, TWINT ou terminal).",
+        "confirm": "Confirmer l'annulation",
+        "keep": "Garder la vente",
+        "done": "Vente annulée : elle ne compte plus dans les totaux.",
+        "doneRefunded": "Vente annulée et carte remboursée.",
+        "cancelled": "Vente annulée",
+        "cancelledBy": "Annulée le {date} par {who}",
+        "errors": {
+          "forbidden": "Seul le responsable de caisse peut annuler une vente.",
+          "notFound": "Vente introuvable.",
+          "already": "Cette vente est déjà annulée.",
+          "refund": "Le remboursement Stripe a échoué : la vente n'est pas annulée. Réessayez ou remboursez dans Stripe.",
+          "reason": "Indiquez la raison de l'annulation."
+        },
+        "salesLink": "Ventes de ce concert ({count})",
+        "salesTitle": "Ventes de ce concert",
+        "noSales": "Aucune vente pour ce concert."
+      }
     }
   },
   "about": {
@@ -1447,7 +1470,10 @@
       "doorTill": "Caisse sur place",
       "doorTillHint": "Vend les billets papier sur place : espèces, carte ou TWINT.",
       "tillEvent": "Caisse pour",
-      "tillEventAll": "Tous les spectacles"
+      "tillEventAll": "Tous les spectacles",
+      "tillManager": "Responsable de caisse",
+      "tillManagerHint": "Voit toutes les ventes du soir et peut en annuler (erreur, test, client qui renonce).",
+      "tillManagerShort": "responsable"
     },
     "paypal": {
       "title": "PayPal",

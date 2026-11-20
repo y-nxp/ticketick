@@ -41,6 +41,8 @@ export interface CurrentUser {
   doorTill: boolean;
   /** Caisse limitée à ce spectacle ; `null` pour tous. */
   doorTillEventId: string | null;
+  /** Responsable de caisse : voit et annule les ventes du soir. */
+  doorTillManager: boolean;
   /** Responsable invité : organisateur dont il consulte les ventes. */
   statsOrganizerId: string | null;
   /** Agent : point de vente pour lequel il vend. */
@@ -83,6 +85,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
             doorScan: true,
             doorTill: true,
             doorTillEventId: true,
+            doorTillManager: true,
             statsOrganizerId: true,
             resellerId: true,
             emailVerifiedAt: true,
@@ -148,6 +151,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     doorScan: session.user.doorScan,
     doorTill: session.user.doorTill,
     doorTillEventId: session.user.doorTillEventId,
+    doorTillManager: session.user.doorTillManager,
     statsOrganizerId: session.user.statsOrganizerId,
     resellerId: session.user.resellerId,
     emailVerified: session.user.emailVerifiedAt != null,

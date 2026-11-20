@@ -540,7 +540,30 @@
       "offline": "offline",
       "cardAsk": "Take this amount on the payment terminal",
       "cardPaid": "Card payment received",
-      "myCash": "Your cash: {amount} ({count, plural, one {# sale} other {# sales}})"
+      "myCash": "Your cash: {amount} ({count, plural, one {# sale} other {# sales}})",
+      "cancel": {
+        "button": "Cancel sale",
+        "reason": "Reason for cancelling",
+        "reasonPlaceholder": "Test, input error, customer changed their mind…",
+        "refundHint": "The card will be refunded automatically by Stripe.",
+        "giveBackHint": "Give the money back to the customer yourself (cash, TWINT or terminal).",
+        "confirm": "Confirm cancellation",
+        "keep": "Keep the sale",
+        "done": "Sale cancelled: it no longer counts in the totals.",
+        "doneRefunded": "Sale cancelled and card refunded.",
+        "cancelled": "Sale cancelled",
+        "cancelledBy": "Cancelled on {date} by {who}",
+        "errors": {
+          "forbidden": "Only the box office manager can cancel a sale.",
+          "notFound": "Sale not found.",
+          "already": "This sale is already cancelled.",
+          "refund": "The Stripe refund failed: the sale is not cancelled. Try again or refund in Stripe.",
+          "reason": "Give the reason for cancelling."
+        },
+        "salesLink": "Sales for this concert ({count})",
+        "salesTitle": "Sales for this concert",
+        "noSales": "No sales for this concert."
+      }
     }
   },
   "about": {
@@ -1447,7 +1470,10 @@
       "doorTill": "On-site box office",
       "doorTillHint": "Sells paper tickets on site: cash, card or TWINT.",
       "tillEvent": "Box office for",
-      "tillEventAll": "All shows"
+      "tillEventAll": "All shows",
+      "tillManager": "Box office manager",
+      "tillManagerHint": "Sees all the evening's sales and can cancel them (mistake, test, customer changes their mind).",
+      "tillManagerShort": "manager"
     },
     "paypal": {
       "title": "PayPal",

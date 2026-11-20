@@ -4,7 +4,8 @@ import { ArrowLeft, CalendarX2, ChevronRight } from "lucide-react";
 import { Link, redirect } from "@/i18n/navigation";
 import { requireRole } from "@/lib/auth/dal";
 import { currentSaleSession, getSaleSession, getSaleSessions } from "@/lib/door/sale";
-import { canScan, canUseTill, DOOR_ROLES } from "@/lib/door/scope";
+import { canManageTill, canScan, canUseTill, DOOR_ROLES } from "@/lib/door/scope";
+import { prisma } from "@/lib/prisma";
 import { cn, EVENT_TIME_ZONE } from "@/lib/utils";
 import { DoorHeader } from "../door-header";
 import { DoorSaleForm } from "./sale-form";
@@ -37,6 +38,8 @@ export default async function DoorSellPage({
   const { s } = await searchParams;
   const selected = s ? await getSaleSession(user, s, locale) : null;
   const sessions = selected ? [] : await getSaleSessions(user, locale);
+  const manager = canManageTill(user);
+  const salesCount = selected && manager ? await prisma.doorSale.count({ where: { sessionId: selected.id } }) : 0;
   // Le prochain : celui qui n'a pas commencé il y a plus de deux heures.
   const next = currentSaleSession(sessions);
   const when = (date: Date) =>
@@ -82,6 +85,14 @@ export default async function DoorSellPage({
               }))}
             />
             <TillTotalsCard totals={selected.totals} locale={locale} />
+            {manager && salesCount > 0 ? (
+              <Link
+                href={{ pathname: "/door/sell/sales", query: { s: selected.id } }}
+                className="flex h-11 items-center justify-center rounded-control border border-border text-sm"
+              >
+                {t("cancel.salesLink", { count: salesCount })}
+              </Link>
+            ) : null}
           </div>
         ) : sessions.length === 0 ? (
           <div className="rounded-card border border-border bg-card p-6 text-center">

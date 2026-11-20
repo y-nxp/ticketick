@@ -16,15 +16,24 @@ export interface TillSessionRow {
 
 /** Concerts de l'organisateur avec des ventes à la caisse, les plus récents d'abord. */
 export async function getTillSessions(organizerId: string, locale: string): Promise<TillSessionRow[]> {
-  const groups = await prisma.doorSale.groupBy({
-    by: ["sessionId"],
-    where: { session: { event: { organizerId } } },
-    _count: { _all: true },
-    _sum: { amountCents: true },
-  });
-  if (groups.length === 0) return [];
+  // Totaux sans les ventes annulées ; un concert dont toutes les ventes sont
+  // annulées reste dans la liste (on y voit la trace).
+  const [groups, present] = await Promise.all([
+    prisma.doorSale.groupBy({
+      by: ["sessionId"],
+      where: { session: { event: { organizerId } }, cancelledAt: null },
+      _count: { _all: true },
+      _sum: { amountCents: true },
+    }),
+    prisma.doorSale.findMany({
+      where: { session: { event: { organizerId } } },
+      distinct: ["sessionId"],
+      select: { sessionId: true },
+    }),
+  ]);
+  if (present.length === 0) return [];
   const sessions = await prisma.eventSession.findMany({
-    where: { id: { in: groups.map((g) => g.sessionId) } },
+    where: { id: { in: present.map((g) => g.sessionId) } },
     orderBy: { startsAt: "desc" },
     select: { id: true, startsAt: true, label: true, event: { select: { title: true } } },
   });
@@ -50,6 +59,9 @@ export interface TillSaleRow {
   amountCents: number;
   seller: string;
   lines: { name: string; quantity: number; unitPriceCents: number }[];
+  cancelledAt: Date | null;
+  cancelledBy: string | null;
+  cancelReason: string | null;
 }
 
 /** Rapport complet d'un concert : totaux par moyen, par tarif, par vendeur, et chaque vente. */
@@ -70,6 +82,9 @@ export async function getTillReport(
       lines: true,
       soldById: true,
       soldBy: { select: { name: true, email: true } },
+      cancelledAt: true,
+      cancelReason: true,
+      cancelledBy: { select: { name: true, email: true } },
     },
   });
   const sales = rows.map((r) => ({
@@ -80,9 +95,22 @@ export async function getTillReport(
     sellerId: r.soldById,
     seller: r.soldBy ? (r.soldBy.name?.trim() || r.soldBy.email) : "—",
     lines: readLines(r.lines).map((l) => ({ name: l.name, quantity: l.quantity, unitPriceCents: l.unitPriceCents })),
+    cancelledAt: r.cancelledAt,
+    cancelledBy: r.cancelledBy ? (r.cancelledBy.name?.trim() || r.cancelledBy.email) : null,
+    cancelReason: r.cancelReason,
   }));
   return {
-    summary: summarizeTill(sales.map((s) => ({ ...s, sellerName: s.seller }))),
-    sales: sales.map((s) => ({ id: s.id, at: s.at, provider: s.provider, amountCents: s.amountCents, seller: s.seller, lines: s.lines })),
+    summary: summarizeTill(sales.filter((s) => !s.cancelledAt).map((s) => ({ ...s, sellerName: s.seller }))),
+    sales: sales.map((s) => ({
+      id: s.id,
+      at: s.at,
+      provider: s.provider,
+      amountCents: s.amountCents,
+      seller: s.seller,
+      lines: s.lines,
+      cancelledAt: s.cancelledAt,
+      cancelledBy: s.cancelledBy,
+      cancelReason: s.cancelReason,
+    })),
   };
 }

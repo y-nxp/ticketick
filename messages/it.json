@@ -540,7 +540,30 @@
       "offline": "offline",
       "cardAsk": "Incassa questo importo sul terminale di pagamento",
       "cardPaid": "Pagamento con carta ricevuto",
-      "myCash": "I tuoi contanti: {amount} ({count, plural, one {# vendita} other {# vendite}})"
+      "myCash": "I tuoi contanti: {amount} ({count, plural, one {# vendita} other {# vendite}})",
+      "cancel": {
+        "button": "Annulla la vendita",
+        "reason": "Motivo dell'annullamento",
+        "reasonPlaceholder": "Test, errore di inserimento, il cliente rinuncia…",
+        "refundHint": "La carta sarà rimborsata automaticamente da Stripe.",
+        "giveBackHint": "Restituite voi il denaro al cliente (contanti, TWINT o terminale).",
+        "confirm": "Conferma l'annullamento",
+        "keep": "Tieni la vendita",
+        "done": "Vendita annullata: non conta più nei totali.",
+        "doneRefunded": "Vendita annullata e carta rimborsata.",
+        "cancelled": "Vendita annullata",
+        "cancelledBy": "Annullata il {date} da {who}",
+        "errors": {
+          "forbidden": "Solo il responsabile della cassa può annullare una vendita.",
+          "notFound": "Vendita non trovata.",
+          "already": "Questa vendita è già annullata.",
+          "refund": "Il rimborso Stripe non è riuscito: la vendita non è annullata. Riprovate o rimborsate in Stripe.",
+          "reason": "Indicate il motivo dell'annullamento."
+        },
+        "salesLink": "Vendite di questo concerto ({count})",
+        "salesTitle": "Vendite di questo concerto",
+        "noSales": "Nessuna vendita per questo concerto."
+      }
     }
   },
   "about": {
@@ -1447,7 +1470,10 @@
       "doorTill": "Cassa sul posto",
       "doorTillHint": "Vende i biglietti cartacei sul posto: contanti, carta o TWINT.",
       "tillEvent": "Cassa per",
-      "tillEventAll": "Tutti gli spettacoli"
+      "tillEventAll": "Tutti gli spettacoli",
+      "tillManager": "Responsabile della cassa",
+      "tillManagerHint": "Vede tutte le vendite della serata e può annullarle (errore, test, cliente che rinuncia).",
+      "tillManagerShort": "responsabile"
     },
     "paypal": {
       "title": "PayPal",

@@ -55,7 +55,7 @@ export async function getSuisaReport(
       seatPlanId: true,
       doorTickets: true,
       doorRevenueCents: true,
-      doorSales: { select: { paidTickets: true, amountCents: true } },
+      doorSales: { where: { cancelledAt: null }, select: { paidTickets: true, amountCents: true } },
       venue: { select: { name: true, city: true } },
       event: { select: { id: true, title: true, suisaMusic: true } },
       ticketTypes: { select: { quantity: true } },

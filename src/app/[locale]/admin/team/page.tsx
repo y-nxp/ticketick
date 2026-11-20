@@ -93,6 +93,11 @@ export default async function AdminTeamPage({
                             <span className="inline-flex items-center gap-1.5 font-medium">
                               <CreditCard className="size-4 shrink-0 text-primary" />
                               {t("doorTill")}
+                              {v.tillManager ? (
+                                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                                  {t("tillManagerShort")}
+                                </span>
+                              ) : null}
                               <span className="text-xs font-normal text-muted-foreground">
                                 · {v.tillEvent ? tr(v.tillEvent, locale) : t("tillEventAll")}
                               </span>
