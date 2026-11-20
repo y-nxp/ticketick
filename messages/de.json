@@ -28,6 +28,9 @@
     "heroSubtitle": "Konzerte, Theater, Festivals, Comedy und mehr. Buchen Sie Ihre Tickets in Sekunden.",
     "heroCta": "Veranstaltungen entdecken",
     "heroSecondary": "So funktioniert's",
+    "organizerBandTitle": "Sie organisieren eine Veranstaltung?",
+    "organizerBandText": "Verkaufen Sie Ihre Tickets mit ticketick: gratis für Gratisanlässe, ab CHF 0.50 + 1.8% pro kostenpflichtiges Ticket.",
+    "organizerBandCta": "Preise ansehen",
     "payments": "PostFinance, Stripe, PayPal",
     "ticketsByEmail": "Tickets per E-Mail",
     "sectionAll": "Alle Veranstaltungen",
@@ -207,6 +210,8 @@
     "success": "Vielen Dank! Ihre Bestellung ist bestätigt.",
     "successHint": "Ihre Tickets wurden an {email} gesendet.",
     "backHome": "Zurück zur Startseite",
+    "organizerHint": "Organisieren Sie auch Veranstaltungen?",
+    "organizerHintCta": "Das ticketick-Ticketing entdecken",
     "downloadPdf": "PDF herunterladen",
     "printTickets": "Tickets drucken",
     "pdfHint": "Eine Seite pro Person: Anlass, Tarif und Ticketnummer. Zum Drucken öffnen.",
@@ -587,7 +592,7 @@
     "faqSetupQ": "Wie lange dauert die Einrichtung?",
     "faqSetupA": "Der Zugang ist kein Selbstbedienung: zuerst das Gespräch, dann öffnen wir Ihren Bereich. Eine einfache Vorstellung ist in wenigen Tagen bereit.",
     "faqFeesQ": "Was kostet das?",
-    "faqFeesA": "Das hängt vom Format ab (ein Anlass oder eine laufende Betreuung). Die Zahlen sehen Sie im Gespräch, vor jeder Verpflichtung. Nichts wird hinter Ihrem Rücken abgezogen.",
+    "faqFeesA": "Gratisanlässe sind gratis. Für kostenpflichtige Tickets: CHF 0.50 + 1.8% pro Ticket in Selbstbedienung, CHF 0.90 + 3.5% mit unserer Begleitung. Kein Abonnement, keine Einrichtungsgebühr; die Einzelheiten stehen auf der Seite Preise.",
     "faqDoorQ": "Wie läuft die Kontrolle am Veranstaltungstag?",
     "faqDoorA": "Eine App scannt den QR-Code jedes Tickets. Ein Code gilt nur einmal. Gerät und Einlassteam bleiben bei Ihnen.",
     "closeTitle": "Ein Event geplant?",
@@ -607,7 +612,8 @@
     "cookieSettings": "Cookies",
     "colInfo": "Infos",
     "colLegal": "Rechtliches",
-    "developers": "API & KI-Agenten"
+    "developers": "API & KI-Agenten",
+    "pricing": "Preise"
   },
   "auth": {
     "signIn": "Anmelden",

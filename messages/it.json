@@ -28,6 +28,9 @@
     "heroSubtitle": "Concerti, teatro, festival, comicità e molto altro. Prenota i tuoi biglietti in pochi secondi.",
     "heroCta": "Scopri gli spettacoli",
     "heroSecondary": "Come funziona",
+    "organizerBandTitle": "Organizzate un evento?",
+    "organizerBandText": "Vendete i vostri biglietti con ticketick: gratuito per gli eventi gratuiti, da CHF 0.50 + 1,8% per biglietto a pagamento.",
+    "organizerBandCta": "Vedere le tariffe",
     "payments": "PostFinance, Stripe, PayPal",
     "ticketsByEmail": "Biglietti via e-mail",
     "sectionAll": "Tutti gli spettacoli",
@@ -207,6 +210,8 @@
     "success": "Grazie! Il tuo ordine è confermato.",
     "successHint": "I tuoi biglietti sono stati inviati a {email}.",
     "backHome": "Torna alla home",
+    "organizerHint": "Organizzate anche voi eventi?",
+    "organizerHintCta": "Scoprire la biglietteria ticketick",
     "downloadPdf": "Scarica il PDF",
     "printTickets": "Stampa i biglietti",
     "pdfHint": "Una pagina a persona: evento, tipo di tariffa e numero. Aprilo per stampare.",
@@ -587,7 +592,7 @@
     "faqSetupQ": "Quanto tempo per aprire una biglietteria?",
     "faqSetupA": "L’accesso non è self-service: prima ne parliamo, poi apriamo il vostro spazio. Uno spettacolo semplice è pronto in pochi giorni.",
     "faqFeesQ": "Quali sono le tariffe?",
-    "faqFeesA": "Dipendono dal formato (un evento o un accompagnamento). Ve le presentiamo all’incontro, prima di qualsiasi impegno. Nulla viene prelevato alle vostre spalle.",
+    "faqFeesA": "Gli eventi gratuiti sono gratuiti. Per i biglietti a pagamento: CHF 0.50 + 1,8% per biglietto in self-service, CHF 0.90 + 3,5% con il nostro accompagnamento. Nessun abbonamento né costo di apertura; i dettagli sono nella pagina Tariffe.",
     "faqDoorQ": "Come funziona il controllo il giorno dell’evento?",
     "faqDoorA": "Un’app scansiona il QR di ogni biglietto. Un codice passa una sola volta. Il materiale e la squadra all’ingresso restano vostri.",
     "closeTitle": "Un progetto di evento?",
@@ -607,7 +612,8 @@
     "cookieSettings": "Cookie",
     "colInfo": "Info",
     "colLegal": "Note legali",
-    "developers": "API & agenti IA"
+    "developers": "API & agenti IA",
+    "pricing": "Tariffe"
   },
   "auth": {
     "signIn": "Accedi",
