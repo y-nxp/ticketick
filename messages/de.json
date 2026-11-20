@@ -526,7 +526,7 @@
       "methodCash": "Bar",
       "twintAsk": "Der Kunde zahlt mit TWINT",
       "twintTo": "an die Nummer",
-      "twintNoNumber": "TWINT-Nummer nicht eingestellt (Seite Stripe-Kasse): Verwenden Sie Ihre übliche Nummer.",
+      "twintNoNumber": "Keine TWINT-Nummer eingestellt (Team › Abendkasse): Ihre übliche Nummer verwenden.",
       "twintPaid": "TWINT-Zahlung erhalten",
       "backToMethods": "Anderes Zahlungsmittel",
       "cashAsk": "Der Kunde zahlt bar",
@@ -535,7 +535,12 @@
       "cashPaid": "Bar kassiert",
       "totalsTitle": "Kasse dieses Konzerts: {count, plural, one {# Ticket verkauft} other {# Tickets verkauft}}",
       "totalsAll": "Total kassiert",
-      "salesCount": "{count, plural, one {# Verkauf} other {# Verkäufe}}"
+      "salesCount": "{count, plural, one {# Verkauf} other {# Verkäufe}}",
+      "online": "online",
+      "offline": "offline",
+      "cardAsk": "Diesen Betrag am Zahlungsterminal einkassieren",
+      "cardPaid": "Kartenzahlung erhalten",
+      "myCash": "Ihr Bargeld: {amount} ({count, plural, one {# Verkauf} other {# Verkäufe}})"
     }
   },
   "about": {
@@ -1428,13 +1433,21 @@
         "forbidden": "Unzureichende Rechte.",
         "otherRole": "Dieses Konto hat bereits eine andere Rolle (Veranstalter, Mitglied eines anderen Teams…). Kontaktieren Sie ticketick.",
         "throttled": "Zu viele Einladungen in kurzer Zeit. Bitte später erneut versuchen.",
-        "unavailable": "Die E-Mail konnte nicht gesendet werden. Bitte erneut versuchen."
+        "unavailable": "Die E-Mail konnte nicht gesendet werden. Bitte erneut versuchen.",
+        "noAccess": "Kontrolle, Kasse oder beides ankreuzen."
       },
       "access": "Zugang",
       "accessStats": "Verkäufe einsehen",
       "accessStatsHint": "Sieht Verkäufe und Bestellungen, ohne etwas ändern zu können.",
-      "accessDoor": "Einlasskontrolle",
-      "accessDoorHint": "Scannt die Tickets Ihrer Veranstaltungen mit der Kontroll-App. Sieht sonst nichts."
+      "accessDoor": "Eingangsteam",
+      "accessDoorHint": "Ticketkontrolle und/oder Abendkasse. Sieht nichts anderes.",
+      "doorWhat": "Aufgaben vor Ort",
+      "doorScan": "Ticketkontrolle",
+      "doorScanHint": "Scannt die Tickets am Eingang mit der Kontroll-App.",
+      "doorTill": "Abendkasse",
+      "doorTillHint": "Verkauft Papiertickets vor Ort: bar, mit Karte oder TWINT.",
+      "tillEvent": "Kasse für",
+      "tillEventAll": "Alle Veranstaltungen"
     },
     "paypal": {
       "title": "PayPal",
@@ -1742,6 +1755,19 @@
           "iban": "Ungültige IBAN: bitte prüfen.",
           "beneficiary": "Kontoinhaber angeben."
         }
+      },
+      "till": {
+        "title": "Abendkasse",
+        "hint": "Wie die Kasse der Eingangs-App einkassiert. „Online“: Die Zahlung wird automatisch geprüft; „offline“: Die Kasse bestätigt sie von Hand.",
+        "card": "Karte",
+        "twint": "TWINT",
+        "cash": "Bargeld",
+        "online": "online",
+        "offline": "offline",
+        "cardOnline": "Collect for Stripe mit Lesegerät (WisePad): Die Zahlung wird bei Stripe geprüft.",
+        "cardOffline": "Ihr eigenes Zahlungsterminal; die Kasse bestätigt die Zahlung. Um online zu kassieren (Collect und WisePad-Lesegerät), lassen Sie Stripe von ticketick verbinden.",
+        "twintOffline": "Der Kunde zahlt auf Ihre TWINT-Nummer, die Kasse bestätigt den Eingang. Ein verbundenes TWINT kann später hinzugefügt werden.",
+        "cashHint": "Mit Berechnung des Rückgelds und dem Bargeld-Total jedes Verkäufers."
       }
     },
     "reservation": {
@@ -2058,7 +2084,8 @@
       "optionsHeading": "Gewählte Optionen — {date}",
       "suisaLink": "SUISA-Bericht",
       "eventReports": "Berichte vor jeder Veranstaltung",
-      "eventReportsHint": "Jeden Morgen um 7 Uhr in der Woche vor einem Datum und am Tag selbst, dann eine Stunde vor Beginn: nur die betroffenen Daten, in einem einzigen Bericht, wenn mehrere gleichzeitig stattfinden. An dieselben Empfänger."
+      "eventReportsHint": "Jeden Morgen um 7 Uhr in der Woche vor einem Datum und am Tag selbst, dann eine Stunde vor Beginn: nur die betroffenen Daten, in einem einzigen Bericht, wenn mehrere gleichzeitig stattfinden. An dieselben Empfänger.",
+      "tillLink": "Abendkasse"
     },
     "suisa": {
       "title": "SUISA-Bericht",
@@ -2486,6 +2513,37 @@
         "saved": "Nummer gespeichert.",
         "error": "Ungültige Nummer."
       }
+    },
+    "tillReport": {
+      "title": "Abendkasse",
+      "subtitle": "Was die Kasse der Eingangs-App pro Konzert verkauft hat: nach Zahlungsmittel, Tarif und Verkäufer.",
+      "back": "Berichte",
+      "empty": "Noch keine Verkäufe an der Abendkasse.",
+      "concerts": "Konzerte",
+      "salesCount": "{count, plural, one {# Verkauf} other {# Verkäufe}}",
+      "collected": "Total eingenommen",
+      "tickets": "Tickets",
+      "ofWhichFree": "davon {count} gratis",
+      "sales": "Verkäufe",
+      "byMethod": "Nach Zahlungsmittel",
+      "byTariff": "Nach Tarif",
+      "bySeller": "Nach Verkäufer",
+      "detail": "Einzelne Verkäufe",
+      "tariff": "Tarif",
+      "price": "Preis",
+      "quantity": "Anzahl",
+      "amount": "Betrag",
+      "seller": "Verkäufer",
+      "time": "Zeit",
+      "method": "Zahlungsmittel",
+      "total": "Total",
+      "card": "Karte",
+      "twint": "TWINT",
+      "cash": "Bargeld",
+      "online": "online",
+      "offline": "offline",
+      "free": "Gratis",
+      "cashHint": "Bargeld: was jeder Verkäufer in der Kasse haben sollte, ohne Wechselgeld."
     }
   },
   "pay": {

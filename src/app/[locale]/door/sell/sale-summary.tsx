@@ -1,15 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { CheckCircle2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { getDoorSaleSummary } from "@/lib/door/sale";
 import { formatPrice } from "@/lib/utils";
-import { TillTotalsCard } from "./till-totals";
-
-const METHOD_LABEL: Record<string, "methodCard" | "methodTwint" | "methodCash"> = {
-  collect: "methodCard",
-  twint: "methodTwint",
-  cash: "methodCash",
-};
+import { bucketOf, getDoorSaleSummary } from "@/lib/door/sale";
+import { BUCKET_LABEL, TillTotalsCard } from "./till-totals";
 
 /** Vente comptée : billets papier à remettre, et ce que la caisse a vendu pour ce concert. */
 export async function SaleSummary({
@@ -26,6 +20,12 @@ export async function SaleSummary({
   if (!summary) return null;
   const { sale, session } = summary;
   const intl = `${locale}-CH`;
+  const methodLabel = (provider: string) => {
+    const bucket = bucketOf(provider);
+    if (!bucket) return t("methodCard");
+    const { method, mode } = BUCKET_LABEL[bucket];
+    return mode ? `${t(method)} (${t(mode)})` : t(method);
+  };
 
   return (
     <div className="space-y-5">
@@ -34,7 +34,7 @@ export async function SaleSummary({
         <p className="mt-2 text-lg font-semibold">{again ? t("alreadyRecorded") : t("recorded")}</p>
         <p className="mt-1 text-sm text-muted-foreground">
           {sale.amountCents > 0
-            ? `${formatPrice(sale.amountCents, intl)} · ${t(METHOD_LABEL[sale.provider] ?? "methodCard")}`
+            ? `${formatPrice(sale.amountCents, intl)} · ${methodLabel(sale.provider)}`
             : t("free")}
         </p>
         <p className="mt-2 text-sm font-medium">{t("handPaper")}</p>

@@ -15,15 +15,15 @@ import { consume } from "@/lib/rate-limit";
  *
  * Chacune reçoit un seul accès, choisi à l'invitation :
  * - « ventes » (ORGANIZER_VIEWER) : consulte les ventes, sans rien modifier ;
- * - « contrôle » (DOOR_STAFF) : scanne les billets à l'entrée de ses
- *   spectacles, et ne voit rien d'autre.
+ * - « équipe d'entrée » (DOOR_STAFF) : contrôle les billets et/ou tient la
+ *   caisse sur place (d'un spectacle ou de tous), et ne voit rien d'autre.
  * L'organisateur n'agit que sur son équipe ; l'administrateur choisit
  * l'organisateur concerné.
  */
 
 export type TeamState =
   | { ok: true; email: string }
-  | { ok: false; error: "invalid" | "forbidden" | "otherRole" | "throttled" | "unavailable" }
+  | { ok: false; error: "invalid" | "forbidden" | "otherRole" | "throttled" | "unavailable" | "noAccess" }
   | undefined;
 
 const INVITATION_DAYS = 7;
@@ -34,6 +34,9 @@ const InviteSchema = z.object({
   organizerId: z.string().optional(),
   locale: z.enum(["fr", "en", "de", "it"]).default("fr"),
   access: z.enum(["stats", "door"]).default("stats"),
+  scan: z.boolean().default(false),
+  till: z.boolean().default(false),
+  tillEventId: z.string().max(40).optional(),
 });
 
 export type TeamAccess = "stats" | "door";
@@ -62,8 +65,13 @@ export async function inviteStatsViewer(
     organizerId: formData.get("organizerId") || undefined,
     locale: formData.get("locale") || undefined,
     access: formData.get("access") || undefined,
+    scan: formData.get("scan") === "on",
+    till: formData.get("till") === "on",
+    tillEventId: formData.get("tillEventId") || undefined,
   });
   if (!parsed.success) return { ok: false, error: "invalid" };
+  const door = parsed.data.access === "door";
+  if (door && !parsed.data.scan && !parsed.data.till) return { ok: false, error: "noAccess" };
 
   const actor = await actorOrganizer(parsed.data.organizerId);
   if (!actor) return { ok: false, error: "forbidden" };
@@ -72,7 +80,17 @@ export async function inviteStatsViewer(
     return { ok: false, error: "throttled" };
   }
 
-  const { email, name, locale, access } = parsed.data;
+  const { email, name, locale, access, scan, till } = parsed.data;
+  // Caisse d'un seul spectacle : il doit appartenir à cet organisateur.
+  let tillEventId: string | null = null;
+  if (door && till && parsed.data.tillEventId) {
+    const event = await prisma.event.findFirst({
+      where: { id: parsed.data.tillEventId, organizerId: actor.organizerId },
+      select: { id: true },
+    });
+    if (!event) return { ok: false, error: "invalid" };
+    tillEventId = event.id;
+  }
   const existing = await prisma.user.findUnique({
     where: { email },
     select: {
@@ -95,8 +113,22 @@ export async function inviteStatsViewer(
 
   const roleData =
     access === "door"
-      ? { role: "DOOR_STAFF" as const, doorOrganizerId: actor.organizerId, statsOrganizerId: null }
-      : { role: "ORGANIZER_VIEWER" as const, statsOrganizerId: actor.organizerId, doorOrganizerId: null };
+      ? {
+          role: "DOOR_STAFF" as const,
+          doorOrganizerId: actor.organizerId,
+          statsOrganizerId: null,
+          doorScan: scan,
+          doorTill: till,
+          doorTillEventId: till ? tillEventId : null,
+        }
+      : {
+          role: "ORGANIZER_VIEWER" as const,
+          statsOrganizerId: actor.organizerId,
+          doorOrganizerId: null,
+          doorScan: true,
+          doorTill: false,
+          doorTillEventId: null,
+        };
 
   try {
     const user = existing
@@ -138,6 +170,7 @@ export async function inviteStatsViewer(
       locale: lang,
       organizerName: organizer.name,
       access,
+      door: { scan, till },
       url: `${publicAppOrigin()}/${lang}/reset-password?token=${token}`,
       expiresInDays: INVITATION_DAYS,
     });
@@ -162,7 +195,14 @@ export async function revokeStatsViewer(
 
   const { count } = await prisma.user.updateMany({
     where: { id: userId, ...memberWhere(actor.organizerId) },
-    data: { role: "CUSTOMER", statsOrganizerId: null, doorOrganizerId: null },
+    data: {
+      role: "CUSTOMER",
+      statsOrganizerId: null,
+      doorOrganizerId: null,
+      doorScan: true,
+      doorTill: false,
+      doorTillEventId: null,
+    },
   });
   if (count !== 1) return { ok: false, error: "forbidden" };
 

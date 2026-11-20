@@ -589,6 +589,9 @@ const INVITATION_TEXTES: Record<
     corps: (org: string) => string;
     sujetControle: (org: string) => string;
     corpsControle: (org: string) => string;
+    sujetCaisse: (org: string) => string;
+    corpsCaisse: (org: string) => string;
+    corpsControleCaisse: (org: string) => string;
     bouton: string;
     expire: (d: number) => string;
   }
@@ -598,6 +601,11 @@ const INVITATION_TEXTES: Record<
     sujetControle: (org) => `Contrôle des billets — ${org}`,
     corpsControle: (org) =>
       `${org} vous invite à contrôler les billets à l'entrée de ses spectacles avec l'app ticketick. Pour activer votre accès, choisissez votre mot de passe. Vous arriverez ensuite directement sur l'app de contrôle, à ajouter à l'écran d'accueil de votre téléphone :`,
+    sujetCaisse: (org) => `Caisse sur place — ${org}`,
+    corpsCaisse: (org) =>
+      `${org} vous invite à tenir la caisse sur place de ses spectacles avec l'app ticketick : vente des billets papier, encaissement en espèces, par carte ou TWINT. Pour activer votre accès, choisissez votre mot de passe :`,
+    corpsControleCaisse: (org) =>
+      `${org} vous invite à contrôler les billets et à tenir la caisse sur place de ses spectacles avec l'app ticketick. Pour activer votre accès, choisissez votre mot de passe. Vous arriverez ensuite directement sur l'app, à ajouter à l'écran d'accueil de votre téléphone :`,
     bonjour: "Bonjour",
     corps: (org) =>
       `${org} vous invite à consulter ses ventes de billets sur ticketick. Pour activer votre accès, choisissez votre mot de passe :`,
@@ -609,6 +617,11 @@ const INVITATION_TEXTES: Record<
     sujetControle: (org) => `Ticket control — ${org}`,
     corpsControle: (org) =>
       `${org} invites you to check tickets at the entrance of its shows with the ticketick app. To activate your access, choose your password. You will then land directly on the control app, which you can add to your phone's home screen:`,
+    sujetCaisse: (org) => `On-site box office — ${org}`,
+    corpsCaisse: (org) =>
+      `${org} invites you to run the on-site box office of its shows with the ticketick app: selling paper tickets, taking cash, card or TWINT. To activate your access, choose your password:`,
+    corpsControleCaisse: (org) =>
+      `${org} invites you to check tickets and run the on-site box office of its shows with the ticketick app. To activate your access, choose your password. You will then land directly on the app, which you can add to your phone's home screen:`,
     bonjour: "Hello",
     corps: (org) =>
       `${org} invites you to view its ticket sales on ticketick. To activate your access, choose your password:`,
@@ -620,6 +633,11 @@ const INVITATION_TEXTES: Record<
     sujetControle: (org) => `Ticketkontrolle — ${org}`,
     corpsControle: (org) =>
       `${org} lädt Sie ein, die Tickets am Eingang seiner Veranstaltungen mit der ticketick-App zu kontrollieren. Um Ihren Zugang zu aktivieren, wählen Sie Ihr Passwort. Danach gelangen Sie direkt zur Kontroll-App, die Sie zum Startbildschirm Ihres Telefons hinzufügen können:`,
+    sujetCaisse: (org) => `Abendkasse — ${org}`,
+    corpsCaisse: (org) =>
+      `${org} lädt Sie ein, mit der ticketick-App die Abendkasse seiner Veranstaltungen zu führen: Verkauf der Papiertickets, Zahlung bar, mit Karte oder TWINT. Um Ihren Zugang zu aktivieren, wählen Sie Ihr Passwort:`,
+    corpsControleCaisse: (org) =>
+      `${org} lädt Sie ein, mit der ticketick-App die Tickets zu kontrollieren und die Abendkasse seiner Veranstaltungen zu führen. Um Ihren Zugang zu aktivieren, wählen Sie Ihr Passwort. Danach gelangen Sie direkt zur App, die Sie zum Startbildschirm Ihres Telefons hinzufügen können:`,
     bonjour: "Guten Tag",
     corps: (org) =>
       `${org} lädt Sie ein, die Ticketverkäufe auf ticketick einzusehen. Um Ihren Zugang zu aktivieren, wählen Sie Ihr Passwort:`,
@@ -631,6 +649,11 @@ const INVITATION_TEXTES: Record<
     sujetControle: (org) => `Controllo dei biglietti — ${org}`,
     corpsControle: (org) =>
       `${org} ti invita a controllare i biglietti all'ingresso dei suoi spettacoli con l'app ticketick. Per attivare l'accesso, scegli la tua password. Arriverai poi direttamente all'app di controllo, da aggiungere alla schermata Home del telefono:`,
+    sujetCaisse: (org) => `Cassa sul posto — ${org}`,
+    corpsCaisse: (org) =>
+      `${org} ti invita a gestire la cassa sul posto dei suoi spettacoli con l'app ticketick: vendita dei biglietti cartacei, incasso in contanti, con carta o TWINT. Per attivare l'accesso, scegli la tua password:`,
+    corpsControleCaisse: (org) =>
+      `${org} ti invita a controllare i biglietti e a gestire la cassa sul posto dei suoi spettacoli con l'app ticketick. Per attivare l'accesso, scegli la tua password. Arriverai poi direttamente all'app, da aggiungere alla schermata Home del telefono:`,
     bonjour: "Buongiorno",
     corps: (org) =>
       `${org} ti invita a consultare le vendite di biglietti su ticketick. Per attivare l'accesso, scegli la tua password:`,
@@ -646,15 +669,23 @@ export async function sendStatsInvitationEmail(payload: {
   organizerName: string;
   url: string;
   expiresInDays: number;
-  /** « door » : invitation d'un contrôleur à l'entrée. */
+  /** « door » : invitation de l'équipe d'entrée (contrôle et/ou caisse). */
   access?: "stats" | "door";
+  door?: { scan: boolean; till: boolean };
 }) {
   const l = byLocale(INVITATION_TEXTES, payload.locale);
   const controle = payload.access === "door";
+  const scan = payload.door?.scan ?? true;
+  const till = payload.door?.till ?? false;
   const salutation = payload.name ? `${l.bonjour} ${payload.name},` : `${l.bonjour},`;
-  const corps = controle
-    ? l.corpsControle(payload.organizerName)
-    : l.corps(payload.organizerName);
+  const org = payload.organizerName;
+  const corps = !controle
+    ? l.corps(org)
+    : scan && till
+      ? l.corpsControleCaisse(org)
+      : till
+        ? l.corpsCaisse(org)
+        : l.corpsControle(org);
 
   const text = [
     salutation,
@@ -676,7 +707,7 @@ export async function sendStatsInvitationEmail(payload: {
 
   return envoyer({
     to: payload.to,
-    subject: controle ? l.sujetControle(payload.organizerName) : l.sujet(payload.organizerName),
+    subject: !controle ? l.sujet(org) : till && !scan ? l.sujetCaisse(org) : l.sujetControle(org),
     text,
     html: `<div style="font:14px/1.6 system-ui,sans-serif;color:#2A2C30">${html}</div>`,
     etiquette: controle ? "invitation contrôleur" : "invitation responsable",

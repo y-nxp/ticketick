@@ -10,15 +10,23 @@ import { prisma } from "@/lib/prisma";
 import { t as translate, type Translated } from "@/lib/types";
 import { EVENT_TIME_ZONE } from "@/lib/utils";
 import { collectLaunchUrl, saleDescription, type CollectReturn } from "./collect-link";
-import { doorEventWhere } from "./scope";
+import { bucketOf, TILL_BUCKETS, type TillBucket, type TillPart } from "@/lib/reports/till-summary";
+import { tillEventWhere } from "./scope";
+
+export { bucketOf, TILL_BUCKETS, type TillBucket, type TillPart };
 
 export { currentSaleSession } from "./current-sale";
 
 /**
  * Caisse sur place : on vend les billets papier réservés en amont (lots de
- * réservations). La personne à l'entrée choisit le concert et les tarifs,
- * Collect for Stripe encaisse sur le lecteur, puis renvoie vers ticketick
- * qui vérifie le paiement chez Stripe et compte la vente.
+ * réservations). La personne à l'entrée choisit le concert, les tarifs, puis
+ * le moyen de paiement :
+ * - carte « en ligne » : l'organisateur a branché Stripe, Collect for Stripe
+ *   encaisse sur le lecteur et ticketick vérifie le paiement chez Stripe ;
+ * - carte « hors ligne » : terminal à part, la caisse confirme à la main ;
+ * - TWINT « hors ligne » : paiement sur le numéro de l'organisateur, confirmé
+ *   à la main (« en ligne » le jour où un TWINT sera branché) ;
+ * - espèces, avec le calcul de la monnaie à rendre.
  *
  * Aucun billet ticketick n'est émis ni aucune place prise : les places sont
  * déjà retenues par les lots. La vente est comptée par tarif, pour savoir ce
@@ -52,9 +60,9 @@ export type TillMethod = "card" | "twint" | "cash";
 /** Totaux de la caisse pour un concert, par moyen de paiement. */
 export interface TillTotals {
   tickets: number;
-  card: { sales: number; cents: number };
-  twint: { sales: number; cents: number };
-  cash: { sales: number; cents: number };
+  parts: Record<TillBucket, TillPart>;
+  /** Espèces encaissées par le vendeur de cet écran : ce qu'il a en caisse. */
+  myCash: TillPart | null;
 }
 
 export interface SaleSession {
@@ -66,11 +74,12 @@ export interface SaleSession {
   organizerName: string;
   /** Numéro TWINT affiché à la caisse, si l'organisateur l'a réglé. */
   twintNumber: string | null;
+  /** Carte encaissée par Collect et vérifiée chez Stripe ; sinon terminal à part. */
+  cardOnline: boolean;
   tariffs: SaleTariff[];
   totals: TillTotals;
 }
 
-const PROVIDER_OF: Record<TillMethod, string> = { card: "collect", twint: "twint", cash: "cash" };
 
 const sessionSelect = {
   id: true,
@@ -81,7 +90,7 @@ const sessionSelect = {
     select: {
       title: true,
       organizerId: true,
-      organizer: { select: { name: true, tillTwintNumber: true } },
+      organizer: { select: { name: true, tillTwintNumber: true, stripe: { select: { enabled: true } } } },
     },
   },
   ticketTypes: {
@@ -90,18 +99,14 @@ const sessionSelect = {
   },
 } satisfies Prisma.EventSessionSelect;
 
-/**
- * Concerts de la caisse : ceux des organisateurs qui encaissent avec Stripe
- * (sans compte Stripe, le paiement ne peut pas être vérifié).
- */
+/** Concerts de la caisse : ceux que ce compte peut vendre, à venir ou en cours. */
 function sellableWhere(user: CurrentUser, now: Date): Prisma.EventSessionWhereInput {
   return {
     startsAt: { gte: new Date(now.getTime() - LATE_SALE_MS) },
     status: { in: ["PUBLISHED", "SOLD_OUT"] },
     event: {
-      ...doorEventWhere(user),
+      ...tillEventWhere(user),
       status: { in: ["PUBLISHED", "SOLD_OUT"] },
-      organizer: { stripe: { enabled: true } },
     },
   };
 }
@@ -109,7 +114,8 @@ function sellableWhere(user: CurrentUser, now: Date): Prisma.EventSessionWhereIn
 type SessionRow = Prisma.EventSessionGetPayload<{ select: typeof sessionSelect }>;
 
 function emptyTotals(): TillTotals {
-  return { tickets: 0, card: { sales: 0, cents: 0 }, twint: { sales: 0, cents: 0 }, cash: { sales: 0, cents: 0 } };
+  const parts = Object.fromEntries(TILL_BUCKETS.map((b) => [b, { sales: 0, cents: 0 }])) as Record<TillBucket, TillPart>;
+  return { tickets: 0, parts, myCash: null };
 }
 
 function toSaleSession(
@@ -128,6 +134,7 @@ function toSaleSession(
     organizerId: s.event.organizerId,
     organizerName: s.event.organizer.name,
     twintNumber: s.event.organizer.tillTwintNumber?.trim() || null,
+    cardOnline: s.event.organizer.stripe?.enabled === true,
     totals: till.totals,
     tariffs: s.ticketTypes.map((tt) => ({
       id: tt.id,
@@ -159,38 +166,37 @@ export async function getSaleSession(
     where: { id: sessionId, ...sellableWhere(user, new Date()) },
     select: sessionSelect,
   });
-  return row ? toSaleSession(row, locale, await tillOf(row.id)) : null;
+  return row ? toSaleSession(row, locale, await tillOf(row.id, user.id)) : null;
 }
 
-/** La caisse existe-t-elle pour ce compte (un organisateur avec Stripe) ? */
-export async function doorTillEnabled(user: CurrentUser): Promise<boolean> {
-  if (user.role === "ADMIN") {
-    return (await prisma.organizerStripeAccount.count({ where: { enabled: true } })) > 0;
-  }
-  const organizerId =
-    user.role === "DOOR_STAFF" ? user.doorOrganizerId : user.role === "ORGANIZER" ? user.organizerId : null;
-  if (!organizerId) return false;
-  return (await prisma.organizerStripeAccount.count({ where: { organizerId, enabled: true } })) > 0;
-}
-
-/** Ventes de la caisse pour un concert : billets par tarif, totaux par moyen. */
-async function tillOf(sessionId: string): Promise<{ sold: Map<string, number>; totals: TillTotals }> {
+/**
+ * Ventes de la caisse pour un concert : billets par tarif, totaux par moyen,
+ * et les espèces encaissées par `sellerId`.
+ */
+async function tillOf(
+  sessionId: string,
+  sellerId?: string | null,
+): Promise<{ sold: Map<string, number>; totals: TillTotals }> {
   const sales = await prisma.doorSale.findMany({
     where: { sessionId },
-    select: { lines: true, provider: true, amountCents: true },
+    select: { lines: true, provider: true, amountCents: true, soldById: true },
   });
   const sold = new Map<string, number>();
   const totals = emptyTotals();
+  if (sellerId) totals.myCash = { sales: 0, cents: 0 };
   for (const sale of sales) {
     for (const line of readLines(sale.lines)) {
       sold.set(line.ticketTypeId, (sold.get(line.ticketTypeId) ?? 0) + line.quantity);
       totals.tickets += line.quantity;
     }
-    const bucket =
-      sale.provider === "collect" ? totals.card : sale.provider === "twint" ? totals.twint : sale.provider === "cash" ? totals.cash : null;
+    const bucket = bucketOf(sale.provider);
     if (bucket) {
-      bucket.sales += 1;
-      bucket.cents += sale.amountCents;
+      totals.parts[bucket].sales += 1;
+      totals.parts[bucket].cents += sale.amountCents;
+    }
+    if (bucket === "cash" && totals.myCash && sale.soldById === sellerId) {
+      totals.myCash.sales += 1;
+      totals.myCash.cents += sale.amountCents;
     }
   }
   return { sold, totals };
@@ -289,11 +295,19 @@ export async function prepareDoorSale(
   const amountCents = lines.reduce((sum, l) => sum + tariffs.get(l.ticketTypeId)!.priceCents * l.quantity, 0);
 
   const key = /^[A-Za-z0-9-]{8,64}$/.test(input.key) ? input.key : null;
-  if (amountCents === 0 || input.method !== "card") {
-    // Gratuit, TWINT sur le numéro de l'organisateur ou espèces : la personne
-    // à la caisse a confirmé avoir reçu le paiement.
+  if (amountCents === 0 || input.method !== "card" || !session.cardOnline) {
+    // Gratuit, TWINT sur le numéro de l'organisateur, carte sur un terminal
+    // à part ou espèces : la personne à la caisse a confirmé le paiement.
+    const provider =
+      amountCents === 0
+        ? "free"
+        : input.method === "cash"
+          ? "cash"
+          : input.method === "twint"
+            ? "twint"
+            : "card_offline";
     const sale = await recordSale(session, user.id, lines, {
-      provider: amountCents === 0 ? "free" : PROVIDER_OF[input.method],
+      provider,
       chargeId: null,
       amountCents,
       clientKey: key,
@@ -458,10 +472,11 @@ export async function getDoorSaleSummary(saleId: string, locale: string) {
       currency: true,
       lines: true,
       sessionId: true,
+      soldById: true,
       session: { select: sessionSelect },
     },
   });
   if (!sale) return null;
-  const session = toSaleSession(sale.session, locale, await tillOf(sale.sessionId));
+  const session = toSaleSession(sale.session, locale, await tillOf(sale.sessionId, sale.soldById));
   return { sale: { ...sale, lines: readLines(sale.lines) }, session };
 }

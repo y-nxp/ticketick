@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChartColumn, ScanLine, Send, UserMinus } from "lucide-react";
+import { ChartColumn, CreditCard, ScanLine, Send, UserMinus } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,15 +48,20 @@ export function OrganizerPicker({
 export function InviteForm({
   organizerId,
   locale,
+  events,
 }: {
   organizerId: string;
   locale: string;
+  /** Spectacles auxquels limiter la caisse. */
+  events: { id: string; label: string }[];
 }) {
   const t = useTranslations("admin.team");
   const [state, action, pending] = useActionState<TeamState, FormData>(
     inviteStatsViewer,
     undefined,
   );
+  const [access, setAccess] = useState<"stats" | "door">("stats");
+  const [till, setTill] = useState(false);
 
   return (
     <form action={action} className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -87,7 +92,8 @@ export function InviteForm({
                 type="radio"
                 name="access"
                 value={o.value}
-                defaultChecked={o.value === "stats"}
+                checked={access === o.value}
+                onChange={() => setAccess(o.value)}
                 className="mt-1 accent-primary"
               />
               <span>
@@ -101,6 +107,52 @@ export function InviteForm({
           ))}
         </div>
       </fieldset>
+      {access === "door" ? (
+        <fieldset className="sm:col-span-2">
+          <legend className="text-sm font-medium">{t("doorWhat")}</legend>
+          <div className="mt-1.5 grid gap-2 sm:grid-cols-2">
+            <label className="flex cursor-pointer gap-3 rounded-control border border-border p-3 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input type="checkbox" name="scan" defaultChecked className="mt-1 accent-primary" />
+              <span>
+                <span className="flex items-center gap-1.5 text-sm font-semibold">
+                  <ScanLine className="size-4 text-primary" />
+                  {t("doorScan")}
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">{t("doorScanHint")}</span>
+              </span>
+            </label>
+            <label className="flex cursor-pointer gap-3 rounded-control border border-border p-3 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input
+                type="checkbox"
+                name="till"
+                checked={till}
+                onChange={(e) => setTill(e.target.checked)}
+                className="mt-1 accent-primary"
+              />
+              <span>
+                <span className="flex items-center gap-1.5 text-sm font-semibold">
+                  <CreditCard className="size-4 text-primary" />
+                  {t("doorTill")}
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">{t("doorTillHint")}</span>
+              </span>
+            </label>
+          </div>
+          {till ? (
+            <label className="mt-3 flex max-w-md flex-col gap-1.5">
+              <span className="text-sm font-medium">{t("tillEvent")}</span>
+              <select name="tillEventId" defaultValue="" className={fieldClass}>
+                <option value="">{t("tillEventAll")}</option>
+                {events.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+        </fieldset>
+      ) : null}
       <div className="sm:col-span-2">
         <Button type="submit" size="lg" disabled={pending} className="w-full sm:w-auto">
           <Send className="size-4" />

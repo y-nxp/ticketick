@@ -526,7 +526,7 @@
       "methodCash": "Espèces",
       "twintAsk": "Le client paie par TWINT",
       "twintTo": "au numéro",
-      "twintNoNumber": "Numéro TWINT non réglé (page Caisse Stripe) : utilisez votre numéro habituel.",
+      "twintNoNumber": "Numéro TWINT non réglé (Équipe › Caisse sur place) : utilisez votre numéro habituel.",
       "twintPaid": "Paiement TWINT reçu",
       "backToMethods": "Autre moyen de paiement",
       "cashAsk": "Le client paie en espèces",
@@ -535,7 +535,12 @@
       "cashPaid": "Espèces encaissées",
       "totalsTitle": "Caisse de ce concert : {count, plural, one {# billet vendu} other {# billets vendus}}",
       "totalsAll": "Total encaissé",
-      "salesCount": "{count, plural, one {# vente} other {# ventes}}"
+      "salesCount": "{count, plural, one {# vente} other {# ventes}}",
+      "online": "en ligne",
+      "offline": "hors ligne",
+      "cardAsk": "Encaissez ce montant sur le terminal de paiement",
+      "cardPaid": "Paiement carte reçu",
+      "myCash": "Vos espèces : {amount} ({count, plural, one {# vente} other {# ventes}})"
     }
   },
   "about": {
@@ -1428,13 +1433,21 @@
         "forbidden": "Droits insuffisants.",
         "otherRole": "Ce compte a déjà un autre rôle (organisateur, membre d'une autre équipe…). Contactez ticketick.",
         "throttled": "Trop d'invitations en peu de temps. Réessayez plus tard.",
-        "unavailable": "L'e-mail n'a pas pu être envoyé. Réessayez."
+        "unavailable": "L'e-mail n'a pas pu être envoyé. Réessayez.",
+        "noAccess": "Cochez le contrôle, la caisse, ou les deux."
       },
       "access": "Accès",
       "accessStats": "Consultation des ventes",
       "accessStatsHint": "Voit les ventes et les commandes, sans rien pouvoir modifier.",
-      "accessDoor": "Contrôle à l'entrée",
-      "accessDoorHint": "Scanne les billets de vos spectacles avec l'app de contrôle. Ne voit rien d'autre."
+      "accessDoor": "Équipe d'entrée",
+      "accessDoorHint": "Contrôle des billets et/ou caisse sur place. Ne voit rien d'autre.",
+      "doorWhat": "Ce qu'elle fait sur place",
+      "doorScan": "Contrôle des billets",
+      "doorScanHint": "Scanne les billets à l'entrée avec l'app de contrôle.",
+      "doorTill": "Caisse sur place",
+      "doorTillHint": "Vend les billets papier sur place : espèces, carte ou TWINT.",
+      "tillEvent": "Caisse pour",
+      "tillEventAll": "Tous les spectacles"
     },
     "paypal": {
       "title": "PayPal",
@@ -1742,6 +1755,19 @@
           "iban": "IBAN invalide : vérifiez sa saisie.",
           "beneficiary": "Indiquez le titulaire du compte."
         }
+      },
+      "till": {
+        "title": "Caisse sur place",
+        "hint": "Ce que la caisse de l'app d'entrée propose pour encaisser. « En ligne » : le paiement est vérifié automatiquement ; « hors ligne » : la caisse le confirme à la main.",
+        "card": "Carte",
+        "twint": "TWINT",
+        "cash": "Espèces",
+        "online": "en ligne",
+        "offline": "hors ligne",
+        "cardOnline": "Collect for Stripe et son lecteur (WisePad) : le paiement est vérifié chez Stripe.",
+        "cardOffline": "Votre propre terminal de paiement ; la caisse confirme le paiement. Pour l'encaisser en ligne (Collect et lecteur WisePad), faites brancher Stripe par ticketick.",
+        "twintOffline": "Le client paie sur votre numéro TWINT, la caisse confirme la réception. Un TWINT branché pourra être ajouté plus tard.",
+        "cashHint": "Avec le calcul de la monnaie à rendre et le total des espèces de chaque vendeur."
       }
     },
     "reservation": {
@@ -2058,7 +2084,8 @@
       "optionsHeading": "Options choisies — {date}",
       "suisaLink": "Rapport SUISA",
       "eventReports": "Rapports avant chaque événement",
-      "eventReportsHint": "Chaque matin à 7 h pendant la semaine qui précède une date et le jour même, puis une heure avant le début : seulement les dates concernées, réunies dans un seul rapport si plusieurs ont lieu en même temps. Aux mêmes destinataires."
+      "eventReportsHint": "Chaque matin à 7 h pendant la semaine qui précède une date et le jour même, puis une heure avant le début : seulement les dates concernées, réunies dans un seul rapport si plusieurs ont lieu en même temps. Aux mêmes destinataires.",
+      "tillLink": "Caisse sur place"
     },
     "suisa": {
       "title": "Rapport SUISA",
@@ -2486,6 +2513,37 @@
         "saved": "Numéro enregistré.",
         "error": "Numéro non valable."
       }
+    },
+    "tillReport": {
+      "title": "Caisse sur place",
+      "subtitle": "Ce que la caisse de l'app d'entrée a vendu pour chaque concert : par moyen de paiement, par tarif et par vendeur.",
+      "back": "Rapports",
+      "empty": "Aucune vente à la caisse pour l'instant.",
+      "concerts": "Concerts",
+      "salesCount": "{count, plural, one {# vente} other {# ventes}}",
+      "collected": "Total encaissé",
+      "tickets": "Billets",
+      "ofWhichFree": "dont {count} gratuits",
+      "sales": "Ventes",
+      "byMethod": "Par moyen de paiement",
+      "byTariff": "Par tarif",
+      "bySeller": "Par vendeur",
+      "detail": "Détail des ventes",
+      "tariff": "Tarif",
+      "price": "Prix",
+      "quantity": "Quantité",
+      "amount": "Montant",
+      "seller": "Vendeur",
+      "time": "Heure",
+      "method": "Moyen",
+      "total": "Total",
+      "card": "Carte",
+      "twint": "TWINT",
+      "cash": "Espèces",
+      "online": "en ligne",
+      "offline": "hors ligne",
+      "free": "Gratuit",
+      "cashHint": "Espèces : ce que chaque vendeur doit avoir en caisse, hors fond de caisse."
     }
   },
   "pay": {

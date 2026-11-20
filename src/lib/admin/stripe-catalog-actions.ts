@@ -48,5 +48,7 @@ export async function saveTillTwintNumber(_prev: TwintNumberState, formData: For
   }
   await prisma.organizer.update({ where: { id: organizerId }, data: { tillTwintNumber: number || null } });
   revalidatePath("/[locale]/admin/stripe-catalog", "page");
+  revalidatePath("/[locale]/admin/payments", "page");
+  revalidatePath("/[locale]/admin/team", "page");
   return { ok: true };
 }

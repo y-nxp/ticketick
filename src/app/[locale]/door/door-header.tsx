@@ -35,7 +35,7 @@ export function DoorHeader({
   till = false,
 }: {
   sound?: { on: boolean; toggle: () => void };
-  /** Caisse sur place (organisateur avec Stripe) : onglets Contrôle / Caisse. */
+  /** Contrôle et caisse ouverts à ce compte : onglets Contrôle / Caisse. */
   till?: boolean;
   /** Onglet ouvert : contrôle des billets ou caisse. */
   active?: "door" | "sell";

@@ -526,7 +526,7 @@
       "methodCash": "Cash",
       "twintAsk": "The customer pays with TWINT",
       "twintTo": "to number",
-      "twintNoNumber": "TWINT number not set (Stripe till page): use your usual number.",
+      "twintNoNumber": "No TWINT number set (Team › On-site box office): use your usual number.",
       "twintPaid": "TWINT payment received",
       "backToMethods": "Other payment method",
       "cashAsk": "The customer pays in cash",
@@ -535,7 +535,12 @@
       "cashPaid": "Cash received",
       "totalsTitle": "Till for this concert: {count, plural, one {# ticket sold} other {# tickets sold}}",
       "totalsAll": "Total taken",
-      "salesCount": "{count, plural, one {# sale} other {# sales}}"
+      "salesCount": "{count, plural, one {# sale} other {# sales}}",
+      "online": "online",
+      "offline": "offline",
+      "cardAsk": "Take this amount on the payment terminal",
+      "cardPaid": "Card payment received",
+      "myCash": "Your cash: {amount} ({count, plural, one {# sale} other {# sales}})"
     }
   },
   "about": {
@@ -1428,13 +1433,21 @@
         "forbidden": "Insufficient permissions.",
         "otherRole": "This account already has another role (organizer, member of another team…). Contact ticketick.",
         "throttled": "Too many invitations in a short time. Try again later.",
-        "unavailable": "The email could not be sent. Please try again."
+        "unavailable": "The email could not be sent. Please try again.",
+        "noAccess": "Tick control, box office, or both."
       },
       "access": "Access",
       "accessStats": "View sales",
       "accessStatsHint": "Sees sales and orders, without being able to change anything.",
-      "accessDoor": "Entrance control",
-      "accessDoorHint": "Scans the tickets of your shows with the control app. Sees nothing else."
+      "accessDoor": "Entrance team",
+      "accessDoorHint": "Ticket control and/or on-site box office. Sees nothing else.",
+      "doorWhat": "What they do on site",
+      "doorScan": "Ticket control",
+      "doorScanHint": "Scans tickets at the entrance with the control app.",
+      "doorTill": "On-site box office",
+      "doorTillHint": "Sells paper tickets on site: cash, card or TWINT.",
+      "tillEvent": "Box office for",
+      "tillEventAll": "All shows"
     },
     "paypal": {
       "title": "PayPal",
@@ -1742,6 +1755,19 @@
           "iban": "Invalid IBAN: please check it.",
           "beneficiary": "Enter the account holder."
         }
+      },
+      "till": {
+        "title": "On-site box office",
+        "hint": "How the entrance app's box office takes payment. \"Online\": the payment is checked automatically; \"offline\": the box office confirms it by hand.",
+        "card": "Card",
+        "twint": "TWINT",
+        "cash": "Cash",
+        "online": "online",
+        "offline": "offline",
+        "cardOnline": "Collect for Stripe and its reader (WisePad): the payment is checked with Stripe.",
+        "cardOffline": "Your own payment terminal; the box office confirms the payment. To take it online (Collect and WisePad reader), have ticketick connect Stripe.",
+        "twintOffline": "The customer pays to your TWINT number, the box office confirms receipt. A connected TWINT can be added later.",
+        "cashHint": "With the change to give back and each seller's cash total."
       }
     },
     "reservation": {
@@ -2058,7 +2084,8 @@
       "optionsHeading": "Options chosen — {date}",
       "suisaLink": "SUISA report",
       "eventReports": "Reports before each event",
-      "eventReportsHint": "Every morning at 7:00 during the week before a date and on the day itself, then one hour before it starts: only the dates concerned, combined into one report when several take place at the same time. Sent to the same recipients."
+      "eventReportsHint": "Every morning at 7:00 during the week before a date and on the day itself, then one hour before it starts: only the dates concerned, combined into one report when several take place at the same time. Sent to the same recipients.",
+      "tillLink": "On-site box office"
     },
     "suisa": {
       "title": "SUISA report",
@@ -2486,6 +2513,37 @@
         "saved": "Number saved.",
         "error": "Invalid number."
       }
+    },
+    "tillReport": {
+      "title": "On-site box office",
+      "subtitle": "What the entrance app's box office sold for each concert: by payment method, by price and by seller.",
+      "back": "Reports",
+      "empty": "No box office sales yet.",
+      "concerts": "Concerts",
+      "salesCount": "{count, plural, one {# sale} other {# sales}}",
+      "collected": "Total collected",
+      "tickets": "Tickets",
+      "ofWhichFree": "of which {count} free",
+      "sales": "Sales",
+      "byMethod": "By payment method",
+      "byTariff": "By price",
+      "bySeller": "By seller",
+      "detail": "Sales detail",
+      "tariff": "Price category",
+      "price": "Price",
+      "quantity": "Quantity",
+      "amount": "Amount",
+      "seller": "Seller",
+      "time": "Time",
+      "method": "Method",
+      "total": "Total",
+      "card": "Card",
+      "twint": "TWINT",
+      "cash": "Cash",
+      "online": "online",
+      "offline": "offline",
+      "free": "Free",
+      "cashHint": "Cash: what each seller should have in the till, excluding the float."
     }
   },
   "pay": {

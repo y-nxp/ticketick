@@ -2,13 +2,15 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CalendarX2 } from "lucide-react";
 import { requireRole } from "@/lib/auth/dal";
+import { redirect } from "@/i18n/navigation";
 import {
+  canScan,
+  canUseTill,
   defaultDoorSession,
   DOOR_ROLES,
   getDoorCounts,
   getDoorSessions,
 } from "@/lib/door/scope";
-import { doorTillEnabled } from "@/lib/door/sale";
 import { DoorHeader } from "./door-header";
 import { DoorScanner } from "./door-scanner";
 
@@ -43,15 +45,15 @@ export default async function DoorPage({
   setRequestLocale(locale);
   const user = await requireRole(DOOR_ROLES, "/door");
   const t = await getTranslations("door");
+  const till = canUseTill(user);
+  // Équipe de caisse seulement : pas de contrôle des billets.
+  if (!canScan(user) && till) redirect({ href: "/door/sell", locale });
 
   const { s } = await searchParams;
   const sessions = await getDoorSessions(user, locale);
   const selected =
     sessions.find((x) => x.id === s) ?? defaultDoorSession(sessions);
-  const [counts, till] = await Promise.all([
-    selected ? getDoorCounts(selected.id) : null,
-    doorTillEnabled(user),
-  ]);
+  const counts = selected && canScan(user) ? await getDoorCounts(selected.id) : null;
 
   if (selected && counts) {
     return (
