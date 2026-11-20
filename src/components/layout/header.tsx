@@ -114,8 +114,8 @@ export function Header({ accountSlot }: { accountSlot?: React.ReactNode }) {
           <Link onClick={() => setMobileOpen(false)} href="/organizer" className="rounded-control px-3 py-2.5 text-sm font-medium hover:bg-secondary">
             {t("organizer")}
           </Link>
-          <div className="flex items-center gap-1 pt-2">
-            <LanguageSwitcher />
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+            <LanguageSwitcher variant="inline" />
             <ThemeSwitcher className="sm:hidden" />
           </div>
         </div>
