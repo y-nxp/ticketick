@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { localizePath } from "@/i18n/pathnames";
 import { routing, type Locale } from "@/i18n/routing";
 import { isSessionSoldOut, t, type EventItem } from "@/lib/types";
 import { EVENT_TIME_ZONE } from "@/lib/utils";
@@ -13,8 +14,10 @@ export function eventPath(event: Pick<EventItem, "slug" | "visibility" | "organi
     : `/go/${event.organizer.slug}/${event.slug}`;
 }
 
+/** Adresse interne → adresse publique dans `locale`, préfixe compris (`/pricing`, de → `/de/preise`). */
 export function localizedPath(path: string, locale: string): string {
-  return locale === routing.defaultLocale ? path || "/" : `/${locale}${path}`;
+  const shown = localizePath(path, locale);
+  return locale === routing.defaultLocale ? shown || "/" : `/${locale}${shown}`;
 }
 
 /** Adresse canonique et variantes linguistiques, pour `generateMetadata`. */

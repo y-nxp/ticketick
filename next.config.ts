@@ -51,12 +51,14 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.ticketick.ch" },
     ],
   },
-  // Adresses que l'on tape ou que l'on dicte au téléphone.
+  // Adresses que l'on tape ou que l'on dicte au téléphone. `/tarifs` et
+  // `/preise` sont les vraies adresses (src/i18n/pathnames.ts) ; le proxy
+  // mène ensuite `/:locale/pricing` à l'adresse de la langue.
   async redirects() {
-    return ["tarifs", "preise", "tariffe"].flatMap((alias) => [
-      { source: `/${alias}`, destination: "/pricing", permanent: false },
-      { source: `/:locale(fr|en|de|it|es)/${alias}`, destination: "/:locale/pricing", permanent: false },
-    ]);
+    return [
+      { source: "/tariffe", destination: "/it/prezzi", permanent: false },
+      { source: "/:locale(fr|en|de|it|es)/tariffe", destination: "/:locale/pricing", permanent: false },
+    ];
   },
   async headers() {
     return [

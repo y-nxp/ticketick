@@ -3,6 +3,7 @@ import "server-only";
 import type Stripe from "stripe";
 import { publicAppOrigin } from "@/lib/app-url";
 import { prisma } from "@/lib/prisma";
+import { localizedPath } from "@/lib/seo/event";
 import { t as translate, type Translated } from "@/lib/types";
 import { EVENT_TIME_ZONE } from "@/lib/utils";
 import {
@@ -115,7 +116,7 @@ export async function loadCatalogSessions(
           [event.organizer.name, venue, longDate.format(session.startsAt)].filter(Boolean).join(" · "),
           500,
         ),
-        url: origin.startsWith("https://") ? `${origin}/events/${event.slug}` : null,
+        url: origin.startsWith("https://") ? `${origin}${localizedPath(`/events/${event.slug}`, "fr")}` : null,
         image: imageUrl(event.coverImage, origin),
         tariffs: session.ticketTypes.map((tt) => ({
           ticketTypeId: tt.id,
