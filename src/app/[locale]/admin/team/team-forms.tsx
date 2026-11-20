@@ -139,6 +139,15 @@ export function InviteForm({
             </label>
           </div>
           {till ? (
+            <label className="mt-3 flex max-w-md cursor-pointer gap-3 rounded-control border border-border p-3 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+              <input type="checkbox" name="manager" className="mt-1 accent-primary" />
+              <span>
+                <span className="text-sm font-semibold">{t("tillManager")}</span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">{t("tillManagerHint")}</span>
+              </span>
+            </label>
+          ) : null}
+          {till ? (
             <label className="mt-3 flex max-w-md flex-col gap-1.5">
               <span className="text-sm font-medium">{t("tillEvent")}</span>
               <select name="tillEventId" defaultValue="" className={fieldClass}>

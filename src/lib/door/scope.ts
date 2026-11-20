@@ -32,6 +32,15 @@ export function canUseTill(user: CurrentUser): boolean {
   return user.role === "ADMIN" || (user.role === "ORGANIZER" && user.organizerId != null);
 }
 
+/**
+ * Responsable de la caisse : voit toutes les ventes d'un concert et peut en
+ * annuler. L'organisateur et l'admin le sont d'office.
+ */
+export function canManageTill(user: CurrentUser): boolean {
+  if (user.role === "DOOR_STAFF") return user.doorTill && user.doorTillManager;
+  return user.role === "ADMIN" || (user.role === "ORGANIZER" && user.organizerId != null);
+}
+
 /** Spectacles vendus à la caisse : ceux du contrôle, ou le seul spectacle confié. */
 export function tillEventWhere(user: CurrentUser): Prisma.EventWhereInput {
   const where = doorEventWhere(user);

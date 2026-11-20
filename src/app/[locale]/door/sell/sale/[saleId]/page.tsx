@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
 import { redirect } from "@/i18n/navigation";
 import { requireRole } from "@/lib/auth/dal";
-import { canScan, canUseTill, DOOR_ROLES, tillEventWhere } from "@/lib/door/scope";
+import { canManageTill, canScan, canUseTill, DOOR_ROLES, tillEventWhere } from "@/lib/door/scope";
 import { prisma } from "@/lib/prisma";
 import { DoorHeader } from "../../../door-header";
 import { SaleSummary } from "../../sale-summary";
@@ -29,7 +29,7 @@ export default async function DoorSalePage({
       <DoorHeader active="sell" till={canScan(user)} />
       <div className="mx-auto w-full max-w-lg flex-1 space-y-4 px-4 py-5">
         <TillNotice />
-        <SaleSummary saleId={saleId} locale={locale} />
+        <SaleSummary saleId={saleId} locale={locale} canCancel={canManageTill(user)} />
       </div>
     </div>
   );

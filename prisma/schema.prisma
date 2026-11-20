@@ -305,6 +305,8 @@ model User {
   doorScan        Boolean    @default(true)
   /// … et/ou vend à la caisse sur place.
   doorTill        Boolean    @default(false)
+  /// Responsable de la caisse du soir : voit toutes les ventes et peut les annuler.
+  doorTillManager Boolean    @default(false)
   /// Caisse limitée à un spectacle ; vide, tous ceux de l'organisateur.
   doorTillEvent   Event?     @relation("TillStaff", fields: [doorTillEventId], references: [id], onDelete: SetNull)
   doorTillEventId String?
@@ -317,10 +319,11 @@ model User {
   reseller   Reseller? @relation(fields: [resellerId], references: [id])
   resellerId String?
 
-  orders     Order[]
-  soldOrders Order[]    @relation("OrderSoldBy")
-  doorSales  DoorSale[]
-  apiKeys    ApiKey[]
+  orders             Order[]
+  soldOrders         Order[]    @relation("OrderSoldBy")
+  doorSales          DoorSale[]
+  cancelledDoorSales DoorSale[] @relation("DoorSaleCancelledBy")
+  apiKeys            ApiKey[]
 
   /// Offres des organisateurs suivis. Jamais implicite : case décochée
   /// à l'inscription, révocable depuis le compte.
@@ -1500,8 +1503,9 @@ model DoorSale {
   /// Clé tirée par l'écran de la caisse pour chaque vente : un double appui
   /// sur « Encaissé » ne compte pas la vente deux fois.
   clientKey   String?      @unique
-  /// Moyen de paiement : "collect" (carte, lecteur Stripe), "twint" (sur le
-  /// numéro de l'organisateur, confirmé à la main), "cash", "free".
+  /// Moyen de paiement : "collect" (carte en ligne, lecteur Stripe),
+  /// "card_offline" (terminal à part), "twint" (sur le numéro de
+  /// l'organisateur, confirmé à la main), "cash", "free".
   provider    String
   amountCents Int
   currency    String
@@ -1512,6 +1516,13 @@ model DoorSale {
   soldBy      User?        @relation(fields: [soldById], references: [id], onDelete: SetNull)
   soldById    String?
   createdAt   DateTime     @default(now())
+
+  /// Vente annulée (erreur, test, client qui renonce) : gardée pour la trace,
+  /// mais hors des totaux, des rapports et du SUISA.
+  cancelledAt   DateTime?
+  cancelledBy   User?     @relation("DoorSaleCancelledBy", fields: [cancelledById], references: [id], onDelete: SetNull)
+  cancelledById String?
+  cancelReason  String?
 
   @@index([sessionId])
 }

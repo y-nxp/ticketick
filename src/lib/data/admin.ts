@@ -241,6 +241,7 @@ export async function getTeam(requestedOrganizerId?: string) {
           passwordHash: true,
           doorScan: true,
           doorTill: true,
+          doorTillManager: true,
           doorTillEvent: { select: { title: true } },
         },
       })
@@ -271,11 +272,12 @@ export async function getTeam(requestedOrganizerId?: string) {
     events: events
       .map((e) => ({ id: e.id, title: e.title as Translated, firstAt: e.sessions[0]?.startsAt ?? null }))
       .sort((a, b) => (a.firstAt?.getTime() ?? 0) - (b.firstAt?.getTime() ?? 0)),
-    members: members.map(({ passwordHash, role, doorScan, doorTill, doorTillEvent, ...m }) => ({
+    members: members.map(({ passwordHash, role, doorScan, doorTill, doorTillManager, doorTillEvent, ...m }) => ({
       ...m,
       access: (role === "DOOR_STAFF" ? "door" : "stats") as "door" | "stats",
       scan: role === "DOOR_STAFF" && doorScan,
       till: role === "DOOR_STAFF" && doorTill,
+      tillManager: role === "DOOR_STAFF" && doorTill && doorTillManager,
       tillEvent: doorTillEvent ? (doorTillEvent.title as Translated) : null,
       activated: passwordHash != null,
     })),

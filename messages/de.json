@@ -540,7 +540,30 @@
       "offline": "offline",
       "cardAsk": "Diesen Betrag am Zahlungsterminal einkassieren",
       "cardPaid": "Kartenzahlung erhalten",
-      "myCash": "Ihr Bargeld: {amount} ({count, plural, one {# Verkauf} other {# Verkäufe}})"
+      "myCash": "Ihr Bargeld: {amount} ({count, plural, one {# Verkauf} other {# Verkäufe}})",
+      "cancel": {
+        "button": "Verkauf stornieren",
+        "reason": "Grund der Stornierung",
+        "reasonPlaceholder": "Test, Eingabefehler, Kunde verzichtet…",
+        "refundHint": "Die Karte wird von Stripe automatisch zurückerstattet.",
+        "giveBackHint": "Geben Sie dem Kunden das Geld selbst zurück (bar, TWINT oder Terminal).",
+        "confirm": "Stornierung bestätigen",
+        "keep": "Verkauf behalten",
+        "done": "Verkauf storniert: Er zählt nicht mehr in den Summen.",
+        "doneRefunded": "Verkauf storniert und Karte zurückerstattet.",
+        "cancelled": "Verkauf storniert",
+        "cancelledBy": "Storniert am {date} von {who}",
+        "errors": {
+          "forbidden": "Nur die Kassenverantwortliche Person kann einen Verkauf stornieren.",
+          "notFound": "Verkauf nicht gefunden.",
+          "already": "Dieser Verkauf ist bereits storniert.",
+          "refund": "Die Stripe-Rückerstattung ist fehlgeschlagen: Der Verkauf ist nicht storniert. Erneut versuchen oder in Stripe zurückerstatten.",
+          "reason": "Geben Sie den Grund der Stornierung an."
+        },
+        "salesLink": "Verkäufe dieses Konzerts ({count})",
+        "salesTitle": "Verkäufe dieses Konzerts",
+        "noSales": "Keine Verkäufe für dieses Konzert."
+      }
     }
   },
   "about": {
@@ -1447,7 +1470,10 @@
       "doorTill": "Abendkasse",
       "doorTillHint": "Verkauft Papiertickets vor Ort: bar, mit Karte oder TWINT.",
       "tillEvent": "Kasse für",
-      "tillEventAll": "Alle Veranstaltungen"
+      "tillEventAll": "Alle Veranstaltungen",
+      "tillManager": "Kassenverantwortlich",
+      "tillManagerHint": "Sieht alle Verkäufe des Abends und kann sie stornieren (Fehler, Test, Kunde verzichtet).",
+      "tillManagerShort": "verantwortlich"
     },
     "paypal": {
       "title": "PayPal",
