@@ -4,7 +4,7 @@
   "short_name": "Contrôle",
   "description": "Contrôle des billets par QR code",
   "start_url": "/door",
-  "scope": "/door",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FFFFFF",
