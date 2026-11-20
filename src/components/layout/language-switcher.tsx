@@ -7,7 +7,12 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import { locales, localeLabels, type Locale } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
-export function LanguageSwitcher() {
+/**
+ * `inline` : les langues côte à côte, sans liste déroulante. Pour le menu
+ * mobile, qui masque ce qui déborde (`overflow-hidden`) : une liste ouverte
+ * y serait coupée et impossible à toucher.
+ */
+export function LanguageSwitcher({ variant = "menu" }: { variant?: "menu" | "inline" }) {
   const locale = useLocale();
   const t = useTranslations("nav");
   const router = useRouter();
@@ -28,6 +33,31 @@ export function LanguageSwitcher() {
   function switchTo(next: Locale) {
     setOpen(false);
     router.replace(pathname, { locale: next });
+  }
+
+  if (variant === "inline") {
+    return (
+      <div role="group" aria-label={t("language")} className="flex flex-wrap items-center gap-1">
+        <Globe className="mr-1 size-4 text-muted-foreground" aria-hidden />
+        {locales.map((l) => (
+          <button
+            key={l}
+            type="button"
+            lang={l}
+            onClick={() => switchTo(l)}
+            aria-current={l === locale ? "true" : undefined}
+            aria-label={localeLabels[l]}
+            title={localeLabels[l]}
+            className={cn(
+              "h-10 min-w-10 rounded-full px-2.5 text-sm font-medium uppercase transition-colors",
+              l === locale ? "bg-primary text-primary-foreground" : "hover:bg-secondary",
+            )}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+    );
   }
 
   return (
