@@ -193,6 +193,15 @@ export default async function AdminPaymentsPage({
               organizerId={organizerId}
               account={stripe ? { enabled: stripe.enabled } : null}
             />
+            {stripe?.enabled ? (
+              <Link
+                href={{ pathname: "/admin/stripe-catalog", query: { organizer: organizerId } }}
+                className="mt-4 inline-flex items-center gap-1 text-sm text-primary hover:underline"
+              >
+                <CreditCard className="size-4" />
+                {t("stripe.catalogLink")}
+              </Link>
+            ) : null}
           </section>
 
           <section className="mt-6 rounded-card border border-border bg-card p-5">

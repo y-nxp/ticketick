@@ -179,6 +179,15 @@ export default async function CheckoutSuccessPage({
         </Button>
       </Link>
       {ref && !refundDue && !signedIn ? <AccountInvite /> : null}
+      {/* Pas dans la boutique habillée d'un organisateur : ses acheteurs restent chez lui. */}
+      {!origin && !refundDue ? (
+        <p className="mt-10 text-sm text-muted-foreground">
+          {t("organizerHint")}{" "}
+          <Link href="/organizer" className="font-medium text-foreground underline underline-offset-4">
+            {t("organizerHintCta")}
+          </Link>
+        </p>
+      ) : null}
     </div>
   );
 }

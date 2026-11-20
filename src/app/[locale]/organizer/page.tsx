@@ -15,6 +15,9 @@ import {
   Users,
 } from "lucide-react";
 import { InquiryChat } from "./inquiry-chat";
+import { Link } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
+import { chf, percentLabel, PLATFORM_FEES } from "@/lib/pricing/platform-fees";
 import { byLocale } from "@/lib/i18n-fallback";
 import { pageAlternates } from "@/lib/seo/site";
 
@@ -44,6 +47,13 @@ const content = {
       { t: "On ouvre votre espace", d: "Spectacles, plan de salle, tarifs et moyens de paiement sont configurés avec vous. Un spectacle simple se prépare en quelques jours." },
       { t: "Vous vendez", d: "Vos clients achètent en ligne, au guichet ou chez vos points de vente. Vous suivez tout depuis votre espace." },
     ],
+    pricingTitle: "Combien ça coûte",
+    pricingFree: "Événements gratuits : gratuit.",
+    pricingSelf: "Libre-service",
+    pricingPremium: "Premium, avec accompagnement",
+    pricingUnit: "par billet payant",
+    pricingNote: "Pas d'abonnement, pas de frais d'ouverture.",
+    pricingCta: "Voir tous les tarifs",
     contactTitle: "Parlons de votre événement",
   },
   en: {
@@ -69,6 +79,13 @@ const content = {
       { t: "We open your space", d: "Events, seating plan, fares and payment methods are set up with you. A simple event is ready in a few days." },
       { t: "You sell", d: "Your customers buy online, at the box office or from your points of sale. You follow everything from your space." },
     ],
+    pricingTitle: "What it costs",
+    pricingFree: "Free events: free.",
+    pricingSelf: "Self-service",
+    pricingPremium: "Premium, with support",
+    pricingUnit: "per paid ticket",
+    pricingNote: "No subscription, no setup fee.",
+    pricingCta: "See full pricing",
     contactTitle: "Let's talk about your event",
   },
   de: {
@@ -94,6 +111,13 @@ const content = {
       { t: "Wir eröffnen Ihren Bereich", d: "Veranstaltungen, Saalplan, Tarife und Zahlungsmittel werden mit Ihnen eingerichtet. Eine einfache Veranstaltung ist in wenigen Tagen bereit." },
       { t: "Sie verkaufen", d: "Ihre Kunden kaufen online, an der Kasse oder bei Ihren Verkaufsstellen. Sie verfolgen alles in Ihrem Bereich." },
     ],
+    pricingTitle: "Was es kostet",
+    pricingFree: "Gratisanlässe: gratis.",
+    pricingSelf: "Selbstbedienung",
+    pricingPremium: "Premium, mit Begleitung",
+    pricingUnit: "pro kostenpflichtiges Ticket",
+    pricingNote: "Kein Abonnement, keine Einrichtungsgebühr.",
+    pricingCta: "Alle Preise ansehen",
     contactTitle: "Sprechen wir über Ihre Veranstaltung",
   },
   it: {
@@ -119,6 +143,13 @@ const content = {
       { t: "Apriamo il vostro spazio", d: "Spettacoli, pianta della sala, tariffe e mezzi di pagamento sono configurati con voi. Uno spettacolo semplice è pronto in pochi giorni." },
       { t: "Vendete", d: "I vostri clienti acquistano online, in cassa o nei vostri punti vendita. Seguite tutto dal vostro spazio." },
     ],
+    pricingTitle: "Quanto costa",
+    pricingFree: "Eventi gratuiti: gratis.",
+    pricingSelf: "Self-service",
+    pricingPremium: "Premium, con accompagnamento",
+    pricingUnit: "per biglietto a pagamento",
+    pricingNote: "Nessun abbonamento, nessun costo di apertura.",
+    pricingCta: "Vedere tutte le tariffe",
     contactTitle: "Parliamo del vostro evento",
   },
 } as const;
@@ -151,6 +182,7 @@ export default async function OrganizerPage({
   setRequestLocale(locale);
   const t = await getTranslations("organizer");
   const c = byLocale<Content>(content, locale);
+  const numberLocale = locale === "es" ? "en" : locale;
 
   return (
     <div className="container-page py-12">
@@ -197,7 +229,34 @@ export default async function OrganizerPage({
         </ol>
       </section>
 
-      <section id="contact" className="mt-14 max-w-2xl" aria-labelledby="organizer-contact">
+      <section className="mt-14 max-w-2xl" aria-labelledby="organizer-pricing">
+        <h2 id="organizer-pricing" className="text-2xl font-bold tracking-tight">
+          {c.pricingTitle}
+        </h2>
+        <div className="mt-6 rounded-card border border-border bg-card p-6">
+          <dl className="grid gap-4 sm:grid-cols-2">
+            {(["selfService", "premium"] as const).map((plan) => (
+              <div key={plan}>
+                <dt className="text-sm text-muted-foreground">
+                  {plan === "selfService" ? c.pricingSelf : c.pricingPremium}
+                </dt>
+                <dd className="mt-1 text-xl font-bold tracking-tight">
+                  CHF {chf(PLATFORM_FEES[plan].fixedCents)} + {percentLabel(PLATFORM_FEES[plan].bps, numberLocale)}
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">{c.pricingUnit}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-4 text-sm text-muted-foreground">
+            {c.pricingFree} {c.pricingNote}
+          </p>
+          <Link href="/pricing" className="mt-5 inline-block">
+            <Button variant="outline">{c.pricingCta}</Button>
+          </Link>
+        </div>
+      </section>
+
+      <section id="contact" className="mt-14 max-w-2xl scroll-mt-24" aria-labelledby="organizer-contact">
         <h2 id="organizer-contact" className="text-2xl font-bold tracking-tight">
           {c.contactTitle}
         </h2>

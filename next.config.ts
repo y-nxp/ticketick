@@ -51,6 +51,13 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.ticketick.ch" },
     ],
   },
+  // Adresses que l'on tape ou que l'on dicte au téléphone.
+  async redirects() {
+    return ["tarifs", "preise", "tariffe"].flatMap((alias) => [
+      { source: `/${alias}`, destination: "/pricing", permanent: false },
+      { source: `/:locale(fr|en|de|it|es)/${alias}`, destination: "/:locale/pricing", permanent: false },
+    ]);
+  },
   async headers() {
     return [
       {

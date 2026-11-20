@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useRouter } from "@/i18n/navigation";
 import { admitTicket, checkTicket } from "@/lib/door/actions";
+import { entryOpensAt } from "@/lib/door/entry-window";
 import { clearDoorStorage, type DoorConflict, type ScanLookup } from "@/lib/door/offline";
 import { playSound, soundOf, unlockSounds, type DoorSound } from "@/lib/door/sounds";
 import { cn, EVENT_TIME_ZONE } from "@/lib/utils";
@@ -30,6 +31,8 @@ import { useDoorSync, withTimeout, type DoorSyncState } from "./use-door-sync";
 interface DoorSessionOption {
   id: string;
   label: string;
+  /** Début de la séance (ISO) : l'entrée s'ouvre deux heures avant. */
+  startsAt: string;
 }
 
 /** `entry` : chaque billet valable est enregistré. `check` : rien n'est enregistré. */
@@ -48,10 +51,13 @@ export function DoorScanner({
   sessions,
   sessionId,
   initialCounts,
+  till = false,
 }: {
   sessions: DoorSessionOption[];
   sessionId: string;
   initialCounts: { entered: number; expected: number };
+  /** Caisse sur place : onglet Caisse dans l'en-tête. */
+  till?: boolean;
 }) {
   const t = useTranslations("door");
   const locale = useLocale();
@@ -59,9 +65,25 @@ export function DoorScanner({
   const sound = useDoorSound();
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
-  // Toujours « Entrée » à l'ouverture : le mode vérification se choisit
-  // à chaque fois, pour ne jamais laisser entrer quelqu'un sans l'enregistrer.
-  const [mode, setMode] = React.useState<Mode>("entry");
+  // L'entrée s'ouvre deux heures avant le début ; d'ici là, vérification seule.
+  const startsAt = sessions.find((s) => s.id === sessionId)?.startsAt;
+  const opensAt = startsAt ? entryOpensAt(startsAt) : 0;
+  const [now, setNow] = React.useState(() => Date.now());
+  const entryOpen = now >= opensAt;
+  React.useEffect(() => {
+    if (entryOpen) return;
+    const id = window.setInterval(() => setNow(Date.now()), 15_000);
+    return () => window.clearInterval(id);
+  }, [entryOpen]);
+  // « Entrée » à l'ouverture dès qu'elle est permise : le mode vérification se
+  // choisit à chaque fois, pour ne jamais laisser entrer quelqu'un sans
+  // l'enregistrer. Avant l'heure, « Vérifier », puis « Entrée » à l'heure dite.
+  const [mode, setMode] = React.useState<Mode>(() => (Date.now() >= opensAt ? "entry" : "check"));
+  const [wasOpen, setWasOpen] = React.useState(entryOpen);
+  if (entryOpen !== wasOpen) {
+    setWasOpen(entryOpen);
+    if (entryOpen) setMode("entry");
+  }
   const [manuel, setManuel] = React.useState("");
   const [scan, setScan] = React.useState<Scan | null>(null);
   const [occupe, setOccupe] = React.useState(false);
@@ -230,6 +252,7 @@ export function DoorScanner({
   }
 
   function choisirMode(next: Mode) {
+    if (next === "entry" && !entryOpen) return;
     unlockSounds();
     setMode(next);
     setScan(null);
@@ -237,12 +260,25 @@ export function DoorScanner({
   }
 
   const verif = mode === "check";
+  const opens = {
+    day: new Intl.DateTimeFormat(`${locale}-CH`, {
+      timeZone: EVENT_TIME_ZONE,
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }).format(opensAt),
+    time: new Intl.DateTimeFormat(`${locale}-CH`, {
+      timeZone: EVENT_TIME_ZONE,
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(opensAt),
+  };
   const pourcent =
     counts.expected > 0 ? Math.min(100, Math.round((counts.entered / counts.expected) * 100)) : 0;
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <DoorHeader sound={sound} />
+      <DoorHeader sound={sound} till={till} />
 
       <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-3 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
         <select
@@ -271,24 +307,34 @@ export function DoorScanner({
             ] as const
           ).map((o) => {
             const actif = mode === o.value;
+            const ferme = o.value === "entry" && !entryOpen;
             return (
               <button
                 key={o.value}
                 type="button"
                 role="radio"
                 aria-checked={actif}
+                disabled={ferme}
                 onClick={() => choisirMode(o.value)}
                 className={cn(
-                  "flex h-10 items-center justify-center gap-2 rounded-[calc(var(--radius-control)-2px)] text-sm font-semibold transition-colors",
+                  "flex min-h-10 flex-col items-center justify-center rounded-[calc(var(--radius-control)-2px)] text-sm font-semibold transition-colors",
                   actif
                     ? o.value === "check"
                       ? "bg-sky-700 text-white shadow-sm"
                       : "bg-card text-foreground shadow-sm"
                     : "text-muted-foreground",
+                  ferme && "cursor-not-allowed py-1 opacity-70",
                 )}
               >
-                <o.icon className="size-4" />
-                {o.label}
+                <span className="flex items-center gap-2">
+                  <o.icon className="size-4" />
+                  {o.label}
+                </span>
+                {ferme ? (
+                  <span className="text-[11px] font-normal leading-tight">
+                    {t("entryOpensAt", opens)}
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -302,7 +348,7 @@ export function DoorScanner({
         {verif ? (
           <p className="flex items-start gap-2 rounded-control bg-sky-700/10 px-3 py-2 text-sm font-medium text-sky-800 dark:text-sky-300">
             <Info className="mt-0.5 size-4 shrink-0" />
-            {t("modeCheckBanner")}
+            {entryOpen ? t("modeCheckBanner") : t("entryClosedBanner", opens)}
           </p>
         ) : (
           <div className="rounded-control border border-border bg-card px-3 py-2.5">
