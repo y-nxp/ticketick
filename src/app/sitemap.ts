@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { routing, type Locale } from "@/i18n/routing";
 import { publicAppOrigin } from "@/lib/app-url";
+import { articlePath, blogIndexPath, localesWithArticles } from "@/lib/blog/articles";
+import { getArticles } from "@/lib/blog/source";
 import { prisma } from "@/lib/prisma";
 import { localizedPath } from "@/lib/seo/event";
 
@@ -80,8 +82,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry(`/go/${slug}`, shopLocales, updatedAt),
   );
 
+  // Blog : une liste par langue qui a des articles, et chaque article dans
+  // sa seule langue. API muette : le sitemap sort sans le blog.
+  const articles = (await getArticles()) ?? [];
+  const blogLocales = localesWithArticles(articles);
+  const blogEntries: MetadataRoute.Sitemap = [
+    ...(blogLocales.length > 0
+      ? [
+          {
+            url: `${origin}${blogIndexPath(blogLocales.includes("fr") ? "fr" : blogLocales[0])}`,
+            lastModified: articles[0]?.modifiedAt ? new Date(articles[0].modifiedAt) : undefined,
+            alternates: {
+              languages: Object.fromEntries(blogLocales.map((l) => [l, `${origin}${blogIndexPath(l)}`])),
+            },
+          },
+        ]
+      : []),
+    ...articles.map((a) => ({
+      url: `${origin}${articlePath(a)}`,
+      lastModified: a.modifiedAt ? new Date(a.modifiedAt) : undefined,
+      alternates: { languages: { [a.locale]: `${origin}${articlePath(a)}` } },
+    })),
+  ];
+
   return [
     ...pages.map((p) => entry(p, siteLocales)),
+    ...blogEntries,
     ...organizerEntries,
     ...eventEntries,
   ];

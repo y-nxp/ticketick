@@ -613,7 +613,8 @@
     "colInfo": "Infos",
     "colLegal": "Légal",
     "developers": "API & agents IA",
-    "pricing": "Tarifs"
+    "pricing": "Tarifs",
+    "blog": "Blog"
   },
   "auth": {
     "signIn": "Se connecter",

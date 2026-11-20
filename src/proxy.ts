@@ -30,11 +30,26 @@ const hostedLocale = createMiddleware({
   localeDetection: false,
 });
 
+/**
+ * Article du blog (`/blog/slug`, `/de/blog/slug`) : il n'existe que dans sa
+ * langue et la page renvoie toute autre langue vers son adresse. Détecter la
+ * langue du navigateur ici (`/blog/x` → `/de/blog/x` → `/blog/x`…) tournerait
+ * en rond ; et ses variantes linguistiques ne sont pas celles de next-intl.
+ * Lire un article français ne change pas non plus la langue retenue du visiteur.
+ */
+const articleLocale = createMiddleware({
+  ...localizedRouting,
+  localeDetection: false,
+  alternateLinks: false,
+  localeCookie: false,
+});
+
 const prefixes = routing.locales
   .filter((l) => l !== routing.defaultLocale)
   .join("|");
 const localePrefix = new RegExp(`^/(?:${prefixes})(?=/|$)`);
 const hostedPath = new RegExp(`^(?:/(?:${prefixes}))?/(?:go|embed|pay|change)(?:/|$)`);
+const articlePagePath = new RegExp(`^(?:/(?:${prefixes}))?/blog/[^/]+/?$`);
 
 function withShopOriginCookie(
   request: NextRequest,
@@ -127,6 +142,10 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
       request,
       withShopOriginCookie(request, hostedLocale(request)),
     );
+  }
+
+  if (articlePagePath.test(request.nextUrl.pathname)) {
+    return withCampaignCookie(request, articleLocale(request));
   }
 
   return withCampaignCookie(

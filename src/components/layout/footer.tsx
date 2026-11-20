@@ -24,6 +24,7 @@ export function Footer({ cookieSettings = false }: { cookieSettings?: boolean })
           <FooterLink href="/organizer">{t("organizers")}</FooterLink>
           <FooterLink href="/pricing">{t("pricing")}</FooterLink>
           <FooterLink href="/contact">{t("contact")}</FooterLink>
+          <FooterLink href="/blog">{t("blog")}</FooterLink>
           <FooterLink href="/help">{t("help")}</FooterLink>
           <FooterLink href="/developers">{t("developers")}</FooterLink>
         </FooterCol>
