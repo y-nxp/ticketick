@@ -17,7 +17,7 @@ import {
 import { InquiryChat } from "./inquiry-chat";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
-import { chf, percentLabel, PLATFORM_FEES } from "@/lib/pricing/platform-fees";
+import { chf, CURRENT_PRICING, percentLabel, PLATFORM_FEES, pricingDate } from "@/lib/pricing/platform-fees";
 import { byLocale } from "@/lib/i18n-fallback";
 import { pageAlternates } from "@/lib/seo/site";
 
@@ -54,6 +54,7 @@ const content = {
     pricingUnit: "par billet payant",
     pricingNote: "Pas d'abonnement, pas de frais d'ouverture.",
     pricingCta: "Voir tous les tarifs",
+    pricingSince: "Tarifs en vigueur depuis le {date}.",
     contactTitle: "Parlons de votre événement",
   },
   en: {
@@ -86,6 +87,7 @@ const content = {
     pricingUnit: "per paid ticket",
     pricingNote: "No subscription, no setup fee.",
     pricingCta: "See full pricing",
+    pricingSince: "Prices in force since {date}.",
     contactTitle: "Let's talk about your event",
   },
   de: {
@@ -118,6 +120,7 @@ const content = {
     pricingUnit: "pro kostenpflichtiges Ticket",
     pricingNote: "Kein Abonnement, keine Einrichtungsgebühr.",
     pricingCta: "Alle Preise ansehen",
+    pricingSince: "Preise gültig seit {date}.",
     contactTitle: "Sprechen wir über Ihre Veranstaltung",
   },
   it: {
@@ -150,6 +153,7 @@ const content = {
     pricingUnit: "per biglietto a pagamento",
     pricingNote: "Nessun abbonamento, nessun costo di apertura.",
     pricingCta: "Vedere tutte le tariffe",
+    pricingSince: "Tariffe in vigore dal {date}.",
     contactTitle: "Parliamo del vostro evento",
   },
 } as const;
@@ -248,7 +252,7 @@ export default async function OrganizerPage({
             ))}
           </dl>
           <p className="mt-4 text-sm text-muted-foreground">
-            {c.pricingFree} {c.pricingNote}
+            {c.pricingFree} {c.pricingNote} {c.pricingSince.replace("{date}", pricingDate(CURRENT_PRICING.from))}
           </p>
           <Link href="/pricing" className="mt-5 inline-block">
             <Button variant="outline">{c.pricingCta}</Button>
