@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await settlePostfinanceById(transactionId);
+    await settlePostfinanceById(transactionId, readSpaceId(body));
   } catch (error) {
     console.error("[postfinance] webhook", error);
     return NextResponse.json({ error: "settle_failed" }, { status: 500 });
@@ -42,5 +42,11 @@ function readEntityId(body: unknown): number | undefined {
       ? (record.data as Record<string, unknown>).entityId
       : undefined);
   const id = Number(raw);
+  return Number.isInteger(id) && id > 0 ? id : undefined;
+}
+
+function readSpaceId(body: unknown): number | undefined {
+  if (!body || typeof body !== "object") return undefined;
+  const id = Number((body as Record<string, unknown>).spaceId);
   return Number.isInteger(id) && id > 0 ? id : undefined;
 }
