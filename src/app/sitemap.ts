@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { routing, type Locale } from "@/i18n/routing";
 import { publicAppOrigin } from "@/lib/app-url";
 import { prisma } from "@/lib/prisma";
+import { localizedPath } from "@/lib/seo/event";
 
 // Les spectacles en vente changent en continu, et la base n'est pas
 // joignable au build.
@@ -28,10 +29,7 @@ const siteLocales = routing.locales.filter((l) => l !== "es");
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = publicAppOrigin();
 
-  const url = (path: string, locale: Locale) =>
-    locale === routing.defaultLocale
-      ? `${origin}${path || "/"}`
-      : `${origin}/${locale}${path}`;
+  const url = (path: string, locale: Locale) => `${origin}${localizedPath(path, locale)}`;
 
   const entry = (
     path: string,

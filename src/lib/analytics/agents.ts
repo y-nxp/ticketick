@@ -1,3 +1,4 @@
+import { internalPath } from "@/i18n/pathnames";
 /**
  * Passages des robots et agents IA, envoyés à un site Matomo à part
  * (« ticketick.ch — agents IA ») : les statistiques des humains restent
@@ -92,7 +93,7 @@ const LOCALE_PREFIX = /^\/(?:en|de|it|es)(?=\/|$)/;
 
 /** Type de page lu dans l'adresse, pour l'action Matomo. */
 export function pageAction(pathname: string): string {
-  const path = pathname.replace(LOCALE_PREFIX, "") || "/";
+  const path = internalPath(pathname.replace(LOCALE_PREFIX, "") || "/");
   if (path === "/") return "Page · accueil";
   if (/^\/events\/[^/]+/.test(path)) return "Page · fiche spectacle";
   if (/^\/(go|embed)\//.test(path)) return "Page · boutique intégrée";

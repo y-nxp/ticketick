@@ -1,5 +1,6 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextFetchEvent, type NextRequest } from "next/server";
+import { legacyRedirect, internalPath, middlewarePathnames } from "./i18n/pathnames";
 import { routing } from "./i18n/routing";
 import { agentHitFor, sendAgentHit } from "./lib/analytics/agent-tracking";
 import { pageAction } from "./lib/analytics/agents";
@@ -11,7 +12,12 @@ import {
 import { campaignLink, landingClick } from "./lib/promotion/proxy-rules";
 import { parseGoOrigin, SHOP_ORIGIN_COOKIE } from "./lib/shop-origin";
 
-const detectLocale = createMiddleware(routing);
+// Adresses traduites (src/i18n/pathnames.ts) : next-intl réécrit `/tarifs`
+// vers la page interne `/fr/pricing`. La navigation garde `routing` sans
+// `pathnames`, pour que les liens restent de simples chaînes.
+const localizedRouting = { ...routing, pathnames: middlewarePathnames(routing.locales) };
+
+const detectLocale = createMiddleware(localizedRouting);
 
 /**
  * Pages destinées au site du client : le lien partagé s'ouvre en français
@@ -20,7 +26,7 @@ const detectLocale = createMiddleware(routing);
  * de la commande.
  */
 const hostedLocale = createMiddleware({
-  ...routing,
+  ...localizedRouting,
   localeDetection: false,
 });
 
@@ -56,7 +62,7 @@ function withCampaignCookie(
   response: NextResponse,
 ): NextResponse {
   const click = landingClick({
-    pathname: request.nextUrl.pathname.replace(localePrefix, "") || "/",
+    pathname: internalPath(request.nextUrl.pathname.replace(localePrefix, "") || "/"),
     searchParams: request.nextUrl.searchParams,
     currentCookie: request.cookies.get(PROMOTION_COOKIE)?.value,
     userAgent: request.headers.get("user-agent"),
@@ -104,6 +110,16 @@ export default function proxy(request: NextRequest, event: NextFetchEvent) {
     const response = NextResponse.redirect(home, 302);
     response.headers.set("cache-control", "no-store");
     return response;
+  }
+
+  // Ancienne adresse en anglais (`/pricing`, `/de/events/…`) : vers celle de
+  // la langue. Permanente (308), sauf les concerts de Gstaad (302) pendant le
+  // festival.
+  const moved = legacyRedirect(request.nextUrl.pathname, routing.locales, routing.defaultLocale);
+  if (moved) {
+    const target = request.nextUrl.clone();
+    target.pathname = moved.pathname;
+    return NextResponse.redirect(target, moved.status);
   }
 
   if (hostedPath.test(request.nextUrl.pathname)) {

@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { localizedPath } from "@/lib/seo/event";
 
 /**
  * API partenaire (SAV téléphonique de Clouboard) : signature des requêtes,
@@ -188,5 +189,5 @@ export function remainingSeats(
 }
 
 export function eventPageUrl(origin: string, locale: PartnerLocale, slug: string): string {
-  return `${origin}${locale === "fr" ? "" : `/${locale}`}/events/${slug}`;
+  return `${origin}${localizedPath(`/events/${slug}`, locale)}`;
 }
