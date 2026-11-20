@@ -47,6 +47,8 @@ test("type de page lu dans l'adresse", () => {
   assert.equal(pageAction("/organizer"), "Page · pour les organisateurs");
   assert.equal(pageAction("/it/help"), "Page · informations");
   assert.equal(pageAction("/go/chœur"), "Page · boutique intégrée");
+  assert.equal(pageAction("/blog"), "Page · blog");
+  assert.equal(pageAction("/de/blog/online-ticketing-verein"), "Page · article");
 });
 
 test("ce que l'agent demandait, sans la clé", () => {

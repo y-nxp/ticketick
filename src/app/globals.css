@@ -254,3 +254,144 @@ h6 {
   text-transform: uppercase;
   color: #6b6e76;
 }
+
+/* Corps des articles du blog (HTML du Manager, assaini) : lecture
+   confortable, sans plugin de typographie. */
+.article-body {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--foreground);
+  overflow-wrap: break-word;
+}
+
+.article-body > * + * {
+  margin-top: 1.25em;
+}
+
+.article-body h2 {
+  margin-top: 2.25em;
+  font-size: 1.5rem;
+  line-height: 1.3;
+  scroll-margin-top: 6rem;
+}
+
+.article-body h3 {
+  margin-top: 1.75em;
+  font-size: 1.2rem;
+  line-height: 1.35;
+}
+
+.article-body h4 {
+  margin-top: 1.5em;
+  font-size: 1.05rem;
+}
+
+.article-body h2 + *,
+.article-body h3 + *,
+.article-body h4 + * {
+  margin-top: 0.6em;
+}
+
+.article-body a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.article-body a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.article-body strong {
+  font-weight: 600;
+}
+
+.article-body ul,
+.article-body ol {
+  padding-left: 1.4em;
+}
+
+.article-body ul {
+  list-style: disc;
+}
+
+.article-body ol {
+  list-style: decimal;
+}
+
+.article-body li + li {
+  margin-top: 0.4em;
+}
+
+.article-body li::marker {
+  color: var(--muted-foreground);
+}
+
+/* « En bref » en tête d'article : un encadré plutôt qu'une citation. */
+.article-body blockquote {
+  border-left: 3px solid var(--primary);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--foreground);
+  padding: 1rem 1.25rem;
+}
+
+.article-body blockquote > * + * {
+  margin-top: 0.6em;
+}
+
+.article-body hr {
+  margin-block: 2.5em;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.article-body code {
+  border-radius: 0.25rem;
+  background: var(--muted);
+  padding: 0.1em 0.35em;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.9em;
+}
+
+.article-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+}
+
+/* Tableaux : défilement horizontal dans leur cadre sur mobile. */
+.article-body .article-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.article-body table {
+  width: 100%;
+  min-width: 32rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.article-body th,
+.article-body td {
+  padding: 0.65rem 0.9rem;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+
+.article-body thead th {
+  background: var(--secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.article-body tbody tr:last-child > * {
+  border-bottom: 0;
+}

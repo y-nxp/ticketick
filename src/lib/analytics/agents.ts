@@ -99,6 +99,8 @@ export function pageAction(pathname: string): string {
   if (/^\/(go|embed)\//.test(path)) return "Page · boutique intégrée";
   if (/^\/organizer\/?$/.test(path)) return "Page · pour les organisateurs";
   if (/^\/developers/.test(path)) return "Page · développeurs";
+  if (/^\/blog\/[^/]+/.test(path)) return "Page · article";
+  if (/^\/blog\/?$/.test(path)) return "Page · blog";
   if (/^\/(how-it-works|help|about|contact|friends|terms|privacy)(\/|$)/.test(path)) return "Page · informations";
   return "Page · autre";
 }

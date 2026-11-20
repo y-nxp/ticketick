@@ -49,6 +49,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "**.ticketick.ch" },
+      // Couvertures des articles du blog (Manager Nextalp), servies par l'optimiseur d'images.
+      { protocol: "https", hostname: "manager.nextalp.com", pathname: "/api/public/articles/**" },
     ],
   },
   // Adresses que l'on tape ou que l'on dicte au téléphone. `/tarifs` et
