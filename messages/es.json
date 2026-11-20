@@ -27,6 +27,9 @@
     "heroSubtitle": "Conciertos, teatro, festivales, humor y mucho más. Reserva tus entradas en unos segundos.",
     "heroCta": "Ver los espectáculos",
     "heroSecondary": "Cómo funciona",
+    "organizerBandTitle": "¿Organiza un evento?",
+    "organizerBandText": "Venda sus entradas con ticketick: gratis para los eventos gratuitos, desde CHF 0.50 + 1,8 % por entrada de pago.",
+    "organizerBandCta": "Ver las tarifas",
     "payments": "PostFinance, Stripe, PayPal",
     "ticketsByEmail": "Entradas por correo electrónico",
     "sectionAll": "Todos los espectáculos",
@@ -206,6 +209,8 @@
     "success": "¡Gracias! Tu pedido está confirmado.",
     "successHint": "Tus entradas se han enviado a {email}.",
     "backHome": "Volver al inicio",
+    "organizerHint": "¿También organiza eventos?",
+    "organizerHintCta": "Descubrir la taquilla ticketick",
     "downloadPdf": "Descargar el PDF",
     "printTickets": "Imprimir las entradas",
     "pdfHint": "Una página por persona: espectáculo, tarifa y número de entrada. Ábrelo para imprimirlo.",
@@ -379,7 +384,8 @@
     "madeIn": "Diseñado y gestionado en Suiza",
     "cookieSettings": "Cookies",
     "colInfo": "Información",
-    "colLegal": "Legal"
+    "colLegal": "Legal",
+    "pricing": "Tarifas"
   },
   "auth": {
     "signIn": "Iniciar sesión",

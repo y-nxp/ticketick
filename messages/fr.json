@@ -28,6 +28,9 @@
     "heroSubtitle": "Concerts, théâtre, festivals, humour et bien plus. Réservez vos billets en quelques secondes.",
     "heroCta": "Découvrir les spectacles",
     "heroSecondary": "Comment ça marche",
+    "organizerBandTitle": "Vous organisez un événement ?",
+    "organizerBandText": "Vendez vos billets avec ticketick : gratuit pour les événements gratuits, dès CHF 0.50 + 1,8 % par billet payant.",
+    "organizerBandCta": "Voir les tarifs",
     "payments": "PostFinance, Stripe, PayPal",
     "ticketsByEmail": "Billets par e-mail",
     "sectionAll": "Tous les spectacles",
@@ -207,6 +210,8 @@
     "success": "Merci ! Votre commande est confirmée.",
     "successHint": "Vos billets ont été envoyés à {email}.",
     "backHome": "Retour à l'accueil",
+    "organizerHint": "Vous organisez aussi des événements ?",
+    "organizerHintCta": "Découvrir la billetterie ticketick",
     "downloadPdf": "Télécharger le PDF",
     "printTickets": "Imprimer les billets",
     "pdfHint": "Un PDF par personne : événement, type de tarif et numéro de billet. Ouvrez-le pour l’imprimer.",
@@ -587,7 +592,7 @@
     "faqSetupQ": "Combien de temps pour ouvrir une billetterie ?",
     "faqSetupA": "L’accès n’est pas en libre-service : on se parle d’abord, puis on ouvre votre espace. Un spectacle simple se prépare en quelques jours.",
     "faqFeesQ": "Quels sont les tarifs ?",
-    "faqFeesA": "Ils dépendent du format (un événement ou un suivi). On vous les présente au rendez-vous, avant tout engagement. Rien n’est prélevé dans votre dos.",
+    "faqFeesA": "Les événements gratuits sont gratuits. Pour les billets payants : CHF 0.50 + 1,8 % par billet en libre-service, CHF 0.90 + 3,5 % avec notre accompagnement. Pas d’abonnement ni de frais d’ouverture ; le détail est sur la page Tarifs.",
     "faqDoorQ": "Comment se passe le contrôle le jour J ?",
     "faqDoorA": "Une application scanne le QR de chaque billet. Un code ne passe qu’une fois. Le matériel et l’équipe d’entrée restent les vôtres.",
     "closeTitle": "Un projet d’événement ?",
@@ -607,7 +612,8 @@
     "cookieSettings": "Cookies",
     "colInfo": "Infos",
     "colLegal": "Légal",
-    "developers": "API & agents IA"
+    "developers": "API & agents IA",
+    "pricing": "Tarifs"
   },
   "auth": {
     "signIn": "Se connecter",

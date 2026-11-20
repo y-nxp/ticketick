@@ -164,6 +164,22 @@ export default async function HomePage({
           eagerFirst={featured.length === 0}
         />
       </section>
+
+      {/* ORGANISATEURS : la plupart des visiteurs sont des acheteurs, certains organisent aussi. */}
+      <section className="container-page mt-16">
+        <div className="flex flex-col items-start justify-between gap-5 rounded-card border border-border bg-card p-6 sm:flex-row sm:items-center sm:p-8">
+          <div className="max-w-2xl">
+            <h2 className="text-xl font-bold tracking-tight">{t("organizerBandTitle")}</h2>
+            <p className="mt-1 text-muted-foreground">{t("organizerBandText")}</p>
+          </div>
+          <Link href="/pricing" className="shrink-0">
+            <Button size="lg" variant="outline" className="gap-2">
+              {t("organizerBandCta")}
+              <ArrowRight className="size-4" />
+            </Button>
+          </Link>
+        </div>
+      </section>
     </>
   );
 }

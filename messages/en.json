@@ -28,6 +28,9 @@
     "heroSubtitle": "Concerts, theatre, festivals, comedy and more. Book your tickets in seconds.",
     "heroCta": "Explore events",
     "heroSecondary": "How it works",
+    "organizerBandTitle": "Organising an event?",
+    "organizerBandText": "Sell your tickets with ticketick: free for free events, from CHF 0.50 + 1.8% per paid ticket.",
+    "organizerBandCta": "See pricing",
     "payments": "PostFinance, Stripe, PayPal",
     "ticketsByEmail": "Tickets by email",
     "sectionAll": "All events",
@@ -207,6 +210,8 @@
     "success": "Thank you! Your order is confirmed.",
     "successHint": "Your tickets have been sent to {email}.",
     "backHome": "Back to home",
+    "organizerHint": "Do you organise events too?",
+    "organizerHintCta": "Discover ticketick ticketing",
     "downloadPdf": "Download PDF",
     "printTickets": "Print tickets",
     "pdfHint": "One page per person: event, fare type and ticket number. Open it to print.",
@@ -587,7 +592,7 @@
     "faqSetupQ": "How long to open ticketing?",
     "faqSetupA": "Access is not self-serve: we talk first, then we open your space. A simple show is ready in a few days.",
     "faqFeesQ": "What does it cost?",
-    "faqFeesA": "It depends on the format (one event or an ongoing run). We show you the figures at the meeting, before any commitment. Nothing is taken behind your back.",
+    "faqFeesA": "Free events are free. For paid tickets: CHF 0.50 + 1.8% per ticket self-service, CHF 0.90 + 3.5% with our support. No subscription or setup fee; details are on the Pricing page.",
     "faqDoorQ": "How does door control work on the day?",
     "faqDoorA": "An app scans each ticket’s QR code. A code is admitted only once. The hardware and the door team remain yours.",
     "closeTitle": "Planning an event?",
@@ -607,7 +612,8 @@
     "cookieSettings": "Cookies",
     "colInfo": "Info",
     "colLegal": "Legal",
-    "developers": "API & AI agents"
+    "developers": "API & AI agents",
+    "pricing": "Pricing"
   },
   "auth": {
     "signIn": "Sign in",
