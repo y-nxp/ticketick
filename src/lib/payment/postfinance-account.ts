@@ -94,3 +94,17 @@ export async function enabledPostfinanceAccounts(): Promise<PostfinanceAccount[]
   });
   return rows.map(toAccount).filter((a): a is PostfinanceAccount => a !== null);
 }
+
+/**
+ * Espaces où relire une transaction inconnue : celui qui l'envoie s'il est
+ * connu (même désactivé depuis), sinon tous les espaces actifs.
+ */
+export async function postfinanceAccountsForSpace(
+  spaceId?: number,
+): Promise<PostfinanceAccount[]> {
+  const rows = await prisma.organizerPostfinanceAccount.findMany({
+    where: spaceId ? { spaceId } : { enabled: true },
+    select,
+  });
+  return rows.map(toAccount).filter((a): a is PostfinanceAccount => a !== null);
+}

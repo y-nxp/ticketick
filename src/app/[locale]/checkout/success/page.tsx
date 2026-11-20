@@ -1,7 +1,7 @@
 import { cookies, headers } from "next/headers";
 import { after } from "next/server";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { AlertTriangle, CheckCircle2, FileDown, Printer } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, FileDown, Printer } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { CartClearer } from "@/components/cart/cart-clearer";
@@ -18,6 +18,7 @@ import { sendMetaPurchase } from "@/lib/analytics/meta-capi";
 import { organizerTagsFromRow } from "@/lib/analytics/organizer-tags";
 import { publicAppOrigin } from "@/lib/app-url";
 import { clientIpFrom } from "@/lib/rate-limit";
+import { PendingRefresh } from "./pending-refresh";
 import { t as tr, type Translated } from "@/lib/types";
 
 export default async function CheckoutSuccessPage({
@@ -81,6 +82,19 @@ export default async function CheckoutSuccessPage({
       })
     : null;
   const refundDue = paid ? isRefundDue(paid) : false;
+  // Ce que l'acheteur doit lire : la commande n'est confirmée que payée.
+  // Sans référence (ancien lien), on garde le remerciement.
+  const outcome: "done" | "refund" | "pending" | "failed" = !ref
+    ? "done"
+    : !paid
+      ? "failed"
+      : refundDue
+        ? "refund"
+        : paid.status === "PAID"
+          ? "done"
+          : paid.status === "CANCELLED" || paid.status === "REFUNDED"
+            ? "failed"
+            : "pending";
   const cookieStore = await cookies();
 
   const purchase =
@@ -131,9 +145,26 @@ export default async function CheckoutSuccessPage({
 
   return (
     <div className="container-page max-w-2xl py-20 text-center">
-      <CartClearer />
+      {outcome === "failed" ? null : <CartClearer />}
+      {outcome === "pending" ? <PendingRefresh /> : null}
       {purchase ? <PurchaseTracker {...purchase} /> : null}
-      {refundDue ? (
+      {outcome === "pending" ? (
+        <>
+          <div className="mx-auto grid size-16 place-items-center rounded-full bg-secondary">
+            <Clock className="size-8 text-muted-foreground" />
+          </div>
+          <h1 className="mt-6 text-3xl font-bold">{t("pendingTitle")}</h1>
+          <p className="mt-4 text-muted-foreground">{t("pending")}</p>
+        </>
+      ) : outcome === "failed" ? (
+        <>
+          <div className="mx-auto grid size-16 place-items-center rounded-full bg-[var(--warning)]/12">
+            <AlertTriangle className="size-8 text-[var(--warning)]" />
+          </div>
+          <h1 className="mt-6 text-3xl font-bold">{t("notConfirmedTitle")}</h1>
+          <p className="mt-4 text-muted-foreground">{t("notConfirmed")}</p>
+        </>
+      ) : refundDue ? (
         <>
           <div className="mx-auto grid size-16 place-items-center rounded-full bg-[var(--warning)]/12">
             <AlertTriangle className="size-8 text-[var(--warning)]" />
@@ -173,14 +204,19 @@ export default async function CheckoutSuccessPage({
           </div>
         </div>
       ) : null}
+      {outcome === "failed" ? (
+        <Link href="/contact" className="mt-6 mr-3 inline-block">
+          <Button size="lg">{t("contactUs")}</Button>
+        </Link>
+      ) : null}
       <Link href={shopHome} className="mt-6 inline-block">
-        <Button size="lg" variant={pdfHref ? "outline" : "default"}>
+        <Button size="lg" variant={pdfHref || outcome === "failed" ? "outline" : "default"}>
           {t("backHome")}
         </Button>
       </Link>
-      {ref && !refundDue && !signedIn ? <AccountInvite /> : null}
+      {ref && outcome === "done" && !signedIn ? <AccountInvite /> : null}
       {/* Pas dans la boutique habillée d'un organisateur : ses acheteurs restent chez lui. */}
-      {!origin && !refundDue ? (
+      {!origin && outcome === "done" ? (
         <p className="mt-10 text-sm text-muted-foreground">
           {t("organizerHint")}{" "}
           <Link href="/organizer" className="font-medium text-foreground underline underline-offset-4">

@@ -17,9 +17,13 @@ import {
   fetchPostfinanceTransaction,
   isPaidTransactionState,
   orderReferenceFromMerchant,
+  PostfinanceError,
   type PostfinanceTransaction,
 } from "@/lib/payment/postfinance";
-import { postfinanceAccountForOrder } from "@/lib/payment/postfinance-account";
+import {
+  postfinanceAccountForOrder,
+  postfinanceAccountsForSpace,
+} from "@/lib/payment/postfinance-account";
 
 /**
  * Solde une commande carte d'après l'état réel chez PostFinance.
@@ -42,8 +46,10 @@ export async function settlePostfinanceTransaction(
     return;
   }
 
+  // Autorisée mais pas encore débitée : PostFinance donne alors un montant
+  // débité à 0, le montant à retenir est celui de l'autorisation.
   const amountCents = amountToCents(
-    transaction.completedAmount ?? transaction.authorizationAmount,
+    transaction.completedAmount || transaction.authorizationAmount,
   );
   if (amountCents == null) {
     console.error("[postfinance] montant absent", {
@@ -77,13 +83,22 @@ export async function settlePostfinanceTransaction(
 
 /**
  * Webhook : l'identifiant de transaction mène à la commande, et la commande
- * à l'espace de son organisateur, où la transaction est relue. Une
- * transaction inconnue de ticketick est ignorée.
+ * à l'espace de son organisateur, où la transaction est relue. La
+ * transaction d'une tentative précédente (paiement relancé) compte aussi.
+ * Une transaction inconnue est relue dans l'espace qui l'envoie et retrouvée
+ * par la référence de commande qu'elle porte.
  */
-export async function settlePostfinanceById(transactionId: number): Promise<void> {
+export async function settlePostfinanceById(
+  transactionId: number,
+  spaceId?: number,
+): Promise<void> {
+  const ref = String(transactionId);
   const payment = await prisma.payment.findFirst({
-    where: { provider: "postfinance", providerRef: String(transactionId) },
-    select: { status: true, order: { select: { reference: true } } },
+    where: {
+      provider: "postfinance",
+      OR: [{ providerRef: ref }, { previousRefs: { has: ref } }],
+    },
+    select: { status: true, providerRef: true, order: { select: { reference: true } } },
   });
   if (!payment) {
     const chargeId = await chargeForPostfinanceTransaction(transactionId);
@@ -91,36 +106,46 @@ export async function settlePostfinanceById(transactionId: number): Promise<void
       await settleChargePostfinance(chargeId);
       return;
     }
-    console.warn("[postfinance] transaction sans commande", { transactionId });
+    await settleUnknownTransaction(transactionId, spaceId);
     return;
   }
-  if (payment.status === "COMPLETED") return;
+  if (payment.status === "COMPLETED" && payment.providerRef === ref) return;
   await settleWithOrderAccount(payment.order.reference, transactionId);
 }
 
-/** Reprend une commande encore en attente quand l'acheteur revient. */
+/**
+ * Reprend une commande encore en attente quand l'acheteur revient : la
+ * dernière transaction d'abord, puis celles des tentatives précédentes.
+ */
 export async function settlePostfinanceOrder(reference: string): Promise<void> {
   const payment = await prisma.payment.findFirst({
     where: {
       provider: "postfinance",
       order: { reference },
     },
-    select: { providerRef: true, status: true },
+    select: { providerRef: true, previousRefs: true, status: true },
   });
 
   if (!payment?.providerRef || payment.status === "COMPLETED") return;
 
-  const id = Number(payment.providerRef);
-  if (!Number.isInteger(id) || id <= 0) return;
+  const ids = [payment.providerRef, ...[...payment.previousRefs].reverse()]
+    .map(Number)
+    .filter((id) => Number.isInteger(id) && id > 0);
 
-  await settleWithOrderAccount(reference, id);
+  for (const id of new Set(ids)) {
+    if (await settleWithOrderAccount(reference, id)) return;
+  }
 }
 
-async function settleWithOrderAccount(reference: string, transactionId: number) {
+/** Relit la transaction dans l'espace de la commande ; `true` si elle est payée. */
+async function settleWithOrderAccount(
+  reference: string,
+  transactionId: number,
+): Promise<boolean> {
   const account = await postfinanceAccountForOrder(reference);
   if (!account) {
     console.error("[postfinance] espace de l'organisateur introuvable", { reference });
-    return;
+    return false;
   }
   const transaction = await fetchPostfinanceTransaction(account, transactionId);
   // La transaction relue doit bien être celle de cette commande.
@@ -132,9 +157,48 @@ async function settleWithOrderAccount(reference: string, transactionId: number) 
       reference,
       transactionId,
     });
+    return false;
+  }
+  if (!isPaidTransactionState(transaction.state)) return false;
+  await settlePostfinanceTransaction(transaction);
+  return true;
+}
+
+/**
+ * Transaction que ticketick ne connaît pas (créée avant que l'on garde les
+ * tentatives précédentes) : relue dans l'espace qui l'envoie, elle doit
+ * porter la référence d'une commande de l'organisateur de cet espace.
+ */
+async function settleUnknownTransaction(transactionId: number, spaceId?: number) {
+  const accounts = await postfinanceAccountsForSpace(spaceId);
+  for (const account of accounts) {
+    let transaction: PostfinanceTransaction;
+    try {
+      transaction = await fetchPostfinanceTransaction(account, transactionId);
+    } catch (error) {
+      // Transaction d'un autre espace : on passe au suivant.
+      if (error instanceof PostfinanceError && (error.status === 404 || error.status === 403)) {
+        continue;
+      }
+      throw error;
+    }
+    const reference =
+      transaction.metaData?.reference ??
+      orderReferenceFromMerchant(transaction.merchantReference);
+    const owner = reference ? await postfinanceAccountForOrder(reference) : null;
+    if (!reference || owner?.organizerId !== account.organizerId) {
+      console.warn("[postfinance] transaction sans commande", { transactionId, reference });
+      return;
+    }
+    console.warn("[postfinance] transaction retrouvée par sa référence", {
+      transactionId,
+      reference,
+      state: transaction.state,
+    });
+    await settlePostfinanceTransaction(transaction);
     return;
   }
-  await settlePostfinanceTransaction(transaction);
+  console.warn("[postfinance] transaction sans commande", { transactionId });
 }
 
 /**

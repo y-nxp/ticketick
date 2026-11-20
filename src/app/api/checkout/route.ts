@@ -314,6 +314,18 @@ export async function POST(request: Request) {
 
     if (session.provider !== "mock") {
       try {
+        // Paiement relancé (retour depuis PostFinance, double clic) : la
+        // transaction précédente reste connue, l'acheteur a pu payer dessus.
+        const previous = await prisma.payment.findUnique({
+          where: { orderId: order.id },
+          select: { provider: true, providerRef: true },
+        });
+        const keep =
+          previous?.providerRef &&
+          previous.provider === session.provider &&
+          previous.providerRef !== session.sessionId
+            ? { previousRefs: { push: previous.providerRef } }
+            : {};
         await prisma.payment.upsert({
           where: { orderId: order.id },
           create: {
@@ -325,7 +337,7 @@ export async function POST(request: Request) {
             amountCents: order.totalCents,
             currency: order.currency,
           },
-          update: { provider: session.provider, providerRef: session.sessionId },
+          update: { provider: session.provider, providerRef: session.sessionId, ...keep },
         });
       } catch (error) {
         console.error("[checkout] enregistrement du paiement", error);
