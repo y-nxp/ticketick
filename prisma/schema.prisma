@@ -301,6 +301,13 @@ model User {
   /// les spectacles de tous les organisateurs.
   doorOrganizer   Organizer? @relation("DoorStaff", fields: [doorOrganizerId], references: [id], onDelete: SetNull)
   doorOrganizerId String?
+  /// Membre de l'équipe d'entrée : scanne les billets (contrôle)…
+  doorScan        Boolean    @default(true)
+  /// … et/ou vend à la caisse sur place.
+  doorTill        Boolean    @default(false)
+  /// Caisse limitée à un spectacle ; vide, tous ceux de l'organisateur.
+  doorTillEvent   Event?     @relation("TillStaff", fields: [doorTillEventId], references: [id], onDelete: SetNull)
+  doorTillEventId String?
 
   /// Responsable invité : organisateur dont il consulte les ventes.
   statsOrganizer   Organizer? @relation("StatsViewers", fields: [statsOrganizerId], references: [id], onDelete: SetNull)
@@ -600,6 +607,9 @@ model Event {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  /// Vendeurs de la caisse limités à ce spectacle.
+  tillStaff User[] @relation("TillStaff")
 
   @@index([status, visibility])
   @@index([organizerId])
@@ -1133,20 +1143,20 @@ model Ticket {
 }
 
 model Payment {
-  id          String        @id @default(cuid())
-  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderId     String        @unique
-  provider    String // "postfinance" | "stripe" | "paypal" | "iban" | "cash" | "free" | "mock"
-  providerRef String? // id de transaction PostFinance ou session Stripe
+  id           String        @id @default(cuid())
+  order        Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId      String        @unique
+  provider     String // "postfinance" | "stripe" | "paypal" | "iban" | "cash" | "free" | "mock"
+  providerRef  String? // id de transaction PostFinance ou session Stripe
   /// Transactions des tentatives précédentes (paiement relancé) : l'acheteur
   /// peut payer sur l'une d'elles, elle doit encore solder la commande.
-  previousRefs String[] @default([])
-  method      PaymentMethod
-  status      PaymentStatus @default(PENDING)
-  amountCents Int
-  currency    String        @default("CHF")
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  previousRefs String[]      @default([])
+  method       PaymentMethod
+  status       PaymentStatus @default(PENDING)
+  amountCents  Int
+  currency     String        @default("CHF")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 enum ChargeKind {

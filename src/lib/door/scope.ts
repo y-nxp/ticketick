@@ -20,10 +20,32 @@ export function doorEventWhere(user: CurrentUser): Prisma.EventWhereInput {
   return { id: { in: [] } };
 }
 
+/** Contrôle des billets : l'organisateur, l'admin, et l'équipe d'entrée qui en a l'accès. */
+export function canScan(user: CurrentUser): boolean {
+  if (user.role === "DOOR_STAFF") return user.doorScan;
+  return user.role === "ADMIN" || (user.role === "ORGANIZER" && user.organizerId != null);
+}
+
+/** Caisse sur place : l'organisateur, l'admin, et l'équipe d'entrée qui en a l'accès. */
+export function canUseTill(user: CurrentUser): boolean {
+  if (user.role === "DOOR_STAFF") return user.doorTill;
+  return user.role === "ADMIN" || (user.role === "ORGANIZER" && user.organizerId != null);
+}
+
+/** Spectacles vendus à la caisse : ceux du contrôle, ou le seul spectacle confié. */
+export function tillEventWhere(user: CurrentUser): Prisma.EventWhereInput {
+  const where = doorEventWhere(user);
+  if (user.role === "DOOR_STAFF" && user.doorTillEventId) {
+    return { ...where, id: user.doorTillEventId };
+  }
+  return where;
+}
+
 export async function canControlSession(
   user: CurrentUser,
   sessionId: string,
 ): Promise<boolean> {
+  if (!canScan(user)) return false;
   const n = await prisma.eventSession.count({
     where: { id: sessionId, event: doorEventWhere(user) },
   });

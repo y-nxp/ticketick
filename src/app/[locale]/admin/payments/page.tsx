@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { CreditCard, Landmark, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
+import { TillSettings } from "@/components/admin/till-settings";
 import { getPaymentSettings } from "@/lib/data/admin";
 import { pickCardProvider } from "@/lib/payment/card-account";
 import { formatDate } from "@/lib/utils";
@@ -242,6 +243,8 @@ export default async function AdminPaymentsPage({
               }
             />
           </section>
+
+          <TillSettings organizerId={organizerId} />
 
           <section className="mt-6 rounded-card border border-border bg-card p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">

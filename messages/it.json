@@ -526,7 +526,7 @@
       "methodCash": "Contanti",
       "twintAsk": "Il cliente paga con TWINT",
       "twintTo": "al numero",
-      "twintNoNumber": "Numero TWINT non impostato (pagina Cassa Stripe): usate il vostro numero abituale.",
+      "twintNoNumber": "Numero TWINT non impostato (Team › Cassa sul posto): usa il tuo numero abituale.",
       "twintPaid": "Pagamento TWINT ricevuto",
       "backToMethods": "Altro mezzo di pagamento",
       "cashAsk": "Il cliente paga in contanti",
@@ -535,7 +535,12 @@
       "cashPaid": "Contanti incassati",
       "totalsTitle": "Cassa di questo concerto: {count, plural, one {# biglietto venduto} other {# biglietti venduti}}",
       "totalsAll": "Totale incassato",
-      "salesCount": "{count, plural, one {# vendita} other {# vendite}}"
+      "salesCount": "{count, plural, one {# vendita} other {# vendite}}",
+      "online": "online",
+      "offline": "offline",
+      "cardAsk": "Incassa questo importo sul terminale di pagamento",
+      "cardPaid": "Pagamento con carta ricevuto",
+      "myCash": "I tuoi contanti: {amount} ({count, plural, one {# vendita} other {# vendite}})"
     }
   },
   "about": {
@@ -1428,13 +1433,21 @@
         "forbidden": "Permessi insufficienti.",
         "otherRole": "Questo account ha già un altro ruolo (organizzatore, membro di un altro team…). Contatta ticketick.",
         "throttled": "Troppi inviti in poco tempo. Riprovate più tardi.",
-        "unavailable": "Impossibile inviare l'e-mail. Riprovate."
+        "unavailable": "Impossibile inviare l'e-mail. Riprovate.",
+        "noAccess": "Seleziona il controllo, la cassa o entrambi."
       },
       "access": "Accesso",
       "accessStats": "Consultazione vendite",
       "accessStatsHint": "Vede vendite e ordini, senza poter modificare nulla.",
-      "accessDoor": "Controllo all'ingresso",
-      "accessDoorHint": "Scansiona i biglietti dei tuoi spettacoli con l'app di controllo. Non vede altro."
+      "accessDoor": "Squadra d'ingresso",
+      "accessDoorHint": "Controllo dei biglietti e/o cassa sul posto. Non vede nient'altro.",
+      "doorWhat": "Cosa fa sul posto",
+      "doorScan": "Controllo dei biglietti",
+      "doorScanHint": "Scansiona i biglietti all'ingresso con l'app di controllo.",
+      "doorTill": "Cassa sul posto",
+      "doorTillHint": "Vende i biglietti cartacei sul posto: contanti, carta o TWINT.",
+      "tillEvent": "Cassa per",
+      "tillEventAll": "Tutti gli spettacoli"
     },
     "paypal": {
       "title": "PayPal",
@@ -1742,6 +1755,19 @@
           "iban": "IBAN non valido: lo verifichi.",
           "beneficiary": "Indichi il titolare del conto."
         }
+      },
+      "till": {
+        "title": "Cassa sul posto",
+        "hint": "Come incassa la cassa dell'app d'ingresso. «Online»: il pagamento è verificato automaticamente; «offline»: la cassa lo conferma a mano.",
+        "card": "Carta",
+        "twint": "TWINT",
+        "cash": "Contanti",
+        "online": "online",
+        "offline": "offline",
+        "cardOnline": "Collect for Stripe e il suo lettore (WisePad): il pagamento è verificato presso Stripe.",
+        "cardOffline": "Il vostro terminale di pagamento; la cassa conferma il pagamento. Per incassare online (Collect e lettore WisePad), fate collegare Stripe da ticketick.",
+        "twintOffline": "Il cliente paga sul vostro numero TWINT, la cassa conferma la ricezione. Un TWINT collegato potrà essere aggiunto in seguito.",
+        "cashHint": "Con il calcolo del resto e il totale dei contanti di ogni venditore."
       }
     },
     "reservation": {
@@ -2058,7 +2084,8 @@
       "optionsHeading": "Opzioni scelte — {date}",
       "suisaLink": "Rapporto SUISA",
       "eventReports": "Rapporti prima di ogni evento",
-      "eventReportsHint": "Ogni mattina alle 7 nella settimana che precede una data e il giorno stesso, poi un’ora prima dell’inizio: solo le date interessate, riunite in un unico rapporto se più date si svolgono insieme. Agli stessi destinatari."
+      "eventReportsHint": "Ogni mattina alle 7 nella settimana che precede una data e il giorno stesso, poi un’ora prima dell’inizio: solo le date interessate, riunite in un unico rapporto se più date si svolgono insieme. Agli stessi destinatari.",
+      "tillLink": "Cassa sul posto"
     },
     "suisa": {
       "title": "Rapporto SUISA",
@@ -2486,6 +2513,37 @@
         "saved": "Numero salvato.",
         "error": "Numero non valido."
       }
+    },
+    "tillReport": {
+      "title": "Cassa sul posto",
+      "subtitle": "Cosa ha venduto la cassa dell'app d'ingresso per ogni concerto: per mezzo di pagamento, per tariffa e per venditore.",
+      "back": "Rapporti",
+      "empty": "Nessuna vendita alla cassa per ora.",
+      "concerts": "Concerti",
+      "salesCount": "{count, plural, one {# vendita} other {# vendite}}",
+      "collected": "Totale incassato",
+      "tickets": "Biglietti",
+      "ofWhichFree": "di cui {count} gratuiti",
+      "sales": "Vendite",
+      "byMethod": "Per mezzo di pagamento",
+      "byTariff": "Per tariffa",
+      "bySeller": "Per venditore",
+      "detail": "Dettaglio delle vendite",
+      "tariff": "Tariffa",
+      "price": "Prezzo",
+      "quantity": "Quantità",
+      "amount": "Importo",
+      "seller": "Venditore",
+      "time": "Ora",
+      "method": "Mezzo",
+      "total": "Totale",
+      "card": "Carta",
+      "twint": "TWINT",
+      "cash": "Contanti",
+      "online": "online",
+      "offline": "offline",
+      "free": "Gratuito",
+      "cashHint": "Contanti: quanto ogni venditore deve avere in cassa, fondo cassa escluso."
     }
   },
   "pay": {

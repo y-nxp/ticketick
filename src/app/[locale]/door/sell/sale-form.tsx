@@ -20,19 +20,22 @@ export interface SaleFormTariff {
 /** Plafond d'une ligne : bien au-delà d'une vente au guichet. */
 const MAX_PER_LINE = 50;
 
-/** Étape du bas de l'écran : choix du moyen, ou confirmation TWINT / espèces. */
-type Step = "choose" | "twint" | "cash";
+/** Étape du bas de l'écran : choix du moyen, ou confirmation carte hors ligne / TWINT / espèces. */
+type Step = "choose" | "card" | "twint" | "cash";
 
 export function DoorSaleForm({
   sessionId,
   tariffs,
   locale,
   twintNumber,
+  cardOnline,
 }: {
   sessionId: string;
   tariffs: SaleFormTariff[];
   locale: string;
   twintNumber: string | null;
+  /** Carte encaissée par Collect (Stripe branché) ; sinon terminal à part, confirmé à la main. */
+  cardOnline: boolean;
 }) {
   const t = useTranslations("door.sell");
   const router = useRouter();
@@ -141,6 +144,30 @@ export function DoorSaleForm({
             </div>
             <p className="text-center text-xs text-muted-foreground">{t("collectHint")}</p>
           </>
+        ) : step === "card" ? (
+          <div className="space-y-3 rounded-card border border-border bg-card p-4 text-center">
+            <p className="text-sm text-muted-foreground">{t("cardAsk")}</p>
+            <p className="text-3xl font-bold tabular-nums">{money(total)}</p>
+            <Button
+              type="submit"
+              name="method"
+              value="card"
+              size="lg"
+              className="h-14 w-full text-base"
+              disabled={pending || done}
+            >
+              {pending || done ? <Loader2 className="size-5 animate-spin" /> : <CreditCard className="size-5" />}
+              {t("cardPaid")}
+            </Button>
+            <button
+              type="button"
+              onClick={back}
+              disabled={pending || done}
+              className="text-sm text-muted-foreground underline"
+            >
+              {t("backToMethods")}
+            </button>
+          </div>
         ) : step === "twint" ? (
           <div className="space-y-3 rounded-card border border-border bg-card p-4 text-center">
             <p className="text-sm text-muted-foreground">{t("twintAsk")}</p>
@@ -231,33 +258,50 @@ export function DoorSaleForm({
           <>
             <p className="text-center text-sm">{t("totalToPay", { count, amount: money(total) })}</p>
             <div className="grid grid-cols-3 gap-2">
-              <Button
-                type="submit"
-                name="method"
-                value="card"
-                size="lg"
-                className="h-16 flex-col gap-1"
-                disabled={pending}
-              >
-                {pending ? <Loader2 className="size-5 animate-spin" /> : <CreditCard className="size-5" />}
-                {t("methodCard")}
-              </Button>
+              {cardOnline ? (
+                <Button
+                  type="submit"
+                  name="method"
+                  value="card"
+                  size="lg"
+                  className="h-16 flex-col gap-0.5"
+                  disabled={pending}
+                >
+                  {pending ? <Loader2 className="size-5 animate-spin" /> : <CreditCard className="size-5" />}
+                  {t("methodCard")}
+                  <span className="text-[11px] font-normal opacity-80">{t("online")}</span>
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="h-16 flex-col gap-0.5"
+                  disabled={pending}
+                  onClick={() => setStep("card")}
+                >
+                  <CreditCard className="size-5" />
+                  {t("methodCard")}
+                  <span className="text-[11px] font-normal text-muted-foreground">{t("offline")}</span>
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="outline"
                 size="lg"
-                className="h-16 flex-col gap-1"
+                className="h-16 flex-col gap-0.5"
                 disabled={pending}
                 onClick={() => setStep("twint")}
               >
                 <Smartphone className="size-5" />
                 {t("methodTwint")}
+                <span className="text-[11px] font-normal text-muted-foreground">{t("offline")}</span>
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="lg"
-                className="h-16 flex-col gap-1"
+                className="h-16 flex-col gap-0.5"
                 disabled={pending}
                 onClick={() => setStep("cash")}
               >

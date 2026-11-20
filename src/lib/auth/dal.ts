@@ -35,6 +35,12 @@ export interface CurrentUser {
   organizerId: string | null;
   /** Contrôleur rattaché à un organisateur ; `null` pour tous. */
   doorOrganizerId: string | null;
+  /** Équipe d'entrée : contrôle des billets. */
+  doorScan: boolean;
+  /** Équipe d'entrée : caisse sur place. */
+  doorTill: boolean;
+  /** Caisse limitée à ce spectacle ; `null` pour tous. */
+  doorTillEventId: string | null;
   /** Responsable invité : organisateur dont il consulte les ventes. */
   statsOrganizerId: string | null;
   /** Agent : point de vente pour lequel il vend. */
@@ -74,6 +80,9 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
             locale: true,
             active: true,
             doorOrganizerId: true,
+            doorScan: true,
+            doorTill: true,
+            doorTillEventId: true,
             statsOrganizerId: true,
             resellerId: true,
             emailVerifiedAt: true,
@@ -136,6 +145,9 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     locale: session.user.locale,
     organizerId: session.user.organizer?.id ?? null,
     doorOrganizerId: session.user.doorOrganizerId,
+    doorScan: session.user.doorScan,
+    doorTill: session.user.doorTill,
+    doorTillEventId: session.user.doorTillEventId,
     statsOrganizerId: session.user.statsOrganizerId,
     resellerId: session.user.resellerId,
     emailVerified: session.user.emailVerifiedAt != null,

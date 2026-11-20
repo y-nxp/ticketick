@@ -3,8 +3,8 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowLeft, CalendarX2, ChevronRight } from "lucide-react";
 import { Link, redirect } from "@/i18n/navigation";
 import { requireRole } from "@/lib/auth/dal";
-import { currentSaleSession, doorTillEnabled, getSaleSession, getSaleSessions } from "@/lib/door/sale";
-import { DOOR_ROLES } from "@/lib/door/scope";
+import { currentSaleSession, getSaleSession, getSaleSessions } from "@/lib/door/sale";
+import { canScan, canUseTill, DOOR_ROLES } from "@/lib/door/scope";
 import { cn, EVENT_TIME_ZONE } from "@/lib/utils";
 import { DoorHeader } from "../door-header";
 import { DoorSaleForm } from "./sale-form";
@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * Caisse sur place : tous les concerts à venir, le prochain en tête ; on le
- * choisit, puis les tarifs, puis Collect encaisse.
+ * choisit, puis les tarifs, puis le moyen de paiement.
  */
 export default async function DoorSellPage({
   params,
@@ -32,7 +32,7 @@ export default async function DoorSellPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const user = await requireRole(DOOR_ROLES, "/door/sell");
-  if (!(await doorTillEnabled(user))) redirect({ href: "/door", locale });
+  if (!canUseTill(user)) redirect({ href: "/door", locale });
   const t = await getTranslations("door.sell");
   const { s } = await searchParams;
   const selected = s ? await getSaleSession(user, s, locale) : null;
@@ -52,7 +52,7 @@ export default async function DoorSellPage({
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <DoorHeader active="sell" till />
+      <DoorHeader active="sell" till={canScan(user)} />
       <div className="mx-auto w-full max-w-lg flex-1 space-y-4 px-4 py-5">
         <TillNotice />
         {selected ? (
@@ -73,6 +73,7 @@ export default async function DoorSellPage({
               sessionId={selected.id}
               locale={locale}
               twintNumber={selected.twintNumber}
+              cardOnline={selected.cardOnline}
               tariffs={selected.tariffs.map(({ id, name, priceCents, soldAtTill }) => ({
                 id,
                 name,

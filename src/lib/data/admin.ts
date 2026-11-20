@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin, requireCatalog } from "@/lib/auth/dal";
 import { statsActor } from "@/lib/admin/access";
 import { sumInventory } from "@/lib/inventory";
+import type { Translated } from "@/lib/types";
 
 function catalogOrderWhere(
   organizerId: string | null,
@@ -238,6 +239,28 @@ export async function getTeam(requestedOrganizerId?: string) {
           role: true,
           lastLoginAt: true,
           passwordHash: true,
+          doorScan: true,
+          doorTill: true,
+          doorTillEvent: { select: { title: true } },
+        },
+      })
+    : [];
+
+  // Spectacles proposés pour limiter la caisse d'un membre : publiés, avec
+  // une date à venir (ou du jour).
+  const events = organizerId
+    ? await prisma.event.findMany({
+        where: {
+          organizerId,
+          status: { in: ["PUBLISHED", "SOLD_OUT"] },
+          sessions: { some: { startsAt: { gte: new Date(Date.now() - 24 * 3600_000) } } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+        select: {
+          id: true,
+          title: true,
+          sessions: { orderBy: { startsAt: "asc" }, take: 1, select: { startsAt: true } },
         },
       })
     : [];
@@ -245,9 +268,15 @@ export async function getTeam(requestedOrganizerId?: string) {
   return {
     organizers,
     organizerId: organizerId ?? null,
-    members: members.map(({ passwordHash, role, ...m }) => ({
+    events: events
+      .map((e) => ({ id: e.id, title: e.title as Translated, firstAt: e.sessions[0]?.startsAt ?? null }))
+      .sort((a, b) => (a.firstAt?.getTime() ?? 0) - (b.firstAt?.getTime() ?? 0)),
+    members: members.map(({ passwordHash, role, doorScan, doorTill, doorTillEvent, ...m }) => ({
       ...m,
       access: (role === "DOOR_STAFF" ? "door" : "stats") as "door" | "stats",
+      scan: role === "DOOR_STAFF" && doorScan,
+      till: role === "DOOR_STAFF" && doorTill,
+      tillEvent: doorTillEvent ? (doorTillEvent.title as Translated) : null,
       activated: passwordHash != null,
     })),
   };

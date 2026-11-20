@@ -1,7 +1,9 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { ChartColumn, ScanLine, UserPlus } from "lucide-react";
+import { ChartColumn, CreditCard, ScanLine, UserPlus } from "lucide-react";
+import { TillSettings } from "@/components/admin/till-settings";
 import { Badge } from "@/components/ui/badge";
 import { getTeam } from "@/lib/data/admin";
+import { t as tr } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import { InviteForm, OrganizerPicker, RevokeButton } from "./team-forms";
 
@@ -43,8 +45,22 @@ export default async function AdminTeamPage({
             <p className="mt-1 text-sm text-muted-foreground">
               {t("inviteHint")}
             </p>
-            <InviteForm organizerId={team.organizerId} locale={locale} />
+            <InviteForm
+              organizerId={team.organizerId}
+              locale={locale}
+              events={team.events.map((e) => ({
+                id: e.id,
+                label: [
+                  tr(e.title, locale),
+                  e.firstAt ? formatDate(e.firstAt, `${locale}-CH`, { day: "2-digit", month: "2-digit", year: "numeric" }) : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · "),
+              }))}
+            />
           </section>
+
+          <TillSettings organizerId={team.organizerId} />
 
           <div className="mt-6 overflow-x-auto rounded-card border border-border">
             <table className="w-full min-w-[36rem] text-sm">
@@ -65,14 +81,30 @@ export default async function AdminTeamPage({
                       <p className="text-xs text-muted-foreground">{v.email}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1.5 font-medium">
-                        {v.access === "door" ? (
-                          <ScanLine className="size-4 shrink-0 text-primary" />
-                        ) : (
+                      {v.access === "door" ? (
+                        <span className="flex flex-col gap-1">
+                          {v.scan ? (
+                            <span className="inline-flex items-center gap-1.5 font-medium">
+                              <ScanLine className="size-4 shrink-0 text-primary" />
+                              {t("doorScan")}
+                            </span>
+                          ) : null}
+                          {v.till ? (
+                            <span className="inline-flex items-center gap-1.5 font-medium">
+                              <CreditCard className="size-4 shrink-0 text-primary" />
+                              {t("doorTill")}
+                              <span className="text-xs font-normal text-muted-foreground">
+                                · {v.tillEvent ? tr(v.tillEvent, locale) : t("tillEventAll")}
+                              </span>
+                            </span>
+                          ) : null}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 font-medium">
                           <ChartColumn className="size-4 shrink-0 text-primary" />
-                        )}
-                        {t(v.access === "door" ? "accessDoor" : "accessStats")}
-                      </span>
+                          {t("accessStats")}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <Badge variant={v.activated ? "default" : "secondary"}>

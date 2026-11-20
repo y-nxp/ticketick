@@ -1,5 +1,5 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { BarChart3, Bus, Music, TicketCheck } from "lucide-react";
+import { BarChart3, Bus, Music, Store, TicketCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
@@ -147,6 +147,13 @@ export default async function ReportsPage({
           >
             <Music className="size-4" />
             {t("suisaLink")}
+          </Link>
+          <Link
+            href={{ pathname: "/admin/reports/till", query: own ? {} : { organizer: organizerId } }}
+            className={buttonVariants({ variant: "outline" })}
+          >
+            <Store className="size-4" />
+            {t("tillLink")}
           </Link>
         </div>
         {organizers.length > 1 ? (

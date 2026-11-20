@@ -8,7 +8,7 @@ import type { CatalogStep, TariffPlan } from "@/lib/payment/stripe-catalog-plan"
 import { prisma } from "@/lib/prisma";
 import { EVENT_TIME_ZONE, formatPrice } from "@/lib/utils";
 import { SyncButton } from "./sync-button";
-import { TwintNumberForm } from "./twint-number-form";
+import { TwintNumberForm } from "@/components/admin/twint-number-form";
 
 export const dynamic = "force-dynamic";
 
