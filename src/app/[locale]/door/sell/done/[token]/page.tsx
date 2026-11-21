@@ -55,8 +55,9 @@ export default async function DoorSaleDonePage({
                 <p className="mt-1 text-sm text-muted-foreground">{t("cancelledHint")}</p>
               )}
             </div>
+            {/* Retour à la caisse du concert de la vente, pas à la liste. */}
             <Link
-              href="/door/sell"
+              href={outcome.sessionId ? { pathname: "/door/sell", query: { s: outcome.sessionId } } : "/door/sell"}
               className="flex h-14 items-center justify-center rounded-control bg-primary text-base font-medium text-primary-foreground"
             >
               {t("backToSell")}

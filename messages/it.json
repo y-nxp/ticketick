@@ -511,6 +511,7 @@
         "stripe": "Stripe non risponde: verificate il pagamento in Stripe prima di riprovare."
       },
       "otherConcert": "Altro concerto",
+      "otherNights": "Altre serate",
       "noticeTitle": "Cassa di vendita sul posto.",
       "notice": "Vendita dei biglietti cartacei riservati in anticipo: nessun biglietto viene emesso e nessun posto viene occupato. Ogni vendita è contata per tariffa.",
       "next": "Prossimo",

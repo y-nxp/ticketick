@@ -67,6 +67,8 @@ export interface TillTotals {
 
 export interface SaleSession {
   id: string;
+  /** Spectacle de la séance : ses autres soirs se vendent à la même caisse. */
+  eventId: string;
   title: string;
   startsAt: Date;
   venue: string | null;
@@ -83,6 +85,7 @@ export interface SaleSession {
 
 const sessionSelect = {
   id: true,
+  eventId: true,
   startsAt: true,
   label: true,
   venue: { select: { name: true } },
@@ -128,6 +131,7 @@ function toSaleSession(
   const label = s.label ? translate(s.label as Translated, locale) : null;
   return {
     id: s.id,
+    eventId: s.eventId,
     title: label ? `${title} (${label})` : title,
     startsAt: s.startsAt,
     venue: s.venue?.name ?? null,
@@ -394,39 +398,44 @@ async function recordSale(
 
 // ───────────────────────────── Retour de Collect
 
+/**
+ * `sessionId` : le concert de la vente préparée, pour revenir à sa caisse
+ * (absent seulement si le lien de retour est illisible ou trop ancien).
+ */
 export type CompleteResult =
   | { status: "done"; saleId: string; again: boolean }
-  | { status: "cancelled" }
-  | { status: "refunded"; error: SaleError }
-  | { status: "error"; error: SaleError };
+  | { status: "cancelled"; sessionId: string }
+  | { status: "refunded"; error: SaleError; sessionId: string }
+  | { status: "error"; error: SaleError; sessionId?: string };
 
 export async function completeDoorSale(token: string, ret: CollectReturn): Promise<CompleteResult> {
   const claim = await readSale(decodeURIComponent(token).replaceAll("~", "."));
   if (!claim) return { status: "error", error: "expired" };
-  if (ret.result !== "success") return { status: "cancelled" };
+  const sessionId = claim.s;
+  if (ret.result !== "success") return { status: "cancelled", sessionId };
 
   const already = await prisma.doorSale.findUnique({ where: { chargeId: ret.chargeId }, select: { id: true } });
   if (already) return { status: "done", saleId: already.id, again: true };
 
   const row = await prisma.eventSession.findUnique({ where: { id: claim.s }, select: sessionSelect });
-  if (!row) return { status: "error", error: "notFound" };
+  if (!row) return { status: "error", error: "notFound", sessionId };
   const session = toSaleSession(row, claim.locale);
 
   const account = await anyStripeAccountForOrganizer(session.organizerId);
-  if (!account) return { status: "error", error: "noStripe" };
+  if (!account) return { status: "error", error: "noStripe", sessionId };
   const stripe = stripeClient(account.secretKey);
   let charge: Stripe.Charge;
   try {
     charge = await retrieveCharge(stripe, ret.chargeId);
   } catch {
-    return { status: "error", error: "stripe" };
+    return { status: "error", error: "stripe", sessionId };
   }
   const paid = charge.status === "succeeded" && charge.paid && !charge.refunded;
   const fresh = Date.now() - charge.created * 1000 < CHARGE_MAX_AGE_MS;
-  if (!paid || !fresh) return { status: "error", error: "notPaid" };
+  if (!paid || !fresh) return { status: "error", error: "notPaid", sessionId };
   if (charge.amount !== claim.a || charge.currency !== claim.c) {
     await refund(stripe, charge);
-    return { status: "refunded", error: "amountMismatch" };
+    return { status: "refunded", error: "amountMismatch", sessionId };
   }
 
   try {
