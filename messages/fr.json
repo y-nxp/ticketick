@@ -511,6 +511,7 @@
         "stripe": "Stripe ne répond pas : vérifiez le paiement dans Stripe avant de recommencer."
       },
       "otherConcert": "Autre concert",
+      "otherNights": "Autres soirs",
       "noticeTitle": "Caisse de vente sur place.",
       "notice": "Vente des billets papier réservés en amont : aucun billet n’est émis, aucune place n’est prise. Chaque vente est comptée par tarif.",
       "next": "Prochain",

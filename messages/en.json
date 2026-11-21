@@ -511,6 +511,7 @@
         "stripe": "Stripe is not responding: check the payment in Stripe before trying again."
       },
       "otherConcert": "Another concert",
+      "otherNights": "Other nights",
       "noticeTitle": "On-site sales till.",
       "notice": "Sale of paper tickets reserved in advance: no ticket is issued and no seat is taken. Each sale is counted by price.",
       "next": "Next",

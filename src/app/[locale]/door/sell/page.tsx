@@ -37,7 +37,11 @@ export default async function DoorSellPage({
   const t = await getTranslations("door.sell");
   const { s } = await searchParams;
   const selected = s ? await getSaleSession(user, s, locale) : null;
-  const sessions = selected ? [] : await getSaleSessions(user, locale);
+  const sessions = await getSaleSessions(user, locale);
+  // Les autres soirs du même spectacle, pour vendre aussi des billets pour un autre soir.
+  const otherNights = selected
+    ? sessions.filter((session) => session.eventId === selected.eventId && session.id !== selected.id)
+    : [];
   const manager = canManageTill(user);
   const salesCount = selected && manager ? await prisma.doorSale.count({ where: { sessionId: selected.id } }) : 0;
   // Le prochain : celui qui n'a pas commencé il y a plus de deux heures.
@@ -71,6 +75,22 @@ export default async function DoorSellPage({
                 {selected.venue ? ` · ${selected.venue}` : ""}
               </p>
             </div>
+            {otherNights.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">{t("otherNights")}</p>
+                <div className="flex flex-wrap gap-2">
+                  {otherNights.map((night) => (
+                    <Link
+                      key={night.id}
+                      href={{ pathname: "/door/sell", query: { s: night.id } }}
+                      className="inline-flex h-10 items-center rounded-control border border-border px-3 text-sm tabular-nums hover:bg-muted/50"
+                    >
+                      {when(night.startsAt)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <DoorSaleForm
               key={selected.id}
               sessionId={selected.id}

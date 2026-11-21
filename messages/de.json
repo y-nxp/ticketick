@@ -511,6 +511,7 @@
         "stripe": "Stripe antwortet nicht: Zahlung in Stripe prüfen, bevor Sie es erneut versuchen."
       },
       "otherConcert": "Anderes Konzert",
+      "otherNights": "Weitere Abende",
       "noticeTitle": "Verkaufskasse vor Ort.",
       "notice": "Verkauf der im Voraus reservierten Papiertickets: Es wird kein Ticket ausgestellt und kein Platz belegt. Jeder Verkauf wird pro Tarif gezählt.",
       "next": "Nächstes",
